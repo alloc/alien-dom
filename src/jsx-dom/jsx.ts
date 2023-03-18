@@ -1,4 +1,5 @@
 import {
+  decamelize,
   forEach,
   isArrayLike,
   isBoolean,
@@ -14,6 +15,7 @@ import { isUnitlessNumber } from './css-props'
 import type { ComponentClass, JSX } from './types'
 import type { ShadowRootContainer } from './shadow'
 import { isShadowRoot } from './shadow'
+import { svgTags } from './svg-tags'
 
 export const SVGNamespace = 'http://www.w3.org/2000/svg'
 const XLinkNamespace = 'http://www.w3.org/1999/xlink'
@@ -48,63 +50,6 @@ export function className(value: any): string {
   }
 }
 
-const svg: Record<string, 1> = {
-  animate: 1,
-  circle: 1,
-  clipPath: 1,
-  defs: 1,
-  desc: 1,
-  ellipse: 1,
-  feBlend: 1,
-  feColorMatrix: 1,
-  feComponentTransfer: 1,
-  feComposite: 1,
-  feConvolveMatrix: 1,
-  feDiffuseLighting: 1,
-  feDisplacementMap: 1,
-  feDistantLight: 1,
-  feFlood: 1,
-  feFuncA: 1,
-  feFuncB: 1,
-  feFuncG: 1,
-  feFuncR: 1,
-  feGaussianBlur: 1,
-  feImage: 1,
-  feMerge: 1,
-  feMergeNode: 1,
-  feMorphology: 1,
-  feOffset: 1,
-  fePointLight: 1,
-  feSpecularLighting: 1,
-  feSpotLight: 1,
-  feTile: 1,
-  feTurbulence: 1,
-  filter: 1,
-  foreignObject: 1,
-  g: 1,
-  image: 1,
-  line: 1,
-  linearGradient: 1,
-  marker: 1,
-  mask: 1,
-  metadata: 1,
-  path: 1,
-  pattern: 1,
-  polygon: 1,
-  polyline: 1,
-  radialGradient: 1,
-  rect: 1,
-  stop: 1,
-  svg: 1,
-  switch: 1,
-  symbol: 1,
-  text: 1,
-  textPath: 1,
-  tspan: 1,
-  use: 1,
-  view: 1,
-}
-
 const nonPresentationSVGAttributes =
   /^(a(ll|t|u)|base[FP]|c(al|lipPathU|on)|di|ed|ex|filter[RU]|g(lyphR|r)|ke|l(en|im)|ma(rker[HUW]|s)|n|pat|pr|point[^e]|re[^n]|s[puy]|st[^or]|ta|textL|vi|xC|y|z)/
 
@@ -133,7 +78,7 @@ export class Component {
 })
 
 export function jsx(tag: any, props: any, key?: string) {
-  if (!props.namespaceURI && svg[tag]) {
+  if (!props.namespaceURI && svgTags[tag]) {
     props.namespaceURI = SVGNamespace
   }
 
@@ -142,7 +87,7 @@ export function jsx(tag: any, props: any, key?: string) {
     node = props.namespaceURI
       ? document.createElementNS(props.namespaceURI, tag)
       : document.createElement(tag)
-    applyProps(props, node)
+    applyProps(node, props)
 
     // Select `option` elements in `select`
     if (node instanceof window.HTMLSelectElement && props.value != null) {
@@ -219,10 +164,6 @@ function appendChildToNode(child: Node, node: Node) {
   }
 }
 
-function normalizeAttribute(s: string, separator: string) {
-  return s.replace(/[A-Z]/g, match => separator + match.toLowerCase())
-}
-
 export function updateStyle(
   node: Element & HTMLOrSVGElement & { style?: any },
   value?: any
@@ -243,6 +184,11 @@ export function updateStyle(
 }
 
 function applyProp(prop: string, value: any, node: Element & HTMLOrSVGElement) {
+  if (value === null) {
+    node.removeAttribute(prop)
+    return
+  }
+
   switch (prop) {
     case 'class':
     case 'className':
@@ -308,20 +254,15 @@ function applyProp(prop: string, value: any, node: Element & HTMLOrSVGElement) {
       case 'xlinkShow':
       case 'xlinkTitle':
       case 'xlinkType':
-        setAttributeNS(
-          node,
-          XLinkNamespace,
-          normalizeAttribute(prop, ':'),
-          value
-        )
+        setAttributeNS(node, XLinkNamespace, decamelize(prop, ':'), value)
         return
       case 'xmlnsXlink':
-        setAttribute(node, normalizeAttribute(prop, ':'), value)
+        setAttribute(node, decamelize(prop, ':'), value)
         return
       case 'xmlBase':
       case 'xmlLang':
       case 'xmlSpace':
-        setAttributeNS(node, XMLNamespace, normalizeAttribute(prop, ':'), value)
+        setAttributeNS(node, XMLNamespace, decamelize(prop, ':'), value)
         return
     }
   }
@@ -365,12 +306,14 @@ function applyProp(prop: string, value: any, node: Element & HTMLOrSVGElement) {
     set(node, prop, value)
   } else if (value === true) {
     setAttribute(node, prop, '')
-  } else if (value !== false && value != null) {
+  } else if (value === false) {
+    node.removeAttribute(prop)
+  } else if (value !== undefined) {
     if (
       node instanceof SVGElement &&
       !nonPresentationSVGAttributes.test(prop)
     ) {
-      setAttribute(node, normalizeAttribute(prop, '-'), value)
+      setAttribute(node, decamelize(prop, '-'), value)
     } else {
       setAttribute(node, prop, value)
     }

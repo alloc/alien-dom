@@ -1,4 +1,9 @@
-import type { AlienElement, AlienElementList, AlienSelect, AlienTag } from './element'
+import type {
+  AlienElement,
+  AlienElementList,
+  AlienSelect,
+  AlienTag,
+} from './element'
 import { hasForEach, isIterable } from './internal/duck'
 import { AnyElement, DefaultElement } from './internal/types'
 import { createAlienElementList } from './node-list'
@@ -7,15 +12,15 @@ export function $(element: AnyElement): AlienElement<AnyElement>
 export function $(element: AnyElement | null): AlienElement<AnyElement> | null
 
 export function $<Element extends AlienTag<DefaultElement>>(
-  element: AnyElement,
+  element: AnyElement
 ): AlienSelect<Element>
 
 export function $<Element extends AlienTag<DefaultElement>>(
-  element: AnyElement | null,
+  element: AnyElement | null
 ): AlienSelect<Element> | null
 
 export function $<Element extends AlienTag<DefaultElement> = DefaultElement>(
-  selector: string,
+  selector: string
 ): AlienSelect<Element> | null
 
 export function $(arg: any) {
@@ -26,7 +31,11 @@ export type AlienElements<Element extends AnyElement = DefaultElement> =
   | AlienElement<Element>
   | AlienElementList<Element>
 
-export type AlienSelector = string | AnyElement | NodeListOf<AnyElement> | Iterable<AnyElement>
+export type AlienSelector =
+  | string
+  | AnyElement
+  | NodeListOf<AnyElement>
+  | Iterable<AnyElement>
 
 export const $$ = <Element extends AlienTag<DefaultElement> = DefaultElement>(
   ...selectors: (AlienSelector | false | null | undefined)[]
@@ -60,7 +69,7 @@ export const $$ = <Element extends AlienTag<DefaultElement> = DefaultElement>(
 }
 
 export function isAlienElement<Element extends AnyElement = DefaultElement>(
-  arg: any,
+  arg: any
 ): arg is Element | AlienElementList<Element> {
   return arg instanceof Element || arg instanceof NodeList
 }

@@ -1,6 +1,6 @@
 {
   "name": "alien-dom",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Enhanced DOM APIs mixed with jsx-dom",
   "main": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -29,6 +29,7 @@
     "build": "tsup src/index.ts --format esm --dts"
   },
   "dependencies": {
+    "@alloc/types": "^2.3.0",
     "@preact/signals-core": "^1.2.3",
     "csstype": "^3.1.1",
     "linear-color": "^1.2.0",

@@ -5,6 +5,7 @@ importers:
   .:
     specifiers:
       '@alloc/prettier-config': ^1.0.0
+      '@alloc/types': ^2.3.0
       '@preact/signals-core': ^1.2.3
       csstype: ^3.1.1
       linear-color: ^1.2.0
@@ -13,6 +14,7 @@ importers:
       type-fest: ^3.6.1
       typescript: ^4.1.0
     dependencies:
+      '@alloc/types': 2.3.0
       '@preact/signals-core': 1.2.3
       csstype: 3.1.1
       linear-color: 1.2.0
@@ -28,6 +30,10 @@ packages:
   /@alloc/prettier-config/1.0.0:
     resolution: {integrity: sha512-xm50V1qxSdTh1O1fKA+gqcU605YSnxfq6HwtYSFU3fRsKMFnUSuSOxqSAPI7y2sRxqPed2EIuGmNn107LVQM6g==}
     dev: true
+
+  /@alloc/types/2.3.0:
+    resolution: {integrity: sha512-20Az/TTgHkLG7qF6Y+0CPdv+RnKruv8TXgqX4qUcHYf8Qk6ZJykWhEpfybpiR51DyCQbQUuSbXpdnah+SamJ9w==}
+    dev: false
 
   /@esbuild/android-arm/0.17.12:
     resolution: {integrity: sha512-E/sgkvwoIfj4aMAPL2e35VnUJspzVYl7+M1B2cqeubdBhADV4uPon0KCc8p2G+LqSJ6i8ocYPCqY3A4GGq0zkQ==}

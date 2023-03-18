@@ -207,8 +207,10 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     applyProps(this as any, props)
     return this
   }
-  spring(animations: SpringAnimation | SpringAnimation[]) {
-    animate(this, animations)
+  spring(
+    animations: SpringAnimation<Element> | readonly SpringAnimation<Element>[]
+  ) {
+    animate(this, animations as any)
     return this
   }
   hooks(): AlienHooks<Element> {
@@ -258,6 +260,7 @@ const styleDeconflict = reverseLookup({
   content: 'cssContent', // HTMLMetaElement.content
   filter: 'cssFilter', // AlienElement.filter()
   height: 'cssHeight', // HTMLImageElement.height
+  transform: 'cssTransform', // SVGElement.transform
   translate: 'cssTranslate', // HTMLElement.translate
   width: 'cssWidth', // HTMLImageElement.width
 } as const)

@@ -51,7 +51,11 @@ export function forEach<V = any>(
   }
 }
 
-export function toArray<T>(a: T): T extends any[] ? T : T[] {
+export function toArray<T>(a: T): T extends readonly any[] ? T : T[] {
   // @ts-ignore
   return Array.isArray(a) ? a : [a]
+}
+
+export function decamelize(s: string, separator: string) {
+  return s.replace(/[A-Z]/g, match => separator + match.toLowerCase())
 }
