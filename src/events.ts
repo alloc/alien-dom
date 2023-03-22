@@ -1,7 +1,7 @@
-import { AlienSubscription, trackSubscription } from './context'
 import { AlienElementList } from './element'
 import { hasForEach } from './internal/duck'
 import { AnyElement, DefaultElement } from './internal/types'
+import { createHookType, Disposable, AlienHook, createHook } from './hooks'
 
 const globalEvents = new Map<string, Set<Function>>()
 const targets = new WeakMap<Element, Map<string, Set<Function>>>()
@@ -11,7 +11,6 @@ const emit = (target: any, event: any) => {
   if (events) {
     const callbacks = events.get(event.type)
     if (callbacks) {
-      console.debug('emit:', event.type, target, callbacks)
       event.currentTarget = target
       callbacks.forEach(callback => callback(event))
     }
@@ -21,12 +20,48 @@ const emit = (target: any, event: any) => {
   }
 }
 
+const targetedEvent = createHookType(
+  (target: Element, event: string, callback: (event: any) => void) => {
+    const events = targets.get(target) || new Map<string, Set<Function>>()
+    targets.set(target, events)
+
+    const callbacks = events.get(event) || new Set<Function>()
+    events.set(event, callbacks)
+
+    callbacks.add(callback!)
+    return () => {
+      callbacks.delete(callback!)
+      if (!callbacks.size) {
+        events.delete(event)
+        if (!events.size) {
+          targets.delete(target as Element)
+        }
+      }
+    }
+  }
+)
+
+const globalEvent = createHookType(
+  (event: string, callback: (event: any) => void) => {
+    const callbacks = globalEvents.get(event) || new Set()
+    globalEvents.set(event, callbacks)
+
+    callbacks.add(callback!)
+    return () => {
+      callbacks.delete(callback!)
+      if (!callbacks.size) {
+        globalEvents.delete(event)
+      }
+    }
+  }
+)
+
 export const events: AlienMessenger = {
   on(
     event: string,
     arg2: Element | AlienElementList | ((event: any) => void),
-    arg3?: (event: any) => void,
-  ): AlienSubscription {
+    arg3?: (event: any) => void
+  ): Disposable<AlienHook> {
     let target: Element | AlienElementList | undefined
     let callback: ((event: any) => void) | undefined
     if (typeof arg2 == 'function') {
@@ -35,59 +70,26 @@ export const events: AlienMessenger = {
       target = arg2
       callback = arg3!
     }
-    let dispose: () => void
     if (target) {
       if (!(target instanceof Element)) {
-        const subscriptions = target.map(target => {
-          return this.on(event, target, callback!)
-        })
-        return {
+        return createHook({
           target,
-          key: event,
-          dispose() {
-            subscriptions.forEach(subscription => subscription.dispose())
+          enable(targets: AlienElementList) {
+            const hooks = targets.map(target =>
+              targetedEvent(target, event, callback!)
+            )
+            return () => hooks.forEach(hook => hook.dispose())
           },
-        }
+        })
       }
-
-      const events = targets.get(target) || new Map<string, Set<Function>>()
-      targets.set(target, events)
-
-      const callbacks = events.get(event) || new Set<Function>()
-      events.set(event, callbacks)
-
-      callbacks.add(callback!)
-      dispose = () => {
-        callbacks.delete(callback!)
-        if (!callbacks.size) {
-          events.delete(event)
-          if (!events.size) {
-            targets.delete(target as Element)
-          }
-        }
-      }
-    } else {
-      const callbacks = globalEvents.get(event) || new Set()
-      globalEvents.set(event, callbacks)
-
-      callbacks.add(callback!)
-      dispose = () => {
-        callbacks.delete(callback!)
-        if (!callbacks.size) {
-          globalEvents.delete(event)
-        }
-      }
+      return targetedEvent(target, event, callback)
     }
-    return trackSubscription({
-      key: event,
-      target: target || this,
-      dispose,
-    })
+    return globalEvent(event, callback)
   },
   dispatch(
     type: string,
     target?: Record<string, any> | Element | AlienElementList,
-    event?: Record<string, any>,
+    event?: Record<string, any>
   ) {
     if (target && hasForEach(target)) {
       return target.forEach(target => {
@@ -111,23 +113,34 @@ export const events: AlienMessenger = {
 }
 
 interface AlienMessenger {
+  on<T extends Record<string, any>, Element extends AnyElement>(
+    this: AlienMessenger,
+    event: string,
+    target: Element,
+    handler: (event: T & AlienElementMessage<Element>) => void
+  ): Disposable<AlienHook<Element>>
+  on<T extends Record<string, any>, Element extends AnyElement>(
+    this: AlienMessenger,
+    event: string,
+    target: AlienElementList<Element>,
+    handler: (event: T & AlienElementMessage<Element>) => void
+  ): Disposable<AlienHook<AlienElementList<Element>>>
   on<T extends Record<string, any>>(
     this: AlienMessenger,
     event: string,
-    target: Element | AlienElementList,
-    handler: (event: T & AlienElementMessage) => void,
-  ): AlienSubscription
-  on<T extends Record<string, any>>(
+    handler: (event: T & AlienMessage) => void
+  ): Disposable<AlienHook<string>>
+
+  dispatch(
     this: AlienMessenger,
     event: string,
-    handler: (event: T & AlienMessage) => void,
-  ): AlienSubscription
-  dispatch(this: AlienMessenger, event: string, data?: Record<string, any>): void
+    data?: Record<string, any>
+  ): void
   dispatch(
     this: AlienMessenger,
     event: string,
     target: Element | AlienElementList,
-    data?: Record<string, any>,
+    data?: Record<string, any>
   ): void
 }
 
@@ -135,7 +148,8 @@ export type AlienMessage = Record<string, any> & {
   readonly type: string
 }
 
-export type AlienElementMessage<Element extends AnyElement = DefaultElement> = AlienMessage & {
-  readonly target: AnyElement
-  currentTarget: Element
-}
+export type AlienElementMessage<Element extends AnyElement = DefaultElement> =
+  AlienMessage & {
+    readonly target: AnyElement
+    currentTarget: Element
+  }

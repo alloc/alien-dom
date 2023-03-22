@@ -1,18 +1,19 @@
-import { effect } from '@preact/signals-core'
 import { animate, SpringAnimation } from './animate'
-import { AlienSubscription, trackSubscription } from './context'
 import { AlienElementMessage, events } from './events'
-import { AlienHooks } from './hooks'
+import { AlienHooks, createHookType, Disposable, AlienHook } from './hooks'
 import { canMatch } from './internal/duck'
 import { AnyElement, AnyEvent, DefaultElement } from './internal/types'
 import { AlienNodeList } from './node-list'
-import { kAlienHooks } from './symbols'
+import { kAlienHooks, setSymbol } from './symbols'
 import { applyProps, updateStyle } from './jsx-dom/jsx'
 import {
   DetailedHTMLProps,
   HTMLAttributes,
   SVGAttributes,
 } from './jsx-dom/types/index'
+import * as CSS from 'csstype'
+import { targetedEffect } from './signals'
+import { elementEvent } from './elementEvents'
 
 declare global {
   interface Element {
@@ -135,7 +136,7 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
    */
   on<T extends Record<string, any>>(
     name: string,
-    callback: (event: T & AlienElementMessage<Element>) => void
+    callback: (event: T & AlienElementMessage<this>) => void
   ) {
     return events.on(name, this, callback)
   }
@@ -148,19 +149,14 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
   }
   $text(): string
   $text(value: string): this
-  $text(value: () => string): AlienSubscription
+  $text(value: () => string): Disposable<AlienHook<this>>
   $text(value?: string | (() => string)) {
     if (arguments.length == 0) {
       return this.textContent
     }
     if (typeof value == 'function') {
-      const dispose = effect(() => {
-        this.textContent = value()
-      })
-      return trackSubscription({
-        target: this,
-        key: 'textContent',
-        dispose,
+      return targetedEffect(this, target => {
+        target.textContent = value()
       })
     } else {
       this.textContent = value!
@@ -213,13 +209,13 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     animate(this, animations as any)
     return this
   }
+  /**
+   * ⚠️ It's not safe to call this from within a `selfUpdating`
+   * component's render function (if this element is returned by the
+   * component).
+   */
   hooks(): AlienHooks<Element> {
-    let hooks: any = Reflect.get(this, kAlienHooks)
-    if (!hooks) {
-      hooks = new AlienHooks(this)
-      Object.defineProperty(this, kAlienHooks, { value: hooks })
-    }
-    return hooks
+    return (this as any)[kAlienHooks] || new AlienHooks(this)
   }
   /**
    * Enable hooks, if any, for this element. Call this instead of
@@ -306,7 +302,7 @@ type AlienEventMethod<
 > = (
   callback: (this: This, event: AlienEvent<Event, This>) => void,
   options?: boolean | AddEventListenerOptions
-) => AlienSubscription<This, string>
+) => Disposable<AlienHook<This>>
 
 type AlienEventMethods<This extends AnyElement> = {
   [P in keyof Omit<
@@ -329,7 +325,7 @@ function getEventMethod<Event extends AnyEvent>(
     this: Element,
     callback: (event: AlienEvent<Event, Element>) => void,
     options?: boolean | AddEventListenerOptions
-  ): AlienSubscription<Element, string> {
+  ) {
     if (baseOptions) {
       if (options) {
         options = options == true ? { capture: true } : options
@@ -338,14 +334,7 @@ function getEventMethod<Event extends AnyEvent>(
         options = baseOptions
       }
     }
-    this.addEventListener(eventType, callback as any, options)
-    return trackSubscription({
-      target: this,
-      key,
-      dispose: () => {
-        this.removeEventListener(eventType, callback as any, options)
-      },
-    })
+    return elementEvent(this, eventType, callback, options)
   })
 }
 
@@ -522,43 +511,5 @@ type Attributes<Element extends AnyElement> = (Element extends HTMLElement
   (Element extends SVGElement ? SVGAttributes<Element> : unknown)
 
 type StyleAttributes = {
-  [Key in keyof CSSStyleDeclaration]: CSSStyleDeclaration[Key] extends infer Value
-    ? Value | null | (Key extends LengthKey ? number : never)
-    : never
+  [Key in keyof CSS.Properties]: CSS.Properties[Key] | null
 }
-
-type LengthKey =
-  | 'width'
-  | 'maxWidth'
-  | 'minWidth'
-  | 'height'
-  | 'maxHeight'
-  | 'minHeight'
-  | 'top'
-  | 'right'
-  | 'bottom'
-  | 'left'
-  | 'margin'
-  | 'marginTop'
-  | 'marginRight'
-  | 'marginBottom'
-  | 'marginLeft'
-  | 'padding'
-  | 'paddingTop'
-  | 'paddingRight'
-  | 'paddingBottom'
-  | 'paddingLeft'
-  | 'borderWidth'
-  | 'borderTopWidth'
-  | 'borderRightWidth'
-  | 'borderBottomWidth'
-  | 'borderLeftWidth'
-  | 'borderRadius'
-  | 'borderTopLeftRadius'
-  | 'borderTopRightRadius'
-  | 'borderBottomLeftRadius'
-  | 'borderBottomRightRadius'
-  | 'fontSize'
-  | 'lineHeight'
-  | 'letterSpacing'
-  | 'wordSpacing'

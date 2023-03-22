@@ -1,0 +1,21 @@
+{
+  "name": "@alien-dom/esbuild",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/plugin.js",
+  "types": "dist/plugin.d.ts",
+  "scripts": {
+    "build": "tsup src/plugin.ts --format esm --dts"
+  },
+  "devDependencies": {
+    "esbuild": "^0.17.12"
+  },
+  "dependencies": {
+    "@alien-dom/nebu": "^0.1.0",
+    "esbuild-extra": "^0.1.2",
+    "nebu": "^2.3.2"
+  },
+  "peerDependencies": {
+    "esbuild": "*"
+  }
+}

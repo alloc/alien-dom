@@ -2020,7 +2020,10 @@ export declare namespace JSX {
       SelectHTMLAttributes<HTMLSelectElement>,
       HTMLSelectElement
     >
-    slot: DetailedHTMLProps<SlotHTMLAttributes<HTMLElement>, HTMLSlotElement>
+    slot: DetailedHTMLProps<
+      SlotHTMLAttributes<HTMLSlotElement>,
+      HTMLSlotElement
+    >
     small: DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement>
     source: DetailedHTMLProps<
       SourceHTMLAttributes<HTMLSourceElement>,

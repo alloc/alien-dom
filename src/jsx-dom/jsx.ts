@@ -12,10 +12,17 @@ import {
   keys,
 } from './util'
 import { isUnitlessNumber } from './css-props'
-import type { ComponentClass, JSX } from './types'
+import type { JSX } from './types'
 import type { ShadowRootContainer } from './shadow'
 import { isShadowRoot } from './shadow'
 import { svgTags } from './svg-tags'
+import { kAlienPlaceholder } from '../symbols'
+import { ElementKey, AnyElement, AlienComponent } from '../internal/types'
+import { updateElement } from '../selfUpdating'
+import { elementEvent } from '../elementEvents'
+import { currentHooks, currentComponent } from '../global'
+import { checkTag, updateTagProps } from '../internal/tags'
+import { kAlienElementKey } from '../symbols'
 
 export const SVGNamespace = 'http://www.w3.org/2000/svg'
 const XLinkNamespace = 'http://www.w3.org/1999/xlink'
@@ -77,9 +84,28 @@ export class Component {
   },
 })
 
-export function jsx(tag: any, props: any, key?: string) {
+export function jsx(tag: any, props: any, key?: ElementKey) {
   if (!props.namespaceURI && svgTags[tag]) {
     props.namespaceURI = SVGNamespace
+  }
+
+  let scope: AlienComponent | undefined
+  let oldNode: AnyElement | undefined
+  if (key != null) {
+    scope = currentComponent.get()
+    if (scope && (oldNode = scope.fromRef(key))) {
+      if (!checkTag(oldNode, tag)) {
+        // Only self-updating component boundaries can have their props
+        // updated. This uses a pure component or a native tag.
+        oldNode = undefined
+      }
+      // Updating the props of an existing element will only rerender
+      // the component if a new value is defined for a stateless prop.
+      else if (updateTagProps(oldNode, tag, props)) {
+        scope.setRef(key, oldNode)
+        return oldNode
+      }
+    }
   }
 
   let node: HTMLElement | SVGElement | null
@@ -113,6 +139,21 @@ export function jsx(tag: any, props: any, key?: string) {
   } else {
     throw new TypeError(`Invalid JSX element type: ${tag}`)
   }
+
+  if (node && key != null && scope) {
+    if (oldNode) {
+      // Update the element now, since self-updating components skip any
+      // element that has a key.
+      updateElement(oldNode, node, scope.hooks)
+
+      // Return the original node. If used a child node, it will be
+      // replaced by a placeholder node so that its parent node is
+      // preserved across renders.
+      node = oldNode as typeof node
+    }
+    scope.setRef(key, node)
+  }
+
   return node
 }
 
@@ -149,18 +190,36 @@ function appendChild(
   }
 }
 
+function getPlaceholder(child: any) {
+  if (
+    child &&
+    child.parentNode &&
+    child[kAlienElementKey] != null &&
+    currentComponent.get()
+  ) {
+    const tagName = child.tagName.toLowerCase()
+    const placeholder: any = child.namespaceURI
+      ? document.createElementNS(child.namespaceURI, tagName)
+      : document.createElement(tagName)
+    placeholder[kAlienPlaceholder] = child
+    return placeholder
+  }
+}
+
 function appendChildren(children: any[], node: Node) {
   for (const child of [...children]) {
-    appendChild(child, node)
+    const placeholder = getPlaceholder(child)
+    appendChild(placeholder || child, node)
   }
   return node
 }
 
 function appendChildToNode(child: Node, node: Node) {
+  const placeholder = getPlaceholder(child)
   if (node instanceof window.HTMLTemplateElement) {
-    node.content.appendChild(child)
+    node.content.appendChild(placeholder || child)
   } else {
-    node.appendChild(child)
+    node.appendChild(placeholder || child)
   }
 }
 
@@ -245,7 +304,7 @@ function applyProp(prop: string, value: any, node: Element & HTMLOrSVGElement) {
     // fallthrough
   }
 
-  if (prop.startsWith('x')) {
+  if (prop[0] === 'x') {
     switch (prop) {
       case 'xlinkActuate':
       case 'xlinkArcrole':
@@ -269,37 +328,32 @@ function applyProp(prop: string, value: any, node: Element & HTMLOrSVGElement) {
 
   if (isFunction(value)) {
     if (prop[0] === 'o' && prop[1] === 'n') {
-      const attribute = prop.toLowerCase()
-      const useCapture = attribute.endsWith('capture')
+      let key = prop.toLowerCase()
+      let useCapture: boolean | undefined
 
-      if (!useCapture && get(node, attribute) === null) {
-        // use property when possible PR #17
-        set(node, attribute, value)
-      } else if (useCapture) {
-        node.addEventListener(
-          attribute.substring(2, attribute.length - 7),
-          value,
-          true
-        )
+      if (key.endsWith('capture')) {
+        key = key.substring(2, key.length - 7)
       } else {
-        let eventName
-        if (attribute in window) {
+        if (key in window) {
           // standard event
           // the JSX attribute could have been "onMouseOver" and the
           // member name "onmouseover" is on the window's prototype
           // so let's add the listener "mouseover", which is all lowercased
-          const standardEventName = attribute.substring(2)
-          eventName = standardEventName
+          key = key.substring(2)
         } else {
           // custom event
           // the JSX attribute could have been "onMyCustomEvent"
           // so let's trim off the "on" prefix and lowercase the first character
           // and add the listener "myCustomEvent"
           // except for the first character, we keep the event name case
-          const customEventName = attribute[2] + prop.slice(3)
-          eventName = customEventName
+          key = key[2] + prop.slice(3)
         }
-        node.addEventListener(eventName, value)
+      }
+
+      if (currentHooks.get()) {
+        elementEvent(node, key, value, useCapture)
+      } else {
+        node.addEventListener(key, value, useCapture)
       }
     }
   } else if (isObject(value)) {

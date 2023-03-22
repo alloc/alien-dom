@@ -1,5 +1,5 @@
-import { trackSubscription } from './context'
 import { $, $$ } from './selectors'
+import { createHookType, getCurrentHook } from './hooks'
 
 type ElementListener = (element: Element) => void
 
@@ -79,56 +79,68 @@ export function observeRemovedChildren(
   })
 }
 
-export function observeNewDescendants(
-  target: Node,
-  listener: (node: Element) => void
-) {
-  const { onAdded, dispose } = observe(target)
-  onAdded.add(listener)
-  return trackSubscription({
-    target,
-    dispose() {
+export const observeNewDescendants = createHookType(
+  (target: Node, listener: (node: Element) => void) => {
+    const { onAdded, dispose } = observe(target)
+    onAdded.add(listener)
+    return () => {
       onAdded.delete(listener)
       if (!onAdded.size) {
         dispose()
       }
-    },
-  })
-}
+    }
+  }
+)
 
-export function observeRemovedDescendants(
-  target: Node,
-  listener: (node: Element) => void
-) {
-  const { onRemoved, dispose } = observe(target)
-  onRemoved.add(listener)
-  return trackSubscription({
-    target,
-    dispose() {
+export const observeRemovedDescendants = createHookType(
+  (target: Node, listener: (node: Element) => void) => {
+    const { onRemoved, dispose } = observe(target)
+    onRemoved.add(listener)
+    return () => {
       onRemoved.delete(listener)
       if (!onRemoved.size) {
         dispose()
       }
-    },
-  })
-}
-
-export function onMount(target: Node, effect: () => void) {
-  const listener = observeNewDescendants(document.body, node => {
-    if (node.contains(target)) {
-      listener.dispose()
-      effect()
     }
-  })
-  return listener
-}
+  }
+)
 
-export function onUnmount(target: Node, effect: () => void) {
-  const listener = observeRemovedDescendants(document.body, node => {
-    if (node.contains(target)) {
-      listener.dispose()
-      effect()
+const observeElementHook = createHookType(
+  (target: Node, key: 'onAdded' | 'onRemoved', effect: () => void) => {
+    const self = getCurrentHook()
+    if ((key == 'onAdded') == document.body.contains(target)) {
+      self?.context?.remove(self)
+      return effect()
     }
-  })
-  return listener
-}
+    const observer = observe(document.body)
+    const listener = (node: Node) => {
+      if (node.contains(target)) {
+        self?.context?.remove(self)
+        effect()
+      }
+    }
+    observer[key].add(listener)
+    return () => {
+      if (
+        observer[key].delete(listener) &&
+        !(observer.onAdded.size + observer.onRemoved.size)
+      ) {
+        observer.dispose()
+      }
+    }
+  }
+)
+
+/**
+ * Runs the effect when the given target is mounted, then stops
+ * observing the document.
+ */
+export const onMount = (target: Node, effect: () => void) =>
+  observeElementHook(target, 'onAdded', effect)
+
+/**
+ * Runs the effect when the given target is unmounted, then stops
+ * observing the document.
+ */
+export const onUnmount = (target: Node, effect: () => void) =>
+  observeElementHook(target, 'onRemoved', effect)

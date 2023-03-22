@@ -366,7 +366,7 @@ function startLoop() {
         if (needMeasuredSize) {
           // TODO: what if width/height are also animated? this will be
           // immediately stale.
-          const bbox = (target as SVGGraphicsElement).getBBox()
+          const bbox: DOMRect = (target as any).getBBox()
           width = bbox.width
           height = bbox.height
         }
@@ -462,7 +462,6 @@ function startLoop() {
           newTransform!,
           noTransform
         )
-        console.log(target, { transform })
         set(target as any, svgMode, 'transform', transform)
       }
 

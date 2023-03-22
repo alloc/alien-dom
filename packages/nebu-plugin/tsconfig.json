@@ -1,13 +1,10 @@
 {
-  "include": ["src", "jsx-runtime.d.ts"],
   "compilerOptions": {
     "esModuleInterop": true,
-    "jsx": "react",
-    "lib": ["dom", "esnext"],
+    "lib": ["esnext"],
     "module": "esnext",
     "moduleResolution": "node",
     "target": "esnext",
-    "strict": true,
-    "types": []
+    "strict": true
   }
 }

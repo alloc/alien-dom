@@ -1,0 +1,14 @@
+{
+  "name": "@alien-dom/nebu",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/plugin.js",
+  "types": "dist/plugin.d.ts",
+  "scripts": {
+    "build": "tsup-node src/plugin.ts --format esm --dts"
+  },
+  "devDependencies": {
+    "nebu": "^2.3.2",
+    "tsup": "^6.6.3"
+  }
+}
