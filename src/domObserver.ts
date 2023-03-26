@@ -1,5 +1,6 @@
 import { $, $$ } from './selectors'
 import { createHookType, getCurrentHook } from './hooks'
+import { binaryInsert, noop } from './jsx-dom/util'
 
 type ElementListener = (element: Element) => void
 
@@ -11,30 +12,61 @@ type Observer = {
 
 const observersByRoot = new WeakMap<Node, Observer>()
 
-function observe(target: Node) {
-  let result = observersByRoot.get(target)
+function observe(rootNode: Node) {
+  let result = observersByRoot.get(rootNode)
   if (!result) {
     const onAdded = new Set<ElementListener>()
     const onRemoved = new Set<ElementListener>()
 
+    let queued = false
+    const added = new Set<Element>()
+    const removed = new Set<Element>()
+
     const observer = new MutationObserver(mutations => {
       for (const mutation of mutations) {
         for (const node of Array.from(mutation.addedNodes)) {
-          if (node instanceof Element) {
-            onAdded.forEach(listener => listener(node))
+          if (node.nodeType == Node.ELEMENT_NODE) {
+            if (!removed.delete(node as Element)) {
+              added.add(node as Element)
+            }
           }
         }
         for (const node of Array.from(mutation.removedNodes)) {
-          if (node instanceof Element) {
-            onRemoved.forEach(listener => listener(node))
+          if (node.nodeType == Node.ELEMENT_NODE) {
+            if (!added.delete(node as Element)) {
+              removed.add(node as Element)
+            }
           }
         }
       }
+      if (!queued) {
+        queued = true
+        queueMicrotask(() => {
+          queued = false
+
+          if (!added.size && !removed.size) {
+            return
+          }
+
+          const lastAdded = [...added]
+          const lastRemoved = [...removed]
+
+          added.clear()
+          removed.clear()
+
+          lastAdded.forEach(node => {
+            onAdded.forEach(listener => listener(node))
+          })
+          lastRemoved.forEach(node => {
+            onRemoved.forEach(listener => listener(node))
+          })
+        })
+      }
     })
 
-    observer.observe(target, { childList: true, subtree: true })
+    observer.observe(rootNode, { childList: true, subtree: true })
     observersByRoot.set(
-      target,
+      rootNode,
       (result = {
         onAdded,
         onRemoved,
@@ -105,22 +137,66 @@ export const observeRemovedDescendants = createHookType(
   }
 )
 
+/**
+ * Runs the effect when the given target is mounted, then stops
+ * observing the document.
+ */
+export const onMount = (target: Element, effect: () => void) =>
+  observeElementHook(target, 'onAdded', effect)
+
+/**
+ * Runs the effect when the given target is unmounted, then stops
+ * observing the document.
+ */
+export const onUnmount = (target: Element, effect: () => void) =>
+  observeElementHook(target, 'onRemoved', effect)
+
+type DepthFirstEffect = [
+  effect: () => void,
+  depth: number,
+  target: Element,
+  key: string
+]
+
+let depthFirstBatch: DepthFirstEffect[] | null = null
+
 const observeElementHook = createHookType(
-  (target: Node, key: 'onAdded' | 'onRemoved', effect: () => void) => {
+  (target: Element, key: 'onAdded' | 'onRemoved', effect: () => void) => {
     const self = getCurrentHook()
     if ((key == 'onAdded') == document.body.contains(target)) {
       self?.context?.remove(self)
       return effect()
     }
-    const observer = observe(document.body)
-    const listener = (node: Node) => {
-      if (node.contains(target)) {
-        self?.context?.remove(self)
-        effect()
+
+    let depth = key == 'onRemoved' ? getElementDepth(target) : null
+
+    function listener(element: Element) {
+      if (element.contains(target)) {
+        if (self?.context) {
+          self.context.remove(self)
+        } else {
+          dispose()
+        }
+        const batch = (depthFirstBatch ||= [] as DepthFirstEffect[])
+        if (!batch.length) {
+          queueMicrotask(() => {
+            depthFirstBatch = null
+            batch.forEach(([effect]) => effect())
+          })
+        }
+        depth ??= getElementDepth(target)
+        binaryInsert<DepthFirstEffect>(
+          batch,
+          [effect, depth, target, key],
+          ([, a], [, b]) => b - a
+        )
       }
     }
+
+    const observer = observe(document.body)
     observer[key].add(listener)
-    return () => {
+
+    function dispose() {
       if (
         observer[key].delete(listener) &&
         !(observer.onAdded.size + observer.onRemoved.size)
@@ -128,19 +204,16 @@ const observeElementHook = createHookType(
         observer.dispose()
       }
     }
+
+    return dispose
   }
 )
 
-/**
- * Runs the effect when the given target is mounted, then stops
- * observing the document.
- */
-export const onMount = (target: Node, effect: () => void) =>
-  observeElementHook(target, 'onAdded', effect)
-
-/**
- * Runs the effect when the given target is unmounted, then stops
- * observing the document.
- */
-export const onUnmount = (target: Node, effect: () => void) =>
-  observeElementHook(target, 'onRemoved', effect)
+function getElementDepth(elem: Element, stopAt?: Element) {
+  let depth = 0
+  while (elem.parentElement && elem.parentElement != stopAt) {
+    depth++
+    elem = elem.parentElement
+  }
+  return depth
+}
