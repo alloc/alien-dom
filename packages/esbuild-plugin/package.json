@@ -13,7 +13,7 @@
   "dependencies": {
     "@alien-dom/nebu": "^0.1.0",
     "esbuild-extra": "^0.1.2",
-    "nebu": "^2.3.2"
+    "nebu": "^2.3.3"
   },
   "peerDependencies": {
     "esbuild": "*"

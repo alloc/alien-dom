@@ -16,6 +16,7 @@ export default function esbuildAlienDOM() {
             filename: args.path,
             jsx: true,
             sourceMap: true,
+            sourceMapHiRes: true,
             plugins: [nebuAlienDOM],
           })
           return {
