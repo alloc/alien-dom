@@ -3,7 +3,7 @@ import {
   signal as ref,
   Signal as Ref,
 } from '@preact/signals-core'
-import { createHookType, createHook } from './hooks'
+import { createHookType } from './hooks'
 
 export {
   batch,
