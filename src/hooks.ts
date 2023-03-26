@@ -325,12 +325,12 @@ export function createHook<
   let dispose: Promisable<(() => void) | void>
   if (context) {
     if (typeof hook == 'function') {
-      context.enable(hook)
+      context.enable(hook, hook.target)
     } else {
       context.enable(hook.enable, hook.target, hook.args)
     }
   } else if (typeof hook == 'function') {
-    dispose = hook()
+    dispose = hook(hook.target, ...(hook.args || []))
   } else {
     dispose = hook.enable(hook.target, ...(hook.args || []))
   }
@@ -360,8 +360,12 @@ export type AlienHookType<Args extends any[]> = (
 export function createHookType<Args extends any[]>(
   enable: (...args: Args) => (() => void) | void
 ): AlienHookType<Args> {
-  return ((target: any, ...args: any[]) =>
-    createHook({ enable, target, args } as any)) as any
+  return ((target: any, ...args: any[]) => {
+    const enabler = enable.bind(null) as any
+    enabler.target = target
+    enabler.args = args
+    return createHook(enabler)
+  }) as any
 }
 
 /**
