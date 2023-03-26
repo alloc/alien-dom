@@ -4,6 +4,7 @@ import { AnyElement } from './internal/types'
 import { currentHooks, currentComponent } from './global'
 import { ref, Ref } from './signals'
 import { kAlienHooks, setSymbol } from './symbols'
+import { noop } from './jsx-dom/util'
 
 export function useEffect(
   effect: () => (() => void) | void,
@@ -32,11 +33,21 @@ export function useRef<T>(init: T | (() => T)): Ref<T> {
   return (scope.memory[index] ||= ref(init instanceof Function ? init() : init))
 }
 
-export interface AlienEnabler<Target = any, Args extends any[] = any[]> {
-  (target: Target, ...args: Args): (() => void) | void
+type Promisable<T> = T | Promise<T>
+
+export interface AlienEnabler<
+  Target = any,
+  Args extends any[] = any[],
+  Async extends boolean = boolean
+> {
+  (
+    target: Target,
+    ...args: Async extends true ? [AbortSignal, ...Args] : Args
+  ): Async extends true ? Promisable<(() => void) | void> : (() => void) | void
   context?: AlienHooks
   target?: Target
   args?: Args
+  async?: Async
   disable?: () => void
   once?: boolean
 }
@@ -53,6 +64,7 @@ export class AlienHooks<Element extends AnyElement = any> {
   element?: AlienElement<Element> = undefined
   enablers?: Set<AlienEnabler> = undefined
   currentEnabler: AlienEnabler | null = null
+  abortCtrl?: AbortController = undefined
 
   constructor(element?: AlienElement<Element>) {
     element && this.setElement(element)
@@ -74,6 +86,23 @@ export class AlienHooks<Element extends AnyElement = any> {
   }
 
   /**
+   * Add a callback to run when the scope is enabled. If the scope is
+   * currently enabled, the callback will be run immediately.
+   */
+  enable(enabler: AlienEnabler<void, [], false>): Disposable<typeof enabler>
+
+  enable<Args extends any[]>(
+    enabler: AlienEnabler<void, Args, false>,
+    args: Args
+  ): Disposable<typeof enabler>
+
+  enable<T extends object | void, Args extends any[] = []>(
+    enabler: AlienEnabler<T, Args, false>,
+    target: T,
+    args?: Args
+  ): Disposable<typeof enabler>
+
+  /**
    * Enable the scope. If there are any `enable` callbacks, they will be
    * run.
    *
@@ -82,33 +111,8 @@ export class AlienHooks<Element extends AnyElement = any> {
    */
   enable(): void
 
-  /**
-   * Add a callback to run when the scope is enabled. If the scope is
-   * currently enabled, the callback will be run immediately.
-   */
-  enable(enabler: AlienEnabler<void, []>): Disposable<typeof enabler>
-
-  /**
-   * Add a callback to run when the scope is enabled. If the scope is
-   * currently enabled, the callback will be run immediately.
-   */
-  enable<Args extends any[]>(
-    enabler: AlienEnabler<void, Args>,
-    args: Args
-  ): Disposable<typeof enabler>
-
-  /**
-   * Add a callback to run when the scope is enabled. If the scope is
-   * currently enabled, the callback will be run immediately.
-   */
-  enable<T extends object, Args extends any[] = []>(
-    enabler: AlienEnabler<T, Args>,
-    target: T,
-    args?: Args
-  ): Disposable<typeof enabler>
-
   /** @internal */
-  enable(enabler?: AlienEnabler, target?: any, args?: any) {
+  enable(enabler?: AlienEnabler<any, any[], false>, target?: any, args?: any) {
     if (enabler) {
       enabler.target = target
       if (arguments.length > 2) {
@@ -132,11 +136,9 @@ export class AlienHooks<Element extends AnyElement = any> {
     }
     if (!this.enabled) {
       enableHooks(this, () => {
-        if (this.enablers) {
-          this.enablers.forEach(enabler => {
-            enableHook(enabler)
-          })
-        }
+        this.enablers?.forEach(enabler => {
+          enableHook(enabler)
+        })
       })
     }
   }
@@ -171,29 +173,73 @@ export class AlienHooks<Element extends AnyElement = any> {
   /**
    * Add a callback to run when the scope is next enabled.
    */
-  enableOnce(enabler: AlienEnabler<void, []>): typeof enabler
+  enableOnce(enabler: AlienEnabler<void, [], false>): typeof enabler
 
-  /**
-   * Add a callback to run when the scope is next enabled.
-   */
   enableOnce<Args extends any[]>(
-    enabler: AlienEnabler<void, Args>,
+    enabler: AlienEnabler<void, Args, false>,
     args: Args
   ): typeof enabler
 
-  /**
-   * Add a callback to run when the scope is next enabled.
-   */
   enableOnce<T extends object, Args extends any[] = []>(
-    enabler: AlienEnabler<T, Args>,
+    enabler: AlienEnabler<T, Args, false>,
     target: T,
     args?: Args
   ): typeof enabler
 
   /** @internal */
-  enableOnce(enabler: AlienEnabler, target?: any, args?: any) {
+  enableOnce(
+    enabler: AlienEnabler<any, any[], false>,
+    target?: any,
+    args?: any
+  ) {
     enabler.once = true
     return this.enable(enabler, target, args)
+  }
+
+  enableAsync(enabler: AlienEnabler<void, [], true>): typeof enabler
+
+  enableAsync<Args extends any[]>(
+    enabler: AlienEnabler<void, Args, true>,
+    args: Args
+  ): typeof enabler
+
+  enableAsync<T extends object, Args extends any[] = []>(
+    enabler: AlienEnabler<T, Args, true>,
+    target: T,
+    args?: Args
+  ): typeof enabler
+
+  /** @internal */
+  enableAsync(
+    enabler: AlienEnabler<any, any[], true>,
+    target?: any,
+    args?: any
+  ): any {
+    enabler.async = true
+    return this.enable(enabler as any, target, args)
+  }
+
+  enableOnceAsync(enabler: AlienEnabler<void, [], true>): typeof enabler
+
+  enableOnceAsync<Args extends any[]>(
+    enabler: AlienEnabler<void, Args, true>,
+    args: Args
+  ): typeof enabler
+
+  enableOnceAsync<T extends object, Args extends any[] = []>(
+    enabler: AlienEnabler<T, Args, true>,
+    target: T,
+    args?: Args
+  ): typeof enabler
+
+  /** @internal */
+  enableOnceAsync(
+    enabler: AlienEnabler<any, any[], true>,
+    target?: any,
+    args?: any
+  ): any {
+    enabler.async = enabler.once = true
+    return this.enable(enabler as any, target, args)
   }
 
   protected _enableOnceMounted() {
@@ -222,9 +268,32 @@ function enableHook(enabler: AlienEnabler) {
   const context = currentHooks.get()!
   context.currentEnabler = enabler
   enabler.context = context
+
+  let args = enabler.args || []
+  if (enabler.async) {
+    context.abortCtrl ||= new AbortController()
+    args = [context.abortCtrl.signal, ...args]
+  }
+
   try {
-    const disable = enabler(enabler.target, ...(enabler.args || []))
-    if (typeof disable == 'function') {
+    const disable = enabler(enabler.target, ...args)
+    if (disable instanceof Promise) {
+      if (!enabler.async) {
+        throw Error('Cannot return promise from non-async enabler')
+      }
+      disable.then(
+        disable => {
+          if (typeof disable == 'function') {
+            enabler.disable = disable
+          }
+        },
+        error => {
+          if (error.name != 'AbortError') {
+            console.error(error)
+          }
+        }
+      )
+    } else if (typeof disable == 'function') {
       enabler.disable = disable
     }
   } finally {
@@ -240,19 +309,20 @@ function disableHook(enabler: AlienEnabler) {
   }
 }
 
-export type AlienHook<Target = any, Args extends any[] = any> = {
-  enable: AlienEnabler<Target, Args>
+export type AlienHook<
+  Target = any,
+  Args extends any[] = any,
+  Async extends boolean = boolean
+> = {
+  enable: AlienEnabler<Target, Args, Async>
   target?: Target
   args?: Args
 }
 
-const noop = () => {}
-
-export function createHook<Hook extends AlienEnabler<void, []> | AlienHook>(
-  hook: Hook,
-  context = currentHooks.get()
-): Disposable<typeof hook> {
-  let dispose: (() => void) | void
+export function createHook<
+  Hook extends AlienEnabler<void, [], false> | AlienHook<any, any, false>
+>(hook: Hook, context = currentHooks.get()): Disposable<typeof hook> {
+  let dispose: Promisable<(() => void) | void>
   if (context) {
     if (typeof hook == 'function') {
       context.enable(hook)
@@ -264,7 +334,21 @@ export function createHook<Hook extends AlienEnabler<void, []> | AlienHook>(
   } else {
     dispose = hook.enable(hook.target, ...(hook.args || []))
   }
+  if (dispose instanceof Promise) {
+    throw Error('Cannot return promise from non-async enabler')
+  }
   return attachDisposer(hook, dispose || noop)
+}
+
+export function createHookAsync<
+  Hook extends AlienEnabler<void, [], true> | AlienHook<any, any, true>
+>(hook: Hook, context?: AlienHooks): Disposable<typeof hook> {
+  if (typeof hook == 'function') {
+    hook.async = true
+  } else {
+    hook.enable.async = true
+  }
+  return createHook(hook as any, context)
 }
 
 export type AlienHookType<Args extends any[]> = (

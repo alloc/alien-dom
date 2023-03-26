@@ -195,7 +195,7 @@ export function updateElement(
         // Move hooks from the new element to the old element.
         newHooks?.enablers?.forEach(enabler => {
           if (enabler.target == newElement) {
-            newHooks.enable(enabler, oldElement)
+            newHooks.enable(enabler as any, oldElement)
           }
         })
       }
