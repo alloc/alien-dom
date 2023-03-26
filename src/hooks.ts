@@ -253,6 +253,7 @@ export class AlienHooks<Element extends AnyElement = any> {
 
 function enableHooks(hooks: AlienHooks, enable: () => void) {
   const wasEnabled = hooks.enabled
+  hooks.enabled = true
   currentHooks.push(hooks)
   enable()
   if (!wasEnabled && hooks.element) {
@@ -261,7 +262,6 @@ function enableHooks(hooks: AlienHooks, enable: () => void) {
     })
   }
   currentHooks.pop(hooks)
-  hooks.enabled = true
 }
 
 function enableHook(enabler: AlienEnabler) {
