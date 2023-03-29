@@ -11,7 +11,6 @@ importers:
       linear-color: ^1.2.0
       morphdom: ^2.7.0
       prettier: ^2.8.4
-      tsup: ^6.6.3
       type-fest: ^3.6.1
       typescript: ^4.1.0
     dependencies:
@@ -24,7 +23,6 @@ importers:
     devDependencies:
       '@alloc/prettier-config': 1.0.0
       prettier: 2.8.4
-      tsup: 6.6.3_typescript@4.9.5
       typescript: 4.9.5
 
   packages/esbuild-plugin:
@@ -42,9 +40,11 @@ importers:
 
   packages/nebu-plugin:
     specifiers:
+      kleur: ^4.1.5
       nebu: ^2.3.2
       tsup: ^6.6.3
     devDependencies:
+      kleur: 4.1.5
       nebu: 2.3.2
       tsup: 6.6.3
 
@@ -607,6 +607,11 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
+  /kleur/4.1.5:
+    resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
+    engines: {node: '>=6'}
+    dev: true
+
   /lilconfig/2.1.0:
     resolution: {integrity: sha512-utWOt/GHzuUxnLKxB6dk81RoOeoNeHgbrXiuGk4yyF5qlRz+iIVWu56E2fqGHFrXz0QNUhLB/8nKqvRH66JKGQ==}
     engines: {node: '>=10'}
@@ -936,42 +941,6 @@ packages:
       source-map: 0.8.0-beta.0
       sucrase: 3.29.0
       tree-kill: 1.2.2
-    transitivePeerDependencies:
-      - supports-color
-      - ts-node
-    dev: true
-
-  /tsup/6.6.3_typescript@4.9.5:
-    resolution: {integrity: sha512-OLx/jFllYlVeZQ7sCHBuRVEQBBa1tFbouoc/gbYakyipjVQdWy/iQOvmExUA/ewap9iQ7tbJf9pW0PgcEFfJcQ==}
-    engines: {node: '>=14.18'}
-    hasBin: true
-    peerDependencies:
-      '@swc/core': ^1
-      postcss: ^8.4.12
-      typescript: ^4.1.0
-    peerDependenciesMeta:
-      '@swc/core':
-        optional: true
-      postcss:
-        optional: true
-      typescript:
-        optional: true
-    dependencies:
-      bundle-require: 4.0.1_esbuild@0.17.12
-      cac: 6.7.14
-      chokidar: 3.5.3
-      debug: 4.3.4
-      esbuild: 0.17.12
-      execa: 5.1.1
-      globby: 11.1.0
-      joycon: 3.1.1
-      postcss-load-config: 3.1.4
-      resolve-from: 5.0.0
-      rollup: 3.19.1
-      source-map: 0.8.0-beta.0
-      sucrase: 3.29.0
-      tree-kill: 1.2.2
-      typescript: 4.9.5
     transitivePeerDependencies:
       - supports-color
       - ts-node
