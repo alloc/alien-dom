@@ -135,7 +135,9 @@ export function selfUpdating<
 
       newHooks.setElement(element)
       newHooks.enable(() => {
-        pause ||= effect(rerender)
+        if (!isRendering) {
+          pause ||= effect(rerender)
+        }
         return () => {
           if (!isRendering && pause) {
             pause()
