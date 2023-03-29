@@ -5,6 +5,7 @@ import { currentHooks, currentComponent } from './global'
 import { ref, Ref } from './signals'
 import { kAlienHooks, setSymbol } from './symbols'
 import { noop } from './jsx-dom/util'
+import { AlienContext } from './context'
 
 export function useEffect(
   effect: () => (() => void) | void,
@@ -83,6 +84,13 @@ export class AlienHooks<Element extends AnyElement = any> {
         this._enableOnceMounted()
       }
     }
+  }
+
+  enableContext<T>(context: AlienContext<T>, value: T) {
+    return this.enable(() => {
+      context.push(value)
+      return () => context.pop(v => v === value)
+    })
   }
 
   /**
