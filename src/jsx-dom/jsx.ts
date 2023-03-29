@@ -15,13 +15,14 @@ import { isUnitlessNumber } from './css-props'
 import { isShadowRoot } from './shadow'
 import { svgTags } from './svg-tags'
 import { kAlienPlaceholder } from '../symbols'
-import { ElementKey, AnyElement, AlienComponent } from '../internal/types'
+import { AnyElement, AlienComponent } from '../internal/types'
 import { updateElement } from '../selfUpdating'
 import { elementEvent } from '../elementEvents'
 import { currentHooks, currentComponent } from '../global'
 import { checkTag, updateTagProps } from '../internal/tags'
 import { kAlienElementKey } from '../symbols'
-import { ReactNode } from './types'
+import { ElementKey } from '../../types/attr'
+import { JSX } from '../../types/jsx'
 import { hasForEach } from './util'
 
 export const SVGNamespace = 'http://www.w3.org/2000/svg'
@@ -64,7 +65,7 @@ export function createFactory(tag: string) {
   return createElement.bind(null, tag)
 }
 
-export function Fragment(attr: { children: ReactNode }) {
+export function Fragment(attr: { children: JSX.Children }) {
   const fragment = document.createDocumentFragment()
   appendChild(attr.children, fragment)
   return fragment
@@ -172,7 +173,7 @@ export function createElement(tag: any, props: any, ...children: any[]) {
   return jsx(tag, { ...props, children }, props.key)
 }
 
-function appendChild(child: ReactNode, node: Node) {
+function appendChild(child: JSX.Children, node: Node) {
   if (isElement(child)) {
     const placeholder = getPlaceholder(child)
     appendChildToNode(placeholder || child, node)
@@ -184,7 +185,7 @@ function appendChild(child: ReactNode, node: Node) {
       children = Array.from(children)
     }
     children.forEach(child => {
-      appendChild(child as ReactNode, node)
+      appendChild(child as JSX.Children, node)
     })
   } else if (child === undefined || child === null || child === false) {
     appendChildToNode(document.createComment(''), node)

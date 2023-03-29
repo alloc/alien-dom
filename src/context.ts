@@ -1,4 +1,4 @@
-import { JSX, ReactNode } from './jsx-dom/types'
+import type { JSX } from '../types/jsx'
 import { Fragment } from './jsx-dom/jsx'
 
 export interface AlienContext<T> {
@@ -10,7 +10,7 @@ export interface AlienContext<T> {
     (until?: (value: NonNullable<T>) => boolean): T | undefined
     (value: Exclude<T, (...args: any) => any>): void
   }
-  Provider: (props: { value: T; children: ReactNode }) => JSX.Element | null
+  Provider: (props: { value: T; children: JSX.Children }) => JSX.Element | null
 }
 
 export function createContext<T>(initial?: T): AlienContext<T> {

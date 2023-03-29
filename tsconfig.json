@@ -1,5 +1,11 @@
 {
-  "include": ["src", "jsx-runtime.d.ts"],
+  "include": [
+    "extra.d.ts",
+    "index.d.ts",
+    "jsx-runtime.d.ts",
+    "types/jsx.d.ts",
+    "src"
+  ],
   "compilerOptions": {
     "declaration": true,
     "esModuleInterop": true,

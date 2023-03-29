@@ -9,8 +9,8 @@ export {
   jsx as jsxs,
   jsx,
   SVGNamespace,
-} from './jsx'
+} from './dist/jsx'
 
-export { ShadowRoot } from './shadow'
+export { ShadowRoot } from './dist/shadow'
 
-export * from './types'
+export * from './dist/index'

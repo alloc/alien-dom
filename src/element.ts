@@ -1,17 +1,13 @@
 import { animate, SpringAnimation } from './animate'
 import { AlienElementMessage, events } from './events'
-import { AlienHooks, createHookType, Disposable, AlienHook } from './hooks'
+import { AlienHooks, Disposable, AlienHook } from './hooks'
 import { canMatch } from './internal/duck'
 import { AnyElement, AnyEvent, DefaultElement } from './internal/types'
 import { AlienNodeList } from './node-list'
 import { kAlienHooks, setSymbol } from './symbols'
 import { applyProps, updateStyle } from './jsx-dom/jsx'
-import {
-  DetailedHTMLProps,
-  HTMLAttributes,
-  SVGAttributes,
-} from './jsx-dom/types/index'
-import * as CSS from 'csstype'
+import { DetailedHTMLProps, CSSProperties } from '../types/html'
+import { HTMLAttributes, SVGAttributes } from '../index'
 import { targetedEffect } from './signals'
 import { elementEvent } from './elementEvents'
 
@@ -511,5 +507,5 @@ type Attributes<Element extends AnyElement> = (Element extends HTMLElement
   (Element extends SVGElement ? SVGAttributes<Element> : unknown)
 
 type StyleAttributes = {
-  [Key in keyof CSS.Properties]: CSS.Properties[Key] | null
+  [Key in keyof CSSProperties]: CSSProperties[Key] | null
 }

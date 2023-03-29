@@ -9,7 +9,10 @@
     "url": "git+https://github.com/aleclarson/alien-dom.git"
   },
   "files": [
-    "dist"
+    "dist",
+    "types",
+    "*.d.ts",
+    "*.js"
   ],
   "sideEffects": [
     "dist/element.js",

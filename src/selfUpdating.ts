@@ -1,18 +1,14 @@
 import morph from 'morphdom'
 import { effect } from '@preact/signals-core'
 import { ref, refs as toRefs, attachRef } from './signals'
-import {
-  AlienComponent,
-  AnyElement,
-  ElementKey,
-  DefaultElement,
-} from './internal/types'
+import { AlienComponent, AnyElement, DefaultElement } from './internal/types'
 import { kAlienPlaceholder, setSymbol } from './symbols'
 import { kAlienElementKey, kAlienSelfUpdating } from './symbols'
 import { currentComponent, currentHooks } from './global'
-import { AlienHooks, Disposable, AlienHook } from './hooks'
+import { AlienHooks } from './hooks'
 import { assignTag } from './internal/tags'
 import { AlienElement } from './element'
+import { ElementKey } from '../types/attr'
 
 /**
  * Create a self-updating component whose render function can mutate its
