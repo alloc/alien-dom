@@ -1,1 +1,1 @@
-export { jsx, jsxs, jsx as jsxDEV, Fragment } from './dist/index.mjs'
+export { jsx, jsxs, jsx as jsxDEV, Fragment } from './dist/index'
