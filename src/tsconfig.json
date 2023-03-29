@@ -1,12 +1,14 @@
 {
-  "include": ["*.d.ts", "dist"],
   "compilerOptions": {
+    "declaration": true,
     "esModuleInterop": true,
+    "jsx": "react",
     "lib": ["dom", "esnext"],
     "module": "esnext",
     "moduleResolution": "node",
-    "noEmit": true,
+    "outDir": "../dist",
     "target": "esnext",
+    "skipLibCheck": true,
     "strict": true,
     "types": []
   }

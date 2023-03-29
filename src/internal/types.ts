@@ -1,5 +1,5 @@
 import type { AlienHooks } from '../hooks'
-import type { ElementKey } from '../../types/attr'
+import type { ElementKey } from '../types/attr'
 
 export type AnyElement = Element
 export type DefaultElement = HTMLElement | SVGElement

@@ -1,10 +1,21 @@
-import { AttrWithRef } from './attr'
+import type * as CSS from 'csstype'
+import type { AttrWithRef } from './attr'
 import type { JSX } from './jsx'
+
+export interface CSSProperties extends CSS.Properties<string | number> {}
 
 export type DOMFactory<P extends DOMAttributes<T>, T extends Element> = (
   props?: (AttrWithRef<T> & P) | null,
   ...children: JSX.Children[]
 ) => T
+
+export type DOMClassAttribute =
+  | readonly DOMClassAttribute[]
+  | string
+  | { [key: string]: boolean }
+  | false
+  | null
+  | undefined
 
 export interface DOMAttributes<T> {
   children?: JSX.Children | undefined

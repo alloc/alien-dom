@@ -2,8 +2,8 @@
   "name": "alien-dom",
   "version": "0.2.0",
   "description": "Enhanced DOM APIs mixed with jsx-dom",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "index.js",
+  "types": "index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aleclarson/alien-dom.git"
@@ -15,8 +15,7 @@
     "*.js"
   ],
   "sideEffects": [
-    "dist/element.js",
-    "dist/node-list.js"
+    "global.js"
   ],
   "keywords": [
     "jsx-dom",
@@ -33,7 +32,8 @@
   "homepage": "https://github.com/aleclarson/alien-dom#readme",
   "prettier": "@alloc/prettier-config",
   "scripts": {
-    "build": "tsc --build"
+    "dev": "tsc -p src/tsconfig.json -i --sourceMap --watch",
+    "build": "tsc -p src/tsconfig.json -i"
   },
   "dependencies": {
     "@alloc/types": "^2.3.0",

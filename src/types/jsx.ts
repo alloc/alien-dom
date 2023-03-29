@@ -1,27 +1,34 @@
-import type { DetailedHTMLProps } from './html'
-import type { ShadowRootContainer } from './shadowRoot'
+import type { AnyElement } from '../internal/types'
+import type { ShadowRootContainer } from '../jsx-dom/shadow'
+import type { ReactEventHandler, ChangeEventHandler } from './dom'
+import type { Attributes, AttrWithRef } from './attr'
+import type { SVGProps } from './svg'
+import type {
+  DetailedHTMLProps,
+  HTMLAttributes,
+  HTMLAttributeAnchorTarget,
+  HTMLAttributeReferrerPolicy,
+} from './html'
 
 type HTMLWebViewElement = HTMLElement
 
-type JSXChildren =
-  | (() => Children)
-  | Children[]
-  | Element
-  | NodeList
-  | HTMLCollection
-  | ShadowRootContainer
-  | DocumentFragment
-  | Text
-  | Comment
-  | string
-  | number
-  | boolean
-  | null
-  | undefined
-
 export declare namespace JSX {
   type Element = HTMLElement
-  type Children = JSXChildren
+  type Children =
+    | (() => JSX.Children)
+    | JSX.Children[]
+    | AnyElement
+    | NodeList
+    | HTMLCollection
+    | ShadowRootContainer
+    | DocumentFragment
+    | Text
+    | Comment
+    | string
+    | number
+    | boolean
+    | null
+    | undefined
 
   interface ElementAttributesProperty {
     props: {}

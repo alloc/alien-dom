@@ -1,32 +1,36 @@
-/**
- * Adapted from React TypeScript definition
- * @see https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/index.d.ts
- * https://github.com/DefinitelyTyped/DefinitelyTyped/commit/e6491e0d87a72a566c0f6ce61fca2b57199aa172
- */
-import type * as CSS from 'csstype'
-import type { JSX } from './types/jsx'
-import type { ShadowRootContainer } from './types/shadowRoot'
-import type { AriaRole, AriaAttributes } from './types/aria'
+import type { JSX } from './dist/types/jsx'
+import type { ShadowRootContainer } from './dist/jsx-dom/shadow'
 import type {
   HTMLElementTagNames,
   HTMLAttributes,
   HTMLFactory,
-} from './types/html'
-import type { SVGAttributes, SVGElementTagNames, SVGFactory } from './types/svg'
-import type { AttrWithRef, Attributes } from './types/attr'
-import type { DOMAttributes } from './types/dom'
+} from './dist/types/html'
+import type {
+  SVGAttributes,
+  SVGElementTagName,
+  SVGElementTagNames,
+  SVGFactory,
+} from './dist/types/svg'
+import type { AttrWithRef, Attributes } from './dist/types/attr'
+import type { DOMAttributes } from './dist/types/dom'
+import type { PropsWithChildren, ComponentType } from './dist/types/component'
 
 export * from './dist/index'
 
-export type { JSX } from './types/jsx'
-export type { HTML, SVG } from './types/extra'
-export type { SVGAttributes } from './types/svg'
+export type { JSX } from './dist/types/jsx'
+export type { HTML, SVG } from './dist/types/extra'
+export type { SVGAttributes } from './dist/types/svg'
+export type { CSSProperties, DOMClassAttribute } from './dist/types/dom'
+export type { HTMLAttributes, HTMLStyleAttribute } from './dist/types/html'
+
 export type {
-  CSSProperties,
-  HTMLAttributes,
-  HTMLClassAttribute,
-  HTMLStyleAttribute,
-} from './types/html'
+  Component,
+  ComponentClass,
+  ComponentType,
+  FunctionComponent,
+  PropsWithChildren,
+  PureComponent,
+} from './dist/types/component'
 
 // DOM Elements
 export declare function createFactory<K extends HTMLElementTagNames>(
@@ -45,7 +49,7 @@ export declare function createElement<
   ...children: JSX.Children[]
 ): T
 export declare function createElement<
-  K extends SVGElementTagNames,
+  K extends SVGElementTagName,
   T extends SVGElementTagNames[K]
 >(
   type: K,
@@ -81,7 +85,7 @@ export declare function jsx<
   key?: string
 ): T
 export declare function jsx<
-  K extends SVGElementTagNames,
+  K extends SVGElementTagName,
   T extends SVGElementTagNames[K]
 >(
   type: K,
@@ -117,31 +121,3 @@ export declare function ShadowRoot(
     children?: JSX.Children | undefined
   }
 ): ShadowRootContainer
-
-export interface FunctionComponent<P = {}, T extends Element = JSX.Element> {
-  (props: PropsWithChildren<P>, context?: any): T | null
-  defaultProps?: Partial<P>
-  displayName?: string
-}
-
-export { FunctionComponent as FC }
-
-export interface ComponentClass<P = {}, T extends Element = JSX.Element> {
-  new (props: P, context?: any): Component<P, T>
-  defaultProps?: Partial<P> | undefined
-  displayName?: string | undefined
-}
-
-export declare class Component<P = {}, T extends Element = JSX.Element> {
-  constructor(props: PropsWithChildren<P>)
-  readonly props: PropsWithChildren<P>
-  render(): T | null
-}
-
-export { Component as PureComponent }
-
-type PropsWithChildren<P> = P & { children?: JSX.Children | undefined }
-
-export type ComponentType<P = {}, T extends Element = JSX.Element> =
-  | ComponentClass<P, T>
-  | FunctionComponent<P, T>

@@ -1,4 +1,4 @@
-import type { JSX } from '../types/jsx'
+import type { JSX } from './types/jsx'
 import { Fragment } from './jsx-dom/jsx'
 
 export interface AlienContext<T> {

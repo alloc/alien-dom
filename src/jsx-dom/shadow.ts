@@ -1,4 +1,4 @@
-import type { JSX } from '../..'
+import type { JSX } from '../types/jsx'
 
 const jsxDomType = Symbol.for('jsx-dom:type')
 

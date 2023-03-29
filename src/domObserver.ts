@@ -5,6 +5,7 @@ import { binaryInsert, noop } from './jsx-dom/util'
 type ElementListener = (element: Element) => void
 
 type Observer = {
+  rootNode: Node
   onAdded: Set<ElementListener>
   onRemoved: Set<ElementListener>
   dispose: () => void
@@ -68,6 +69,7 @@ function observe(rootNode: Node) {
     observersByRoot.set(
       rootNode,
       (result = {
+        rootNode,
         onAdded,
         onRemoved,
         dispose() {
@@ -113,27 +115,17 @@ export function observeRemovedChildren(
 
 export const observeNewDescendants = createHookType(
   (target: Node, listener: (node: Element) => void) => {
-    const { onAdded, dispose } = observe(target)
-    onAdded.add(listener)
-    return () => {
-      onAdded.delete(listener)
-      if (!onAdded.size) {
-        dispose()
-      }
-    }
+    const observer = observe(target)
+    observer.onAdded.add(listener)
+    return () => removeElementListener(observer, 'onAdded', listener)
   }
 )
 
 export const observeRemovedDescendants = createHookType(
   (target: Node, listener: (node: Element) => void) => {
-    const { onRemoved, dispose } = observe(target)
-    onRemoved.add(listener)
-    return () => {
-      onRemoved.delete(listener)
-      if (!onRemoved.size) {
-        dispose()
-      }
-    }
+    const observer = observe(target)
+    observer.onRemoved.add(listener)
+    return () => removeElementListener(observer, 'onRemoved', listener)
   }
 )
 
@@ -197,12 +189,7 @@ const observeElementHook = createHookType(
     observer[key].add(listener)
 
     function dispose() {
-      if (
-        observer[key].delete(listener) &&
-        !(observer.onAdded.size + observer.onRemoved.size)
-      ) {
-        observer.dispose()
-      }
+      removeElementListener(observer, key, listener)
     }
 
     return dispose
@@ -216,4 +203,18 @@ function getElementDepth(elem: Element, stopAt?: Element) {
     elem = elem.parentElement
   }
   return depth
+}
+
+function removeElementListener(
+  observer: Observer,
+  key: 'onAdded' | 'onRemoved',
+  listener: ElementListener
+) {
+  if (
+    observer[key].delete(listener) &&
+    !(observer.onAdded.size + observer.onRemoved.size)
+  ) {
+    observersByRoot.delete(observer.rootNode)
+    observer.dispose()
+  }
 }

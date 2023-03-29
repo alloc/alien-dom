@@ -8,7 +8,7 @@ import { currentComponent, currentHooks } from './global'
 import { AlienHooks } from './hooks'
 import { assignTag } from './internal/tags'
 import { AlienElement } from './element'
-import { ElementKey } from '../types/attr'
+import { ElementKey } from './types/attr'
 
 /**
  * Create a self-updating component whose render function can mutate its

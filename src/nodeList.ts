@@ -5,11 +5,10 @@ import { AnyElement, DefaultElement } from './internal/types'
 export interface AlienNodeList<Element extends Node>
   extends ReturnType<typeof defineAlienNodeList<Element>> {}
 
-const alienNodeList = defineAlienNodeList<Element>()
-Object.assign(NodeList.prototype, alienNodeList)
+export const AlienNodeListPrototype = defineAlienNodeList<Element>()
 
-const alienElementList = {
-  ...alienNodeList,
+const AlienElementListPrototype = {
+  ...AlienNodeListPrototype,
   __proto__: Array.prototype,
   // Exists for compatibility with NodeList.
   item(this: Element[], index: number): Element | null {
@@ -17,14 +16,21 @@ const alienElementList = {
   },
 }
 
-export function createAlienElementList<Element extends AlienTag<DefaultElement> = DefaultElement>(
-  arg?: AnyElement | NodeListOf<AnyElement> | Iterable<AnyElement> | false | null,
+export function createAlienElementList<
+  Element extends AlienTag<DefaultElement> = DefaultElement
+>(
+  arg?:
+    | AnyElement
+    | NodeListOf<AnyElement>
+    | Iterable<AnyElement>
+    | false
+    | null
 ): AlienElementList<AlienSelect<Element>> {
   if (arg && arg instanceof NodeList) {
     return arg as any
   }
   const list = !arg ? [] : isIterable(arg) ? [...arg] : [arg]
-  Object.setPrototypeOf(list, alienElementList)
+  Object.setPrototypeOf(list, AlienElementListPrototype)
   return list as any
 }
 
@@ -46,7 +52,7 @@ function defineAlienNodeList<T extends Node>() {
     },
     filter<U extends T = T>(
       this: NodeListOf<T>,
-      selector: string | ((value: T, index: number) => any),
+      selector: string | ((value: T, index: number) => any)
     ): U[] {
       const out: U[] = []
       const filter =
@@ -62,7 +68,7 @@ function defineAlienNodeList<T extends Node>() {
     },
     mapFilter<U>(
       this: NodeListOf<T>,
-      iterator: (value: T, index: number) => U | null | undefined | void,
+      iterator: (value: T, index: number) => U | null | undefined | void
     ): U[] {
       const out: U[] = []
       this.forEach((value, index) => {
@@ -75,7 +81,7 @@ function defineAlienNodeList<T extends Node>() {
     },
     find<U extends T = T>(
       this: NodeListOf<T>,
-      selector: string | ((value: T, index: number) => any),
+      selector: string | ((value: T, index: number) => any)
     ): U | undefined {
       const filter =
         typeof selector == 'string'

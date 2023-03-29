@@ -6,7 +6,7 @@ import type {
 } from './element'
 import { hasForEach, isIterable } from './internal/duck'
 import { AnyElement, DefaultElement } from './internal/types'
-import { createAlienElementList } from './node-list'
+import { createAlienElementList } from './nodeList'
 
 export function $(element: AnyElement): AlienElement<AnyElement>
 export function $(element: AnyElement | null): AlienElement<AnyElement> | null

@@ -1,12 +1,12 @@
-import type * as CSS from 'csstype'
-import type { AriaAttributes } from './aria'
-import type { DOMAttributes } from './dom'
-import { Booleanish, AttrWithRef } from './attr'
-import { AriaRole } from './aria'
-import { DOMFactory } from './dom'
-import { JSX } from '..'
-
-export interface CSSProperties extends CSS.Properties<string | number> {}
+import type { AriaAttributes, AriaRole } from './aria'
+import type { Booleanish, AttrWithRef } from './attr'
+import type { JSX } from './jsx'
+import type {
+  CSSProperties,
+  DOMAttributes,
+  DOMClassAttribute,
+  DOMFactory,
+} from './dom'
 
 export type HTMLElementTagNames = keyof HTMLElementTagNameMap
 
@@ -26,14 +26,6 @@ interface DetailedHTMLFactory<
 export type DetailedHTMLProps<E extends HTMLAttributes<T>, T> = AttrWithRef<T> &
   E
 
-export type HTMLClassAttribute =
-  | readonly HTMLClassAttribute[]
-  | string
-  | { [key: string]: boolean }
-  | false
-  | null
-  | undefined
-
 export type HTMLStyleAttribute =
   | readonly (CSSProperties | string)[]
   | CSSProperties
@@ -42,7 +34,7 @@ export type HTMLStyleAttribute =
 export interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
   // Extension
   namespaceURI?: string | undefined
-  class?: HTMLClassAttribute | undefined
+  class?: DOMClassAttribute | undefined
   innerHTML?: string | undefined
   innerText?: string | undefined
   textContent?: string | undefined
@@ -50,7 +42,7 @@ export interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
 
   // Standard HTML Attributes
   accessKey?: string | undefined
-  className?: HTMLClassAttribute | undefined
+  className?: DOMClassAttribute | undefined
   contentEditable?: Booleanish | 'inherit' | undefined
   contextMenu?: string | undefined
   dir?: string | undefined

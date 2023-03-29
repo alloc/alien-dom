@@ -3,11 +3,12 @@ import { AlienElementMessage, events } from './events'
 import { AlienHooks, Disposable, AlienHook } from './hooks'
 import { canMatch } from './internal/duck'
 import { AnyElement, AnyEvent, DefaultElement } from './internal/types'
-import { AlienNodeList } from './node-list'
-import { kAlienHooks, setSymbol } from './symbols'
+import { AlienNodeList } from './nodeList'
+import { kAlienHooks } from './symbols'
 import { applyProps, updateStyle } from './jsx-dom/jsx'
-import { DetailedHTMLProps, CSSProperties } from '../types/html'
-import { HTMLAttributes, SVGAttributes } from '../index'
+import { HTMLAttributes, DetailedHTMLProps } from './types/html'
+import { CSSProperties } from './types/dom'
+import { SVGAttributes } from './types/svg'
 import { targetedEffect } from './signals'
 import { elementEvent } from './elementEvents'
 
@@ -61,7 +62,9 @@ export type AlienEvent<
 > = Event & {
   currentTarget: Element
   target: AnyElement
-}
+} & (Event extends { relatedTarget: EventTarget }
+    ? { relatedTarget: AnyElement }
+    : unknown)
 
 type AlienParentElement<Element extends AnyElement> =
   | (Element extends SVGElement ? SVGElement : never)
@@ -344,7 +347,7 @@ export interface AlienElement<Element extends AnyElement>
   oneChangeCapture: AlienEventMethod<this>
 }
 
-const prototype = new Proxy(AlienElement.prototype, {
+export const AlienElementPrototype = new Proxy(AlienElement.prototype, {
   get(target, key, receiver) {
     if (typeof key == 'string') {
       const cachedMethod = methodCache[key]
@@ -385,9 +388,6 @@ const prototype = new Proxy(AlienElement.prototype, {
     return Reflect.get(target, key)
   },
 })
-
-Object.setPrototypeOf(prototype, Node.prototype)
-Object.setPrototypeOf(Element.prototype, prototype)
 
 /**
  * Allows type casting via tag name (eg: `"a"` → `HTMLAnchorElement`)

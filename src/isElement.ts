@@ -1,4 +1,4 @@
-import type { JSX } from '../types/jsx'
+import type { JSX } from './types/jsx'
 
 /**
  * ⚠️ This returns true for functions due to the possibility of element

@@ -2,15 +2,12 @@ export {
   className,
   Component,
   Component as PureComponent,
-  createElement as h,
   createElement,
   createFactory,
   Fragment,
-  jsx as jsxs,
-  jsx,
   SVGNamespace,
-} from './dist/jsx'
+} from './dist/jsx-dom/jsx'
 
-export { ShadowRoot } from './dist/shadow'
+export { ShadowRoot } from './dist/jsx-dom/shadow'
 
 export * from './dist/index'
