@@ -12,8 +12,6 @@ import {
   keys,
 } from './util'
 import { isUnitlessNumber } from './css-props'
-import type { JSX } from './types'
-import type { ShadowRootContainer } from './shadow'
 import { isShadowRoot } from './shadow'
 import { svgTags } from './svg-tags'
 import { kAlienPlaceholder } from '../symbols'
@@ -23,6 +21,8 @@ import { elementEvent } from '../elementEvents'
 import { currentHooks, currentComponent } from '../global'
 import { checkTag, updateTagProps } from '../internal/tags'
 import { kAlienElementKey } from '../symbols'
+import { ReactNode } from './types'
+import { hasForEach } from './util'
 
 export const SVGNamespace = 'http://www.w3.org/2000/svg'
 const XLinkNamespace = 'http://www.w3.org/1999/xlink'
@@ -64,7 +64,7 @@ export function createFactory(tag: string) {
   return createElement.bind(null, tag)
 }
 
-export function Fragment(attr: { children: JSX.Element | JSX.Element[] }) {
+export function Fragment(attr: { children: ReactNode }) {
   const fragment = document.createDocumentFragment()
   appendChild(attr.children, fragment)
   return fragment
@@ -172,21 +172,27 @@ export function createElement(tag: any, props: any, ...children: any[]) {
   return jsx(tag, { ...props, children }, props.key)
 }
 
-function appendChild(
-  child: any[] | string | number | ShadowRootContainer | null | Element,
-  node: Node
-) {
-  if (isArrayLike(child)) {
-    appendChildren(child as any, node)
-  } else if (isString(child) || isNumber(child)) {
-    appendChildToNode(document.createTextNode(child as any), node)
-  } else if (child === null) {
+function appendChild(child: ReactNode, node: Node) {
+  if (isElement(child)) {
+    const placeholder = getPlaceholder(child)
+    appendChildToNode(placeholder || child, node)
+  } else if (isFunction(child)) {
+    appendChild(child(), node)
+  } else if (isArrayLike(child)) {
+    let children = child
+    if (!hasForEach(children)) {
+      children = Array.from(children)
+    }
+    children.forEach(child => {
+      appendChild(child as ReactNode, node)
+    })
+  } else if (child === undefined || child === null || child === false) {
     appendChildToNode(document.createComment(''), node)
-  } else if (isElement(child)) {
-    appendChildToNode(child, node)
   } else if (isShadowRoot(child)) {
     const shadowRoot = (node as HTMLElement).attachShadow(child.attr)
     appendChild(child.children, shadowRoot)
+  } else {
+    appendChildToNode(document.createTextNode(String(child)), node)
   }
 }
 
@@ -204,14 +210,6 @@ function getPlaceholder(child: any) {
     placeholder[kAlienPlaceholder] = child
     return placeholder
   }
-}
-
-function appendChildren(children: any[], node: Node) {
-  for (const child of [...children]) {
-    const placeholder = getPlaceholder(child)
-    appendChild(placeholder || child, node)
-  }
-  return node
 }
 
 function appendChildToNode(child: Node, node: Node) {

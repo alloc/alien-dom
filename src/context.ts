@@ -1,3 +1,6 @@
+import { JSX, ReactNode } from './jsx-dom/types'
+import { Fragment } from './jsx-dom/jsx'
+
 export interface AlienContext<T> {
   get: () => T
   find: (fn: (value: NonNullable<T>) => unknown) => T | undefined
@@ -7,10 +10,39 @@ export interface AlienContext<T> {
     (until?: (value: NonNullable<T>) => boolean): T | undefined
     (value: Exclude<T, (...args: any) => any>): void
   }
+  Provider: (props: { value: T; children: ReactNode }) => JSX.Element | null
 }
 
 export function createContext<T>(initial?: T): AlienContext<T> {
   const stack = [initial]
+  function push(value: any) {
+    stack.push(value)
+    return value
+  }
+  function pop(arg?: any) {
+    if (!arg) {
+      return stack.pop()
+    }
+
+    const until =
+      typeof arg == 'function'
+        ? (arg as (value: NonNullable<T>) => boolean)
+        : (value: NonNullable<T>) => value === arg
+
+    while (stack.length) {
+      const value = stack.pop()
+      if (value == null) {
+        if (stack.length) {
+          continue
+        }
+        stack.push(value)
+        return
+      }
+      if (until(value)) {
+        return value
+      }
+    }
+  }
   return {
     get: () => stack.at(-1)!,
     find(fn) {
@@ -30,33 +62,18 @@ export function createContext<T>(initial?: T): AlienContext<T> {
       }
       return value
     },
-    push(value) {
-      stack.push(value)
-      return value
-    },
-    pop(arg) {
-      if (!arg) {
-        return stack.pop()
-      }
-
-      const until =
-        typeof arg == 'function'
-          ? (arg as (value: NonNullable<T>) => boolean)
-          : (value: NonNullable<T>) => value === arg
-
-      while (stack.length) {
-        const value = stack.pop()
-        if (value == null) {
-          if (stack.length) {
-            continue
-          }
-          stack.push(value)
-          return
-        }
-        if (until(value)) {
-          return value
+    push,
+    pop,
+    Provider({ value, children }) {
+      if (children) {
+        push(value)
+        try {
+          return Fragment({ children }) as any
+        } finally {
+          pop((v: any) => v === value)
         }
       }
+      return null
     },
   }
 }

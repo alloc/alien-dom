@@ -71,7 +71,7 @@ interface SVGFactory extends DOMFactory<SVGAttributes<SVGElement>, SVGElement> {
 // ----------------------------------------------------------------------
 
 type ReactText = string | number
-type ReactChild = Node | ReactText
+type ReactChild = Element | ReactText
 type ReactChildren = ReactNodeArray | NodeList | HTMLCollection
 
 interface ReactNodeArray extends Array<ReactNode> {}
@@ -82,6 +82,7 @@ export type ReactNode =
   | DocumentFragment
   | Text
   | Comment
+  | (() => ReactNode)
   | boolean
   | null
   | undefined

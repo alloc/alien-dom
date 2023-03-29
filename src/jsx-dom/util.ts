@@ -33,12 +33,16 @@ export function isComponentClass(
   return !!(prototype && prototype.isReactComponent)
 }
 
-export function isArrayLike(obj: any): obj is ArrayLike<any> {
+export function isArrayLike(obj: any): obj is object & ArrayLike<any> {
   return (
     isObject(obj) &&
     typeof obj.length === 'number' &&
     typeof obj.nodeType !== 'number'
   )
+}
+
+export function hasForEach(obj: any): obj is { forEach: any } {
+  return obj && isFunction(obj.forEach)
 }
 
 export function forEach<V = any>(
