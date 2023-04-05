@@ -1,15 +1,9 @@
-import type { HTMLAttributes } from './html'
+import type { AnyElement } from '../internal/types'
+import type { AlienHooks } from '../hooks'
 
 export type Booleanish = boolean | 'true' | 'false'
 
 export type ElementKey = string | number
-
-// export interface RefObject<T> {
-//   readonly current: T | null
-// }
-// export type RefCallback<T> = (instance: T) => void
-//
-// export type Ref<T> = RefCallback<T> | RefObject<T> | null
 
 /**
  * @internal You shouldn't need to use this type since you never see
@@ -18,6 +12,7 @@ export type ElementKey = string | number
 export interface Attributes {
   key?: ElementKey | null | undefined
 }
-export interface AttrWithRef<T> extends Attributes {
-  // ref?: Ref<T> | undefined
+
+export interface AttrWithRef<Element extends AnyElement> extends Attributes {
+  ref?: AlienHooks<Element> | undefined
 }

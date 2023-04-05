@@ -12,7 +12,7 @@ export const elementEvent = createHookType(
     if (self && options && typeof options != 'boolean' && options.once) {
       const userCallback = callback
       callback = event => {
-        self?.context?.remove(self)
+        self.context?.remove(self)
         userCallback(event)
       }
     }

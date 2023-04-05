@@ -14,16 +14,21 @@ import {
 import { isUnitlessNumber } from './css-props'
 import { isShadowRoot } from './shadow'
 import { svgTags } from './svg-tags'
-import { kAlienPlaceholder } from '../symbols'
-import { AnyElement, AlienComponent } from '../internal/types'
-import { updateElement } from '../selfUpdating'
+import {
+  kAlienElementKey,
+  setSymbol,
+  kAlienSelfUpdating,
+  kAlienPlaceholder,
+} from '../symbols'
+import { DefaultElement } from '../internal/types'
 import { elementEvent } from '../elementEvents'
 import { currentHooks, currentComponent } from '../global'
-import { checkTag, updateTagProps } from '../internal/tags'
-import { kAlienElementKey } from '../symbols'
+import { updateTagProps } from '../internal/tags'
 import { ElementKey } from '../types/attr'
 import { hasForEach } from './util'
 import { JSX } from '../types/jsx'
+import { selfUpdating } from '../selfUpdating'
+import { fromElementThunk } from '../fromElementProp'
 
 export const SVGNamespace = 'http://www.w3.org/2000/svg'
 const XLinkNamespace = 'http://www.w3.org/1999/xlink'
@@ -85,24 +90,30 @@ export class Component {
   },
 })
 
+const selfUpdatingTags = new WeakMap<any, any>()
+
 export function jsx(tag: any, props: any, key?: ElementKey) {
   if (!props.namespaceURI && svgTags[tag]) {
     props.namespaceURI = SVGNamespace
   }
 
-  let scope: AlienComponent | undefined
-  let oldNode: AnyElement | undefined
-  if (key != null) {
-    scope = currentComponent.get()
-    if (scope && (oldNode = scope.fromRef(key))) {
-      if (!checkTag(oldNode, tag)) {
-        // Only self-updating component boundaries can have their props
-        // updated. This uses a pure component or a native tag.
-        oldNode = undefined
+  let oldNode: DefaultElement | undefined
+
+  const scope = currentComponent.get()
+  if (scope && typeof tag !== 'string' && tag !== Fragment) {
+    if (!tag.hasOwnProperty(kAlienSelfUpdating)) {
+      let selfUpdatingTag = selfUpdatingTags.get(tag)
+      if (!selfUpdatingTag) {
+        selfUpdatingTag = selfUpdating(tag)
+        selfUpdatingTags.set(tag, selfUpdatingTag)
       }
+      tag = selfUpdatingTag
+    }
+    if (key !== undefined && (oldNode = scope.fromRef(key))) {
       // Updating the props of an existing element will only rerender
       // the component if a new value is defined for a stateless prop.
-      else if (updateTagProps(oldNode, tag, props)) {
+      if (updateTagProps(oldNode, tag, props)) {
+        // TODO: what if the component returned a different node?
         scope.setRef(key, oldNode)
         return oldNode
       }
@@ -117,7 +128,7 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
     applyProps(node, props)
 
     // Select `option` elements in `select`
-    if (node instanceof window.HTMLSelectElement && props.value != null) {
+    if (hasTagName(node, 'SELECT') && props.value != null) {
       if (props.multiple === true && Array.isArray(props.value)) {
         const values = (props.value as any[]).map(value => String(value))
 
@@ -141,18 +152,20 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
     throw new TypeError(`Invalid JSX element type: ${tag}`)
   }
 
-  if (node && key != null && scope) {
-    if (oldNode) {
-      // Update the element now, since self-updating components skip any
-      // element that has a key.
-      updateElement(oldNode, node, scope.hooks)
-
-      // Return the original node. If used a child node, it will be
-      // replaced by a placeholder node so that its parent node is
-      // preserved across renders.
-      node = oldNode as typeof node
+  if (node && key !== undefined) {
+    if (scope) {
+      // Check for equivalence as the return value of a custom component
+      // might be the cached result of an element thunk.
+      if (oldNode !== node) {
+        scope.newElements.set(key, node as DefaultElement)
+      }
+      if (oldNode) {
+        node = oldNode as typeof node
+      }
+      scope.setRef(key, node as DefaultElement)
+    } else {
+      setSymbol(node, kAlienElementKey, key)
     }
-    scope.setRef(key, node)
   }
 
   return node
@@ -175,10 +188,29 @@ export function createElement(tag: any, props: any, ...children: any[]) {
 
 function appendChild(child: JSX.Children, node: Node) {
   if (isElement(child)) {
-    const placeholder = getPlaceholder(child)
-    appendChildToNode(placeholder || child, node)
+    if (child.hasOwnProperty(kAlienElementKey)) {
+      const scope = currentComponent.get()
+      if (scope) {
+        const key = (child as any)[kAlienElementKey]
+        // If the key is not found in `scope.newElements`, it means
+        // that the element was cached, so no update is needed.
+        const newChild = scope.newElements.get(key)
+        if (newChild) {
+          // Append the new element, so the old element's parent is
+          // preserved.
+          child = newChild
+        } else {
+          // Ensure this element is not forgotten by the ref tracker, so
+          // it can be reused when the cache is invalidated.
+          scope.setRef(key, child as DefaultElement)
+          // Prevent an update by morphdom.
+          child = getPlaceholder(child)
+        }
+      }
+    }
+    appendChildToNode(child, node)
   } else if (isFunction(child)) {
-    appendChild(child(), node)
+    appendChild(fromElementThunk(child), node)
   } else if (isArrayLike(child)) {
     let children = child
     if (!hasForEach(children)) {
@@ -188,6 +220,10 @@ function appendChild(child: JSX.Children, node: Node) {
       appendChild(child as JSX.Children, node)
     })
   } else if (child === undefined || child === null || child === false) {
+    // Create a placeholder comment node to preserve the position of the
+    // child in the parent node. If we don't do this, morph-dom will
+    // remove a node instead of morphing it when a preceding sibling is
+    // removed.
     appendChildToNode(document.createComment(''), node)
   } else if (isShadowRoot(child)) {
     const shadowRoot = (node as HTMLElement).attachShadow(child.attr)
@@ -197,28 +233,27 @@ function appendChild(child: JSX.Children, node: Node) {
   }
 }
 
-function getPlaceholder(child: any) {
-  if (
-    child &&
-    child.parentNode &&
-    child[kAlienElementKey] != null &&
-    currentComponent.get()
-  ) {
-    const tagName = child.tagName.toLowerCase()
-    const placeholder: any = child.namespaceURI
-      ? document.createElementNS(child.namespaceURI, tagName)
-      : document.createElement(tagName)
-    placeholder[kAlienPlaceholder] = child
-    return placeholder
-  }
+function getPlaceholder(child: any): DefaultElement {
+  const tagName = child.tagName.toLowerCase()
+  const placeholder: any = child.namespaceURI
+    ? document.createElementNS(child.namespaceURI, tagName)
+    : document.createElement(tagName)
+  placeholder[kAlienPlaceholder] = child
+  return placeholder
+}
+
+function hasTagName<Tag extends string>(
+  node: any,
+  tagName: Tag
+): node is JSX.ElementType<Lowercase<Tag>> {
+  return node && node.tagName === tagName
 }
 
 function appendChildToNode(child: Node, node: Node) {
-  const placeholder = getPlaceholder(child)
-  if (node instanceof window.HTMLTemplateElement) {
-    node.content.appendChild(placeholder || child)
+  if (hasTagName(node, 'TEMPLATE')) {
+    node.content.appendChild(child)
   } else {
-    node.appendChild(placeholder || child)
+    node.appendChild(child)
   }
 }
 
@@ -248,6 +283,11 @@ function applyProp(prop: string, value: any, node: Element & HTMLOrSVGElement) {
   }
 
   switch (prop) {
+    case 'ref':
+      if (value) {
+        value.setElement(node)
+      }
+      return
     case 'class':
     case 'className':
       if (isFunction(value)) {
@@ -274,11 +314,11 @@ function applyProp(prop: string, value: any, node: Element & HTMLOrSVGElement) {
       }
       return
     case 'value':
-      if (value == null || node instanceof window.HTMLSelectElement) {
+      if (value == null || hasTagName(node, 'SELECT')) {
         // skip nullish values
         // for `<select>` apply value after appending `<option>` elements
         return
-      } else if (node instanceof window.HTMLTextAreaElement) {
+      } else if (hasTagName(node, 'TEXTAREA')) {
         node.value = value
         return
       }
@@ -297,7 +337,6 @@ function applyProp(prop: string, value: any, node: Element & HTMLOrSVGElement) {
         }
       })
       return
-    case 'ref':
     case 'namespaceURI':
       return
     // fallthrough
@@ -373,7 +412,6 @@ function applyProp(prop: string, value: any, node: Element & HTMLOrSVGElement) {
   }
 }
 
-const get = <T = any>(obj: any, key: string) => obj[key] as T
 const set = <T = any>(obj: any, key: string, value: T) => (obj[key] = value)
 
 function setAttribute(node: Element, key: string, value: string | number) {

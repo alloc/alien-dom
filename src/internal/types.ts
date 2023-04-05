@@ -9,6 +9,8 @@ export interface AlienComponent {
   hooks: AlienHooks
   memory: any[]
   memoryIndex: number
-  fromRef(key: ElementKey): AnyElement | undefined
-  setRef(key: ElementKey, element: AnyElement): void
+  /** The elements that were replaced by `refElement` */
+  newElements: Map<ElementKey, DefaultElement>
+  fromRef(key: ElementKey): DefaultElement | undefined
+  setRef(key: ElementKey, element: DefaultElement): void
 }

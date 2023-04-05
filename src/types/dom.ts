@@ -5,7 +5,7 @@ import type { JSX } from './jsx'
 export interface CSSProperties extends CSS.Properties<string | number> {}
 
 export type DOMFactory<P extends DOMAttributes<T>, T extends Element> = (
-  props?: (AttrWithRef<T> & P) | null,
+  props?: (P & AttrWithRef<T>) | null,
   ...children: JSX.Children[]
 ) => T
 
@@ -223,10 +223,7 @@ type ChangeEvent = Event
 // Event Handler Types
 // ----------------------------------------------------------------------
 
-type EventHandler<E extends Event, T> = (
-  this: T,
-  event: E & CurrentTarget<T>
-) => void
+type EventHandler<E extends Event, T> = (event: E & CurrentTarget<T>) => void
 
 export type ReactEventHandler<T = Element> = EventHandler<Event, T>
 

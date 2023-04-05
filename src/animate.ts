@@ -4,6 +4,8 @@ import { AnyElement, DefaultElement } from './internal/types'
 import { decamelize, toArray } from './jsx-dom/util'
 import { $$, AlienSelector } from './selectors'
 import { svgTags } from './jsx-dom/svg-tags'
+import { kAlienElementKey } from './symbols'
+import { currentComponent } from './global'
 
 export type SpringAnimation<Element extends AnyElement = any> = {
   to: AnimatedProps<Element>
@@ -107,6 +109,12 @@ export type AnimatedElement = {
   svgMode: boolean
   transform: ParsedTransform | null
   anchor: readonly [number, number] | null
+  /**
+   * This contains the most recent values applied by an animation.
+   *
+   * The keys are the animated CSS properties.
+   */
+  style: Record<string, any>
 }
 
 type OneOrMany<T> = T | readonly T[]
@@ -141,8 +149,12 @@ export function animate(
           svgMode: !!svgTags[target.tagName] && target.tagName != 'svg',
           transform: null,
           anchor: null,
+          style: {},
         }
         animatedElements.set(target, state)
+      }
+
+      if (target.dataset.animatedId == null) {
         animatedElementIds.add(
           (target.dataset.animatedId = '' + nextElementId++)
         )
@@ -191,6 +203,35 @@ export function animate(
     })
   }
   startLoop()
+}
+
+/** @internal */
+export function getAnimatedKeys(element: DefaultElement) {
+  const state = animatedElements.get(element)
+  if (state) {
+    const keys = Object.keys(state.style)
+    if (keys.length) {
+      return keys
+    }
+  }
+}
+
+/** @internal */
+export function copyAnimatedStyle(
+  oldElement: DefaultElement,
+  newElement: DefaultElement
+) {
+  const state = animatedElements.get(oldElement)
+  if (state) {
+    const { svgMode, style } = state
+    for (const key in style) {
+      set(newElement as any, style, svgMode, key, style[key])
+    }
+  }
+  const { animatedId } = oldElement.dataset
+  if (animatedId) {
+    newElement.dataset.animatedId = animatedId
+  }
 }
 
 function applyAnimation(
@@ -377,8 +418,7 @@ function startLoop() {
     }
 
     for (let [target, state, width, height] of animations) {
-      const { props, svgMode } = state
-      const { scaleX, scaleY } = props
+      const { props, svgMode, style } = state
 
       type FrameValue = [string, AnimatedValue<any>]
       const frames = new Map<Record<string, any>, FrameValue[]>()
@@ -436,11 +476,11 @@ function startLoop() {
             }
           } else {
             const value = position + to[1]
-            set(target as any, svgMode, prop, value)
+            set(target as any, style, svgMode, prop, value)
           }
         } else {
           const value = mixColor(node.from as Color, to, position)
-          set(target as any, svgMode, prop, value)
+          set(target as any, style, svgMode, prop, value)
         }
       }
 
@@ -448,6 +488,7 @@ function startLoop() {
         if (state.anchor) {
           set(
             target as any,
+            style,
             svgMode,
             'transformOrigin',
             `${state.anchor[0] * 100}% ${state.anchor[1] * 100}%`
@@ -462,7 +503,7 @@ function startLoop() {
           newTransform!,
           noTransform
         )
-        set(target as any, svgMode, 'transform', transform)
+        set(target as any, style, svgMode, 'transform', transform)
       }
 
       for (const [frame, values] of frames) {
@@ -484,7 +525,6 @@ function startLoop() {
 
       if (done) {
         animatedElementIds.delete(target.dataset.animatedId!)
-        animatedElements.delete(target)
         delete target.dataset.animatedId
       }
     }
@@ -512,7 +552,14 @@ function readValue({ lastPosition, from, to }: AnimatedValue) {
   return mixColor(from as Color, to, lastPosition)
 }
 
-function set(target: HTMLElement, svgMode: boolean, key: string, value: any) {
+function set(
+  target: HTMLElement,
+  style: Record<string, any>,
+  svgMode: boolean,
+  key: string,
+  value: any
+) {
+  style[key] = value
   if (svgMode) {
     target.setAttribute(decamelize(key, '-'), value)
   } else {

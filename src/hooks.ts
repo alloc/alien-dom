@@ -1,40 +1,19 @@
 import { onMount, onUnmount } from './domObserver'
 import type { AlienElement } from './element'
 import { AnyElement } from './internal/types'
-import { currentHooks, currentComponent } from './global'
-import { ref, Ref } from './signals'
+import { currentHooks } from './global'
 import { kAlienHooks, setSymbol } from './symbols'
 import { noop } from './jsx-dom/util'
 import { AlienContext } from './context'
-
-export function useEffect(
-  effect: () => (() => void) | void,
-  deps: readonly any[]
-) {
-  const scope = currentComponent.get()!
-  const index = scope.memoryIndex++
-  const state = (scope.memory[index] ||= { deps, dispose: undefined })
-
-  const prevDeps = state.deps
-  const shouldRun =
-    deps == prevDeps ||
-    deps.length != prevDeps.length ||
-    deps.some((dep, i) => dep !== prevDeps[i])
-
-  if (shouldRun) {
-    state.dispose?.()
-    state.deps = deps
-    state.dispose = effect()
-  }
-}
-
-export function useRef<T>(init: T | (() => T)): Ref<T> {
-  const scope = currentComponent.get()!
-  const index = scope.memoryIndex++
-  return (scope.memory[index] ||= ref(init instanceof Function ? init() : init))
-}
+import { JSX } from './types/jsx'
 
 type Promisable<T> = T | Promise<T>
+
+export * from './hooks/useEffect'
+export * from './hooks/useMicrotask'
+export * from './hooks/useRef'
+export * from './hooks/useSpring'
+export * from './hooks/useState'
 
 export interface AlienEnabler<
   Target = any,
@@ -62,26 +41,53 @@ export interface AlienEnabler<
  */
 export class AlienHooks<Element extends AnyElement = any> {
   enabled = false
+  mounted = false
   element?: AlienElement<Element> = undefined
   enablers?: Set<AlienEnabler> = undefined
   currentEnabler: AlienEnabler | null = null
   abortCtrl?: AbortController = undefined
+  protected _mountHook: Disposable | null = null
 
-  constructor(element?: AlienElement<Element>) {
+  constructor(element?: Element) {
     element && this.setElement(element)
   }
 
-  setElement(element: AlienElement<Element>) {
-    if (this.element) {
-      throw Error('Element already set')
-    }
-    setSymbol(element, kAlienHooks, this)
-    this.element = element
-    if (element) {
-      if (document.contains(element)) {
-        this.enable()
+  setElement(element: Element | null) {
+    if (element === null) {
+      if ((this.element as any)[kAlienHooks] === this) {
+        setSymbol(this.element, kAlienHooks, undefined)
+      }
+      this.element = undefined
+      if (this._mountHook) {
+        this._mountHook.dispose()
+        this._mountHook = null
       } else {
-        this._enableOnceMounted()
+        this.disable()
+      }
+    } else {
+      if (this.element !== undefined) {
+        if ((element as any) === this.element) {
+          return
+        }
+        if (!this._mountHook) {
+          throw Error('Cannot change element while mounted')
+        }
+        setSymbol(this.element, kAlienHooks, undefined)
+        this._mountHook.dispose()
+        this._mountHook = null
+      }
+
+      // Assume the element will be mounted soon, if it's not already.
+      this.mounted = true
+      this.element = element as any
+      setSymbol(element, kAlienHooks, this)
+
+      if (element) {
+        if (document.contains(element)) {
+          this.enable()
+        } else {
+          this._enableOnceMounted()
+        }
       }
     }
   }
@@ -133,7 +139,7 @@ export class AlienHooks<Element extends AnyElement = any> {
         // If the enabler is being retargeted, this is needed.
         disableHook(enabler)
         enableHooks(this, () => {
-          enableHook(enabler)
+          enableHook(enabler, this)
         })
       }
 
@@ -145,7 +151,7 @@ export class AlienHooks<Element extends AnyElement = any> {
     if (!this.enabled) {
       enableHooks(this, () => {
         this.enablers?.forEach(enabler => {
-          enableHook(enabler)
+          enableHook(enabler, this)
         })
       })
     }
@@ -253,7 +259,9 @@ export class AlienHooks<Element extends AnyElement = any> {
   protected _enableOnceMounted() {
     // This assumes that the element will eventually be mounted. If
     // it's not, a memory leak will occur.
-    onMount(this.element!, () => {
+    this._mountHook = onMount(this.element!, () => {
+      this._mountHook = null
+      this.mounted = true
       this.enable()
     })
   }
@@ -266,14 +274,14 @@ function enableHooks(hooks: AlienHooks, enable: () => void) {
   enable()
   if (!wasEnabled && hooks.element) {
     onUnmount(hooks.element, () => {
+      hooks.mounted = false
       hooks.disable()
     })
   }
   currentHooks.pop(hooks)
 }
 
-function enableHook(enabler: AlienEnabler) {
-  const context = currentHooks.get()!
+function enableHook(enabler: AlienEnabler, context: AlienHooks) {
   context.currentEnabler = enabler
   enabler.context = context
 
@@ -329,15 +337,16 @@ export type AlienHook<
 
 export function createHook<
   Hook extends AlienEnabler<void, [], false> | AlienHook<any, any, false>
->(hook: Hook, context = currentHooks.get()): Disposable<typeof hook> {
-  let dispose: Promisable<(() => void) | void>
+>(hook: Hook, context = currentHooks.get()): Disposable<Hook> {
   if (context) {
-    if (typeof hook == 'function') {
-      context.enable(hook, hook.target)
-    } else {
-      context.enable(hook.enable, hook.target, hook.args)
-    }
-  } else if (typeof hook == 'function') {
+    return (
+      typeof hook == 'function'
+        ? context.enable(hook, hook.target)
+        : context.enable(hook.enable, hook.target, hook.args)
+    ) as Disposable<Hook>
+  }
+  let dispose: Promisable<(() => void) | void>
+  if (typeof hook == 'function') {
     dispose = hook(hook.target, ...(hook.args || []))
   } else {
     dispose = hook.enable(hook.target, ...(hook.args || []))
@@ -374,6 +383,19 @@ export function createHookType<Args extends any[]>(
     enabler.args = args
     return createHook(enabler)
   }) as any
+}
+
+/**
+ * Create a component that provides the current `AlienHooks` context to
+ * children. Useful for asynchronous rendering.
+ */
+export function bindHooksContext() {
+  const hooks = currentHooks.get()
+  return (props: { children: JSX.Children }) =>
+    currentHooks.Provider({
+      value: hooks,
+      children: props.children,
+    })
 }
 
 /**

@@ -1,3 +1,4 @@
+import type { AnyElement } from '../internal/types'
 import type { AriaAttributes, AriaRole } from './aria'
 import type { Booleanish, AttrWithRef } from './attr'
 import type { JSX } from './jsx'
@@ -19,12 +20,12 @@ interface DetailedHTMLFactory<
   P extends HTMLAttributes<T>,
   T extends HTMLElement
 > extends DOMFactory<P, T> {
-  (props?: (AttrWithRef<T> & P) | null, ...children: JSX.Children[]): T
+  (props?: (P & AttrWithRef<T>) | null, ...children: JSX.Children[]): T
   (...children: JSX.Children[]): T
 }
 
-export type DetailedHTMLProps<E extends HTMLAttributes<T>, T> = AttrWithRef<T> &
-  E
+export type DetailedHTMLProps<E extends HTMLAttributes<T>, T> = E &
+  AttrWithRef<Extract<T, AnyElement>>
 
 export type HTMLStyleAttribute =
   | readonly (CSSProperties | string)[]

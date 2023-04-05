@@ -1,14 +1,13 @@
-import morph from 'morphdom'
 import { effect } from '@preact/signals-core'
 import { ref, refs as toRefs, attachRef } from './signals'
-import { AlienComponent, AnyElement, DefaultElement } from './internal/types'
-import { kAlienPlaceholder, setSymbol } from './symbols'
+import { AlienComponent, DefaultElement } from './internal/types'
+import { setSymbol, kAlienHooks, kAlienNewHooks } from './symbols'
 import { kAlienElementKey, kAlienSelfUpdating } from './symbols'
 import { currentComponent, currentHooks } from './global'
 import { AlienHooks } from './hooks'
 import { assignTag } from './internal/tags'
-import { AlienElement } from './element'
 import { ElementKey } from './types/attr'
+import { updateElement } from './updateElement'
 
 /**
  * Create a self-updating component whose render function can mutate its
@@ -21,7 +20,7 @@ import { ElementKey } from './types/attr'
  */
 export function selfUpdating<
   Props extends object,
-  Element extends AnyElement = DefaultElement
+  Element extends DefaultElement = DefaultElement
 >(
   render: (props: Props, update: (props: Partial<Props>) => void) => Element
 ): (props: Props) => Element {
@@ -45,14 +44,15 @@ export function selfUpdating<
           props[key] = value
           isInitialProp = false
         } else {
+          // TODO: force a rerender!
           attachRef(props, key, ref(value), addStatefulProp)
         }
       }
     }
 
-    let scope: AlienComponent
-    let element: AlienElement<Element> | undefined
-    let refs: Map<ElementKey, AnyElement> | undefined
+    let scope: AlienComponent | undefined
+    let element: DefaultElement | undefined
+    let refs: Map<ElementKey, DefaultElement> | undefined
     let pause: (() => void) | undefined
     let isRendering = false
 
@@ -60,23 +60,42 @@ export function selfUpdating<
     pause = effect(rerender)
 
     function rerender() {
-      const newRefs = new Map<ElementKey, AnyElement>()
-      const newHooks = new AlienHooks<Element>()
+      let newHooks = new AlienHooks<DefaultElement>()
+
+      const newRefs = new Map<ElementKey, DefaultElement>()
+      const newElements = new Map<ElementKey, DefaultElement>()
       const newScope = currentComponent.push({
         hooks: newHooks,
         memory: scope?.memory || [],
         memoryIndex: 0,
+        newElements,
         fromRef: Map.prototype.get.bind(refs || newRefs),
         setRef(key, element) {
           setSymbol(element, kAlienElementKey, key)
           newRefs.set(key, element)
+
+          const oldHooks: AlienHooks | undefined = (element as any)[kAlienHooks]
+          if (oldHooks?.enabled) {
+            // If the component accesses the hooks of the old element
+            // during render, return the hooks of the new element
+            // instead.
+            Object.defineProperty(element, kAlienNewHooks, {
+              configurable: true,
+              get() {
+                if (isRendering) {
+                  const newElement = newElements.get(key)
+                  return newElement?.hooks()
+                }
+              },
+            })
+          }
         },
       })
 
       isRendering = true
       currentHooks.push(newHooks)
 
-      let newElement: AlienElement<Element> | undefined
+      let newElement: DefaultElement | undefined
       try {
         newElement = render(props, newProps => {
           if (isRendering) {
@@ -99,37 +118,51 @@ export function selfUpdating<
       } finally {
         currentHooks.pop(newHooks)
         currentComponent.pop(newScope)
+
         if (!newElement) {
           isRendering = false
+          scope = undefined
+          refs = undefined
           return
         }
       }
 
-      if (element) {
-        scope.hooks.disable()
-
-        const key = (newElement as any)[kAlienElementKey]
-        if (key != null) {
-          scope.setRef(key, element)
-        }
-
-        // The render function may return the same element if it keeps a
-        // local reference to it. In that case, the element is already
-        // updated by now.
-        if (element != newElement) {
-          updateElement(element, newElement, newHooks)
-        }
-      } else {
-        element = newElement
-        if (!element.hasOwnProperty(kAlienElementKey)) {
-          // Ensure the element is ignored by self-updating ancestors.
-          // Use a negative random number to avoid conflicts with static
-          // keys and common dynamic keys.
-          setSymbol(element, kAlienElementKey, -String(Math.random()).slice(2))
+      if (element === newElement) {
+        const key = (element as any)[kAlienElementKey]
+        newElement = newElements.get(key)
+        if (!newElement) {
+          // This is a self-updating element that's not created by this
+          // component, so we have to merge our `newHooks` into theirs.
+          const hooks = (element as any)[kAlienHooks]
+          newHooks.enablers?.forEach(enabler => {
+            hooks.enable(enabler as any, enabler.target)
+          })
+          newHooks = newScope.hooks = hooks
         }
       }
 
-      newHooks.setElement(element)
+      if (newElement) {
+        const hooks: AlienHooks | undefined = (newElement as any)[kAlienHooks]
+        if (hooks) {
+          // The component added hooks manually during render, so we
+          // have to merge those into the `newHooks` object. Before
+          // doing that, we call `setElement(null)` to remove the
+          // internal `onMount` hook.
+          hooks.setElement(null)
+          hooks.enablers?.forEach(enabler => {
+            newHooks.enable(enabler as any, enabler.target)
+          })
+        }
+        if (element) {
+          setSymbol(newElement, kAlienHooks, newHooks)
+          updateElement(element, newElement)
+        } else {
+          element = newElement
+          newHooks.setElement(newElement)
+        }
+      }
+
+      newElements.clear()
       newHooks.enable(() => {
         if (!isRendering) {
           pause ||= effect(rerender)
@@ -153,63 +186,4 @@ export function selfUpdating<
 
   setSymbol(Component, kAlienSelfUpdating, render)
   return Component
-}
-
-/** @internal */
-export function refElement(id: number, element: AnyElement) {
-  const key = ':' + id
-  const scope = currentComponent.get()!
-  const oldElement = scope.fromRef(key)
-  if (oldElement) {
-    updateElement(oldElement, element, scope.hooks)
-    element = oldElement
-  }
-  scope.setRef(key, element)
-  return element
-}
-
-/** @internal */
-export function derefElement(key: ElementKey) {
-  const scope = currentComponent.get()!
-  return scope.fromRef(key)
-}
-
-/** @internal */
-export function updateElement(
-  rootElement: AnyElement,
-  newRootElement: AnyElement,
-  newHooks?: AlienHooks
-) {
-  morph(rootElement, newRootElement, {
-    // getNodeKey(node: any) {
-    //   return node[kAlienElementKey]
-    // },
-    onBeforeElUpdated(oldElement, newElement) {
-      const shouldUpdate =
-        oldElement == rootElement ||
-        !oldElement.hasOwnProperty(kAlienElementKey)
-
-      if (shouldUpdate) {
-        // Move hooks from the new element to the old element.
-        newHooks?.enablers?.forEach(enabler => {
-          if (enabler.target == newElement) {
-            newHooks.enable(enabler as any, oldElement)
-          }
-        })
-      }
-      return shouldUpdate
-    },
-    onBeforeNodeAdded(node: any): any {
-      if (node[kAlienPlaceholder]) {
-        debugger
-        return false
-      }
-    },
-    onBeforeNodeDiscarded(node: any): any {
-      if (node[kAlienPlaceholder]) {
-        debugger
-        return false
-      }
-    },
-  })
 }

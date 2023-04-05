@@ -40,11 +40,22 @@ importers:
     devDependencies:
       esbuild: 0.17.12
 
+  packages/hmr:
+    specifiers:
+      md5-hex: ^4.0.0
+      meriyah: ^4.3.5
+    dependencies:
+      md5-hex: 4.0.0
+      meriyah: 4.3.5
+
   packages/nebu-plugin:
     specifiers:
+      '@alien-dom/hmr': workspace:0.1.0
       kleur: ^4.1.5
       nebu: ^2.3.2
       tsup: ^6.6.3
+    dependencies:
+      '@alien-dom/hmr': link:../hmr
     devDependencies:
       kleur: 4.1.5
       nebu: 2.3.2
@@ -325,6 +336,10 @@ packages:
     resolution: {integrity: sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==}
     engines: {node: '>=8'}
     dev: true
+
+  /blueimp-md5/2.19.0:
+    resolution: {integrity: sha512-DRQrD6gJyy8FbiE4s+bDoXS9hiW3Vbx5uCdwvcCf3zLHL+Iv7LtGHLpr+GZV8rHG8tK766FGYBwRbu8pELTt+w==}
+    dev: false
 
   /brace-expansion/1.1.11:
     resolution: {integrity: sha512-iCuPHDFgrHX7H2vEI/5xpz07zSHB00TpugqhmYtVmMO6518mCuRMoOYFldEBl0g187ufozdaHgWKcYFb61qGiA==}
@@ -640,6 +655,13 @@ packages:
     resolution: {integrity: sha512-YBfNxbJiixMzxW40XqJEIldzHyh5f7CZKalo1uZffevyrPEX8Qgo9s0dmcORLHdV47UyvJg8/zD+6hQG3qvJrA==}
     dependencies:
       sourcemap-codec: 1.4.8
+
+  /md5-hex/4.0.0:
+    resolution: {integrity: sha512-di38zHPn4Tz8LCb5Lz8SpLb/20Hv23aPXpF4Bq1mR5r9JuCZQ/JpcDUxFfZF9Ur5GiUvqS5NQOkR+fm5cYZ0IQ==}
+    engines: {node: '>=12'}
+    dependencies:
+      blueimp-md5: 2.19.0
+    dev: false
 
   /merge-stream/2.0.0:
     resolution: {integrity: sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==}

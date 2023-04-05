@@ -3,6 +3,8 @@ import type { ShadowRootContainer } from '../jsx-dom/shadow'
 import type { ReactEventHandler, ChangeEventHandler } from './dom'
 import type { Attributes, AttrWithRef } from './attr'
 import type { SVGProps } from './svg'
+import type { DragEventHandler } from './dom'
+import { AlienHooks } from '../hooks'
 import type {
   DetailedHTMLProps,
   HTMLAttributes,
@@ -14,6 +16,7 @@ type HTMLWebViewElement = HTMLElement
 
 export declare namespace JSX {
   type Element = HTMLElement
+
   type Children =
     | (() => JSX.Children)
     | JSX.Children[]
@@ -30,6 +33,34 @@ export declare namespace JSX {
     | null
     | undefined
 
+  type ElementOption = Element | false | null | undefined
+
+  /**
+   * If defining the type of a component prop that can be a JSX element,
+   * you have to use this type instead of `JSX.Element` or else you'll
+   * be surprised when trying to use the element without passing it into
+   * `fromElementProp` first.
+   */
+  type ElementProp = ElementOption | (() => ElementOption)
+
+  type ElementType<T> = T extends keyof IntrinsicElements
+    ? IntrinsicElements[T]['ref'] extends AlienHooks<infer Element> | undefined
+      ? Element
+      : never
+    : never
+
+  type ElementAttributes<T> = keyof IntrinsicElements extends infer TagName
+    ? TagName extends keyof IntrinsicElements
+      ? IntrinsicElements[TagName]['onDrag'] extends
+          | DragEventHandler<infer Element>
+          | undefined
+        ? Element extends T
+          ? IntrinsicElements[TagName]
+          : never
+        : never
+      : never
+    : never
+
   interface ElementAttributesProperty {
     props: {}
   }
@@ -38,7 +69,8 @@ export declare namespace JSX {
   }
 
   interface IntrinsicAttributes extends Attributes {}
-  interface IntrinsicClassAttributes<T> extends AttrWithRef<T> {}
+  interface IntrinsicClassAttributes<T>
+    extends AttrWithRef<Extract<T, AnyElement>> {}
 
   interface IntrinsicElements {
     // HTML

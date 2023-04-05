@@ -4,13 +4,14 @@ import { AlienHooks, Disposable, AlienHook } from './hooks'
 import { canMatch } from './internal/duck'
 import { AnyElement, AnyEvent, DefaultElement } from './internal/types'
 import { AlienNodeList } from './nodeList'
-import { kAlienHooks } from './symbols'
+import { kAlienHooks, kAlienNewHooks } from './symbols'
 import { applyProps, updateStyle } from './jsx-dom/jsx'
 import { HTMLAttributes, DetailedHTMLProps } from './types/html'
 import { CSSProperties } from './types/dom'
 import { SVGAttributes } from './types/svg'
 import { targetedEffect } from './signals'
 import { elementEvent } from './elementEvents'
+import { updateElement } from './updateElement'
 
 declare global {
   interface Element {
@@ -146,13 +147,20 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
   dispatch<T extends Record<string, any>>(name: string, data?: T) {
     events.dispatch(name, this, data)
   }
-  $text(): string
-  $text(value: string): this
-  $text(value: () => string): Disposable<AlienHook<this>>
-  $text(value?: string | (() => string)) {
-    if (arguments.length == 0) {
-      return this.textContent
-    }
+  /**
+   * Morph this element into another element. If the given `element` had
+   * its `hooks` method called, all of its hooks will be transferred to
+   * this element.
+   *
+   * ⚠️ DO NOT use this with a `selfUpdating` element, or it will break.
+   */
+  morph(element: Element) {
+    updateElement(this, element)
+    return this
+  }
+  replaceText(value: string): this
+  replaceText(value: () => string): Disposable<AlienHook<this>>
+  replaceText(value?: string | (() => string)) {
     if (typeof value == 'function') {
       return targetedEffect(this, target => {
         target.textContent = value()
@@ -214,7 +222,8 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
    * component).
    */
   hooks(): AlienHooks<Element> {
-    return (this as any)[kAlienHooks] || new AlienHooks(this)
+    const newHooks = (this as any)[kAlienNewHooks]
+    return newHooks || (this as any)[kAlienHooks] || new AlienHooks(this)
   }
   /**
    * Enable hooks, if any, for this element. Call this instead of

@@ -2,14 +2,17 @@
   "name": "@alien-dom/nebu",
   "version": "0.1.0",
   "type": "module",
-  "main": "dist/plugin.js",
-  "types": "dist/plugin.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup-node src/plugin.ts --format esm --dts"
+    "build": "tsup-node src/index.ts --format esm --dts"
   },
   "devDependencies": {
     "kleur": "^4.1.5",
     "nebu": "^2.3.2",
     "tsup": "^6.6.3"
+  },
+  "dependencies": {
+    "@alien-dom/hmr": "workspace:0.1.0"
   }
 }

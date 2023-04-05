@@ -1,3 +1,4 @@
+import type { AnyElement } from '../internal/types'
 import type { AriaAttributes, AriaRole } from './aria'
 import type { AttrWithRef, Booleanish } from './attr'
 import type { JSX } from './jsx'
@@ -77,7 +78,9 @@ export interface SVGElementTagNames {
   view: SVGFactory
 }
 
-export interface SVGProps<T> extends SVGAttributes<T>, AttrWithRef<T> {}
+export interface SVGProps<T>
+  extends SVGAttributes<T>,
+    AttrWithRef<Extract<T, AnyElement>> {}
 
 // this list is "complete" in that it contains every SVG attribute
 // that React supports, but the types can be improved.
