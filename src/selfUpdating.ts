@@ -155,7 +155,7 @@ export function selfUpdating<
         }
         if (element) {
           setSymbol(newElement, kAlienHooks, newHooks)
-          updateElement(element, newElement)
+          updateElement(element, newElement, newRefs)
         } else {
           element = newElement
           newHooks.setElement(newElement)

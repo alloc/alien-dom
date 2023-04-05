@@ -199,7 +199,11 @@ function appendChild(child: JSX.Children, node: Node) {
           // Append the new element, so the old element's parent is
           // preserved.
           child = newChild
-        } else {
+        }
+        // Elements created in a loop or callback don't have their `key`
+        // prop set by the compiler, which means they don't get added to
+        // the `scope.newElements` cache unless a dynamic key is set.
+        else if (document.contains(child)) {
           // Ensure this element is not forgotten by the ref tracker, so
           // it can be reused when the cache is invalidated.
           scope.setRef(key, child as DefaultElement)

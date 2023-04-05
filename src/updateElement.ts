@@ -1,12 +1,18 @@
 import morph from 'morphdom'
 import { AnyElement } from './internal/types'
-import { kAlienElementTags, kAlienHooks, kAlienPlaceholder } from './symbols'
+import {
+  kAlienElementTags,
+  kAlienHooks,
+  kAlienPlaceholder,
+  kAlienElementKey,
+} from './symbols'
 import { AlienHooks } from './hooks'
 import { copyAnimatedStyle } from './animate'
 
 export function updateElement(
   rootElement: AnyElement,
-  newRootElement: AnyElement
+  newRootElement: AnyElement,
+  newRefs?: Map<any, AnyElement>
 ) {
   const elementMap = new Map<HTMLElement, HTMLElement>()
 
@@ -15,18 +21,25 @@ export function updateElement(
     //   return (node as any)[kAlienElementKey]
     // },
     onBeforeElUpdated(oldElement, newElement) {
-      const shouldUpdate =
-        oldElement === rootElement ||
-        !(
-          oldElement.hasOwnProperty(kAlienElementTags) ||
-          oldElement.hasOwnProperty(kAlienPlaceholder)
-        )
-
-      if (shouldUpdate) {
-        elementMap.set(newElement, oldElement)
-        copyAnimatedStyle(oldElement, newElement)
+      if (oldElement !== rootElement) {
+        // Placeholders exist to prevent updates.
+        if (newElement.hasOwnProperty(kAlienPlaceholder)) {
+          return false
+        }
+        // If the element is self-updating, no update is needed unless
+        // it was created in a loop or callback without a dynamic key.
+        else if (oldElement.hasOwnProperty(kAlienElementTags)) {
+          const key = (newElement as any)[kAlienElementKey]
+          if (newRefs && !newRefs.has(key)) {
+            oldElement.replaceWith(newElement)
+          }
+          return false
+        }
       }
-      return shouldUpdate
+
+      elementMap.set(newElement, oldElement)
+      copyAnimatedStyle(oldElement, newElement)
+      return true
     },
   })
 

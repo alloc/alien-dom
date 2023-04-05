@@ -16,6 +16,7 @@ import type { DOMAttributes } from './dist/types/dom'
 import type { PropsWithChildren, ComponentType } from './dist/types/component'
 
 export * from './dist/index'
+export { SVGNamespace } from './dist/jsx-dom/jsx'
 
 export type { JSX } from './dist/types/jsx'
 export type { HTML, SVG } from './dist/types/extra'

@@ -145,7 +145,7 @@ export class AlienHooks<Element extends AnyElement = any> {
 
       return attachDisposer(enabler, () => {
         disableHook(enabler)
-        this.enablers!.delete(enabler)
+        this.enablers?.delete(enabler)
       })
     }
     if (!this.enabled) {
@@ -169,7 +169,7 @@ export class AlienHooks<Element extends AnyElement = any> {
       this.enablers?.forEach(enabler => {
         disableHook(enabler)
         if (enabler.once) {
-          this.enablers!.delete(enabler)
+          this.enablers?.delete(enabler)
         }
       })
       if (this.element && !document.contains(this.element)) {
