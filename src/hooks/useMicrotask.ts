@@ -1,3 +1,4 @@
+import { batch } from '@preact/signals-core'
 import { useState } from './useState'
 import { currentComponent } from '../global'
 
@@ -10,7 +11,7 @@ export function useMicrotask(effect: () => void, shouldRun = true) {
       if (nextRun == state.nextRun) {
         state.nextRun = undefined
         if (hooks.mounted) {
-          effect()
+          batch(effect)
         }
       }
     }

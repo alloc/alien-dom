@@ -1,3 +1,4 @@
+import { batch } from '@preact/signals-core'
 import { AnyElement } from './internal/types'
 import { createHookType, getCurrentHook } from './hooks'
 
@@ -9,11 +10,14 @@ export const elementEvent = createHookType(
     options?: boolean | AddEventListenerOptions
   ) => {
     const self = getCurrentHook()
-    if (self && options && typeof options != 'boolean' && options.once) {
+    if (self) {
+      const isOnce = options && typeof options != 'boolean' && options.once
       const userCallback = callback
       callback = event => {
-        self.context?.remove(self)
-        userCallback(event)
+        if (isOnce) {
+          self.context?.remove(self)
+        }
+        batch(userCallback.bind(null, event))
       }
     }
     element.addEventListener(eventName, callback, options)
