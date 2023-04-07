@@ -186,54 +186,68 @@ export function createElement(tag: any, props: any, ...children: any[]) {
   return jsx(tag, { ...props, children }, props.key)
 }
 
-function appendChild(child: JSX.Children, node: Node) {
+function appendChild(child: JSX.Children, parent: Node, key?: string) {
+  if (child === undefined || child === null || child === false) {
+    return
+  }
   if (isElement(child)) {
-    if (child.hasOwnProperty(kAlienElementKey)) {
-      const scope = currentComponent.get()
-      if (scope) {
-        const key = (child as any)[kAlienElementKey]
-        // If the key is not found in `scope.newElements`, it means
-        // that the element was cached, so no update is needed.
-        const newChild = scope.newElements.get(key)
-        if (newChild) {
-          // Append the new element, so the old element's parent is
-          // preserved.
-          child = newChild
+    if (child.nodeType !== Node.TEXT_NODE) {
+      if (child.hasOwnProperty(kAlienElementKey)) {
+        const scope = currentComponent.get()
+        if (scope) {
+          const key = (child as any)[kAlienElementKey]
+          // If the key is not found in `scope.newElements`, it means
+          // that the element was cached, so no update is needed.
+          const newChild = scope.newElements.get(key)
+          if (newChild) {
+            // Append the new element, so the old element's parent is
+            // preserved.
+            child = newChild
+          }
+          // Elements created in a loop or callback don't have their `key`
+          // prop set by the compiler, which means they don't get added to
+          // the `scope.newElements` cache unless a dynamic key is set.
+          else if (document.contains(child)) {
+            // Ensure this element is not forgotten by the ref tracker, so
+            // it can be reused when the cache is invalidated.
+            scope.setRef(key, child as DefaultElement)
+            // Prevent an update by morphdom.
+            child = getPlaceholder(child)
+          }
         }
-        // Elements created in a loop or callback don't have their `key`
-        // prop set by the compiler, which means they don't get added to
-        // the `scope.newElements` cache unless a dynamic key is set.
-        else if (document.contains(child)) {
-          // Ensure this element is not forgotten by the ref tracker, so
-          // it can be reused when the cache is invalidated.
-          scope.setRef(key, child as DefaultElement)
-          // Prevent an update by morphdom.
-          child = getPlaceholder(child)
-        }
+      } else {
+        setSymbol(child, kAlienElementKey, key || '*0')
       }
     }
-    appendChildToNode(child, node)
+    appendChildToNode(child, parent)
   } else if (isFunction(child)) {
-    appendChild(fromElementThunk(child), node)
+    appendChild(fromElementThunk(child), parent, key)
   } else if (isArrayLike(child)) {
     let children = child
     if (!hasForEach(children)) {
       children = Array.from(children)
     }
-    children.forEach(child => {
-      appendChild(child as JSX.Children, node)
+    const slotKey = key || ''
+    children.forEach((child, i) => {
+      const arrayKey = slotKey + '*' + i
+
+      // Fragment children are not wrapped in an element, so we need to
+      // prepend the key to the child nodes to differentiate them.
+      if (isElement(child, Node.DOCUMENT_FRAGMENT_NODE)) {
+        child.childNodes.forEach(node => {
+          let key = (node as any)[kAlienElementKey]
+          if (key && key[0] === '*') {
+            setSymbol(node, kAlienElementKey, arrayKey + key)
+          }
+        })
+      }
+      appendChild(child as JSX.Children, parent, arrayKey)
     })
-  } else if (child === undefined || child === null || child === false) {
-    // Create a placeholder comment node to preserve the position of the
-    // child in the parent node. If we don't do this, morph-dom will
-    // remove a node instead of morphing it when a preceding sibling is
-    // removed.
-    appendChildToNode(document.createComment(''), node)
   } else if (isShadowRoot(child)) {
-    const shadowRoot = (node as HTMLElement).attachShadow(child.attr)
+    const shadowRoot = (parent as HTMLElement).attachShadow(child.attr)
     appendChild(child.children, shadowRoot)
   } else {
-    appendChildToNode(document.createTextNode(String(child)), node)
+    appendChildToNode(document.createTextNode(String(child)), parent)
   }
 }
 

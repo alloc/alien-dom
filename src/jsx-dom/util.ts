@@ -6,8 +6,12 @@ export function isBoolean(val: any): val is boolean {
   return typeof val === 'boolean'
 }
 
-export function isElement(val: any): val is Element {
-  return val && typeof val.nodeType === 'number'
+export function isElement(val: any, nodeType?: number): val is Element {
+  return (
+    val &&
+    typeof val.nodeType === 'number' &&
+    (nodeType === undefined || val.nodeType === nodeType)
+  )
 }
 
 export function isString(val: any): val is string {
