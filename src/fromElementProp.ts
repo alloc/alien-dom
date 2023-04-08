@@ -36,8 +36,8 @@ export function fromElementThunk(thunk: () => JSX.Children) {
       let newElement = result.value
 
       // TODO: support more than single element nodes
-      const scope = currentComponent.get()
-      if (scope && isElement(newElement)) {
+      const component = currentComponent.get()
+      if (component && isElement(newElement)) {
         const key = (newElement as any)[kAlienElementKey]
         if (key !== undefined) {
           if (element !== newElement) {
@@ -56,11 +56,11 @@ export function fromElementThunk(thunk: () => JSX.Children) {
           // We have to set `newElements` here or else we'll confuse the
           // self-updating component into thinking it didn't create this
           // element (i.e. a child component did).
-          scope.newElements!.set(key, newElement as DefaultElement)
+          component.newElements!.set(key, newElement as DefaultElement)
 
           // We have to call `setRef` to emulate a JSX element being
           // constructed.
-          scope.setRef(key, newElement as DefaultElement)
+          component.setRef(key, newElement as DefaultElement)
         }
       }
 

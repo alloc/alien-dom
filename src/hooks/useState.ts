@@ -4,7 +4,7 @@ export function useState<State extends object, Params extends any[]>(
   init: (...params: Params) => State,
   ...params: Params
 ): State {
-  const scope = currentComponent.get()!
-  const index = scope.memoryIndex++
-  return (scope.memory[index] ||= init(...params))
+  const component = currentComponent.get()!
+  const index = component.memoryIndex++
+  return (component.memory[index] ||= init(...params))
 }
