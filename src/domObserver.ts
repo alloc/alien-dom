@@ -1,6 +1,6 @@
 import { $, $$ } from './selectors'
 import { createHookType, getCurrentHook } from './hooks'
-import { binaryInsert, noop } from './jsx-dom/util'
+import { binaryInsert } from './jsx-dom/util'
 
 type ElementListener = (element: Element) => void
 

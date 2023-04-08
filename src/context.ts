@@ -44,7 +44,7 @@ export function createContext<T>(initial?: T): AlienContext<T> {
     }
   }
   return {
-    get: () => stack.at(-1)!,
+    get: stack.at.bind(stack, -1) as any,
     find(fn) {
       for (let i = 1; i <= stack.length; i++) {
         const value = stack.at(-i)!

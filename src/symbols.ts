@@ -1,5 +1,6 @@
 export const kAlienHooks = Symbol.for('alien:hooks')
 export const kAlienNewHooks = Symbol.for('alien:newHooks')
+export const kAlienFragment = Symbol.for('alien:fragment')
 export const kAlienElementKey = Symbol.for('alien:elementKey')
 export const kAlienElementTags = Symbol.for('alien:elementTags')
 export const kAlienSelfUpdating = Symbol.for('alien:selfUpdating')

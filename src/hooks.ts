@@ -318,10 +318,11 @@ function enableHook(enabler: AlienEnabler, context: AlienHooks) {
 }
 
 function disableHook(enabler: AlienEnabler) {
+  const { disable } = enabler
   enabler.context = undefined
-  if (enabler.disable) {
-    enabler.disable()
+  if (disable) {
     enabler.disable = undefined
+    disable()
   }
 }
 

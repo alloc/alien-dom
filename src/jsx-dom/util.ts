@@ -68,7 +68,7 @@ export function decamelize(s: string, separator: string) {
   return s.replace(/[A-Z]/g, match => separator + match.toLowerCase())
 }
 
-export const noop = () => {}
+export const noop = (): any => {}
 
 /**
  * Function that takes in two values and compares them.

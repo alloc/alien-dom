@@ -1,13 +1,17 @@
 import { effect } from '@preact/signals-core'
-import { ref, refs as toRefs, attachRef } from './signals'
-import { AlienComponent, DefaultElement } from './internal/types'
-import { setSymbol, kAlienHooks, kAlienNewHooks } from './symbols'
-import { kAlienElementKey, kAlienSelfUpdating } from './symbols'
+import { ref, refs as toRefs, attachRef, Ref } from './signals'
+import { DefaultElement } from './internal/types'
+import {
+  setSymbol,
+  kAlienHooks,
+  kAlienElementKey,
+  kAlienSelfUpdating,
+} from './symbols'
 import { currentComponent, currentHooks } from './global'
 import { AlienHooks } from './hooks'
-import { assignTag } from './internal/tags'
-import { ElementKey } from './types/attr'
-import { updateElement } from './updateElement'
+import { updateElement, updateFragment } from './updateElement'
+import { kAlienFragment } from './symbols'
+import { AlienComponent } from './internal/component'
 
 /**
  * Create a self-updating component whose render function can mutate its
@@ -22,166 +26,201 @@ export function selfUpdating<
   Props extends object,
   Element extends DefaultElement = DefaultElement
 >(
-  render: (props: Props, update: (props: Partial<Props>) => void) => Element
+  render: (
+    props: Props,
+    update: (props: Partial<Props>) => void
+  ) => DefaultElement | null | undefined
 ): (props: Props) => Element {
   const Component = (initialProps: Props): any => {
+    let oldPropChanged = false
+    let newPropAdded = false
+
+    // The props object passed to the render function.
+    const props = {} as Props
+
     // Once a prop is mutated from inside, it's considered stateful.
     // This means it can't be updated from outside unless the element's
     // key is changed.
     const statefulProps = new Set<keyof any>()
-    const addStatefulProp = (key: keyof any) => {
+
+    const didSetProp = (key: keyof any, newValue: any, oldValue?: any) => {
       // When a parent component rebinds an initial prop, do nothing.
-      if (!isInitialProp) {
+      if (!isPropReinit) {
         statefulProps.add(key)
       }
-    }
-
-    let isInitialProp = false
-    const rebindInitialProp = (key: keyof Props, value: any) => {
-      if (!statefulProps.has(key)) {
-        if (props.hasOwnProperty(key)) {
-          isInitialProp = true
-          props[key] = value
-          isInitialProp = false
-        } else {
-          // TODO: force a rerender!
-          attachRef(props, key, ref(value), addStatefulProp)
-        }
+      if (!props.hasOwnProperty(key)) {
+        attachRef(props, key, ref(newValue))
+        newPropAdded = true
+      } else if (newValue !== oldValue) {
+        oldPropChanged = true
       }
     }
 
-    let scope: AlienComponent | undefined
-    let element: DefaultElement | undefined
-    let refs: Map<ElementKey, DefaultElement> | undefined
-    let pause: (() => void) | undefined
-    let isRendering = false
+    for (const key in initialProps) {
+      attachRef(props, key, ref(initialProps[key]), didSetProp)
+    }
 
-    const props = toRefs(initialProps, addStatefulProp)
-    pause = effect(rerender)
+    const updateProps = (newProps: Partial<Props>) => {
+      if (self.newHooks) {
+        throw Error('Cannot update props during render')
+      }
+      for (const key in newProps) {
+        if (props.hasOwnProperty(key)) {
+          props[key] = newProps[key] as any
+        } else {
+          didSetProp(key, newProps[key])
+        }
+      }
+      if (preventUpdates && (oldPropChanged || newPropAdded)) {
+        preventUpdates()
+        preventUpdates = effect(updateComponent)
+      }
+    }
 
-    function rerender() {
-      let newHooks = new AlienHooks<DefaultElement>()
+    let isPropReinit = false
+    const reinitProps = (newProps: Partial<Props>) => {
+      for (const key in newProps) {
+        if (statefulProps.has(key)) {
+          continue
+        }
+        isPropReinit = true
+        if (props.hasOwnProperty(key)) {
+          props[key] = newProps[key] as any
+        } else {
+          didSetProp(key, newProps[key])
+        }
+        isPropReinit = false
+      }
+      if (preventUpdates) {
+        if (oldPropChanged || newPropAdded) {
+          preventUpdates()
+          preventUpdates = effect(updateComponent)
+        }
+      } else {
+        // The component is disabled but the parent component is being
+        // re-enabled, so we should re-render too.
+        preventUpdates = effect(updateComponent)
+      }
+    }
 
-      const newRefs = new Map<ElementKey, DefaultElement>()
-      const newElements = new Map<ElementKey, DefaultElement>()
-      const newScope = currentComponent.push({
-        hooks: newHooks,
-        memory: scope?.memory || [],
-        memoryIndex: 0,
-        newElements,
-        fromRef: Map.prototype.get.bind(refs || newRefs),
-        setRef(key, element) {
-          setSymbol(element, kAlienElementKey, key)
-          newRefs.set(key, element)
+    /**
+     * When non-null, this component will re-render on prop changes and
+     * other observables accessed during render.
+     */
+    let preventUpdates: (() => void) | null
 
-          const oldHooks: AlienHooks | undefined = (element as any)[kAlienHooks]
-          if (oldHooks?.enabled) {
-            // If the component accesses the hooks of the old element
-            // during render, return the hooks of the new element
-            // instead.
-            Object.defineProperty(element, kAlienNewHooks, {
-              configurable: true,
-              get() {
-                if (isRendering) {
-                  const newElement = newElements.get(key)
-                  return newElement?.hooks()
-                }
-              },
-            })
-          }
-        },
-      })
+    const enable = () => {
+      if (preventUpdates) {
+        self.hooks?.enable()
+      } else {
+        preventUpdates = effect(updateComponent)
+      }
+    }
+    const disable = () => {
+      self.hooks?.disable()
+      self.hooks = null
+      preventUpdates?.()
+      preventUpdates = null
+    }
 
-      isRendering = true
+    const self = new AlienComponent(
+      Component as any,
+      props,
+      reinitProps,
+      updateProps,
+      enable,
+      disable
+    )
+
+    const updateComponent = () => {
+      let { rootNode, newElements, newHooks, newRefs } = self.startRender()
+
+      currentComponent.push(self)
       currentHooks.push(newHooks)
 
-      let newElement: DefaultElement | undefined
+      let threw = true
+      let newRootNode: DefaultElement | null | undefined
       try {
-        newElement = render(props, newProps => {
-          if (isRendering) {
-            throw Error('Cannot update props during render')
-          }
-          for (const key in newProps) {
-            const value: any = newProps[key]
-            if (props.hasOwnProperty(key)) {
-              props[key] = value
-            } else {
-              attachRef(props, key, ref(value))
-              addStatefulProp(key)
-              if (pause) {
-                pause()
-                pause = effect(rerender)
-              }
-            }
-          }
-        }) as any
+        newRootNode = render(props, updateProps)
+        threw = false
       } finally {
         currentHooks.pop(newHooks)
-        currentComponent.pop(newScope)
+        currentComponent.pop(self)
 
-        if (!newElement) {
-          isRendering = false
-          scope = undefined
-          refs = undefined
-          return
+        if (threw) {
+          self.endRender(true)
         }
       }
 
-      if (element === newElement) {
-        const key = (element as any)[kAlienElementKey]
-        newElement = newElements.get(key)
-        if (!newElement) {
-          // This is a self-updating element that's not created by this
-          // component, so we have to merge our `newHooks` into theirs.
-          const hooks = (element as any)[kAlienHooks]
-          newHooks.enablers?.forEach(enabler => {
-            hooks.enable(enabler as any, enabler.target)
-          })
-          newHooks = newScope.hooks = hooks
+      // If there are enabled component hooks, we are mounted.
+      const isMounted = self.hooks?.enabled
+
+      // The render function might return an element reference.
+      if (rootNode && rootNode === newRootNode) {
+        const key = (rootNode as any)[kAlienElementKey]
+        const newElement = newElements.get(key)
+        if (newElement) {
+          newRootNode = newElement
         }
       }
 
-      if (newElement) {
-        const hooks: AlienHooks | undefined = (newElement as any)[kAlienHooks]
-        if (hooks) {
-          // The component added hooks manually during render, so we
-          // have to merge those into the `newHooks` object. Before
-          // doing that, we call `setElement(null)` to remove the
-          // internal `onMount` hook.
-          hooks.setElement(null)
-          hooks.enablers?.forEach(enabler => {
-            newHooks.enable(enabler as any, enabler.target)
-          })
-        }
-        if (element) {
-          setSymbol(newElement, kAlienHooks, newHooks)
-          updateElement(element, newElement, newRefs)
-        } else {
-          element = newElement
-          newHooks.setElement(newElement)
-        }
-      }
+      if (rootNode !== newRootNode) {
+        if (newRootNode) {
+          if (rootNode?.nodeType === Node.ELEMENT_NODE) {
+            // Root nodes must have same key for morphing to work.
+            const newKey = (newRootNode as any)[kAlienElementKey]
+            setSymbol(rootNode, kAlienElementKey, newKey)
 
-      newElements.clear()
-      newHooks.enable(() => {
-        if (!isRendering) {
-          pause ||= effect(rerender)
-        }
-        return () => {
-          if (!isRendering && pause) {
-            pause()
-            pause = undefined
+            // Diff the root nodes and enable the new hooks.
+            updateElement(rootNode as Element, newRootNode, self)
+          }
+          // Fragments have their own update logic.
+          else if (rootNode?.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+            if (newRootNode.childNodes.length) {
+              updateFragment(rootNode, newRootNode, newRefs)
+            } else {
+              // Empty fragment needs a placeholder. Setting this to null
+              // allows for that.
+              newRootNode = null
+            }
+          } else {
+            // The `rootNode` might be a comment node that was being used
+            // to hold the position of this element in the DOM.
+            rootNode?.replaceWith(newRootNode)
+            self.setRootNode((rootNode = newRootNode))
           }
         }
-      })
 
-      isRendering = false
-      scope = newScope
-      refs = newRefs
+        // If nothing is returned (e.g. null, undefined, empty fragment),
+        // use a comment node to hold the position of the element.
+        if (!newRootNode && rootNode?.nodeType !== Node.COMMENT_NODE) {
+          const placeholder = document.createComment('')
+          if (rootNode?.nodeType === Node.ELEMENT_NODE) {
+            const oldHooks: AlienHooks = (rootNode as any)[kAlienHooks]
+            oldHooks?.disable()
+            rootNode.replaceWith(placeholder)
+          } else if (rootNode?.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+            const oldNodes: ChildNode[] = (rootNode as any)[kAlienFragment]
+            oldNodes[0].before(placeholder)
+            oldNodes.forEach(node => node.remove())
+          }
+          self.setRootNode(placeholder)
+        }
+
+        // If neither updateElement nor updateFragment were called, but
+        // we're already mounted, we need to enable the hooks now.
+        if (isMounted && !newHooks.enabled) {
+          newHooks.enable()
+        }
+      }
+
+      self.endRender()
+      oldPropChanged = false
+      newPropAdded = false
     }
 
-    assignTag(element!, Component, rebindInitialProp)
-    return element
+    preventUpdates = effect(updateComponent)
+    return self.rootNode
   }
 
   setSymbol(Component, kAlienSelfUpdating, render)

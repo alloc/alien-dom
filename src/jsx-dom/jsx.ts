@@ -23,12 +23,13 @@ import {
 import { DefaultElement } from '../internal/types'
 import { elementEvent } from '../elementEvents'
 import { currentHooks, currentComponent } from '../global'
-import { updateTagProps } from '../internal/tags'
+import { ElementTags, updateTagProps } from '../internal/component'
 import { ElementKey } from '../types/attr'
 import { hasForEach } from './util'
 import { JSX } from '../types/jsx'
 import { selfUpdating } from '../selfUpdating'
 import { fromElementThunk } from '../fromElementProp'
+import { kAlienFragment, kAlienElementTags } from '../symbols'
 
 export const SVGNamespace = 'http://www.w3.org/2000/svg'
 const XLinkNamespace = 'http://www.w3.org/1999/xlink'
@@ -99,8 +100,8 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
 
   let oldNode: DefaultElement | undefined
 
-  const scope = currentComponent.get()
-  if (scope && typeof tag !== 'string' && tag !== Fragment) {
+  const component = currentComponent.get()
+  if (component && typeof tag !== 'string' && tag !== Fragment) {
     if (!tag.hasOwnProperty(kAlienSelfUpdating)) {
       let selfUpdatingTag = selfUpdatingTags.get(tag)
       if (!selfUpdatingTag) {
@@ -109,12 +110,11 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
       }
       tag = selfUpdatingTag
     }
-    if (key !== undefined && (oldNode = scope.fromRef(key))) {
+    if (key !== undefined && (oldNode = component.refs?.get(key))) {
       // Updating the props of an existing element will only rerender
       // the component if a new value is defined for a stateless prop.
       if (updateTagProps(oldNode, tag, props)) {
-        // TODO: what if the component returned a different node?
-        scope.setRef(key, oldNode)
+        component.setRef(key, oldNode)
         return oldNode
       }
     }
@@ -153,16 +153,16 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
   }
 
   if (node && key !== undefined) {
-    if (scope) {
+    if (component) {
       // Check for equivalence as the return value of a custom component
       // might be the cached result of an element thunk.
       if (oldNode !== node) {
-        scope.newElements.set(key, node as DefaultElement)
+        component.newElements!.set(key, node as DefaultElement)
       }
       if (oldNode) {
         node = oldNode as typeof node
       }
-      scope.setRef(key, node as DefaultElement)
+      component.setRef(key, node as DefaultElement)
     } else {
       setSymbol(node, kAlienElementKey, key)
     }
@@ -191,15 +191,35 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
     return
   }
   if (isElement(child)) {
-    if (child.nodeType !== Node.TEXT_NODE) {
+    // The child nodes of a fragment are cached on the fragment itself
+    // in case the fragment is cached and reused in a future render.
+    if (child.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+      const fragment: DocumentFragment = child as any
+      const childNodes: Element[] = (fragment as any)[kAlienFragment]
+      if (childNodes) {
+        // For child nodes still in the DOM, generate a placeholder to
+        // indicate a no-op. Otherwise, reuse the child node.
+        childNodes.forEach(child => {
+          fragment.appendChild(
+            document.contains(child) ? getPlaceholder(child) : child
+          )
+        })
+      } else {
+        // This is the first time the fragment is being appended, so
+        // cache its child nodes.
+        setSymbol(fragment, kAlienFragment, Array.from(fragment.childNodes))
+      }
+    }
+    // Text nodes cannot have an element key.
+    else if (child.nodeType !== Node.TEXT_NODE) {
       if (child.hasOwnProperty(kAlienElementKey)) {
-        const scope = currentComponent.get()
-        if (scope) {
+        const component = currentComponent.get()
+        if (component) {
           const key = (child as any)[kAlienElementKey]
-          // If the key is not found in `scope.newElements`, it means
-          // that the element was cached, so no update is needed.
-          const newChild = scope.newElements.get(key)
-          if (newChild) {
+          // If a key is missing from `newElements` or points to the
+          // same node, we can skip the update.
+          const newChild = component.newElements!.get(key)
+          if (newChild && child !== newChild) {
             // Append the new element, so the old element's parent is
             // preserved.
             child = newChild
@@ -210,7 +230,7 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
           else if (document.contains(child)) {
             // Ensure this element is not forgotten by the ref tracker, so
             // it can be reused when the cache is invalidated.
-            scope.setRef(key, child as DefaultElement)
+            component.setRef(key, child as DefaultElement)
             // Prevent an update by morphdom.
             child = getPlaceholder(child)
           }
@@ -219,7 +239,26 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
         setSymbol(child, kAlienElementKey, key || '*0')
       }
     }
+
     appendChildToNode(child, parent)
+
+    // Enable component hooks when the parent element is set.
+    if (child.hasOwnProperty(kAlienElementTags)) {
+      const tags: ElementTags = (child as any)[kAlienElementTags]
+      queueMicrotask(() => {
+        const components = Array.from(tags.values())
+        if (components[0].hooks) {
+          for (const component of components) {
+            component.enable()
+          }
+        } else {
+          // Re-render the top-most component and the updates will
+          // trickle down the component tree.
+          const topMostComponent = components.at(-1)!
+          topMostComponent.enable()
+        }
+      })
+    }
   } else if (isFunction(child)) {
     appendChild(fromElementThunk(child), parent, key)
   } else if (isArrayLike(child)) {
@@ -231,8 +270,8 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
     children.forEach((child, i) => {
       const arrayKey = slotKey + '*' + i
 
-      // Fragment children are not wrapped in an element, so we need to
-      // prepend the key to the child nodes to differentiate them.
+      // Fragment children are merged into the nearest ancestor element,
+      // so the arrayKey is prepended to avoid conflicts.
       if (isElement(child, Node.DOCUMENT_FRAGMENT_NODE)) {
         child.childNodes.forEach(node => {
           let key = (node as any)[kAlienElementKey]
@@ -241,6 +280,7 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
           }
         })
       }
+
       appendChild(child as JSX.Children, parent, arrayKey)
     })
   } else if (isShadowRoot(child)) {
@@ -256,7 +296,8 @@ function getPlaceholder(child: any): DefaultElement {
   const placeholder: any = child.namespaceURI
     ? document.createElementNS(child.namespaceURI, tagName)
     : document.createElement(tagName)
-  placeholder[kAlienPlaceholder] = child
+  setSymbol(placeholder, kAlienPlaceholder, true)
+  setSymbol(placeholder, kAlienElementKey, child[kAlienElementKey])
   return placeholder
 }
 
@@ -355,6 +396,7 @@ function applyProp(prop: string, value: any, node: Element & HTMLOrSVGElement) {
         }
       })
       return
+    case 'key':
     case 'namespaceURI':
       return
     // fallthrough
