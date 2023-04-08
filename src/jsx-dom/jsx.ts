@@ -101,22 +101,25 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
   let oldNode: DefaultElement | undefined
 
   const component = currentComponent.get()
-  if (component && typeof tag !== 'string' && tag !== Fragment) {
-    // When a plain function component is used by a self-updating
-    // component, the former is made to be self-updating as well.
-    if (!tag.hasOwnProperty(kAlienSelfUpdating)) {
-      let selfUpdatingTag = selfUpdatingTags.get(tag)
-      if (!selfUpdatingTag) {
-        selfUpdatingTag = selfUpdating(tag)
-        selfUpdatingTags.set(tag, selfUpdatingTag)
-      }
-      tag = selfUpdatingTag
+  if (component) {
+    if (key !== undefined) {
+      oldNode = component.refs?.get(key)
     }
-    if (key !== undefined && (oldNode = component.refs?.get(key))) {
+    if (typeof tag !== 'string' && tag !== Fragment) {
+      // When a plain function component is used by a self-updating
+      // component, the former is made to be self-updating as well.
+      if (!tag.hasOwnProperty(kAlienSelfUpdating)) {
+        let selfUpdatingTag = selfUpdatingTags.get(tag)
+        if (!selfUpdatingTag) {
+          selfUpdatingTag = selfUpdating(tag)
+          selfUpdatingTags.set(tag, selfUpdatingTag)
+        }
+        tag = selfUpdatingTag
+      }
       // Updating the props of an existing element will only rerender
       // the component if a new value is defined for a stateless prop.
-      if (updateTagProps(oldNode, tag, props)) {
-        component.setRef(key, oldNode)
+      if (oldNode && updateTagProps(oldNode, tag, props)) {
+        component.setRef(key!, oldNode)
         return oldNode
       }
     }
