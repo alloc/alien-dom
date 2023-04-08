@@ -1,5 +1,10 @@
 lockfileVersion: 5.4
 
+patchedDependencies:
+  morphdom@2.7.0:
+    hash: ye4w3sngvdchhu64z3n7nifjdy
+    path: patches/morphdom@2.7.0.patch
+
 importers:
 
   .:
@@ -19,7 +24,7 @@ importers:
       '@preact/signals-core': 1.2.3
       csstype: 3.1.1
       linear-color: 1.2.0
-      morphdom: 2.7.0
+      morphdom: 2.7.0_ye4w3sngvdchhu64z3n7nifjdy
       type-fest: 3.6.1
     devDependencies:
       '@alloc/prettier-config': 1.0.0
@@ -695,9 +700,10 @@ packages:
       brace-expansion: 1.1.11
     dev: true
 
-  /morphdom/2.7.0:
+  /morphdom/2.7.0_ye4w3sngvdchhu64z3n7nifjdy:
     resolution: {integrity: sha512-8L8DwbdjjWwM/aNqj7BSoSn4G7SQLNiDcxCnMWbf506jojR6lNQ5YOmQqXEIE8u3C492UlkN4d0hQwz97+M1oQ==}
     dev: false
+    patched: true
 
   /ms/2.1.2:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}

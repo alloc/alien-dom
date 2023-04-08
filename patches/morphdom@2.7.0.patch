@@ -1,0 +1,26 @@
+diff --git a/dist/morphdom-esm.js b/dist/morphdom-esm.js
+index 607c48a3513962529f564ce1eeb138bf35b99540..a192eac9ce6c66e09a31e3bed43cbbbf11248e5e 100644
+--- a/dist/morphdom-esm.js
++++ b/dist/morphdom-esm.js
+@@ -424,7 +424,7 @@ function morphdomFactory(morphAttrs) {
+           }
+ 
+           // Walk recursively
+-          indexTree(curChild);
++          // indexTree(curChild);
+ 
+           curChild = curChild.nextSibling;
+         }
+diff --git a/dist/morphdom.js b/dist/morphdom.js
+index c5ba58faba6ba5143ccc1f3ce11b94144e815ee6..e600b03de953c7467a63e601a187b82f623b4820 100644
+--- a/dist/morphdom.js
++++ b/dist/morphdom.js
+@@ -426,7 +426,7 @@ function morphdomFactory(morphAttrs) {
+           }
+ 
+           // Walk recursively
+-          indexTree(curChild);
++          // indexTree(curChild);
+ 
+           curChild = curChild.nextSibling;
+         }
