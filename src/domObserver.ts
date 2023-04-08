@@ -133,27 +133,27 @@ export const observeRemovedDescendants = createHookType(
  * Runs the effect when the given target is mounted, then stops
  * observing the document.
  */
-export const onMount = (target: Element, effect: () => void) =>
+export const onMount = (target: ChildNode, effect: () => void) =>
   observeElementHook(target, 'onAdded', effect)
 
 /**
  * Runs the effect when the given target is unmounted, then stops
  * observing the document.
  */
-export const onUnmount = (target: Element, effect: () => void) =>
+export const onUnmount = (target: ChildNode, effect: () => void) =>
   observeElementHook(target, 'onRemoved', effect)
 
 type DepthFirstEffect = [
   effect: () => void,
   depth: number,
-  target: Element,
+  target: ChildNode,
   key: string
 ]
 
 let depthFirstBatch: DepthFirstEffect[] | null = null
 
 const observeElementHook = createHookType(
-  (target: Element, key: 'onAdded' | 'onRemoved', effect: () => void) => {
+  (target: ChildNode, key: 'onAdded' | 'onRemoved', effect: () => void) => {
     const self = getCurrentHook()
     if ((key == 'onAdded') == document.body.contains(target)) {
       self?.context?.remove(self)
@@ -196,7 +196,7 @@ const observeElementHook = createHookType(
   }
 )
 
-function getElementDepth(elem: Element, stopAt?: Element) {
+function getElementDepth(elem: ChildNode, stopAt?: Element) {
   let depth = 0
   while (elem.parentElement && elem.parentElement != stopAt) {
     depth++
