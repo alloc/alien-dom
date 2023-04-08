@@ -162,12 +162,13 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
       // Check for equivalence as the return value of a custom component
       // might be the cached result of an element thunk.
       if (oldNode !== node) {
-        component.newElements!.set(key, node as DefaultElement)
+        component.newElements!.set(key, node as JSX.Element)
       }
       if (oldNode) {
-        node = oldNode as typeof node
+        setSymbol(node, kAlienElementKey, key)
+        node = oldNode
       }
-      component.setRef(key, node as DefaultElement)
+      component.setRef(key, node as JSX.Element)
     } else {
       setSymbol(node, kAlienElementKey, key)
     }
@@ -235,7 +236,7 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
           else if (document.contains(child)) {
             // Ensure this element is not forgotten by the ref tracker, so
             // it can be reused when the cache is invalidated.
-            component.setRef(key, child as DefaultElement)
+            component.setRef(key, child as JSX.Element)
             // Prevent an update by morphdom.
             child = getPlaceholder(child)
           }
