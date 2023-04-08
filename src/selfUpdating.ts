@@ -1,5 +1,5 @@
 import { effect } from '@preact/signals-core'
-import { ref, refs as toRefs, attachRef, Ref } from './signals'
+import { ref, attachRef } from './signals'
 import { DefaultElement } from './internal/types'
 import {
   setSymbol,
@@ -12,7 +12,6 @@ import { AlienHooks } from './hooks'
 import { updateElement, updateFragment } from './updateElement'
 import { kAlienFragment } from './symbols'
 import { AlienComponent } from './internal/component'
-import { onMount } from './domObserver'
 
 /**
  * Create a self-updating component whose render function can mutate its
