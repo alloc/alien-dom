@@ -12,6 +12,7 @@ import { AlienHooks } from './hooks'
 import { updateElement, updateFragment } from './updateElement'
 import { kAlienFragment } from './symbols'
 import { AlienComponent } from './internal/component'
+import { onMount } from './domObserver'
 
 /**
  * Create a self-updating component whose render function can mutate its
@@ -153,7 +154,8 @@ export function selfUpdating<
       }
 
       // If there are enabled component hooks, we are mounted.
-      const isMounted = self.hooks?.enabled
+      const oldHooks = self.hooks
+      const isMounted = !!oldHooks && oldHooks.enabled
 
       // The render function might return an element reference.
       if (rootNode && rootNode === newRootNode) {
@@ -204,14 +206,23 @@ export function selfUpdating<
             oldNodes[0].before(placeholder)
             oldNodes.forEach(node => node.remove())
           }
-          self.setRootNode(placeholder)
+          self.setRootNode((rootNode = placeholder))
         }
+      }
 
-        // If neither updateElement nor updateFragment were called, but
-        // we're already mounted, we need to enable the hooks now.
-        if (isMounted && !newHooks.enabled) {
-          newHooks.enable()
-        }
+      if (isMounted && document.contains(rootNode)) {
+        newHooks.enable()
+        oldHooks.disable()
+      } else {
+        // If the root node isn't added to a JSX parent node by the next
+        // microtask, assume the node has been or will be added to the
+        // DOM with native methods.
+        queueMicrotask(() => {
+          if (!newHooks.enabled && self.hooks === newHooks) {
+            newHooks.setElement(rootNode)
+            oldHooks?.setElement(null)
+          }
+        })
       }
 
       self.endRender()

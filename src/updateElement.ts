@@ -73,12 +73,7 @@ export function updateElement(
   const elementMap = new Map<HTMLElement, HTMLElement>()
   recursiveMorph(rootElement, newRootElement, instance?.newRefs, elementMap)
   if (instance) {
-    retargetHooks(instance.newHooks!, rootElement, elementMap)
-
-    // Disable the old hooks after the new hooks are enabled, so that no
-    // unnecessary cleanup occurs (e.g. destroying a mutation observer
-    // that seems like it's unused when it's actually still needed).
-    instance.hooks?.disable()
+    retargetHooks(instance.newHooks!, rootElement, elementMap, true)
   }
   for (const [newElement, oldElement] of elementMap) {
     const oldHooks: AlienHooks = (oldElement as any)[kAlienHooks]
@@ -94,12 +89,13 @@ export function updateElement(
  */
 function retargetHooks(
   newHooks: AlienHooks,
-  oldElement: AnyElement | null,
-  elementMap: Map<HTMLElement, HTMLElement>
+  oldElement: AnyElement,
+  elementMap: Map<HTMLElement, HTMLElement>,
+  isComponent?: boolean
 ) {
   const { enablers } = newHooks
 
-  if (oldElement) {
+  if (!isComponent) {
     // The `setElement` call will run the enablers if we don't unset
     // them here, which would be bad since we don't want to run them
     // until they've been retargeted.
@@ -111,11 +107,6 @@ function retargetHooks(
     const oldElement = elementMap.get(enabler.target)
     newHooks.enable(enabler as any, oldElement || enabler.target)
   })
-
-  if (!oldElement) {
-    // For component hooks, it can be done simply.
-    newHooks.enable()
-  }
 }
 
 function getNodeKey(node: any): ElementKey | undefined {

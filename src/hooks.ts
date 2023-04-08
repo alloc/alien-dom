@@ -54,10 +54,12 @@ export class AlienHooks<Element extends AnyElement = any> {
 
   setElement(element: Element | null) {
     if (element === null) {
-      if ((this.element as any)[kAlienHooks] === this) {
-        setSymbol(this.element, kAlienHooks, undefined)
+      if (this.element) {
+        if ((this.element as any)[kAlienHooks] === this) {
+          setSymbol(this.element, kAlienHooks, undefined)
+        }
+        this.element = undefined
       }
-      this.element = undefined
       if (this._mountHook) {
         this._mountHook.dispose()
         this._mountHook = null
