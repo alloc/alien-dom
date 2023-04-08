@@ -3,8 +3,8 @@ import { JSX } from './types/jsx'
 import { kAlienThunkResult, kAlienElementKey, kAlienHooks } from './symbols'
 import { currentComponent } from './global'
 import { isElement } from './jsx-dom/util'
-import { DefaultElement } from './internal/types'
 import { AlienHooks } from './hooks'
+import { ElementKey } from './types/attr'
 
 /**
  * Coerce a possible element thunk into an element (or a falsy value),
@@ -20,53 +20,75 @@ export function fromElementProp(element: JSX.ElementProp): JSX.ElementOption {
 
 /** @internal */
 export function fromElementThunk(thunk: () => JSX.Children) {
-  if (thunk.hasOwnProperty(kAlienThunkResult)) {
-    return (thunk as any)[kAlienThunkResult]
+  if (!thunk.hasOwnProperty(kAlienThunkResult)) {
+    const result = computed(thunk)
+
+    // The first component to call the thunk owns it.
+    const component = currentComponent.get()
+    if (!component) {
+      return result.value
+    }
+
+    // By caching the element here, we can reuse a mounted element even if
+    // a parent component overwrites its element key, which can happen if
+    // the current component returns it as the root element.
+    let rootNode: Element | null | undefined
+    let key: ElementKey | undefined
+
+    Object.defineProperty(thunk, kAlienThunkResult, {
+      get() {
+        let newRootNode = result.value
+
+        // TODO: support more than single element nodes
+        if (isElement(newRootNode)) {
+          const newKey: ElementKey = (newRootNode as any)[kAlienElementKey]
+          if (newKey !== undefined) {
+            // When no cached node exists, check the component refs in
+            // case this thunk was recreated.
+            if (rootNode === undefined) {
+              rootNode = component.refs?.get(newKey)
+              if (rootNode) {
+                key = newKey
+              }
+            }
+
+            const oldRootNode = rootNode
+            if (rootNode !== newRootNode) {
+              if (!rootNode || key !== newKey) {
+                rootNode = newRootNode
+                key = newKey
+              }
+            } else {
+              key ??= newKey
+
+              // If the element is unchanged, we need to disable the old
+              // hooks before new hooks are added.
+              const hooks: AlienHooks = (rootNode as any)[kAlienHooks]
+              hooks?.setElement(null)
+            }
+
+            if (rootNode && rootNode === oldRootNode) {
+              // Emulate a JSX element being constructed.
+              component.setRef(key, rootNode as any)
+
+              // We have to set `newElements` here or else we'll confuse
+              // the self-updating component into thinking it didn't
+              // create this element (i.e. a child component did).
+              if (rootNode === newRootNode) {
+                component.newElements!.set(key, rootNode as any)
+              } else {
+                newRootNode = rootNode
+              }
+            }
+          }
+        } else {
+          rootNode = null
+        }
+
+        return newRootNode
+      },
+    })
   }
 
-  const result = computed(thunk)
-
-  // By caching the element here, we can reuse a mounted element even if
-  // a parent component overwrites its element key, which can happen if
-  // the current component returns it as the root element.
-  let element = result.value
-
-  Object.defineProperty(thunk, kAlienThunkResult, {
-    get() {
-      let newElement = result.value
-
-      // TODO: support more than single element nodes
-      const component = currentComponent.get()
-      if (component && isElement(newElement)) {
-        const key = (newElement as any)[kAlienElementKey]
-        if (key !== undefined) {
-          if (element !== newElement) {
-            if (element) {
-              newElement = element
-            } else {
-              element = newElement
-            }
-          } else {
-            // If the element is unchanged, we need to disable the old
-            // hooks before new hooks are added.
-            const hooks: AlienHooks = (element as any)[kAlienHooks]
-            hooks?.setElement(null)
-          }
-
-          // We have to set `newElements` here or else we'll confuse the
-          // self-updating component into thinking it didn't create this
-          // element (i.e. a child component did).
-          component.newElements!.set(key, newElement as DefaultElement)
-
-          // We have to call `setRef` to emulate a JSX element being
-          // constructed.
-          component.setRef(key, newElement as DefaultElement)
-        }
-      }
-
-      return newElement
-    },
-  })
-
-  return element
+  return (thunk as any)[kAlienThunkResult]
 }
