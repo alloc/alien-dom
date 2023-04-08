@@ -139,6 +139,8 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
    * ⚠️ DO NOT use this with a `selfUpdating` element, or it will break.
    */
   morph(element: Element) {
+    const key = (this as any)[kAlienElementKey]
+    setSymbol(element, kAlienElementKey, key)
     updateElement(this, element)
     return this
   }
