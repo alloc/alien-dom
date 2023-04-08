@@ -1,8 +1,28 @@
 # Function Components
 
-### Element references
+## Self-updating ancestors
 
-JSX-defined elements can be referenced with a variable, with some limitations.
+Even if a plain function component isn't explicitly wrapped with a
+`selfUpdating` call, it can still become a self-updating component at
+runtime. Specifically, if it has a self-updating ancestor, it will also
+become self-updating.
+
+In practice, the only major effect this has is in relation to JSX
+element references.
+
+## Element references
+
+By declaring a JSX element anywhere other than a `return` statement or
+within a JSX parent element, you've created an element reference.
+
+In a self-updating component (explicit or otherwise), this means the DOM
+element returned by the JSX declaration could be an element reused from
+a previous render.
+
+### Limitations
+
+If your component or non-component function is never used within a
+self-updating component tree, these limitations don't apply.
 
 - JSX element references cannot exist in a loop. Move the reference into
   a separate component that your loop renders instead.
@@ -11,9 +31,9 @@ JSX-defined elements can be referenced with a variable, with some limitations.
   the reference into a separate component that your function renders
   instead.
 
-The limitations above only apply if your component is ever rendered by a
-self-updating component (directly or indirectly) or is itself a
-self-updating component.
+### When are elements updated?
 
-It's also important to understand that a JSX element isn't guaranteed to
-have up-to-date property values during render.
+A referenced element won't be updated with the latest props until the
+component returns (unless the element was just created). This means any
+attributes or properties you access during render aren't guaranteed to
+be up-to-date.
