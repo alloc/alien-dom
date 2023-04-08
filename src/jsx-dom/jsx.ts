@@ -102,6 +102,8 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
 
   const component = currentComponent.get()
   if (component && typeof tag !== 'string' && tag !== Fragment) {
+    // When a plain function component is used by a self-updating
+    // component, the former is made to be self-updating as well.
     if (!tag.hasOwnProperty(kAlienSelfUpdating)) {
       let selfUpdatingTag = selfUpdatingTags.get(tag)
       if (!selfUpdatingTag) {
