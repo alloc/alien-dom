@@ -4,6 +4,7 @@ import { AnyElement, DefaultElement } from './types'
 import { AlienHooks } from '../hooks'
 import { kAlienElementTags } from '../symbols'
 import { FunctionComponent } from '../types/component'
+import { getAlienHooks } from './hooks'
 import {
   setSymbol,
   kAlienElementKey,
@@ -84,7 +85,7 @@ export class AlienComponent<Props = any> {
         get: () => {
           if (this.newElements) {
             const newElement = this.newElements.get(key)
-            return newElement?.hooks()
+            return newElement && getAlienHooks(newElement)
           }
         },
       })

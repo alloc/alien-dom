@@ -1,10 +1,10 @@
 import { animate, SpringAnimation } from './animate'
 import { AlienElementMessage, events } from './events'
-import { AlienHooks, Disposable, AlienHook } from './hooks'
+import { Disposable, AlienHook } from './hooks'
 import { canMatch } from './internal/duck'
 import { AnyElement, AnyEvent, DefaultElement } from './internal/types'
 import { AlienNodeList } from './nodeList'
-import { kAlienHooks, kAlienNewHooks } from './symbols'
+import { kAlienElementKey, setSymbol } from './symbols'
 import { applyProps, updateStyle } from './jsx-dom/jsx'
 import { HTMLAttributes, DetailedHTMLProps } from './types/html'
 import { CSSProperties } from './types/dom'
@@ -12,23 +12,7 @@ import { SVGAttributes } from './types/svg'
 import { targetedEffect } from './signals'
 import { elementEvent } from './elementEvents'
 import { updateElement } from './updateElement'
-
-declare global {
-  interface Element {
-    readonly childNodes: AlienElementList<Element>
-    cloneNode(deep?: boolean): this
-    matches(selectors: string): boolean
-    matches<Element extends AlienTag<DefaultElement>>(
-      selectors: string
-    ): this is AlienSelect<Element>
-  }
-  interface HTMLElement extends AlienElement<HTMLElement> {
-    readonly childNodes: AlienElementList
-  }
-  interface SVGElement extends AlienElement<SVGElement> {
-    readonly childNodes: AlienElementList<SVGElement>
-  }
-}
+import { getAlienHooks } from './internal/hooks'
 
 export interface AlienElementList<Element extends Node = DefaultElement>
   extends NodeListOf<Element>,
@@ -221,39 +205,8 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
    * component's render function (if this element is returned by the
    * component).
    */
-  hooks(): AlienHooks<Element> {
-    const newHooks = (this as any)[kAlienNewHooks]
-    return newHooks || (this as any)[kAlienHooks] || new AlienHooks(this)
-  }
-  /**
-   * Enable hooks, if any, for this element. Call this instead of
-   * `hooks().enable()` if you don't want to create an `AlienHooks`
-   * instance unnecessarily.
-   *
-   * Note: You should only use this if you're also using `disableHooks`
-   * (see its note for valid use cases).
-   */
-  enableHooks() {
-    const hooks = Reflect.get(this, kAlienHooks) as
-      | AlienHooks<Element>
-      | undefined
-    hooks?.enable()
-    return this
-  }
-  /**
-   * Disable hooks, if any, for this element. Call this instead of
-   * `hooks().disable()` if you don't want to create an `AlienHooks`
-   * instance unnecessarily.
-   *
-   * Note: You should only use this if you're keeping an element in the
-   * DOM but don't want its hooks to run.
-   */
-  disableHooks() {
-    const hooks = Reflect.get(this, kAlienHooks) as
-      | AlienHooks<Element>
-      | undefined
-    hooks?.disable()
-    return this
+  hooks() {
+    return getAlienHooks(this)
   }
 }
 

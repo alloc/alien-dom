@@ -121,9 +121,6 @@ export class AlienHooks<Element extends AnyElement = any> {
   /**
    * Enable the scope. If there are any `enable` callbacks, they will be
    * run.
-   *
-   * Note: You should only call this method if you know what you're
-   * doing. Otherwise, prefer `element.enableHooks()` instead.
    */
   enable(): void
 
@@ -161,9 +158,6 @@ export class AlienHooks<Element extends AnyElement = any> {
 
   /**
    * Tear down any subscriptions, including `disable` callbacks.
-   *
-   * Note: You should only call this method if you know what you're
-   * doing. Otherwise, prefer `element.disableHooks()` instead.
    */
   disable() {
     if (this.enabled) {
