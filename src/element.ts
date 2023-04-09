@@ -135,8 +135,6 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
    * Morph this element into another element. If the given `element` had
    * its `hooks` method called, all of its hooks will be transferred to
    * this element.
-   *
-   * ⚠️ DO NOT use this with a `selfUpdating` element, or it will break.
    */
   morph(element: Element) {
     const key = (this as any)[kAlienElementKey]

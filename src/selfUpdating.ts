@@ -12,6 +12,7 @@ import { AlienHooks } from './hooks'
 import { updateElement, updateFragment } from './updateElement'
 import { kAlienFragment } from './symbols'
 import { AlienComponent } from './internal/component'
+import { currentContext, ContextStore } from './context'
 
 /**
  * Create a self-updating component whose render function can mutate its
@@ -37,6 +38,7 @@ export function selfUpdating<
 
     // The props object passed to the render function.
     const props = {} as Props
+    const context = new ContextStore(currentContext)
 
     // Once a prop is mutated from inside, it's considered stateful.
     // This means it can't be updated from outside unless the element's
@@ -126,6 +128,7 @@ export function selfUpdating<
     const self = new AlienComponent(
       Component as any,
       props,
+      context,
       reinitProps,
       updateProps,
       enable,

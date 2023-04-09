@@ -4,11 +4,10 @@ import { AnyElement } from './internal/types'
 import { currentHooks } from './global'
 import { kAlienHooks, setSymbol } from './symbols'
 import { noop } from './jsx-dom/util'
-import { AlienContext } from './context'
-import { JSX } from './types/jsx'
 
 type Promisable<T> = T | Promise<T>
 
+export * from './hooks/useContext'
 export * from './hooks/useEffect'
 export * from './hooks/useMicrotask'
 export * from './hooks/useRef'
@@ -92,13 +91,6 @@ export class AlienHooks<Element extends AnyElement = any> {
         }
       }
     }
-  }
-
-  enableContext<T>(context: AlienContext<T>, value: T) {
-    return this.enable(() => {
-      context.push(value)
-      return () => context.pop(v => v === value)
-    })
   }
 
   /**
@@ -380,19 +372,6 @@ export function createHookType<Args extends any[]>(
     enabler.args = args
     return createHook(enabler)
   }) as any
-}
-
-/**
- * Create a component that provides the current `AlienHooks` context to
- * children. Useful for asynchronous rendering.
- */
-export function bindHooksContext() {
-  const hooks = currentHooks.get()
-  return (props: { children: JSX.Children }) =>
-    currentHooks.Provider({
-      value: hooks,
-      children: props.children,
-    })
 }
 
 /**

@@ -5,6 +5,8 @@ import { AlienHooks } from '../hooks'
 import { kAlienElementTags } from '../symbols'
 import { FunctionComponent } from '../types/component'
 import { getAlienHooks } from './hooks'
+import { Ref } from '../signals'
+import { AlienContext, currentContext } from '../context'
 import {
   setSymbol,
   kAlienElementKey,
@@ -33,6 +35,7 @@ export class AlienComponent<Props = any> {
   constructor(
     readonly tag: FunctionComponent,
     readonly props: Props,
+    readonly context: Map<AlienContext, Ref>,
     readonly reinitProps: (props: Partial<Props>) => void,
     readonly updateProps: (props: Partial<Props>) => void,
     readonly enable: () => void,
@@ -103,7 +106,15 @@ export function updateTagProps(element: AnyElement, tag: any, props: any) {
   if (tags) {
     const instance = tags.get(tag)
     if (instance) {
-      batch(() => instance.reinitProps(props))
+      batch(() => {
+        instance.reinitProps(props)
+        currentContext.forEach((ref, key) => {
+          const targetRef = instance.context.get(key)
+          if (targetRef) {
+            targetRef.value = ref.peek()
+          }
+        })
+      })
       return true
     }
   }
