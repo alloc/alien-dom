@@ -1,0 +1,13 @@
+{
+  "name": "@alien-dom/hmr",
+  "version": "0.1.0",
+  "main": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup-node src/index.ts --format esm --dts"
+  },
+  "dependencies": {
+    "md5-hex": "^4.0.0",
+    "meriyah": "^4.3.5"
+  }
+}
