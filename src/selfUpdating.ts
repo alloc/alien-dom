@@ -13,6 +13,7 @@ import { updateElement, updateFragment } from './updateElement'
 import { kAlienFragment } from './symbols'
 import { AlienComponent } from './internal/component'
 import { currentContext, ContextStore } from './context'
+import { JSX } from './types/jsx'
 
 /**
  * Create a self-updating component whose render function can mutate its
@@ -25,12 +26,12 @@ import { currentContext, ContextStore } from './context'
  */
 export function selfUpdating<
   Props extends object,
-  Element extends DefaultElement = DefaultElement
+  Element extends JSX.Element = JSX.Element
 >(
   render: (
     props: Props,
     update: (props: Partial<Props>) => void
-  ) => DefaultElement | null | undefined
+  ) => Element | null | undefined
 ): (props: Props) => Element {
   const Component = (initialProps: Props): any => {
     let oldPropChanged = false
