@@ -288,12 +288,12 @@ function applyAnimation(
 
   node.done = false
   node.to = parsedTo
+  node.from = parsedFrom
   node.frame = frame || null
   node.onChange = onChange || null
   node.onRest = onRest || null
 
   if (parsedFrom) {
-    node.from = parsedFrom
     node.lastPosition = null
   }
 
