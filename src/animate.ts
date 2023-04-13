@@ -301,12 +301,12 @@ function applyAnimation(
     node.lastVelocity = null
   }
 
-  node.isRelative =
-    svgMode &&
-    !isColor &&
-    (scaleKeys.includes(key) ||
+  if (svgMode && !isColor) {
+    node.isRelative =
+      scaleKeys.includes(key) ||
       (parsedTo as ParsedValue)[1] == '%' ||
-      (!!parsedFrom && (parsedFrom as ParsedValue)[1] == '%'))
+      (!!parsedFrom && (parsedFrom as ParsedValue)[1] == '%')
+  }
 
   return node
 }
