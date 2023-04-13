@@ -664,7 +664,7 @@ function advance(
   let finished = false
 
   const step = 1 // 1ms
-  const numSteps = Math.ceil(dt / step)
+  const numSteps = Math.max(1, Math.ceil(dt / step))
   for (let n = 0; n < numSteps; ++n) {
     isMoving = Math.abs(velocity) > restVelocity
 
