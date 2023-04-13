@@ -10,6 +10,7 @@
   },
   "files": [
     "dist",
+    "!dist/*.tsbuildinfo",
     "types",
     "*.d.ts",
     "*.js"
