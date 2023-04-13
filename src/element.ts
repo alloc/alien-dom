@@ -195,7 +195,9 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     return this
   }
   spring(
-    animations: SpringAnimation<Element> | readonly SpringAnimation<Element>[]
+    animations:
+      | SpringAnimation<Element, any>
+      | readonly SpringAnimation<Element, any>[]
   ) {
     animate(this, animations as any)
     return this

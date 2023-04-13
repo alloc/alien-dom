@@ -4,17 +4,18 @@ import { AnyElement, DefaultElement } from './internal/types'
 import { decamelize, toArray } from './jsx-dom/util'
 import { $$, AlienSelector } from './selectors'
 import { svgTags } from './jsx-dom/svg-tags'
-import { kAlienElementKey } from './symbols'
-import { currentComponent } from './global'
 
-export type SpringAnimation<Element extends AnyElement = any> = {
-  to: AnimatedProps<Element>
-  from?: AnimatedProps<Element>
+export type SpringAnimation<
+  Element extends AnyElement = any,
+  Props extends object = AnimatedProps<Element>
+> = {
+  to: Props
+  from?: Props
   spring?: SpringConfig
   velocity?: number
   anchor?: [number, number]
-  onChange?: FrameCallback<Element>
-  onRest?: FrameCallback<Element>
+  onChange?: FrameCallback<Element, Props>
+  onRest?: FrameCallback<Element, Props>
 }
 
 export type SpringConfig = {
@@ -99,10 +100,10 @@ export type AnimationState<T extends AnimatedType = any> = [
   ResolvedSpringConfig
 ]
 
-export type FrameCallback<T extends AnyElement> = (
-  props: [T] extends [Any] ? any : Required<AnimatedProps<T>>,
-  target: T
-) => void
+export type FrameCallback<
+  T extends AnyElement,
+  Props extends object = AnimatedProps<T>
+> = (props: [T] extends [Any] ? any : Required<Props>, target: T) => void
 
 export type AnimatedElement = {
   props: { [prop: string]: AnimationState<AnimatedType> }

@@ -1,10 +1,15 @@
+import { DefaultElement } from './dist/internal/types'
 import {
   AlienElementList,
   AlienTag,
   AlienSelect,
   AlienElement,
 } from './dist/element'
-import { DefaultElement } from './dist/internal/types'
+import {
+  SpringAnimation,
+  HTMLAnimatedProps,
+  SVGAnimatedProps,
+} from './dist/animate'
 
 declare global {
   interface Element {
@@ -17,9 +22,19 @@ declare global {
   }
   interface HTMLElement extends AlienElement<HTMLElement> {
     readonly childNodes: AlienElementList
+    spring(
+      animations:
+        | SpringAnimation<this, HTMLAnimatedProps>
+        | readonly SpringAnimation<this, HTMLAnimatedProps>[]
+    ): this
   }
   interface SVGElement extends AlienElement<SVGElement> {
     readonly childNodes: AlienElementList<SVGElement>
+    spring(
+      animations:
+        | SpringAnimation<this, SVGAnimatedProps>
+        | readonly SpringAnimation<this, SVGAnimatedProps>[]
+    ): this
   }
 }
 
