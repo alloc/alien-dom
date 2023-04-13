@@ -44,6 +44,7 @@ interface TransformProps {
 
 export interface HTMLAnimatedProps extends TransformProps {
   backgroundColor?: string
+  borderRadius?: Length
   color?: string
   opacity?: number
 }
@@ -322,6 +323,7 @@ function isColorKey(key: string, svgMode: boolean) {
 }
 
 const defaultUnits: Record<string, string | undefined> = {
+  borderRadius: 'px',
   x: 'px',
   y: 'px',
   z: 'px',
