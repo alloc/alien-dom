@@ -1,12 +1,15 @@
 {
   "name": "@alien-dom/nebu",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsup-node src/index.ts --format esm --dts"
   },
+  "files": [
+    "dist"
+  ],
   "devDependencies": {
     "kleur": "^4.1.5",
     "nebu": "^2.3.2",
@@ -14,5 +17,8 @@
   },
   "dependencies": {
     "@alien-dom/hmr": "workspace:0.1.0"
+  },
+  "peerDependencies": {
+    "nebu": ">=2.3"
   }
 }
