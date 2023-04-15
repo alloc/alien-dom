@@ -7,6 +7,9 @@
   "scripts": {
     "build": "tsup src/plugin.ts --format esm --dts"
   },
+  "files": [
+    "dist"
+  ],
   "devDependencies": {
     "esbuild": "^0.17.12"
   },
