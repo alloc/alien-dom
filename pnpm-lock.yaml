@@ -35,14 +35,16 @@ importers:
   packages/esbuild-plugin:
     specifiers:
       '@alien-dom/nebu': ^0.1.0
+      '@types/node': ^18.15.11
       esbuild: ^0.17.12
       esbuild-extra: ^0.1.2
-      nebu: ^2.3.3
+      nebu: ^2.3.7
     dependencies:
       '@alien-dom/nebu': link:../nebu-plugin
       esbuild-extra: 0.1.2_esbuild@0.17.12
-      nebu: 2.3.3
+      nebu: 2.3.7
     devDependencies:
+      '@types/node': 18.15.11
       esbuild: 0.17.12
 
   packages/hmr:
@@ -52,6 +54,14 @@ importers:
     dependencies:
       md5-hex: 4.0.0
       meriyah: 4.3.5
+
+  packages/htmelt:
+    specifiers:
+      '@alien-dom/esbuild': workspace:^0.1.0
+      '@htmelt/plugin': ^0.1.1
+    dependencies:
+      '@alien-dom/esbuild': link:../esbuild-plugin
+      '@htmelt/plugin': 0.1.1
 
   packages/nebu-plugin:
     specifiers:
@@ -262,6 +272,20 @@ packages:
     requiresBuild: true
     optional: true
 
+  /@htmelt/plugin/0.1.1:
+    resolution: {integrity: sha512-5dOblxL5I6JQIJFDQHCFj7pz5UwynC/ZB2x8E/vBLa3loPgvvY364iOQUpzhIW7LAr6ONzMQOuxaNPmK+8fZxA==}
+    dependencies:
+      '@rollup/pluginutils': 5.0.2
+      '@web/parse5-utils': 1.3.1
+      esbuild: 0.17.12
+      esbuild-extra: 0.1.4_esbuild@0.17.12
+      md5-hex: 4.0.0
+      mitt: 3.0.0
+      type-fest: 3.6.1
+    transitivePeerDependencies:
+      - rollup
+    dev: false
+
   /@jridgewell/gen-mapping/0.1.1:
     resolution: {integrity: sha512-sQXCasFk+U8lWYEe66WxRDOE9PjVz4vSM51fTu3Hw+ClTpUSQb718772vH3pyS5pShp6lvQM7SxgIDXXXmOX7w==}
     engines: {node: '>=6.0.0'}
@@ -314,6 +338,40 @@ packages:
 
   /@preact/signals-core/1.2.3:
     resolution: {integrity: sha512-Kui4p7PMcEQevBgsTO0JBo3gyQ88Q3qzEvsVCuSp11t0JcN4DmGCTJcGRVSCq7Bn7lGxJBO+57jNSzDoDJ+QmA==}
+    dev: false
+
+  /@rollup/pluginutils/5.0.2:
+    resolution: {integrity: sha512-pTd9rIsP92h+B6wWwFbW8RkZv4hiR/xKsqre4SIuAOaOEQRxi0lqLke9k2/7WegC85GgUs9pjmOjCUi3In4vwA==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^1.20.0||^2.0.0||^3.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+    dependencies:
+      '@types/estree': 1.0.0
+      estree-walker: 2.0.2
+      picomatch: 2.3.1
+    dev: false
+
+  /@types/estree/1.0.0:
+    resolution: {integrity: sha512-WulqXMDUTYAXCjZnk6JtIHPigp55cVtDgDrO2gHRwhyJto21+1zbVCtOYB2L1F9w4qCQ0rOGWBnBe0FNTiEJIQ==}
+    dev: false
+
+  /@types/node/18.15.11:
+    resolution: {integrity: sha512-E5Kwq2n4SbMzQOn6wnmBjuK9ouqlURrcZDVfbo9ftDDTFt3nk7ZKK4GMOzoYgnpQJKcxwQw+lGaBvvlMo0qN/Q==}
+    dev: true
+
+  /@types/parse5/6.0.3:
+    resolution: {integrity: sha512-SuT16Q1K51EAVPz1K29DJ/sXjhSQ0zjvsypYJ6tlwVsRV9jwW5Adq2ch8Dq8kDBCkYnELS7N7VNCSB5nC56t/g==}
+    dev: false
+
+  /@web/parse5-utils/1.3.1:
+    resolution: {integrity: sha512-haCgDchZrAOB9EhBJ5XqiIjBMsS/exsM5Ru7sCSyNkXVEJWskyyKuKMFk66BonnIGMPpDtqDrTUfYEis5Zi3XA==}
+    engines: {node: '>=10.0.0'}
+    dependencies:
+      '@types/parse5': 6.0.3
+      parse5: 6.0.1
     dev: false
 
   /any-promise/1.3.0:
@@ -445,6 +503,16 @@ packages:
       esbuild: 0.17.12
     dev: false
 
+  /esbuild-extra/0.1.4_esbuild@0.17.12:
+    resolution: {integrity: sha512-CGPDKeTS+N/zsC6Tu9IgLo7hi8xacdyauLuhlt9E7uMRJeJgSmTu0hOaTiHd5xd4s4xZ2Hy5b7d7mOxlccdmBw==}
+    peerDependencies:
+      esbuild: '>=0.15'
+    dependencies:
+      '@ampproject/remapping': 2.2.0
+      convert-source-map: 2.0.0
+      esbuild: 0.17.12
+    dev: false
+
   /esbuild/0.17.12:
     resolution: {integrity: sha512-bX/zHl7Gn2CpQwcMtRogTTBf9l1nl+H6R8nUbjk+RuKqAE3+8FDulLA+pHvX7aA7Xe07Iwa+CWvy9I8Y2qqPKQ==}
     engines: {node: '>=12'}
@@ -482,6 +550,10 @@ packages:
   /eslint-visitor-keys/3.3.0:
     resolution: {integrity: sha512-mQ+suqKJVyeuwGYHAdjMFqjCyfl8+Ldnxuyp3ldiMBFKkvytrXUZWaiPCEav8qDHKty44bD+qV1IP4T+w+xXRA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    dev: false
+
+  /estree-walker/2.0.2:
+    resolution: {integrity: sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w==}
     dev: false
 
   /execa/5.1.1:
@@ -700,6 +772,10 @@ packages:
       brace-expansion: 1.1.11
     dev: true
 
+  /mitt/3.0.0:
+    resolution: {integrity: sha512-7dX2/10ITVyqh4aOSVI9gdape+t9l2/8QxHrFmUXu4EEUpdlxl6RudZUPZoc+zuY2hk1j7XxVroIVIan/pD/SQ==}
+    dev: false
+
   /morphdom/2.7.0_ye4w3sngvdchhu64z3n7nifjdy:
     resolution: {integrity: sha512-8L8DwbdjjWwM/aNqj7BSoSn4G7SQLNiDcxCnMWbf506jojR6lNQ5YOmQqXEIE8u3C492UlkN4d0hQwz97+M1oQ==}
     dev: false
@@ -728,8 +804,8 @@ packages:
       meriyah: 4.3.5
     dev: true
 
-  /nebu/2.3.3:
-    resolution: {integrity: sha512-b/wMcaq4DJYypj4HzHYna4A+O1/BzxlntUuKv05iGi3pmw5wuck9TT8/Uw7bdldQiLpFvGYOjL9uKf7Z3h2lLQ==}
+  /nebu/2.3.7:
+    resolution: {integrity: sha512-WgbS0CHNS2VjGx0wWUySD/DNdZcD7hALLYaek17rHXYNOzWAy528dH7u3czaABncLs66ezrEOe0h3FcK296QNw==}
     engines: {node: '>= 7.6.0'}
     dependencies:
       '@alloc/is': 3.1.2
@@ -769,6 +845,10 @@ packages:
       mimic-fn: 2.1.0
     dev: true
 
+  /parse5/6.0.1:
+    resolution: {integrity: sha512-Ofn/CTFzRGTTxwpNEs9PP93gXShHcTq255nzRYSKe8AkVpZY7e1fpmTfOyoIvjP5HG7Z2ZM7VS9PPhQGW2pOpw==}
+    dev: false
+
   /path-is-absolute/1.0.1:
     resolution: {integrity: sha512-AVbw3UJ2e9bq64vSaS9Am0fje1Pa8pbGqTTsmXfaIiMpnr5DlDhfJOuLj9Sf95ZPVDAUerDfEk88MPmPe7UCQg==}
     engines: {node: '>=0.10.0'}
@@ -787,7 +867,6 @@ packages:
   /picomatch/2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
-    dev: true
 
   /pirates/4.0.5:
     resolution: {integrity: sha512-8V9+HQPupnaXMA23c5hvl69zXvTwTzyAYasnkb0Tts4XvO4CliqONMOnvlq26rkhLC3nWDFBJf73LU1e1VZLaQ==}
