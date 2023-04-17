@@ -8,12 +8,19 @@ import {
   isFunctionNode,
 } from './helpers'
 
-export default function (): Plugin {
-  let globalNextId = 0
-
+export default function (
+  state: {
+    /**
+     * This value is used to prevent key collisions across builds.
+     */
+    globalNextId: number
+  } = {
+    globalNextId: 0,
+  }
+): Plugin {
   return {
     Program(program) {
-      const globalId = globalNextId++
+      const globalId = state.globalNextId++
       let moduleNextId = 0
 
       const handleElementRefs = (path: FunctionNode) => {

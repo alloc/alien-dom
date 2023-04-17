@@ -1,0 +1,18 @@
+{
+  "name": "@alien-dom/htmelt",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/plugin.js",
+  "types": "dist/plugin.d.ts",
+  "scripts": {
+    "build": "tsup src/plugin.ts src/client.ts --format esm --dts",
+    "dev": "tsup src/plugin.ts src/client.ts --format esm --dts --watch --sourcemap"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@alien-dom/esbuild": "^0.1.0",
+    "@htmelt/plugin": "^0.1.1"
+  }
+}
