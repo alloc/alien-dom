@@ -13,12 +13,12 @@
   ],
   "devDependencies": {
     "@types/node": "^18.15.11",
-    "esbuild": "^0.17.12"
+    "esbuild": "^0.17.17"
   },
   "dependencies": {
-    "@alien-dom/nebu": "^0.1.0",
-    "esbuild-extra": "^0.1.2",
-    "nebu": "^2.3.7"
+    "@alien-dom/nebu": "^0.1.6",
+    "esbuild-extra": "^0.1.9",
+    "nebu": "^2.3.8"
   },
   "peerDependencies": {
     "esbuild": "*"
