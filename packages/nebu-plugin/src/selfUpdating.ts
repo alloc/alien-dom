@@ -1,5 +1,4 @@
-import { Node, Plugin } from 'nebu'
-import { ESTree } from 'nebu/dist/types'
+import type { Node, Plugin } from 'nebu'
 import { isHostElement } from './helpers'
 import {
   FunctionNode,
@@ -38,7 +37,7 @@ export default function (
 
         const componentFn = path
 
-        const addStaticElementKeys = (path: Node<ESTree.JSXOpeningElement>) => {
+        const addStaticElementKeys = (path: Node.JSXOpeningElement) => {
           if (!path.name.isJSXIdentifier()) {
             return // Dynamic element types are not supported.
           }
@@ -65,7 +64,7 @@ export default function (
           // A key must be defined for elements using a custom component,
           // or else we wouldn't be able to update its props from inside
           // the parent component.
-          if (isHostElement(path.parent as Node<ESTree.JSXElement>)) {
+          if (isHostElement(path.parent as Node.JSXElement)) {
             skipped =
               !path.parent.findParent(parent => {
                 if (parent === componentFn) {

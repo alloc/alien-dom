@@ -1,7 +1,6 @@
 import { Node } from 'nebu'
-import { ESTree } from 'nebu/dist/types'
 
-export function isHostElement(node: Node<ESTree.JSXElement>) {
+export function isHostElement(node: Node.JSXElement) {
   const { openingElement } = node
   if (!openingElement.name.isJSXIdentifier()) {
     return false
@@ -10,11 +9,10 @@ export function isHostElement(node: Node<ESTree.JSXElement>) {
   return /^[a-z]/.test(tagName)
 }
 
-export type FunctionNode = Node<
-  | ESTree.FunctionExpression
-  | ESTree.ArrowFunctionExpression
-  | ESTree.FunctionDeclaration
->
+export type FunctionNode =
+  | Node.FunctionExpression
+  | Node.ArrowFunctionExpression
+  | Node.FunctionDeclaration
 
 export function isFunctionNode(path: Node): path is FunctionNode {
   return (
@@ -25,9 +23,7 @@ export function isFunctionNode(path: Node): path is FunctionNode {
 }
 
 export function getComponentName(fn: FunctionNode) {
-  let entity:
-    | Node<ESTree.VariableDeclarator | ESTree.FunctionDeclaration>
-    | undefined
+  let entity: Node.VariableDeclarator | Node.FunctionDeclaration | undefined
 
   if (fn.isFunctionDeclaration()) {
     entity = fn
@@ -47,10 +43,7 @@ export function getComponentName(fn: FunctionNode) {
   }
 }
 
-export function hasElementProp(
-  path: Node<ESTree.JSXOpeningElement>,
-  name: string
-) {
+export function hasElementProp(path: Node.JSXOpeningElement, name: string) {
   return path.attributes.some(
     attr =>
       attr.isJSXAttribute() &&

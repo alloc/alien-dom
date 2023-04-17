@@ -1,9 +1,7 @@
 import { computeComponentHashes } from './hash'
-import { Node, Plugin } from 'nebu'
-import { ESTree } from 'nebu/dist/types'
+import type { Node, Plugin } from 'nebu'
+import type { ESTree } from 'nebu/dist/types'
 import { FunctionNode } from './helpers'
-
-type Identifier = Node<ESTree.Identifier>
 
 type State = { file: string; code: string }
 
@@ -16,7 +14,7 @@ export default (options: {
   onHmrAdded?: (file: string) => void
 }): Plugin<State> => ({
   Program(program, { file, code }) {
-    const components = computeComponentHashes<Identifier, FunctionNode>(
+    const components = computeComponentHashes<Node.Identifier, FunctionNode>(
       program,
       code,
       options.hash
@@ -34,8 +32,8 @@ export default (options: {
     for (const component of components) {
       if (component.selfUpdating) {
         const selfUpdatingCall = component.function
-          .parent as Node<ESTree.CallExpression>
-        const callee = selfUpdatingCall.callee as Node<ESTree.Identifier>
+          .parent as Node.CallExpression
+        const callee = selfUpdatingCall.callee as Node.Identifier
         callee.replace('hmrSelfUpdating')
       } else {
         component.function.before(`hmrComponent(`)
@@ -47,7 +45,7 @@ export default (options: {
 
       const nearestBlock = component.function.findParent(
         node => node.isBlockStatement() || node.isProgram()
-      ) as Node<ESTree.BlockStatement | ESTree.Program>
+      ) as Node.BlockStatement | Node.Program
 
       nearestBlock.push(
         'body',

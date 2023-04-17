@@ -1,10 +1,9 @@
-import { Node, Plugin } from 'nebu'
-import { ESTree } from 'nebu/dist/types'
+import type { Node, Plugin } from 'nebu'
 import { isHostElement, isFunctionNode } from './helpers'
 
 const plugin: Plugin = {
   Program(program) {
-    const jsxThunkParents = new Map<Node<ESTree.JSXElement>, JSXThunkParent>()
+    const jsxThunkParents = new Map<Node.JSXElement, JSXThunkParent>()
     program.process({
       JSXElement(path) {
         collectThunkParents(path, jsxThunkParents)
@@ -14,7 +13,7 @@ const plugin: Plugin = {
     // Wrap the children of each thunk parent in a closure.
     jsxThunkParents.forEach((thunk, path) => {
       thunk.attributes.forEach(attr => {
-        const value = attr.value as Node<ESTree.JSXExpressionContainer>
+        const value = attr.value as Node.JSXExpressionContainer
         value.expression.before(`() => `)
       })
 
@@ -43,17 +42,17 @@ const plugin: Plugin = {
 export default plugin
 
 type JSXThunkParent = {
-  attributes: Set<Node<ESTree.JSXAttribute>>
+  attributes: Set<Node.JSXAttribute>
   children: Set<Node>
 }
 
 // Checks if the given `jsxPath` is nested in another JSX element
 // without a closure in between them.
 function collectThunkParents(
-  jsxPath: Node<ESTree.JSXElement>,
-  jsxThunkParents: Map<Node<ESTree.JSXElement>, JSXThunkParent>
+  jsxPath: Node.JSXElement,
+  jsxThunkParents: Map<Node.JSXElement, JSXThunkParent>
 ) {
-  let jsxParent: Node<ESTree.JSXElement> | undefined
+  let jsxParent: Node.JSXElement | undefined
   let jsxChildOrAttr: Node = jsxPath
 
   // Look for nearest JSX element parent, or a closure.
