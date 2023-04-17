@@ -10,7 +10,6 @@
   },
   "files": [
     "dist",
-    "!dist/*.tsbuildinfo",
     "types",
     "*.d.ts",
     "*.js"
@@ -34,7 +33,7 @@
   "prettier": "@alloc/prettier-config",
   "scripts": {
     "dev": "tsc -p src/tsconfig.json -i --sourceMap --watch",
-    "build": "tsc -p src/tsconfig.json -i"
+    "build": "rimraf dist && tsc -p src/tsconfig.json"
   },
   "dependencies": {
     "@alloc/types": "^2.3.0",
@@ -45,6 +44,7 @@
     "type-fest": "^3.6.1"
   },
   "devDependencies": {
+    "@alloc/fast-rimraf": "^1.0.8",
     "@alloc/prettier-config": "^1.0.0",
     "prettier": "^2.8.4",
     "tsup": "^6.6.3",

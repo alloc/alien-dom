@@ -9,6 +9,7 @@ importers:
 
   .:
     specifiers:
+      '@alloc/fast-rimraf': ^1.0.8
       '@alloc/prettier-config': ^1.0.0
       '@alloc/types': ^2.3.0
       '@preact/signals-core': ^1.2.3
@@ -27,6 +28,7 @@ importers:
       morphdom: 2.7.0_ye4w3sngvdchhu64z3n7nifjdy
       type-fest: 3.6.1
     devDependencies:
+      '@alloc/fast-rimraf': 1.0.8
       '@alloc/prettier-config': 1.0.0
       prettier: 2.8.4
       tsup: 6.6.3_typescript@4.9.5
@@ -77,6 +79,11 @@ importers:
       tsup: 6.6.3
 
 packages:
+
+  /@alloc/fast-rimraf/1.0.8:
+    resolution: {integrity: sha512-TsRTRLLDW6Q4fWBAYlbkcaHQDAANKsI0smrhS/1x7/GHcjVxo+r+2VRbqrWaYpmjdhvCp5v7n2wtwkMYp+Kivw==}
+    hasBin: true
+    dev: true
 
   /@alloc/is/3.1.2:
     resolution: {integrity: sha512-VgfKuuc45fpQRanNLYNnNWVwYBy19FSBGU5Y5q4CPuglv6KLhb+ipVy7lfn9CWM43lKRzkRPU+mt8eT+mPDhDA==}
