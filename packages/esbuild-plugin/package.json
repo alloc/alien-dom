@@ -5,18 +5,20 @@
   "main": "dist/plugin.js",
   "types": "dist/plugin.d.ts",
   "scripts": {
-    "build": "tsup src/plugin.ts --format esm --dts"
+    "build": "tsup src/plugin.ts --format esm --dts",
+    "dev": "tsup src/plugin.ts --format esm --dts --watch --sourcemap"
   },
   "files": [
     "dist"
   ],
   "devDependencies": {
+    "@types/node": "^18.15.11",
     "esbuild": "^0.17.12"
   },
   "dependencies": {
     "@alien-dom/nebu": "^0.1.0",
     "esbuild-extra": "^0.1.2",
-    "nebu": "^2.3.3"
+    "nebu": "^2.3.7"
   },
   "peerDependencies": {
     "esbuild": "*"
