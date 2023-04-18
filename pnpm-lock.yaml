@@ -57,6 +57,14 @@ importers:
       '@alien-dom/esbuild': link:../esbuild-plugin
       '@htmelt/plugin': 0.1.2
 
+  packages/htmelt-plugin:
+    specifiers:
+      '@alien-dom/esbuild': ^0.1.0
+      '@htmelt/plugin': ^0.2.0
+    dependencies:
+      '@alien-dom/esbuild': link:../esbuild-plugin
+      '@htmelt/plugin': 0.2.0
+
   packages/nebu-plugin:
     specifiers:
       kleur: ^4.1.5
@@ -270,6 +278,21 @@ packages:
 
   /@htmelt/plugin/0.1.2:
     resolution: {integrity: sha512-qoa4er2VhN7Hl1Pc/Lf9OSoit9eTRALhu6Gp9tI9zENgM1HjfvI+yzZbae7W1buBDOvxl0ETnBCyKafENHhNjw==}
+    dependencies:
+      '@rollup/pluginutils': 5.0.2
+      '@web/parse5-utils': 1.3.1
+      esbuild: 0.17.17
+      esbuild-extra: 0.1.9_esbuild@0.17.17
+      md5-hex: 4.0.0
+      mitt: 3.0.0
+      type-fest: 3.8.0
+    transitivePeerDependencies:
+      - rollup
+      - typescript
+    dev: false
+
+  /@htmelt/plugin/0.2.0:
+    resolution: {integrity: sha512-66kOyyocH5y+Yh8xGzCw1smfvRbZQNDwGGA6Eoi+VT131+6XIc0X1yW86XwpRR0K8oi5JTOds/kKuXO5puHfig==}
     dependencies:
       '@rollup/pluginutils': 5.0.2
       '@web/parse5-utils': 1.3.1
