@@ -76,15 +76,6 @@ export function hmrRegister(
   // components to update the new component instance.
   componentRegistry[key] = [oldComponent || component, hash]
 
-  console.log('hmrRegister:', {
-    file,
-    name,
-    component,
-    hash,
-    oldComponent,
-    oldHash,
-  })
-
   if (oldHash && oldHash !== hash) {
     Reflect.set(
       oldComponent,
