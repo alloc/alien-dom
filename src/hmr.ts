@@ -6,8 +6,8 @@ import { jsx } from './jsx-dom/jsx'
 import { currentComponent } from './global'
 import { setSymbol } from './symbols'
 
-const kAlienRenderFunc = Symbol('alien:renderFunc')
-const kAlienComponentKey = Symbol('alien:componentKey')
+const kAlienRenderFunc = Symbol.for('alien:renderFunc')
+const kAlienComponentKey = Symbol.for('alien:componentKey')
 
 export function hmrSelfUpdating(
   render: (props: any, update: (props: any) => void) => JSX.Element
