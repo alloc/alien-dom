@@ -8,7 +8,7 @@ import {
 } from './symbols'
 import { AlienHooks } from './hooks'
 import { copyAnimatedStyle } from './animate'
-import { kAlienFragment } from './symbols'
+import { kAlienFragment, setSymbol } from './symbols'
 import { ElementKey } from './types/attr'
 import { AlienComponent } from './internal/component'
 import { ElementTags } from './internal/component'
@@ -56,7 +56,7 @@ export function updateFragment(
     }
   }
 
-  fragment[kAlienFragment] = newNodes
+  setSymbol(fragment, kAlienFragment, newNodes)
   for (const [newElement, oldElement] of elementMap) {
     const oldHooks: AlienHooks = (oldElement as any)[kAlienHooks]
     const newHooks: AlienHooks = (newElement as any)[kAlienHooks]
