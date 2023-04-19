@@ -1,12 +1,13 @@
 import type { JSX } from './types/jsx'
-import type { AlienComponent } from './internal/component'
 import type { FunctionComponent } from './types/component'
 import { selfUpdating } from './selfUpdating'
 import { ref, attachRef } from './signals'
 import { jsx } from './jsx-dom/jsx'
 import { currentComponent } from './global'
+import { setSymbol } from './symbols'
 
 const kAlienRenderFunc = Symbol('alien:renderFunc')
+const kAlienComponentKey = Symbol('alien:componentKey')
 
 export function hmrSelfUpdating(
   render: (props: any, update: (props: any) => void) => JSX.Element
@@ -40,14 +41,14 @@ export function hmrComponent(render: (props: any) => JSX.Element) {
     instances.clear()
 
     for (const oldInstance of oldInstances) {
-      // If the "state" property exists, this component was called by a
-      // self-updating parent, which means the assignment to `renderRef`
-      // will be enough to update this component.
-      if (oldInstance.state) {
+      const oldElements = oldInstance.elements.filter(element =>
+        document.body.contains(element)
+      )
+      if (!oldElements.length) {
         continue
       }
       const result = jsx(Component, oldInstance.props)
-      oldInstance.elements.forEach((element, i) => {
+      oldElements.forEach((element, i) => {
         if (i === 0 && result !== null) {
           element.replaceWith(result)
         } else {
@@ -60,7 +61,7 @@ export function hmrComponent(render: (props: any) => JSX.Element) {
 }
 
 const componentRegistry: {
-  [key: string]: [component: FunctionComponent, hash: string]
+  [key: string]: [component: Set<FunctionComponent>, hash: string]
 } = {}
 
 export function hmrRegister(
@@ -70,38 +71,47 @@ export function hmrRegister(
   hash: string
 ) {
   const key = file + ':' + name
-  const [oldComponent, oldHash] = componentRegistry[key] || []
+  setSymbol(component, kAlienComponentKey, key)
 
   // Keep the original component around, so it can be used by parent
   // components to update the new component instance.
-  componentRegistry[key] = [oldComponent || component, hash]
+  const [components, oldHash] = componentRegistry[key] || [new Set()]
+  componentRegistry[key] = [components, hash]
 
   if (oldHash && oldHash !== hash) {
-    Reflect.set(
-      oldComponent,
-      kAlienRenderFunc,
-      (component as any)[kAlienRenderFunc]
-    )
+    // Postpone updates until all `hmrRegister` calls have been made.
+    queueMicrotask(() => {
+      // Any old components that are still mounted will re-add
+      // themselves to the component registry when re-rendered.
+      const oldComponents = [...components]
+      components.clear()
+      oldComponents.forEach(oldComponent => {
+        Reflect.set(
+          oldComponent,
+          kAlienRenderFunc,
+          (component as any)[kAlienRenderFunc]
+        )
+      })
+    })
   }
 }
 
 type ComponentInstance = {
   elements: JSX.Element[]
   props: object
-  state?: AlienComponent | null
 }
 
 const instanceRegistry = new Map<FunctionComponent, Set<ComponentInstance>>()
 
 function registerElements(
   element: JSX.Element | null,
-  Component: FunctionComponent,
+  component: FunctionComponent,
   props: object
 ) {
-  let instances = instanceRegistry.get(Component)
+  let instances = instanceRegistry.get(component)
   if (!instances) {
     instances = new Set()
-    instanceRegistry.set(Component, instances)
+    instanceRegistry.set(component, instances)
   }
 
   const instance: ComponentInstance = { elements: [], props }
@@ -114,6 +124,10 @@ function registerElements(
       instance.elements.push(element)
     }
   }
+
+  const key = (component as any)[kAlienComponentKey]
+  const [components] = componentRegistry[key]
+  components.add(component)
 }
 
 function registerFragment(fragment: JSX.Element, instance: ComponentInstance) {
