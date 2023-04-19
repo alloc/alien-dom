@@ -171,6 +171,11 @@ export function selfUpdating<
 
       if (rootNode !== newRootNode) {
         if (newRootNode) {
+          if (newRootNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+            // Document fragments need a placeholder comment node for
+            // the component hooks to be attached to.
+            newRootNode.prepend(document.createComment(''))
+          }
           if (rootNode?.nodeType === Node.ELEMENT_NODE) {
             // Root nodes must have same key for morphing to work.
             const newKey = (newRootNode as any)[kAlienElementKey]

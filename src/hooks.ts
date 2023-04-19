@@ -2,7 +2,7 @@ import { onMount, onUnmount } from './domObserver'
 import type { AlienElement } from './element'
 import { AnyElement } from './internal/types'
 import { currentHooks } from './global'
-import { kAlienHooks, setSymbol } from './symbols'
+import { kAlienHooks, setSymbol, kAlienFragment } from './symbols'
 import { noop } from './jsx-dom/util'
 
 type Promisable<T> = T | Promise<T>
@@ -76,6 +76,14 @@ export class AlienHooks<Element extends AnyElement = any> {
         setSymbol(this.element, kAlienHooks, undefined)
         this._mountHook.dispose()
         this._mountHook = null
+      }
+
+      // If the hooks are being attached to a document fragment, use the
+      // first child instead. For component hooks, this should be a
+      // comment node created for exactly this purpose.
+      if (element.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+        element = ((element as any)[kAlienFragment] ||
+          element.childNodes)[0] as any
       }
 
       // Assume the element will be mounted soon, if it's not already.
