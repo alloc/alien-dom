@@ -208,12 +208,13 @@ export function selfUpdating<
             const oldNodes: ChildNode[] = (rootNode as any)[kAlienFragment]
             oldNodes[0].before(placeholder)
             oldNodes.forEach(node => node.remove())
+            setSymbol(rootNode, kAlienFragment, [placeholder])
           }
           self.setRootNode((rootNode = placeholder))
         }
       }
 
-      if (isMounted && document.contains(rootNode)) {
+      if (isMounted && rootNode.isConnected) {
         newHooks.enable()
         oldHooks.disable()
       } else {

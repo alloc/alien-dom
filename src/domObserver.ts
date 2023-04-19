@@ -155,7 +155,7 @@ let depthFirstBatch: DepthFirstEffect[] | null = null
 const observeElementHook = createHookType(
   (target: ChildNode, key: 'onAdded' | 'onRemoved', effect: () => void) => {
     const self = getCurrentHook()
-    if ((key == 'onAdded') == document.body.contains(target)) {
+    if ((key == 'onAdded') == target.isConnected) {
       self?.context?.remove(self)
       return effect()
     }
@@ -185,7 +185,7 @@ const observeElementHook = createHookType(
       }
     }
 
-    const observer = observe(document.body)
+    const observer = observe(target.ownerDocument!.body)
     observer[key].add(listener)
 
     function dispose() {

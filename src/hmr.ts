@@ -49,8 +49,8 @@ export function hmrComponent(render: (props: any) => JSX.Element) {
     instances.clear()
 
     for (const oldInstance of oldInstances) {
-      const oldElements = oldInstance.elements.filter(element =>
-        document.body.contains(element)
+      const oldElements = oldInstance.elements.filter(
+        element => element.isConnected
       )
       if (!oldElements.length) {
         continue

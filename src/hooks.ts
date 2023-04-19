@@ -84,7 +84,7 @@ export class AlienHooks<Element extends AnyElement = any> {
       setSymbol(element, kAlienHooks, this)
 
       if (element) {
-        if (document.contains(element)) {
+        if (element.isConnected) {
           this.enable()
         } else {
           this._enableOnceMounted()
@@ -160,7 +160,7 @@ export class AlienHooks<Element extends AnyElement = any> {
           this.enablers?.delete(enabler)
         }
       })
-      if (this.element && !document.contains(this.element)) {
+      if (this.element && !this.element.isConnected) {
         this._enableOnceMounted()
       }
     }

@@ -207,7 +207,7 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
         // indicate a no-op. Otherwise, reuse the child node.
         childNodes.forEach(child => {
           fragment.appendChild(
-            document.contains(child) ? getPlaceholder(child) : child
+            child.isConnected ? getPlaceholder(child) : child
           )
         })
       } else {
@@ -233,7 +233,7 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
           // Elements created in a loop or callback don't have their `key`
           // prop set by the compiler, which means they don't get added to
           // the `scope.newElements` cache unless a dynamic key is set.
-          else if (document.contains(child)) {
+          else if (child.isConnected) {
             // Ensure this element is not forgotten by the ref tracker, so
             // it can be reused when the cache is invalidated.
             component.setRef(key, child as JSX.Element)
@@ -252,7 +252,7 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
     if (child.hasOwnProperty(kAlienElementTags)) {
       const tags: ElementTags = (child as any)[kAlienElementTags]
       queueMicrotask(() => {
-        if (!document.contains(child as any)) {
+        if (!(child as ChildNode).isConnected) {
           // The element hasn't mounted yet, so we'll have to rely on
           // the component to set an `onMount` listener.
           return
