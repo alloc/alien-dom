@@ -164,6 +164,21 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     }
     return this
   }
+  /**
+   * Replace this node with its children.
+   */
+  unwrap<T extends Node = ChildNode>() {
+    const children: T[] = []
+    const parent = this.parentNode
+    if (parent) {
+      while (this.firstChild) {
+        children.push(this.firstChild as any)
+        parent.insertBefore(this.firstChild, this)
+      }
+      parent.removeChild(this)
+    }
+    return children
+  }
   appendTo(parent: AlienParentElement<Element>) {
     parent.appendChild(this)
     return this
