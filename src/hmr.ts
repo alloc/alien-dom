@@ -15,7 +15,9 @@ export function hmrSelfUpdating(
   const renderRef = ref(render)
   const Component = selfUpdating((props, update) => {
     const render = renderRef.value
-    return render(props, update)
+    const result = render(props, update)
+    registerComponent(Component)
+    return result
   })
   attachRef(Component, kAlienRenderFunc, renderRef)
   return Component
@@ -26,9 +28,15 @@ export function hmrComponent(render: (props: any) => JSX.Element) {
   const Component = (props: any) => {
     const render = renderRef.value
     const result = render(props)
+
+    // Elements are only registered when this component isn't used by a
+    // self-updating ancestor, since this component will be made
+    // self-updating in that case.
     if (!currentComponent.get()) {
       registerElements(result, Component, props)
     }
+
+    registerComponent(Component)
     return result
   }
   attachRef(Component, kAlienRenderFunc, renderRef, () => {
@@ -96,6 +104,12 @@ export function hmrRegister(
   }
 }
 
+function registerComponent(component: FunctionComponent) {
+  const key = (component as any)[kAlienComponentKey]
+  const [components] = componentRegistry[key]
+  components.add(component)
+}
+
 type ComponentInstance = {
   elements: JSX.Element[]
   props: object
@@ -124,10 +138,6 @@ function registerElements(
       instance.elements.push(element)
     }
   }
-
-  const key = (component as any)[kAlienComponentKey]
-  const [components] = componentRegistry[key]
-  components.add(component)
 }
 
 function registerFragment(fragment: JSX.Element, instance: ComponentInstance) {
