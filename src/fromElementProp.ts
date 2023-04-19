@@ -11,7 +11,17 @@ import { ElementKey } from './types/attr'
  * while ensuring the thunk isn't executed more than once in its
  * lifetime.
  */
-export function fromElementProp(element: JSX.ElementProp): JSX.ElementOption {
+export function fromElementProp(element: JSX.ElementProp): JSX.ElementOption
+
+export function fromElementProp(
+  element: JSX.ElementsProp
+): Exclude<JSX.ElementsProp, () => JSX.ElementsProp>
+
+export function fromElementProp(
+  element: JSX.Children
+): Exclude<JSX.Children, () => JSX.Children>
+
+export function fromElementProp(element: JSX.Children) {
   if (typeof element === 'function') {
     return fromElementThunk(element)
   }

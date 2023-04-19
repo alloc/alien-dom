@@ -14,26 +14,31 @@ import type {
 
 type HTMLWebViewElement = HTMLElement
 
+type Thunk<T = any> = () => T
+type Thunkable<T> = T | Thunk<T>
+
+type JSXChild =
+  | JSXChild[]
+  | NodeList
+  | HTMLCollection
+  | ShadowRootContainer
+  | DocumentFragment
+  | AnyElement
+  | Text
+  | Comment
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+
 export declare namespace JSX {
   type Element = HTMLElement
 
-  type Children =
-    | (() => JSX.Children)
-    | JSX.Children[]
-    | AnyElement
-    | NodeList
-    | HTMLCollection
-    | ShadowRootContainer
-    | DocumentFragment
-    | Text
-    | Comment
-    | string
-    | number
-    | boolean
-    | null
-    | undefined
+  type Children = Thunkable<JSXChild>
 
-  type ElementOption = Element | false | null | undefined
+  type ElementOption = AnyElement | false | null | undefined
+  type ElementsOption = ElementOption | ElementOption[]
 
   /**
    * If defining the type of a component prop that can be a JSX element,
@@ -41,7 +46,8 @@ export declare namespace JSX {
    * be surprised when trying to use the element without passing it into
    * `fromElementProp` first.
    */
-  type ElementProp = ElementOption | (() => ElementOption)
+  type ElementProp = Thunkable<ElementOption>
+  type ElementsProp = Thunkable<ElementOption | ElementOption[]>
 
   type ElementType<T> = T extends keyof IntrinsicElements
     ? IntrinsicElements[T]['ref'] extends AlienHooks<infer Element> | undefined
