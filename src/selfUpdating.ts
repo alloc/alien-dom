@@ -169,7 +169,7 @@ export function selfUpdating<
         }
       }
 
-      if (rootNode !== newRootNode) {
+      if (!rootNode || rootNode !== newRootNode) {
         if (newRootNode) {
           if (newRootNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
             // Document fragments need a placeholder comment node for
@@ -217,6 +217,10 @@ export function selfUpdating<
           }
           self.setRootNode((rootNode = placeholder))
         }
+      }
+
+      if (!rootNode) {
+        throw Error('expected root node to exist')
       }
 
       if (isMounted && rootNode.isConnected) {
