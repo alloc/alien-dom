@@ -66,24 +66,27 @@ export class AlienComponent<Props = any> {
   }
 
   setRootNode(rootNode: ChildNode) {
-    let tags: ElementTags = (rootNode as any)[kAlienElementTags]
+    let tags = kAlienElementTags(rootNode)
     if (!tags) {
       tags = new Map()
-      setSymbol(rootNode, kAlienElementTags, tags)
+      kAlienElementTags(rootNode, tags)
+      if (rootNode.nodeType === kFragmentNodeType) {
+        kAlienElementTags(rootNode.childNodes[0], tags)
+      }
     }
     tags.set(this.tag, this)
     this.rootNode = rootNode
   }
 
   setRef(key: ElementKey, element: DefaultElement) {
-    setSymbol(element, kAlienElementKey, key)
+    kAlienElementKey(element, key)
     this.newRefs!.set(key, element)
 
     // If a component accesses the hooks of an old element during
     // render, return the hooks of a new element instead.
-    const oldHooks: AlienHooks | undefined = (element as any)[kAlienHooks]
+    const oldHooks = kAlienHooks(element)
     if (oldHooks?.enabled) {
-      Object.defineProperty(element, kAlienNewHooks, {
+      Object.defineProperty(element, kAlienNewHooks.symbol, {
         configurable: true,
         get: () => {
           if (this.newElements) {
@@ -102,7 +105,7 @@ export class AlienComponent<Props = any> {
  * Returns `true` if a component instance is found for the given tag.
  */
 export function updateTagProps(element: AnyElement, tag: any, props: any) {
-  const tags: ElementTags = (element as any)[kAlienElementTags]
+  const tags = kAlienElementTags(element)
   if (tags) {
     const instance = tags.get(tag)
     if (instance) {

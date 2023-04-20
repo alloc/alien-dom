@@ -4,11 +4,11 @@ import { selfUpdating } from './selfUpdating'
 import { ref, attachRef } from './signals'
 import { jsx } from './jsx-dom/jsx-runtime'
 import { currentComponent } from './global'
-import { setSymbol } from './symbols'
+import { createSymbol } from './symbols'
 import { kFragmentNodeType } from './internal/constants'
 
-const kAlienRenderFunc = Symbol.for('alien:renderFunc')
-const kAlienComponentKey = Symbol.for('alien:componentKey')
+const kAlienComponentKey = createSymbol<string>('componentKey')
+const kAlienRenderFunc = createSymbol<FunctionComponent>('renderFunc')
 
 export function hmrSelfUpdating(
   render: (props: any, update: (props: any) => void) => JSX.Element
@@ -20,7 +20,7 @@ export function hmrSelfUpdating(
     registerComponent(Component)
     return result
   })
-  attachRef(Component, kAlienRenderFunc, renderRef)
+  attachRef(Component, kAlienRenderFunc.symbol, renderRef)
   return Component
 }
 
@@ -40,7 +40,7 @@ export function hmrComponent(render: (props: any) => JSX.Element) {
     registerComponent(Component)
     return result
   }
-  attachRef(Component, kAlienRenderFunc, renderRef, () => {
+  attachRef(Component, kAlienRenderFunc.symbol, renderRef, () => {
     const instances = instanceRegistry.get(Component)
     if (!instances) {
       return
@@ -80,7 +80,7 @@ export function hmrRegister(
   hash: string
 ) {
   const key = file + ':' + name
-  setSymbol(component, kAlienComponentKey, key)
+  kAlienComponentKey(component, key)
 
   // Keep the original component around, so it can be used by parent
   // components to update the new component instance.
@@ -97,8 +97,8 @@ export function hmrRegister(
       oldComponents.forEach(oldComponent => {
         Reflect.set(
           oldComponent,
-          kAlienRenderFunc,
-          (component as any)[kAlienRenderFunc]
+          kAlienRenderFunc.symbol,
+          kAlienRenderFunc(component)
         )
       })
     })
@@ -106,7 +106,7 @@ export function hmrRegister(
 }
 
 function registerComponent(component: FunctionComponent) {
-  const key = (component as any)[kAlienComponentKey]
+  const key = kAlienComponentKey(component)!
   const [components] = componentRegistry[key]
   components.add(component)
 }

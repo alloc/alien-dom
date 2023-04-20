@@ -17,14 +17,13 @@ import { isShadowRoot } from './shadow'
 import { svgTags } from './svg-tags'
 import {
   kAlienElementKey,
-  setSymbol,
   kAlienSelfUpdating,
   kAlienPlaceholder,
 } from '../symbols'
 import { DefaultElement } from '../internal/types'
 import { elementEvent } from '../elementEvents'
 import { currentHooks, currentComponent } from '../global'
-import { ElementTags, updateTagProps } from '../internal/component'
+import { updateTagProps } from '../internal/component'
 import { ElementKey } from '../types/attr'
 import { hasForEach } from './util'
 import { JSX } from '../types/jsx'
@@ -118,7 +117,7 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
     if (typeof tag !== 'string' && tag !== Fragment) {
       // When a plain function component is used by a self-updating
       // component, the former is made to be self-updating as well.
-      if (!tag.hasOwnProperty(kAlienSelfUpdating)) {
+      if (!kAlienSelfUpdating.in(tag)) {
         let selfUpdatingTag = selfUpdatingTags.get(tag)
         if (!selfUpdatingTag) {
           selfUpdatingTag = selfUpdating(tag)
@@ -175,12 +174,12 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
         component.newElements!.set(key, node as JSX.Element)
       }
       if (oldNode) {
-        setSymbol(node, kAlienElementKey, key)
+        kAlienElementKey(node, key)
         node = oldNode
       }
       component.setRef(key, node as JSX.Element)
     } else {
-      setSymbol(node, kAlienElementKey, key)
+      kAlienElementKey(node, key)
     }
   }
 
@@ -211,7 +210,7 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
     // in case the fragment is cached and reused in a future render.
     if (child.nodeType === kFragmentNodeType) {
       const fragment: DocumentFragment = child as any
-      const childNodes: Element[] = (fragment as any)[kAlienFragment]
+      let childNodes = kAlienFragment(fragment)
       if (childNodes) {
         // For child nodes still in the DOM, generate a placeholder to
         // indicate a no-op. Otherwise, reuse the child node.
@@ -223,15 +222,17 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
       } else {
         // This is the first time the fragment is being appended, so
         // cache its child nodes.
-        setSymbol(fragment, kAlienFragment, Array.from(fragment.childNodes))
+        childNodes = Array.from(fragment.childNodes)
+        kAlienFragment(fragment, childNodes)
+        kAlienFragment(childNodes[0], childNodes)
       }
     }
     // Text nodes cannot have an element key.
     else if (child.nodeType !== kTextNodeType) {
-      if (child.hasOwnProperty(kAlienElementKey)) {
+      if (kAlienElementKey.in(child)) {
         const component = currentComponent.get()
         if (component) {
-          const key = (child as any)[kAlienElementKey]
+          const key = kAlienElementKey(child)!
           // If a key is missing from `newElements` or points to the
           // same node, we can skip the update.
           const newChild = component.newElements!.get(key)
@@ -252,15 +253,15 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
           }
         }
       } else {
-        setSymbol(child, kAlienElementKey, key || '*0')
+        kAlienElementKey(child, key || '*0')
       }
     }
 
     appendChildToNode(child, parent)
 
     // Enable component hooks when the parent element is set.
-    if (child.hasOwnProperty(kAlienElementTags)) {
-      const tags: ElementTags = (child as any)[kAlienElementTags]
+    if (kAlienElementTags.in(child)) {
+      const tags = kAlienElementTags(child)!
       queueMicrotask(() => {
         if (!(child as ChildNode).isConnected) {
           // The element hasn't mounted yet, so we'll have to rely on
@@ -295,9 +296,9 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
       // so the arrayKey is prepended to avoid conflicts.
       if (isElement(child, kFragmentNodeType)) {
         child.childNodes.forEach(node => {
-          let key = (node as any)[kAlienElementKey]
-          if (key && key[0] === '*') {
-            setSymbol(node, kAlienElementKey, arrayKey + key)
+          const key = kAlienElementKey(node)
+          if (typeof key === 'string' && key[0] === '*') {
+            kAlienElementKey(node, arrayKey + key)
           }
         })
       }
@@ -317,8 +318,8 @@ function getPlaceholder(child: any): DefaultElement {
   const placeholder: any = child.namespaceURI
     ? document.createElementNS(child.namespaceURI, tagName)
     : document.createElement(tagName)
-  setSymbol(placeholder, kAlienPlaceholder, true)
-  setSymbol(placeholder, kAlienElementKey, child[kAlienElementKey])
+  kAlienPlaceholder(placeholder, true)
+  kAlienElementKey(placeholder, kAlienElementKey(child))
   return placeholder
 }
 

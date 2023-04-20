@@ -167,7 +167,7 @@ export function selfUpdating<
 
       // The render function might return an element reference.
       if (rootNode && rootNode === newRootNode) {
-        const key = (rootNode as any)[kAlienElementKey]
+        const key = kAlienElementKey(rootNode)!
         const newElement = newElements.get(key)
         if (newElement) {
           newRootNode = newElement
@@ -176,15 +176,18 @@ export function selfUpdating<
 
       if (!rootNode || rootNode !== newRootNode) {
         if (newRootNode) {
-          if (newRootNode.nodeType === kFragmentNodeType) {
+          if (
+            newRootNode.nodeType === kFragmentNodeType &&
+            newRootNode.childNodes.length > 0
+          ) {
             // Document fragments need a placeholder comment node for
             // the component hooks to be attached to.
             newRootNode.prepend(document.createComment(''))
           }
           if (rootNode?.nodeType === kElementNodeType) {
             // Root nodes must have same key for morphing to work.
-            const newKey = (newRootNode as any)[kAlienElementKey]
-            setSymbol(rootNode, kAlienElementKey, newKey)
+            const newKey = kAlienElementKey(newRootNode)
+            kAlienElementKey(rootNode, newKey)
 
             // Diff the root nodes and enable the new hooks.
             updateElement(rootNode as Element, newRootNode, self)
@@ -211,14 +214,14 @@ export function selfUpdating<
         if (!newRootNode && rootNode?.nodeType !== kCommentNodeType) {
           const placeholder = document.createComment('')
           if (rootNode?.nodeType === kElementNodeType) {
-            const oldHooks: AlienHooks = (rootNode as any)[kAlienHooks]
+            const oldHooks = kAlienHooks(rootNode)
             oldHooks?.disable()
             rootNode.replaceWith(placeholder)
           } else if (rootNode?.nodeType === kFragmentNodeType) {
-            const oldNodes: ChildNode[] = (rootNode as any)[kAlienFragment]
+            const oldNodes = kAlienFragment(rootNode)!
             oldNodes[0].before(placeholder)
             oldNodes.forEach(node => node.remove())
-            setSymbol(rootNode, kAlienFragment, [placeholder])
+            kAlienFragment(rootNode, [placeholder])
           }
           self.setRootNode((rootNode = placeholder))
         }
@@ -252,6 +255,6 @@ export function selfUpdating<
     return self.rootNode
   }
 
-  setSymbol(Component, kAlienSelfUpdating, render)
+  kAlienSelfUpdating(Component, render)
   return Component
 }

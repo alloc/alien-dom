@@ -137,8 +137,8 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
    * this element.
    */
   morph(element: Element) {
-    const key = (this as any)[kAlienElementKey]
-    setSymbol(element, kAlienElementKey, key)
+    const key = kAlienElementKey(this)
+    kAlienElementKey(element, key)
     updateElement(this, element)
     return this
   }

@@ -2,7 +2,7 @@ import { onMount, onUnmount } from './domObserver'
 import type { AlienElement } from './element'
 import { AnyElement } from './internal/types'
 import { currentHooks } from './global'
-import { kAlienHooks, setSymbol, kAlienFragment } from './symbols'
+import { kAlienHooks, kAlienFragment } from './symbols'
 import { noop } from './jsx-dom/util'
 import { kFragmentNodeType } from './internal/constants'
 
@@ -55,8 +55,8 @@ export class AlienHooks<Element extends AnyElement = any> {
   setElement(element: Element | null) {
     if (element === null) {
       if (this.element) {
-        if ((this.element as any)[kAlienHooks] === this) {
-          setSymbol(this.element, kAlienHooks, undefined)
+        if (kAlienHooks(this.element) === this) {
+          kAlienHooks(this.element, undefined)
         }
         this.element = undefined
       }
@@ -74,7 +74,7 @@ export class AlienHooks<Element extends AnyElement = any> {
         if (!this._mountHook) {
           throw Error('Cannot change element while mounted')
         }
-        setSymbol(this.element, kAlienHooks, undefined)
+        kAlienHooks(this.element, undefined)
         this._mountHook.dispose()
         this._mountHook = null
       }
@@ -83,14 +83,13 @@ export class AlienHooks<Element extends AnyElement = any> {
       // first child instead. For component hooks, this should be a
       // comment node created for exactly this purpose.
       if (element.nodeType === kFragmentNodeType) {
-        element = ((element as any)[kAlienFragment] ||
-          element.childNodes)[0] as any
+        element = (kAlienFragment(element) || element.childNodes)[0] as any
       }
 
       // Assume the element will be mounted soon, if it's not already.
       this.mounted = true
       this.element = element as any
-      setSymbol(element, kAlienHooks, this)
+      kAlienHooks(element, this)
 
       if (element) {
         if (element.isConnected) {

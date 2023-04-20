@@ -30,7 +30,7 @@ export function fromElementProp(element: JSX.Children) {
 
 /** @internal */
 export function fromElementThunk(thunk: () => JSX.Children) {
-  if (!thunk.hasOwnProperty(kAlienThunkResult)) {
+  if (!kAlienThunkResult.in(thunk)) {
     const result = computed(thunk)
 
     // The first component to call the thunk owns it.
@@ -45,13 +45,13 @@ export function fromElementThunk(thunk: () => JSX.Children) {
     let rootNode: Element | null | undefined
     let key: ElementKey | undefined
 
-    Object.defineProperty(thunk, kAlienThunkResult, {
+    Object.defineProperty(thunk, kAlienThunkResult.symbol, {
       get() {
         let newRootNode = result.value
 
         // TODO: support more than single element nodes
         if (isElement(newRootNode)) {
-          const newKey: ElementKey = (newRootNode as any)[kAlienElementKey]
+          const newKey = kAlienElementKey(newRootNode)
           if (newKey !== undefined) {
             // When no cached node exists, check the component refs in
             // case this thunk was recreated.
@@ -73,7 +73,7 @@ export function fromElementThunk(thunk: () => JSX.Children) {
 
               // If the element is unchanged, we need to disable the old
               // hooks before new hooks are added.
-              const hooks: AlienHooks = (rootNode as any)[kAlienHooks]
+              const hooks = kAlienHooks(rootNode)
               hooks?.setElement(null)
             }
 
@@ -100,5 +100,5 @@ export function fromElementThunk(thunk: () => JSX.Children) {
     })
   }
 
-  return (thunk as any)[kAlienThunkResult]
+  return kAlienThunkResult(thunk)
 }

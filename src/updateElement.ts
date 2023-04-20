@@ -18,9 +18,9 @@ export function updateFragment(
   newFragment: any,
   newRefs?: Map<any, AnyElement>
 ) {
-  const oldNodes: ChildNode[] = fragment[kAlienFragment]
-  const oldKeys = oldNodes.map(getNodeKey)
-  const newKeys = Array.from(newFragment.childNodes, getNodeKey)
+  const oldNodes = kAlienFragment(fragment)
+  const oldKeys = oldNodes.map(kAlienElementKey.get)
+  const newKeys = Array.from(newFragment.childNodes, kAlienElementKey.get)
 
   const elementMap = new Map<HTMLElement, HTMLElement>()
 
@@ -56,10 +56,11 @@ export function updateFragment(
     }
   }
 
-  setSymbol(fragment, kAlienFragment, newNodes)
+  kAlienFragment(fragment, newNodes)
+
   for (const [newElement, oldElement] of elementMap) {
-    const oldHooks: AlienHooks = (oldElement as any)[kAlienHooks]
-    const newHooks: AlienHooks = (newElement as any)[kAlienHooks]
+    const oldHooks = kAlienHooks(oldElement)
+    const newHooks = kAlienHooks(newElement)
     if (newHooks) retargetHooks(newHooks, oldElement, elementMap)
     oldHooks?.disable()
   }
@@ -76,8 +77,8 @@ export function updateElement(
     retargetHooks(instance.newHooks!, rootElement, elementMap, true)
   }
   for (const [newElement, oldElement] of elementMap) {
-    const oldHooks: AlienHooks = (oldElement as any)[kAlienHooks]
-    const newHooks: AlienHooks = (newElement as any)[kAlienHooks]
+    const oldHooks = kAlienHooks(oldElement)
+    const newHooks = kAlienHooks(newElement)
     if (newHooks) retargetHooks(newHooks, oldElement, elementMap)
     oldHooks?.disable()
   }
@@ -109,10 +110,6 @@ function retargetHooks(
   })
 }
 
-function getNodeKey(node: any): ElementKey | undefined {
-  return node[kAlienElementKey]
-}
-
 function recursiveMorph(
   oldParentElem: AnyElement,
   newParentElem: AnyElement,
@@ -122,7 +119,7 @@ function recursiveMorph(
   childrenOnly?: boolean
 ) {
   morph(oldParentElem, newParentElem, {
-    getNodeKey,
+    getNodeKey: kAlienElementKey.get,
     childrenOnly,
     onNodeDiscarded,
     onBeforeElUpdated(oldElem, newElem) {
@@ -167,8 +164,8 @@ function recursiveMorph(
 function onNodeDiscarded(node: Node) {
   // Prevent components from re-rendering and disable their hooks
   // when no parent element exists.
-  if (node.hasOwnProperty(kAlienElementTags)) {
-    const tags: ElementTags = (node as any)[kAlienElementTags]
+  if (kAlienElementTags.in(node)) {
+    const tags = kAlienElementTags(node)!
     queueMicrotask(() => {
       for (const component of tags.values()) {
         component.disable()
