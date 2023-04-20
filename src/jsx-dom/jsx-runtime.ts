@@ -31,6 +31,8 @@ import { selfUpdating } from '../selfUpdating'
 import { fromElementThunk } from '../fromElementProp'
 import { kAlienFragment, kAlienElementTags } from '../symbols'
 
+export type { JSX }
+
 export const SVGNamespace = 'http://www.w3.org/2000/svg'
 const XLinkNamespace = 'http://www.w3.org/1999/xlink'
 const XMLNamespace = 'http://www.w3.org/XML/1998/namespace'
@@ -92,6 +94,8 @@ export class Component {
 })
 
 const selfUpdatingTags = new WeakMap<any, any>()
+
+export { jsx as jsxs }
 
 export function jsx(tag: any, props: any, key?: ElementKey) {
   if (!props.namespaceURI && svgTags[tag]) {

@@ -2,7 +2,8 @@
   "compilerOptions": {
     "declaration": true,
     "esModuleInterop": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
+    "jsxImportSource": "./jsx-dom",
     "lib": ["dom", "esnext"],
     "module": "esnext",
     "moduleResolution": "node",

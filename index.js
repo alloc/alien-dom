@@ -6,7 +6,7 @@ export {
   createFactory,
   Fragment,
   SVGNamespace,
-} from './dist/jsx-dom/jsx'
+} from './dist/jsx-dom/jsx-runtime'
 
 export { ShadowRoot } from './dist/jsx-dom/shadow'
 

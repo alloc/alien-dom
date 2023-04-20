@@ -1,28 +1,28 @@
-import type { JSX } from './dist/types/jsx'
+import type { JSX } from './dist/types'
 import type { ShadowRootContainer } from './dist/jsx-dom/shadow'
 import type {
   HTMLElementTagNames,
   HTMLAttributes,
   HTMLFactory,
-} from './dist/types/html'
+} from './dist/types'
 import type {
   SVGAttributes,
   SVGElementTagName,
   SVGElementTagNames,
   SVGFactory,
-} from './dist/types/svg'
-import type { AttrWithRef, Attributes } from './dist/types/attr'
-import type { DOMAttributes } from './dist/types/dom'
-import type { PropsWithChildren, ComponentType } from './dist/types/component'
+} from './dist/types'
+import type { AttrWithRef, Attributes } from './dist/types'
+import type { DOMAttributes } from './dist/types'
+import type { PropsWithChildren, ComponentType } from './dist/types'
 
 export * from './dist/index'
-export { SVGNamespace } from './dist/jsx-dom/jsx'
+export { SVGNamespace } from './dist/jsx-dom/jsx-runtime'
 
-export type { JSX } from './dist/types/jsx'
-export type { HTML, SVG } from './dist/types/extra'
-export type { SVGAttributes } from './dist/types/svg'
-export type { CSSProperties, DOMClassAttribute } from './dist/types/dom'
-export type { HTMLAttributes, HTMLStyleAttribute } from './dist/types/html'
+export type { JSX } from './dist/types'
+export type { HTML, SVG } from './dist/types'
+export type { SVGAttributes } from './dist/types'
+export type { CSSProperties, DOMClassAttribute } from './dist/types'
+export type { HTMLAttributes, HTMLStyleAttribute } from './dist/types'
 
 export type {
   Component,
@@ -31,7 +31,7 @@ export type {
   FunctionComponent,
   PropsWithChildren,
   PureComponent,
-} from './dist/types/component'
+} from './dist/types'
 
 // DOM Elements
 export declare function createFactory<K extends HTMLElementTagNames>(
@@ -111,6 +111,8 @@ export declare function jsx<T extends Element>(
   props?: PropsWithChildren<Attributes> | null,
   key?: string
 ): T
+
+export { jsx as jsxs }
 
 export declare function Fragment(props: {
   children?: JSX.Children | undefined

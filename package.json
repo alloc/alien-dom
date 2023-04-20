@@ -32,19 +32,18 @@
   "homepage": "https://github.com/aleclarson/alien-dom#readme",
   "prettier": "@alloc/prettier-config",
   "scripts": {
-    "dev": "tsc -p src/tsconfig.json -i --sourceMap --watch",
-    "build": "rimraf dist && tsc -p src/tsconfig.json"
+    "build": "rimraf dist && cd src && tsup-node",
+    "dev": "cd src && tsup-node --watch --sourcemap"
   },
   "dependencies": {
-    "@alloc/types": "^2.3.0",
     "@preact/signals-core": "^1.3.0",
-    "csstype": "^3.1.2",
-    "linear-color": "^1.2.0",
-    "type-fest": "^3.8.0"
+    "csstype": "^3.1.2"
   },
   "devDependencies": {
     "@alloc/fast-rimraf": "^1.0.8",
     "@alloc/prettier-config": "^1.0.0",
+    "@alloc/types": "^2.3.0",
+    "linear-color": "^1.2.0",
     "prettier": "^2.8.7",
     "tsup": "^6.7.0",
     "typescript": "^4.9.5"
