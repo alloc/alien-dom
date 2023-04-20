@@ -8,20 +8,21 @@ import { hasForEach, isIterable } from './internal/duck'
 import { AnyElement, DefaultElement } from './internal/types'
 import { createAlienElementList } from './nodeList'
 
-export function $(element: AnyElement): AlienElement<AnyElement>
-export function $(element: AnyElement | null): AlienElement<AnyElement> | null
-
 export function $<Element extends AlienTag<DefaultElement>>(
   element: AnyElement
-): AlienSelect<Element>
+): AlienElement<AlienSelect<Element>>
+
+export function $(element: AnyElement): AlienElement<AnyElement>
 
 export function $<Element extends AlienTag<DefaultElement>>(
   element: AnyElement | null
-): AlienSelect<Element> | null
+): AlienElement<AlienSelect<Element>> | null
+
+export function $(element: AnyElement | null): AlienElement<AnyElement> | null
 
 export function $<Element extends AlienTag<DefaultElement> = DefaultElement>(
   selector: string
-): AlienSelect<Element> | null
+): AlienElement<AlienSelect<Element>> | null
 
 export function $(arg: any) {
   return typeof arg == 'string' ? document.querySelector(arg) : arg
