@@ -13,6 +13,7 @@ export type SpringAnimation<
   from?: Props
   spring?: SpringConfig
   velocity?: number
+  delay?: SpringDelay | { [K in keyof Props]?: SpringDelay }
   anchor?: [number, number]
   onChange?: FrameCallback<Element, Props>
   onRest?: FrameCallback<Element, Props>
@@ -111,6 +112,7 @@ export type AnimatedElement = {
   svgMode: boolean
   transform: ParsedTransform | null
   anchor: readonly [number, number] | null
+  timelines: { [prop: string]: SpringTimeline } | null
   /**
    * This contains the most recent values applied by an animation.
    *
@@ -118,6 +120,18 @@ export type AnimatedElement = {
    */
   style: Record<string, any>
 }
+
+type SpringTimeline = (SpringAnimation & {
+  timerId?: number
+  abortCtrl?: AbortController
+})[]
+
+type SpringDelay = number | SpringDelayFn
+
+type SpringDelayFn = (
+  signal: AbortSignal,
+  key: string
+) => Promise<any> | null | void
 
 type OneOrMany<T> = T | readonly T[]
 
@@ -138,73 +152,181 @@ export function animate(
 
 export function animate(
   selector: AlienSelector | readonly AnyElement[],
-  animations: OneOrMany<SpringAnimation>
+  _animations: OneOrMany<SpringAnimation>
 ) {
+  const animations = toArray(_animations)
+  const springs = animations.map(animation =>
+    resolveSpring(animation.spring || {})
+  )
   const targets = $$<HTMLElement>(selector)
-  for (const animation of toArray(animations)) {
-    const spring = resolveSpring(animation.spring || {})
-    targets.forEach(target => {
-      let state = animatedElements.get(target)
-      if (!state) {
-        state = {
-          props: {},
-          svgMode: !!svgTags[target.tagName] && target.tagName != 'svg',
-          transform: null,
-          anchor: null,
-          style: {},
-        }
-        animatedElements.set(target, state)
+  targets.forEach(target => {
+    let timelines: Record<string, SpringTimeline> | undefined
+    let state = animatedElements.get(target)!
+    if (!state) {
+      state = {
+        props: {},
+        svgMode: !!svgTags[target.tagName] && target.tagName != 'svg',
+        transform: null,
+        anchor: null,
+        timelines: null,
+        style: {},
       }
+      animatedElements.set(target, state)
+    }
 
-      if (target.dataset.animatedId == null) {
-        animatedElementIds.add(
-          (target.dataset.animatedId = '' + nextElementId++)
-        )
-      }
+    // Any defined keys will be removed from the previous timelines object.
+    const definedKeys = new Set<string>()
 
-      state.anchor =
-        animation.anchor ||
-        (state.anchor
-          ? state.svgMode
-            ? svgDefaultAnchor
-            : htmlDefaultAnchor
-          : null)
-
-      const keys = Object.keys({
+    animations.forEach((animation, i) => {
+      let keys = Object.keys({
         ...animation.to,
         ...animation.from,
       }) as AnimatedProp<any>[]
 
-      const { onChange, onRest } = animation
-      const frame: Record<string, any> | null = onChange || onRest ? {} : null
-
-      for (const key of keys) {
-        const prop: AnimationState = state.props[key] || [null!, spring]
-        const node = applyAnimation(
-          target,
-          state.svgMode,
-          key,
-          animation.to[key],
-          animation.from?.[key],
-          prop[0],
-          frame,
-          animation.velocity,
-          onChange,
-          onRest
-        )
-        if (!node) {
-          continue
+      keys.forEach(key => {
+        const to = animation.to?.[key]
+        const from = animation.from?.[key]
+        if (to != null || from != null) {
+          definedKeys.add(key)
         }
-        if (prop[0]) {
-          prop[1] = spring
+      })
+
+      if (animation.delay) {
+        const { delay } = animation
+        if (typeof delay === 'number') {
+          if (delay > 0) {
+            timelines ||= {}
+            keys.forEach(key => {
+              timelines = addTimelineTimeout(
+                timelines,
+                target,
+                state,
+                animation,
+                springs[i],
+                delay,
+                key
+              )
+            })
+            keys.length = 0
+          }
+        } else if (typeof delay === 'function') {
+          timelines ||= {}
+          keys.forEach(key => {
+            timelines = addTimelinePromise(
+              timelines,
+              target,
+              state,
+              animation,
+              springs[i],
+              delay,
+              key
+            )
+          })
+          keys.length = 0
         } else {
-          prop[0] = node
-          state.props[key] = prop
+          keys = keys.filter(key => {
+            const keyDelay = delay[key]
+            if (keyDelay) {
+              if (typeof keyDelay === 'number') {
+                timelines = addTimelineTimeout(
+                  timelines,
+                  target,
+                  state,
+                  animation,
+                  springs[i],
+                  keyDelay,
+                  key
+                )
+              } else {
+                timelines = addTimelinePromise(
+                  timelines,
+                  target,
+                  state,
+                  animation,
+                  springs[i],
+                  keyDelay,
+                  key
+                )
+              }
+              return false
+            }
+            return true
+          })
         }
       }
+
+      applyAnimation(target, state, animation, springs[i], keys)
     })
-  }
+
+    const oldTimelines = state.timelines
+    if (oldTimelines) {
+      definedKeys.forEach(key => {
+        if (!oldTimelines[key]) {
+          return
+        }
+        oldTimelines[key].forEach(timeline => {
+          if (timeline.timerId) {
+            clearTimeout(timeline.timerId)
+          } else {
+            timeline.abortCtrl?.abort()
+          }
+        })
+        delete oldTimelines[key]
+      })
+    }
+
+    if (timelines) {
+      state.timelines = { ...oldTimelines, ...timelines }
+    }
+  })
   startLoop()
+}
+
+function addTimelineTimeout(
+  timelines: Record<string, SpringTimeline> | undefined,
+  target: HTMLElement,
+  state: AnimatedElement,
+  animation: SpringAnimation,
+  spring: ResolvedSpringConfig,
+  delay: number,
+  key: string
+) {
+  if (delay > 0) {
+    const timerId = setTimeout(() => {
+      applyAnimation(target, state, animation, spring, [key])
+    }, delay)
+
+    const timeline = ((timelines ||= {})[key] ||= [])
+    timeline.push({ ...animation, timerId })
+  } else {
+    applyAnimation(target, state, animation, spring, [key])
+  }
+  return timelines
+}
+
+function addTimelinePromise(
+  timelines: Record<string, SpringTimeline> | undefined,
+  target: HTMLElement,
+  state: AnimatedElement,
+  animation: SpringAnimation,
+  spring: ResolvedSpringConfig,
+  delay: SpringDelayFn,
+  key: string
+) {
+  const abortCtrl = new AbortController()
+  const promise = delay(abortCtrl.signal, key)
+  if (promise) {
+    const timeline = ((timelines ||= {})[key] ||= [])
+    timeline.push({ ...animation, abortCtrl })
+    promise.then(() => {
+      if (!abortCtrl.signal.aborted) {
+        applyAnimation(target, state, animation, spring, [key])
+      }
+    }, console.error)
+  } else {
+    applyAnimation(target, state, animation, spring, [key])
+  }
+  return timelines
 }
 
 /** @internal */
@@ -237,6 +359,54 @@ export function copyAnimatedStyle(
 }
 
 function applyAnimation(
+  target: HTMLElement,
+  state: AnimatedElement,
+  animation: SpringAnimation,
+  spring: ResolvedSpringConfig,
+  keys: AnimatedProp<any>[]
+) {
+  if (target.dataset.animatedId == null) {
+    animatedElementIds.add((target.dataset.animatedId = '' + nextElementId++))
+  }
+
+  state.anchor =
+    animation.anchor ||
+    (state.anchor
+      ? state.svgMode
+        ? svgDefaultAnchor
+        : htmlDefaultAnchor
+      : null)
+
+  const { onChange, onRest } = animation
+  const frame: Record<string, any> | null = onChange || onRest ? {} : null
+
+  for (const key of keys) {
+    const prop: AnimationState = state.props[key] || [null!, spring]
+    const node = applyAnimatedValue(
+      target,
+      state.svgMode,
+      key,
+      animation.to[key],
+      animation.from?.[key],
+      prop[0],
+      frame,
+      animation.velocity,
+      onChange,
+      onRest
+    )
+    if (!node) {
+      continue
+    }
+    if (prop[0]) {
+      prop[1] = spring
+    } else {
+      prop[0] = node
+      state.props[key] = prop
+    }
+  }
+}
+
+function applyAnimatedValue(
   target: HTMLElement,
   svgMode: boolean,
   key: string,
