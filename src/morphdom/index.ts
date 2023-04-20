@@ -35,7 +35,7 @@ export function morph(
   options: MorphDomOptions = {}
 ) {
   const {
-    getNodeKey = defaultGetNodeKey,
+    getNodeKey = noop,
     onBeforeNodeAdded = noop,
     onNodeAdded = noop,
     onBeforeElUpdated = noop,
@@ -494,12 +494,6 @@ const specialMorphs: Record<string, Function> = {
   INPUT: morphInputElement,
   TEXTAREA: morphTextAreaElement,
   SELECT: morphSelectElement,
-}
-
-function defaultGetNodeKey(node: Node) {
-  if (node.nodeType === ELEMENT_NODE) {
-    return (node.getAttribute && node.getAttribute('id')) || node.id
-  }
 }
 
 function defaultAddChild(parent: Node, child: Node) {
