@@ -1,4 +1,4 @@
-import morph from 'morphdom'
+import { morph } from './morphdom'
 import { AnyElement } from './internal/types'
 import {
   kAlienElementTags,

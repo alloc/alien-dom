@@ -1,4 +1,5 @@
 import type { ComponentClass } from '../types/component'
+import type { JSX } from '../types/jsx'
 
 export const keys: <T>(obj: T) => Array<keyof T> = Object.keys as any
 
@@ -12,6 +13,13 @@ export function isElement(val: any, nodeType?: number): val is Element {
     typeof val.nodeType === 'number' &&
     (nodeType === undefined || val.nodeType === nodeType)
   )
+}
+
+export function hasTagName<Tag extends string>(
+  node: any,
+  tagName: Tag
+): node is JSX.ElementType<Lowercase<Tag>> {
+  return node && node.tagName === tagName
 }
 
 export function isString(val: any): val is string {
@@ -68,7 +76,7 @@ export function decamelize(s: string, separator: string) {
   return s.replace(/[A-Z]/g, match => separator + match.toLowerCase())
 }
 
-export const noop = (): any => {}
+export const noop = <T>() => undefined as T
 
 /**
  * Function that takes in two values and compares them.
