@@ -1,6 +1,4 @@
-export const {
-  ELEMENT_NODE: kElementNodeType,
-  DOCUMENT_FRAGMENT_NODE: kFragmentNodeType,
-  TEXT_NODE: kTextNodeType,
-  COMMENT_NODE: kCommentNodeType,
-} = Node
+export const kElementNodeType = 1
+export const kFragmentNodeType = 11
+export const kTextNodeType = 3
+export const kCommentNodeType = 8

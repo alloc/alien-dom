@@ -475,7 +475,7 @@ export function morph(
   return morphedNode
 }
 
-type Node = Node.Element | Node.Text | Node.Comment | Node.DocumentFragment
+type Node = Node.Element | Node.Text | Node.Comment | Node.Fragment
 
 declare namespace Node {
   type HTMLElement = globalThis.HTMLElement & {
@@ -484,7 +484,7 @@ declare namespace Node {
   type Element = globalThis.Element & { nodeType: typeof kElementNodeType }
   type Text = globalThis.Text & { nodeType: typeof kTextNodeType }
   type Comment = globalThis.Comment & { nodeType: typeof kCommentNodeType }
-  type DocumentFragment = globalThis.DocumentFragment & {
+  type Fragment = globalThis.DocumentFragment & {
     nodeType: typeof kFragmentNodeType
   }
 }

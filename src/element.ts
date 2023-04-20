@@ -371,7 +371,7 @@ export const AlienElementPrototype = new Proxy(AlienElement.prototype, {
 /**
  * Allows type casting via tag name (eg: `"a"` → `HTMLAnchorElement`)
  */
-export type AlienTag<Element extends AnyElement> =
+export type AlienTag<Element extends AnyElement = DefaultElement> =
   | Element
   | (Element extends HTMLElement
       ? HTMLElement | keyof HTMLElementTagNameMap

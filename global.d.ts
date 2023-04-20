@@ -1,4 +1,3 @@
-import { DefaultElement } from './dist/internal/types'
 import {
   AlienElementList,
   AlienTag,
@@ -16,7 +15,7 @@ declare global {
     readonly childNodes: AlienElementList<Element>
     cloneNode(deep?: boolean): this
     matches(selectors: string): boolean
-    matches<Element extends AlienTag<DefaultElement>>(
+    matches<Element extends AlienTag>(
       selectors: string
     ): this is AlienSelect<Element>
   }

@@ -26,7 +26,7 @@ export default (options: {
 
     program.unshift(
       'body',
-      `import { hmrSelfUpdating, hmrComponent, hmrRegister } from "alien-dom/dist/hmr"\n`
+      `import { hmrSelfUpdating, hmrComponent, hmrRegister } from "alien-dom/dist/hmr.mjs"\n`
     )
 
     for (const component of components) {
