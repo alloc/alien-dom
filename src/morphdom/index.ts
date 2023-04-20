@@ -63,7 +63,7 @@ export function morph(
       while (curChild) {
         var key = undefined
 
-        if (skipKeyedNodes && (key = getNodeKey(curChild))) {
+        if (skipKeyedNodes && (key = getNodeKey(curChild)) != null) {
           // If we are skipping keyed nodes then we add the key to a
           // list so that it can be handled at the very end.
           keyedRemovalList.push(key)
@@ -110,7 +110,7 @@ export function morph(
     var curChild = fromNode.firstChild as Node
     while (curChild) {
       var key = getNodeKey(curChild)
-      if (key && curChild.nodeType === kElementNodeType) {
+      if (key != null && curChild.nodeType === kElementNodeType) {
         fromNodesLookup.set(key, curChild)
       }
       curChild = curChild.nextSibling as Node
@@ -125,7 +125,7 @@ export function morph(
       var nextSibling = curChild.nextSibling as Node
 
       var key = getNodeKey(curChild)
-      if (key) {
+      if (key != null) {
         var unmatchedFromEl = fromNodesLookup.get(key)
         // if we find a duplicate #id node in cache, replace `el` with
         // cache value and morph it to the child node.
@@ -157,7 +157,7 @@ export function morph(
     // to be removed
     while (curFromNodeChild) {
       var fromNextSibling = curFromNodeChild.nextSibling as Node
-      if ((curFromNodeKey = getNodeKey(curFromNodeChild))) {
+      if ((curFromNodeKey = getNodeKey(curFromNodeChild)) != null) {
         // Since the node is keyed it might be matched up later so we defer
         // the actual removal to later
         keyedRemovalList.push(curFromNodeKey)
@@ -177,7 +177,7 @@ export function morph(
   ) {
     var toElKey = getNodeKey(toEl)
 
-    if (toElKey) {
+    if (toElKey != null) {
       // If an element with an ID is being morphed then it will be in
       // the final DOM so clear it out of the saved elements
       // collection
@@ -245,7 +245,7 @@ export function morph(
           if (curFromNodeChild.nodeType === kElementNodeType) {
             // Both nodes being compared are Element nodes
 
-            if (curToNodeKey) {
+            if (curToNodeKey != null) {
               // The target node has a key so we want to match it up
               // with the correct element in the original DOM tree.
               if (curToNodeKey !== curFromNodeKey) {
@@ -276,7 +276,7 @@ export function morph(
 
                     // fromNextSibling = curFromNodeChild.nextSibling;
 
-                    if (curFromNodeKey) {
+                    if (curFromNodeKey != null) {
                       // Since the node is keyed it might be matched up
                       // later so we defer the actual removal to later
                       keyedRemovalList.push(curFromNodeKey)
@@ -299,7 +299,7 @@ export function morph(
                   isCompatible = false
                 }
               }
-            } else if (curFromNodeKey) {
+            } else if (curFromNodeKey != null) {
               // The original has a key
               isCompatible = false
             }
@@ -345,7 +345,7 @@ export function morph(
         // to discard it just yet since it still might find a home in
         // the final DOM tree. After everything is done we will remove
         // any keyed nodes that didn't find a home.
-        if (curFromNodeKey) {
+        if (curFromNodeKey != null) {
           // Since the node is keyed it might be matched up later so
           // we defer the actual removal to later.
           keyedRemovalList.push(curFromNodeKey)
@@ -364,7 +364,7 @@ export function morph(
       // nodes. Therefore, we will just append the current "to" node to
       // the end.
       if (
-        curToNodeKey &&
+        curToNodeKey != null &&
         (matchingFromEl = fromNodesLookup.get(curToNodeKey)) &&
         compareNodeNames(matchingFromEl, curToNodeChild)
       ) {
@@ -497,5 +497,5 @@ const specialMorphs: Record<string, Function> = {
 }
 
 function defaultAddChild(parent: Node, child: Node) {
-  return parent.appendChild(child)
+  parent.appendChild(child)
 }
