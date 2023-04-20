@@ -1,6 +1,7 @@
 import {
   decamelize,
   forEach,
+  hasTagName,
   isArrayLike,
   isBoolean,
   isComponentClass,
@@ -30,6 +31,11 @@ import { JSX } from '../types/jsx'
 import { selfUpdating } from '../selfUpdating'
 import { fromElementThunk } from '../fromElementProp'
 import { kAlienFragment, kAlienElementTags } from '../symbols'
+import {
+  kCommentNodeType,
+  kFragmentNodeType,
+  kTextNodeType,
+} from '../internal/constants'
 
 export type { JSX }
 
@@ -203,7 +209,7 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
   if (isElement(child)) {
     // The child nodes of a fragment are cached on the fragment itself
     // in case the fragment is cached and reused in a future render.
-    if (child.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+    if (child.nodeType === kFragmentNodeType) {
       const fragment: DocumentFragment = child as any
       const childNodes: Element[] = (fragment as any)[kAlienFragment]
       if (childNodes) {
@@ -221,7 +227,7 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
       }
     }
     // Text nodes cannot have an element key.
-    else if (child.nodeType !== Node.TEXT_NODE) {
+    else if (child.nodeType !== kTextNodeType) {
       if (child.hasOwnProperty(kAlienElementKey)) {
         const component = currentComponent.get()
         if (component) {
@@ -287,7 +293,7 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
 
       // Fragment children are merged into the nearest ancestor element,
       // so the arrayKey is prepended to avoid conflicts.
-      if (isElement(child, Node.DOCUMENT_FRAGMENT_NODE)) {
+      if (isElement(child, kFragmentNodeType)) {
         child.childNodes.forEach(node => {
           let key = (node as any)[kAlienElementKey]
           if (key && key[0] === '*') {
@@ -314,13 +320,6 @@ function getPlaceholder(child: any): DefaultElement {
   setSymbol(placeholder, kAlienPlaceholder, true)
   setSymbol(placeholder, kAlienElementKey, child[kAlienElementKey])
   return placeholder
-}
-
-function hasTagName<Tag extends string>(
-  node: any,
-  tagName: Tag
-): node is JSX.ElementType<Lowercase<Tag>> {
-  return node && node.tagName === tagName
 }
 
 function appendChildToNode(child: Node, node: Node) {

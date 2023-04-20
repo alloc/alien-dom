@@ -1,5 +1,5 @@
 import type { JSX } from './types/jsx'
-import { Fragment } from './jsx-dom/jsx'
+import { Fragment } from './jsx-dom/jsx-runtime'
 import { ref, Ref } from './signals'
 import { currentComponent } from './global'
 
