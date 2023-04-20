@@ -1,6 +1,7 @@
 import { $, $$ } from './selectors'
 import { createHookType, getCurrentHook } from './hooks'
 import { binaryInsert } from './jsx-dom/util'
+import { kElementNodeType } from './internal/constants'
 
 type ElementListener = (element: Element) => void
 
@@ -26,14 +27,14 @@ function observe(rootNode: Node) {
     const observer = new MutationObserver(mutations => {
       for (const mutation of mutations) {
         for (const node of Array.from(mutation.addedNodes)) {
-          if (node.nodeType == Node.ELEMENT_NODE) {
+          if (node.nodeType == kElementNodeType) {
             if (!removed.delete(node as Element)) {
               added.add(node as Element)
             }
           }
         }
         for (const node of Array.from(mutation.removedNodes)) {
-          if (node.nodeType == Node.ELEMENT_NODE) {
+          if (node.nodeType == kElementNodeType) {
             if (!added.delete(node as Element)) {
               removed.add(node as Element)
             }

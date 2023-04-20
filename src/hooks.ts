@@ -4,6 +4,7 @@ import { AnyElement } from './internal/types'
 import { currentHooks } from './global'
 import { kAlienHooks, setSymbol, kAlienFragment } from './symbols'
 import { noop } from './jsx-dom/util'
+import { kFragmentNodeType } from './internal/constants'
 
 type Promisable<T> = T | Promise<T>
 
@@ -81,7 +82,7 @@ export class AlienHooks<Element extends AnyElement = any> {
       // If the hooks are being attached to a document fragment, use the
       // first child instead. For component hooks, this should be a
       // comment node created for exactly this purpose.
-      if (element.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+      if (element.nodeType === kFragmentNodeType) {
         element = ((element as any)[kAlienFragment] ||
           element.childNodes)[0] as any
       }

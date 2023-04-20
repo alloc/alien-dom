@@ -1,3 +1,4 @@
+import { kFragmentNodeType, kElementNodeType } from './internal/constants'
 import type { JSX } from './types/jsx'
 
 /**
@@ -14,7 +15,5 @@ export function isElement(value: any): value is JSX.Element {
     return true
   }
   const { nodeType } = value as { nodeType?: number }
-  return (
-    nodeType === Node.ELEMENT_NODE || nodeType === Node.DOCUMENT_FRAGMENT_NODE
-  )
+  return nodeType === kElementNodeType || nodeType === kFragmentNodeType
 }

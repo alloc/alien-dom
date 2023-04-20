@@ -5,6 +5,7 @@ import { ref, attachRef } from './signals'
 import { jsx } from './jsx-dom/jsx'
 import { currentComponent } from './global'
 import { setSymbol } from './symbols'
+import { kFragmentNodeType } from './internal/constants'
 
 const kAlienRenderFunc = Symbol.for('alien:renderFunc')
 const kAlienComponentKey = Symbol.for('alien:componentKey')
@@ -132,7 +133,7 @@ function registerElements(
   instances.add(instance)
 
   if (element) {
-    if (element.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+    if (element.nodeType === kFragmentNodeType) {
       registerFragment(element, instance)
     } else {
       instance.elements.push(element)
@@ -142,7 +143,7 @@ function registerElements(
 
 function registerFragment(fragment: JSX.Element, instance: ComponentInstance) {
   fragment.childNodes.forEach(child => {
-    if (child.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+    if (child.nodeType === kFragmentNodeType) {
       registerFragment(child as JSX.Element, instance)
     } else {
       instance.elements.push(child as JSX.Element)

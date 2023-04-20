@@ -5,10 +5,10 @@ import { morphTextAreaElement } from './morphTextArea'
 import { morphInputElement } from './morphInput'
 import { noop, hasTagName } from '../jsx-dom/util'
 import {
-  COMMENT_NODE,
-  DOCUMENT_FRAGMENT_NODE,
-  ELEMENT_NODE,
-  TEXT_NODE,
+  kCommentNodeType,
+  kFragmentNodeType,
+  kElementNodeType,
+  kTextNodeType,
 } from '../internal/constants'
 import { morphAttrs } from './morphAttrs'
 
@@ -48,7 +48,7 @@ export function morph(
     childrenOnly = false,
   } = options
 
-  if (toNode.nodeType === DOCUMENT_FRAGMENT_NODE) {
+  if (toNode.nodeType === kFragmentNodeType) {
     toNode = toNode.firstElementChild as Node.Element
   }
 
@@ -58,7 +58,7 @@ export function morph(
   var keyedRemovalList: any[] = []
 
   function walkDiscardedChildNodes(node: Node, skipKeyedNodes?: boolean) {
-    if (node.nodeType === ELEMENT_NODE) {
+    if (node.nodeType === kElementNodeType) {
       var curChild = node.firstChild as Node
       while (curChild) {
         var key = undefined
@@ -104,13 +104,13 @@ export function morph(
   }
 
   if (
-    fromNode.nodeType === ELEMENT_NODE ||
-    fromNode.nodeType === DOCUMENT_FRAGMENT_NODE
+    fromNode.nodeType === kElementNodeType ||
+    fromNode.nodeType === kFragmentNodeType
   ) {
     var curChild = fromNode.firstChild as Node
     while (curChild) {
       var key = getNodeKey(curChild)
-      if (key && curChild.nodeType === ELEMENT_NODE) {
+      if (key && curChild.nodeType === kElementNodeType) {
         fromNodesLookup.set(key, curChild)
       }
       curChild = curChild.nextSibling as Node
@@ -131,7 +131,7 @@ export function morph(
         // cache value and morph it to the child node.
         if (unmatchedFromEl && compareNodeNames(curChild, unmatchedFromEl)) {
           curChild.parentNode!.replaceChild(unmatchedFromEl, curChild)
-          if (curChild.nodeType === ELEMENT_NODE) {
+          if (curChild.nodeType === kElementNodeType) {
             morphEl(unmatchedFromEl, curChild)
           }
         } else {
@@ -242,7 +242,7 @@ export function morph(
         var isCompatible = undefined
 
         if (curFromNodeChild.nodeType === curToNodeChild.nodeType) {
-          if (curFromNodeChild.nodeType === ELEMENT_NODE) {
+          if (curFromNodeChild.nodeType === kElementNodeType) {
             // Both nodes being compared are Element nodes
 
             if (curToNodeKey) {
@@ -315,8 +315,8 @@ export function morph(
               morphEl(curFromNodeChild, curToNodeChild as Node.Element)
             }
           } else if (
-            curFromNodeChild.nodeType === TEXT_NODE ||
-            curFromNodeChild.nodeType === COMMENT_NODE
+            curFromNodeChild.nodeType === kTextNodeType ||
+            curFromNodeChild.nodeType === kCommentNodeType
           ) {
             // Both nodes being compared are Text or Comment nodes
             isCompatible = true
@@ -404,8 +404,8 @@ export function morph(
   if (!childrenOnly) {
     // Handle the case where we are given two DOM nodes that are not
     // compatible (e.g. <div> --> <span> or <div> --> TEXT)
-    if (fromNode.nodeType === ELEMENT_NODE) {
-      if (toNode.nodeType === ELEMENT_NODE) {
+    if (fromNode.nodeType === kElementNodeType) {
+      if (toNode.nodeType === kElementNodeType) {
         if (!compareNodeNames(fromNode, toNode)) {
           onNodeDiscarded(fromNode)
           morphedNode = moveChildren(
@@ -422,8 +422,8 @@ export function morph(
         morphedNode = toNode
       }
     } else if (
-      fromNode.nodeType === TEXT_NODE ||
-      fromNode.nodeType === COMMENT_NODE
+      fromNode.nodeType === kTextNodeType ||
+      fromNode.nodeType === kCommentNodeType
     ) {
       // Text or comment node
       if (toNode.nodeType === fromNode.nodeType) {
@@ -478,12 +478,14 @@ export function morph(
 type Node = Node.Element | Node.Text | Node.Comment | Node.DocumentFragment
 
 declare namespace Node {
-  type HTMLElement = globalThis.HTMLElement & { nodeType: typeof ELEMENT_NODE }
-  type Element = globalThis.Element & { nodeType: typeof ELEMENT_NODE }
-  type Text = globalThis.Text & { nodeType: typeof TEXT_NODE }
-  type Comment = globalThis.Comment & { nodeType: typeof COMMENT_NODE }
+  type HTMLElement = globalThis.HTMLElement & {
+    nodeType: typeof kElementNodeType
+  }
+  type Element = globalThis.Element & { nodeType: typeof kElementNodeType }
+  type Text = globalThis.Text & { nodeType: typeof kTextNodeType }
+  type Comment = globalThis.Comment & { nodeType: typeof kCommentNodeType }
   type DocumentFragment = globalThis.DocumentFragment & {
-    nodeType: typeof DOCUMENT_FRAGMENT_NODE
+    nodeType: typeof kFragmentNodeType
   }
 }
 

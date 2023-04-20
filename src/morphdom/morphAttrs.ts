@@ -1,4 +1,4 @@
-import { DOCUMENT_FRAGMENT_NODE } from '../internal/constants'
+import { kFragmentNodeType } from '../internal/constants'
 
 export function morphAttrs(fromNode: Element, toNode: Element) {
   var toNodeAttrs = toNode.attributes
@@ -10,8 +10,8 @@ export function morphAttrs(fromNode: Element, toNode: Element) {
 
   // document-fragments dont have attributes so lets not do anything
   if (
-    toNode.nodeType === DOCUMENT_FRAGMENT_NODE ||
-    fromNode.nodeType === DOCUMENT_FRAGMENT_NODE
+    toNode.nodeType === kFragmentNodeType ||
+    fromNode.nodeType === kFragmentNodeType
   ) {
     return
   }

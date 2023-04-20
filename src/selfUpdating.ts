@@ -14,6 +14,11 @@ import { kAlienFragment } from './symbols'
 import { AlienComponent } from './internal/component'
 import { currentContext, ContextStore } from './context'
 import { JSX } from './types/jsx'
+import {
+  kCommentNodeType,
+  kFragmentNodeType,
+  kElementNodeType,
+} from './internal/constants'
 
 /**
  * Create a self-updating component whose render function can mutate its
@@ -171,12 +176,12 @@ export function selfUpdating<
 
       if (!rootNode || rootNode !== newRootNode) {
         if (newRootNode) {
-          if (newRootNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+          if (newRootNode.nodeType === kFragmentNodeType) {
             // Document fragments need a placeholder comment node for
             // the component hooks to be attached to.
             newRootNode.prepend(document.createComment(''))
           }
-          if (rootNode?.nodeType === Node.ELEMENT_NODE) {
+          if (rootNode?.nodeType === kElementNodeType) {
             // Root nodes must have same key for morphing to work.
             const newKey = (newRootNode as any)[kAlienElementKey]
             setSymbol(rootNode, kAlienElementKey, newKey)
@@ -185,7 +190,7 @@ export function selfUpdating<
             updateElement(rootNode as Element, newRootNode, self)
           }
           // Fragments have their own update logic.
-          else if (rootNode?.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+          else if (rootNode?.nodeType === kFragmentNodeType) {
             if (newRootNode.childNodes.length) {
               updateFragment(rootNode, newRootNode, newRefs)
             } else {
@@ -203,13 +208,13 @@ export function selfUpdating<
 
         // If nothing is returned (e.g. null, undefined, empty fragment),
         // use a comment node to hold the position of the element.
-        if (!newRootNode && rootNode?.nodeType !== Node.COMMENT_NODE) {
+        if (!newRootNode && rootNode?.nodeType !== kCommentNodeType) {
           const placeholder = document.createComment('')
-          if (rootNode?.nodeType === Node.ELEMENT_NODE) {
+          if (rootNode?.nodeType === kElementNodeType) {
             const oldHooks: AlienHooks = (rootNode as any)[kAlienHooks]
             oldHooks?.disable()
             rootNode.replaceWith(placeholder)
-          } else if (rootNode?.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+          } else if (rootNode?.nodeType === kFragmentNodeType) {
             const oldNodes: ChildNode[] = (rootNode as any)[kAlienFragment]
             oldNodes[0].before(placeholder)
             oldNodes.forEach(node => node.remove())
