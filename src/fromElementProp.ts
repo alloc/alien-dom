@@ -80,12 +80,7 @@ export function fromElementThunk(thunk: () => JSX.Children) {
               // Emulate a JSX element being constructed.
               component.setRef(key, rootNode as any)
 
-              // We have to set `newElements` here or else we'll confuse
-              // the self-updating component into thinking it didn't
-              // create this element (i.e. a child component did).
-              if (rootNode === newRootNode) {
-                component.newElements!.set(key, rootNode as any)
-              } else {
+              if (rootNode !== newRootNode) {
                 newRootNode = rootNode
               }
             }
