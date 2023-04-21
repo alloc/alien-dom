@@ -7,7 +7,7 @@ export const setSymbol = (obj: any, key: symbol, value: any) =>
 
 export function createSymbol<T = unknown>(name: string) {
   const symbol: symbol = Symbol.for('alien:' + name)
-  function s(target: any): T | undefined
+  function s<U extends T>(target: any): U | undefined
   function s(target: any, value: T | undefined): void
   function s(target: any, value?: T) {
     if (arguments.length === 1) {
@@ -27,6 +27,6 @@ export const kAlienFragment = createSymbol<ChildNode[]>('fragment')
 export const kAlienHooks = createSymbol<AlienHooks>('hooks')
 export const kAlienManualUpdates = createSymbol<boolean>('manualUpdates')
 export const kAlienNewHooks = createSymbol<AlienHooks>('newHooks')
-export const kAlienPlaceholder = createSymbol<boolean>('placeholder')
+export const kAlienPlaceholder = createSymbol<ChildNode>('placeholder')
 export const kAlienSelfUpdating = createSymbol<any>('selfUpdating')
 export const kAlienThunkResult = createSymbol<any>('thunkResult')

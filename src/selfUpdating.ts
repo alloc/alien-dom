@@ -2,7 +2,7 @@ import { effect } from '@preact/signals-core'
 import { ref, attachRef } from './signals'
 import { DefaultElement } from './internal/types'
 import { kAlienHooks, kAlienElementKey, kAlienSelfUpdating } from './symbols'
-import { currentComponent, currentHooks } from './global'
+import { currentComponent, currentHooks, currentMode } from './global'
 import { updateElement, updateFragment } from './updateElement'
 import { kAlienFragment } from './symbols'
 import { AlienComponent } from './internal/component'
@@ -138,6 +138,7 @@ export function selfUpdating<
     const updateComponent = () => {
       let { rootNode, newElements, newHooks, newRefs } = self.startRender()
 
+      currentMode.push('ref')
       currentComponent.push(self)
       currentHooks.push(newHooks)
 
@@ -149,6 +150,7 @@ export function selfUpdating<
       } finally {
         currentHooks.pop(newHooks)
         currentComponent.pop(self)
+        currentMode.pop('ref')
 
         if (threw) {
           self.endRender(true)

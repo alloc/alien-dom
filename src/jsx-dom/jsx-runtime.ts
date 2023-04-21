@@ -22,7 +22,7 @@ import {
 } from '../symbols'
 import { DefaultElement } from '../internal/types'
 import { elementEvent } from '../elementEvents'
-import { currentHooks, currentComponent } from '../global'
+import { currentHooks, currentComponent, currentMode } from '../global'
 import { updateTagProps } from '../internal/component'
 import { ElementKey } from '../types/attr'
 import { hasForEach } from './util'
@@ -219,46 +219,58 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
     // The child nodes of a fragment are cached on the fragment itself
     // in case the fragment is cached and reused in a future render.
     if (child.nodeType === kFragmentNodeType) {
-      const fragment: DocumentFragment = child as any
-      let childNodes = kAlienFragment(fragment)
-      if (childNodes) {
-        // For child nodes still in the DOM, generate a placeholder to
-        // indicate a no-op. Otherwise, reuse the child node.
-        childNodes.forEach(child => {
-          fragment.appendChild(
-            child.isConnected ? getPlaceholder(child) : child
-          )
-        })
+      if (currentMode.is('deref')) {
+        // Revert placeholders if not in a component. This should only
+        // happen when using the <ManualUpdates> component.
+        child = revertAllPlaceholders(child)
       } else {
-        // This is the first time the fragment is being appended, so
-        // cache its child nodes.
-        childNodes = Array.from(fragment.childNodes)
-        kAlienFragment(fragment, childNodes)
+        const component = currentComponent.get()
+        if (component) {
+          const fragment: DocumentFragment = child as any
+          let childNodes = kAlienFragment(fragment)
+          if (childNodes) {
+            // For child nodes still in the DOM, generate a placeholder to
+            // indicate a no-op. Otherwise, reuse the child node.
+            childNodes.forEach(child => {
+              if (child.isConnected) {
+                child = getPlaceholder(child as any)
+              }
+              fragment.appendChild(child)
+            })
+          } else {
+            // This is the first time the fragment is being appended, so
+            // cache its child nodes.
+            childNodes = Array.from(fragment.childNodes)
+            kAlienFragment(fragment, childNodes)
+          }
+        }
       }
     }
     // Text nodes cannot have an element key.
     else if (child.nodeType !== kTextNodeType) {
       if (kAlienElementKey.in(child)) {
-        const component = currentComponent.get()
-        if (component) {
-          const key = kAlienElementKey(child)!
-          // If a key is missing from `newElements` or points to the
-          // same node, we can skip the update.
-          const newChild = component.newElements!.get(key)
-          if (newChild && child !== newChild) {
-            // Append the new element, so the old element's parent is
-            // preserved.
-            child = newChild
-          }
-          // Elements created in a loop or callback don't have their `key`
-          // prop set by the compiler, which means they don't get added to
-          // the `scope.newElements` cache unless a dynamic key is set.
-          else if (child.isConnected) {
-            // Ensure this element is not forgotten by the ref tracker, so
-            // it can be reused when the cache is invalidated.
-            component.setRef(key, child as JSX.Element)
-            // Prevent an update by morphdom.
-            child = getPlaceholder(child)
+        if (currentMode.is('deref')) {
+          // Revert placeholders if not in a component. This should only
+          // happen when using the <ManualUpdates> component.
+          child = revertAllPlaceholders(child)
+        } else {
+          const component = currentComponent.get()
+          if (component) {
+            // If this child is an element reference, we should
+            // dereference it so the new version is morphed with.
+            const key = kAlienElementKey(child)!
+            const newChild = component.newElements!.get(key)
+            if (newChild && child !== newChild) {
+              child = newChild
+            }
+            // If an element reference was cached, there won't exist a new
+            // version in the `newElements` map. In this case, let's
+            // ensure it's not forgotten by the reference tracker and
+            // replace it with a placeholder to skip morphing.
+            else if (child.isConnected) {
+              component.setRef(key, child as JSX.Element)
+              child = getPlaceholder(child)
+            }
           }
         }
       } else {
@@ -298,12 +310,11 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
     }
   } else if (isFunction(child)) {
     if (kAlienManualUpdates.in(parent)) {
-      // Temporarily disable element swapping.
-      currentComponent.push(undefined)
+      currentMode.push('deref')
       try {
         appendChild(fromElementThunk(child), parent, key)
       } finally {
-        currentComponent.pop(undefined)
+        currentMode.pop('deref')
       }
     } else {
       appendChild(fromElementThunk(child), parent, key)
@@ -338,19 +349,31 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
   }
 }
 
-function getPlaceholder(child: any): DefaultElement {
+function getPlaceholder(child: Element): DefaultElement {
   let placeholder: any
   if (child.nodeType === kCommentNodeType) {
-    placeholder = document.createComment(child.textContent)
+    placeholder = document.createComment(child.textContent || '')
   } else {
     const tagName = child.tagName.toLowerCase()
     placeholder = child.namespaceURI
       ? document.createElementNS(child.namespaceURI, tagName)
       : document.createElement(tagName)
   }
-  kAlienPlaceholder(placeholder, true)
+  kAlienPlaceholder(placeholder, child)
   kAlienElementKey(placeholder, kAlienElementKey(child))
   return placeholder
+}
+
+function revertAllPlaceholders<T extends ChildNode>(child: T) {
+  child = kAlienPlaceholder<T>(child) || child
+  child.childNodes.forEach(grandChild => {
+    const oldGrandChild = grandChild
+    grandChild = revertAllPlaceholders(grandChild)
+    if (oldGrandChild !== grandChild) {
+      child.replaceChild(grandChild, oldGrandChild)
+    }
+  })
+  return child
 }
 
 function appendChildToNode(child: Node, node: Node) {

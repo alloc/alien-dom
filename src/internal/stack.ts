@@ -1,6 +1,7 @@
-export function createStack<T>() {
-  const stack: (T | null)[] = [null]
+export function createStack<T>(baseValue?: T) {
+  const stack: (T | null)[] = [baseValue ?? null]
   return {
+    is: (value: T) => stack.at(-1) === value,
     get: stack.at.bind(stack, -1),
     push: (value: T) => void stack.push(value),
     pop(value: T) {
