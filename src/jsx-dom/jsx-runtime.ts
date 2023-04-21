@@ -23,7 +23,7 @@ import {
 import { DefaultElement } from '../internal/types'
 import { elementEvent } from '../elementEvents'
 import { currentHooks, currentComponent, currentMode } from '../global'
-import { updateTagProps } from '../internal/component'
+import { updateTagProps, AlienComponent } from '../internal/component'
 import { ElementKey } from '../types/attr'
 import { hasForEach } from './util'
 import { JSX } from '../types/jsx'
@@ -256,10 +256,17 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
         } else {
           const component = currentComponent.get()
           if (component) {
-            // If this child is an element reference, we should
-            // dereference it so the new version is morphed with.
             const key = kAlienElementKey(child)!
-            const newChild = component.newElements!.get(key)
+
+            // Find the element's new version. The element may have been
+            // passed by reference, so its new version could exist in a
+            // parent component, hence the for loop.
+            let newChild: Element | undefined
+            for (let c: AlienComponent | null = component; c; c = c.parent) {
+              if (!c.newElements || (newChild = c.newElements.get(key))) break
+            }
+
+            // Use the new version of the element if it exists.
             if (newChild && child !== newChild) {
               child = newChild
             }

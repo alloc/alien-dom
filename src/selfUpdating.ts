@@ -126,6 +126,7 @@ export function selfUpdating<
     }
 
     const self = new AlienComponent(
+      currentComponent.get(),
       Component as any,
       props,
       context,

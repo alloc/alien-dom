@@ -32,6 +32,7 @@ export class AlienComponent<Props = any> {
   newHooks: AlienHooks | null = null
 
   constructor(
+    readonly parent: AlienComponent | null,
     readonly tag: FunctionComponent,
     readonly props: Props,
     readonly context: Map<AlienContext, Ref>,
