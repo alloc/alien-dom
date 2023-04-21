@@ -28,20 +28,22 @@ export function updateNode(node: AnyElement, newNode: AnyElement) {
   }
 }
 
+/** @internal */
 export function updateFragment(
   fragment: DocumentFragment,
   newFragment: DocumentFragment,
   newRefs?: Map<any, AnyElement> | null
 ) {
-  const oldNodes = kAlienFragment(fragment)
+  const oldNodes = kAlienFragment(fragment)!
   const oldKeys = oldNodes.map(kAlienElementKey.get)
-  const newKeys = Array.from(newFragment.childNodes, kAlienElementKey.get)
+  const newNodes: ChildNode[] = Array.from<any>(newFragment.childNodes)
+  const newKeys = newNodes.map(kAlienElementKey.get)
 
-  const elementMap = new Map<HTMLElement, HTMLElement>()
+  const elementMap = new Map<AnyElement, AnyElement>()
   const isManualUpdate = kAlienManualUpdates.in(newFragment)
 
   let prevChild: ChildNode | undefined
-  const newNodes = newKeys.map((newKey, newIndex) => {
+  newKeys.forEach((newKey, newIndex) => {
     let oldNode: ChildNode | undefined
     // When the root fragment is a <ManualUpdates> element, skip reuse
     // of old nodes and prefer the latest nodes instead.
@@ -51,21 +53,25 @@ export function updateFragment(
         oldNode = oldNodes[oldIndex]
         recursiveMorph(
           oldNode as Element,
-          newFragment.childNodes[newIndex],
+          newNodes[newIndex] as Element,
           newRefs,
           elementMap,
           true /* isFragment */
         )
       }
     }
-    const node = oldNode || newFragment.childNodes[newIndex]
     if (prevChild) {
+      const node = oldNode || newNodes[newIndex]
       prevChild.after(node)
+      prevChild = node
     } else {
-      oldNodes[0].before(node)
+      // The first node is always the placeholder comment node where the
+      // component hooks are attached.
+      prevChild = oldNode = oldNodes[0]
     }
-    prevChild = node
-    return node
+    if (oldNode) {
+      newNodes[newIndex] = oldNode
+    }
   })
 
   for (const oldNode of oldNodes) {
@@ -86,6 +92,7 @@ export function updateFragment(
   }
 }
 
+/** @internal */
 export function updateElement(
   rootElement: AnyElement,
   newRootElement: AnyElement,
