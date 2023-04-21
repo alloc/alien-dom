@@ -31,13 +31,13 @@ export function fromElementProp(element: JSX.Children) {
 /** @internal */
 export function fromElementThunk(thunk: () => JSX.Children) {
   if (!kAlienThunkResult.in(thunk)) {
-    const result = computed(thunk)
-
     // The first component to call the thunk owns it.
     const component = currentComponent.get()
     if (!component) {
-      return result.value
+      return thunk()
     }
+
+    const result = computed(thunk)
 
     // By caching the element here, we can reuse a mounted element even if
     // a parent component overwrites its element key, which can happen if
