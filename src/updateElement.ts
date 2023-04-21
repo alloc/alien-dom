@@ -34,14 +34,7 @@ export function updateFragment(
   newFragment: DocumentFragment,
   newRefs?: Map<any, AnyElement> | null
 ) {
-  const oldNodes = kAlienFragment(fragment)!.filter(
-    // In the event that any of the fragment's child nodes are moved to
-    // a new parent than the comment node (e.g. the first child), we
-    // should avoid updating the moved nodes.
-    (oldNode, index, oldNodes) =>
-      oldNode.isConnected &&
-      (index === 0 || oldNode.parentNode === oldNodes[0].parentNode)
-  )
+  const oldNodes = kAlienFragment(fragment)!
   const oldKeys = oldNodes.map(kAlienElementKey.get)
   const newNodes: ChildNode[] = Array.from<any>(newFragment.childNodes)
   const newKeys = newNodes.map(kAlienElementKey.get)
@@ -82,15 +75,7 @@ export function updateFragment(
   })
 
   for (const oldNode of oldNodes) {
-    // If the old node is not in the new nodes, remove it. We check if
-    // the old node still exists as a direct child of the fragment or as
-    // a deep descendant, so nodes can be manually moved to a new parent
-    // without being recreated from scratch (useful for wrapping and
-    // unwrapping purposes).
-    if (
-      oldNode.isConnected &&
-      newNodes.every(newNode => !newNode.contains(oldNode))
-    ) {
+    if (!newNodes.includes(oldNode)) {
       oldNode.remove()
     }
   }
