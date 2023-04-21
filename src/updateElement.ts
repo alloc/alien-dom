@@ -79,7 +79,9 @@ export function updateFragment(
   for (const [newElement, oldElement] of elementMap) {
     const oldHooks = kAlienHooks(oldElement)
     const newHooks = kAlienHooks(newElement)
-    if (newHooks) retargetHooks(newHooks, oldElement, elementMap)
+    if (newHooks) {
+      retargetHooks(newHooks, oldElement, elementMap)
+    }
     oldHooks?.disable()
   }
 }
@@ -99,7 +101,9 @@ export function updateElement(
   for (const [newElement, oldElement] of elementMap) {
     const oldHooks = kAlienHooks(oldElement)
     const newHooks = kAlienHooks(newElement)
-    if (newHooks) retargetHooks(newHooks, oldElement, elementMap)
+    if (newHooks) {
+      retargetHooks(newHooks, oldElement, elementMap)
+    }
     oldHooks?.disable()
   }
 }
@@ -134,25 +138,26 @@ function recursiveMorph(
   oldParentElem: AnyElement,
   newParentElem: AnyElement,
   newRefs: Map<any, AnyElement> | null | undefined,
-  elementMap: Map<HTMLElement, HTMLElement>,
+  elementMap: Map<AnyElement, AnyElement>,
   isFragment?: boolean,
   childrenOnly?: boolean
 ) {
-  morph(oldParentElem, newParentElem, {
+  morph(oldParentElem as any, newParentElem as any, {
     getNodeKey: kAlienElementKey.get,
     childrenOnly,
     onNodeDiscarded,
     onBeforeElUpdated(oldElem, newElem) {
       if (oldElem !== oldParentElem || isFragment) {
-        // Placeholders exist to prevent updates.
-        if (newElem.hasOwnProperty(kAlienPlaceholder)) {
+        // Placeholders exist to prevent updates. Some use cases include
+        // cached elements and children of cached fragments.
+        if (kAlienPlaceholder.in(newElem)) {
           return false
         }
 
         // If the element is self-updating, no update is needed unless
         // it was created in a loop or callback without a dynamic key.
-        if (oldElem.hasOwnProperty(kAlienElementTags)) {
-          const key = (newElem as any)[kAlienElementKey]
+        if (kAlienElementTags.in(oldElem)) {
+          const key = kAlienElementKey(newElem)
           if (newRefs && !newRefs.has(key)) {
             oldElem.replaceWith(newElem)
           }
@@ -161,7 +166,7 @@ function recursiveMorph(
       }
 
       elementMap.set(newElem, oldElem)
-      copyAnimatedStyle(oldElem, newElem)
+      copyAnimatedStyle(oldElem as any, newElem as any)
       return true
     },
     onBeforeElChildrenUpdated(oldElem, newElem) {

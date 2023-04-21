@@ -1,14 +1,8 @@
 import { effect } from '@preact/signals-core'
 import { ref, attachRef } from './signals'
 import { DefaultElement } from './internal/types'
-import {
-  setSymbol,
-  kAlienHooks,
-  kAlienElementKey,
-  kAlienSelfUpdating,
-} from './symbols'
+import { kAlienHooks, kAlienElementKey, kAlienSelfUpdating } from './symbols'
 import { currentComponent, currentHooks } from './global'
-import { AlienHooks } from './hooks'
 import { updateElement, updateFragment } from './updateElement'
 import { kAlienFragment } from './symbols'
 import { AlienComponent } from './internal/component'
@@ -195,7 +189,7 @@ export function selfUpdating<
           // Fragments have their own update logic.
           else if (rootNode?.nodeType === kFragmentNodeType) {
             if (newRootNode.childNodes.length) {
-              updateFragment(rootNode, newRootNode, newRefs)
+              updateFragment(rootNode as any, newRootNode as any, newRefs)
             } else {
               // Empty fragment needs a placeholder. Setting this to null
               // allows for that.

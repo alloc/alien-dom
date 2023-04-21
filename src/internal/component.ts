@@ -2,14 +2,13 @@ import { batch } from '@preact/signals-core'
 import { ElementKey } from '../types/attr'
 import { AnyElement, DefaultElement } from './types'
 import { AlienHooks } from '../hooks'
-import { kAlienElementTags } from '../symbols'
 import { FunctionComponent } from '../types/component'
 import { getAlienHooks } from './hooks'
 import { Ref } from '../signals'
 import { AlienContext, currentContext } from '../context'
 import {
-  setSymbol,
   kAlienElementKey,
+  kAlienElementTags,
   kAlienHooks,
   kAlienNewHooks,
 } from '../symbols'
@@ -70,9 +69,6 @@ export class AlienComponent<Props = any> {
     if (!tags) {
       tags = new Map()
       kAlienElementTags(rootNode, tags)
-      if (rootNode.nodeType === kFragmentNodeType) {
-        kAlienElementTags(rootNode.childNodes[0], tags)
-      }
     }
     tags.set(this.tag, this)
     this.rootNode = rootNode

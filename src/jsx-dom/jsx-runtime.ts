@@ -234,7 +234,6 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
         // cache its child nodes.
         childNodes = Array.from(fragment.childNodes)
         kAlienFragment(fragment, childNodes)
-        kAlienFragment(childNodes[0], childNodes)
       }
     }
     // Text nodes cannot have an element key.
