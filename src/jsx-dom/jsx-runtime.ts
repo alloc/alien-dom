@@ -272,11 +272,17 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
     if (kAlienElementTags.in(child)) {
       const tags = kAlienElementTags(child)!
       queueMicrotask(() => {
-        if (!(child as ChildNode).isConnected) {
+        const rootNode =
+          (child as ChildNode).nodeType === kFragmentNodeType
+            ? kAlienFragment(child)![0]
+            : (child as ChildNode)
+
+        if (!rootNode.isConnected) {
           // The element hasn't mounted yet, so we'll have to rely on
           // the component to set an `onMount` listener.
           return
         }
+
         const components = Array.from(tags.values())
         if (components[0].hooks) {
           for (const component of components) {
