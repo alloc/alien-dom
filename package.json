@@ -32,7 +32,7 @@
   "homepage": "https://github.com/aleclarson/alien-dom#readme",
   "prettier": "@alloc/prettier-config",
   "scripts": {
-    "build": "rimraf dist && cd src && tsup-node",
+    "build": "rimraf dist && cd src && tsup-node --treeshake smallest",
     "dev": "cd src && tsup-node --watch --sourcemap"
   },
   "dependencies": {

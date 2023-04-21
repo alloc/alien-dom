@@ -16,7 +16,6 @@ export default defineConfig({
   outDir: '../dist',
   format: ['esm'],
   dts: true,
-  treeshake: 'smallest',
   noExternal: ['linear-color', '@alloc/types'],
   async onSuccess() {
     copyFileSync('jsx-dom/LICENSE', '../dist/jsx-dom/LICENSE')
