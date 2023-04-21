@@ -3,7 +3,6 @@ import { JSX } from './types/jsx'
 import { kAlienThunkResult, kAlienElementKey, kAlienHooks } from './symbols'
 import { currentComponent } from './global'
 import { isElement } from './jsx-dom/util'
-import { AlienHooks } from './hooks'
 import { ElementKey } from './types/attr'
 
 /**
