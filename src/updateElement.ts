@@ -8,10 +8,8 @@ import {
 } from './symbols'
 import { AlienHooks } from './hooks'
 import { copyAnimatedStyle } from './animate'
-import { kAlienFragment, setSymbol } from './symbols'
-import { ElementKey } from './types/attr'
+import { kAlienFragment, kAlienManualUpdates } from './symbols'
 import { AlienComponent } from './internal/component'
-import { ElementTags } from './internal/component'
 
 export function updateFragment(
   fragment: any,
@@ -23,11 +21,14 @@ export function updateFragment(
   const newKeys = Array.from(newFragment.childNodes, kAlienElementKey.get)
 
   const elementMap = new Map<HTMLElement, HTMLElement>()
+  const isManualUpdate = kAlienManualUpdates.in(newFragment)
 
   let prevChild: ChildNode | undefined
   const newNodes = newKeys.map((newKey, newIndex) => {
     let oldNode: ChildNode | undefined
-    if (newKey !== undefined) {
+    // When the root fragment is a <ManualUpdates> element, skip reuse
+    // of old nodes and prefer the latest nodes instead.
+    if (!isManualUpdate && newKey !== undefined) {
       const oldIndex = oldKeys.indexOf(newKey)
       if (oldIndex !== -1) {
         oldNode = oldNodes[oldIndex]

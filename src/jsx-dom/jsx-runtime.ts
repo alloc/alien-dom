@@ -29,7 +29,11 @@ import { hasForEach } from './util'
 import { JSX } from '../types/jsx'
 import { selfUpdating } from '../selfUpdating'
 import { fromElementThunk } from '../fromElementProp'
-import { kAlienFragment, kAlienElementTags } from '../symbols'
+import {
+  kAlienFragment,
+  kAlienElementTags,
+  kAlienManualUpdates,
+} from '../symbols'
 import {
   kCommentNodeType,
   kFragmentNodeType,
@@ -78,9 +82,15 @@ export function createFactory(tag: string) {
   return createElement.bind(null, tag)
 }
 
-export function Fragment(attr: { children: JSX.Children }) {
+export function Fragment(props: {
+  children: JSX.Children
+  manualUpdates?: boolean
+}) {
   const fragment = document.createDocumentFragment()
-  appendChild(attr.children, fragment)
+  if (props.manualUpdates) {
+    kAlienManualUpdates(fragment, true)
+  }
+  appendChild(props.children, fragment)
   return fragment
 }
 
@@ -282,7 +292,17 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
       })
     }
   } else if (isFunction(child)) {
-    appendChild(fromElementThunk(child), parent, key)
+    if (kAlienManualUpdates.in(parent)) {
+      // Temporarily disable element swapping.
+      currentComponent.push(undefined)
+      try {
+        appendChild(fromElementThunk(child), parent, key)
+      } finally {
+        currentComponent.pop(undefined)
+      }
+    } else {
+      appendChild(fromElementThunk(child), parent, key)
+    }
   } else if (isArrayLike(child)) {
     let children = child
     if (!hasForEach(children)) {
