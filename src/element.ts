@@ -1,6 +1,6 @@
 import { animate, SpringAnimation } from './animate'
 import { AlienElementMessage, events } from './events'
-import { Disposable, AlienHook } from './hooks'
+import { Disposable, AlienHook, AlienEnabler } from './hooks'
 import { canMatch } from './internal/duck'
 import { AnyElement, AnyEvent, DefaultElement } from './internal/types'
 import { AlienNodeList } from './nodeList'
@@ -224,6 +224,19 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
    */
   hooks() {
     return getAlienHooks(this)
+  }
+  effect(enabler: AlienEnabler<void, [], false>): Disposable<typeof enabler>
+  effect<Args extends any[]>(
+    enabler: AlienEnabler<void, Args, false>,
+    args: Args
+  ): Disposable<typeof enabler>
+  effect<T extends object | void, Args extends any[] = []>(
+    enabler: AlienEnabler<T, Args, false>,
+    target: T,
+    args?: Args
+  ): Disposable<typeof enabler>
+  effect(enabler: any, arg2?: any, arg3?: any) {
+    return this.hooks().enable(enabler, arg2, arg3)
   }
 }
 
