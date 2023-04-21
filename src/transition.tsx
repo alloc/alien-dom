@@ -2,15 +2,15 @@ import { selfUpdating } from './selfUpdating'
 import { SpringAnimation, animate } from './animate'
 import { JSX } from './types/jsx'
 import { useState } from './hooks/useState'
-import { fromElementProp } from './fromElementProp'
 import { $ } from './selectors'
 import { isElement } from './isElement'
 import { useEffect } from './hooks/useEffect'
 import { updateNode } from './updateElement'
 import { CSSProperties } from './types/dom'
 import { AnyElement } from './internal/types'
-import { kFragmentNodeType, kElementNodeType } from './internal/constants'
 import { ManualUpdates } from './manualUpdates'
+import { Fragment } from './jsx-dom/jsx-runtime'
+import { toElements } from './toElements'
 
 type Falsy = false | null | undefined
 
@@ -43,33 +43,27 @@ export const Transition = selfUpdating(function <T>(props: {
 
   const previousId = props.id !== state.currentId ? state.currentId : undefined
   const leavingElements = Array.from(
-    state.children,
+    state.elements,
     ([id, element]) => id !== props.id && id !== previousId && element
   ).filter(Boolean)
 
-  let children = fromElementProp(props.children)
   let newLeavingElements: AnyElement[] | undefined
   let newEnteredElements: AnyElement[] | undefined
   let initial = false
 
+  // We must wrap props.children in a fragment so that jsx-dom can
+  // replace any element references with their latest versions (or a
+  // placeholder if nothing changed).
+  let children = Fragment(props)
+
+  const previousChildren = state.children.get(props.id)
+  if (previousChildren) {
+    updateNode(previousChildren, children)
+    children = previousChildren
+  }
+
   if (previousId !== undefined || state.children.size === 0) {
-    if (previousId !== undefined) {
-      // We can assume the previous elements are an array, because we
-      // don't wrap entered elements in a container.
-      newLeavingElements = state.elements.get(previousId) as AnyElement[]
-
-      if (newLeavingElements.length) {
-        const container = <div key={Math.random()} style={leaveStyle} />
-        container.append(...newLeavingElements)
-        state.elements.set(previousId, container)
-        leavingElements.push(container)
-      }
-    }
-
-    const previousChildren = state.children.get(props.id)
-    children = Array.isArray(children) ? <>{children}</> : children
-
-    if (children) {
+    if (children.childNodes.length) {
       if (previousChildren) {
         const previousElements = state.elements.get(props.id)!
         if (Array.isArray(previousElements)) {
@@ -84,8 +78,6 @@ export const Transition = selfUpdating(function <T>(props: {
             .unwrap()
             .filter(child => isElement(child)) as JSX.Element[]
         }
-        updateNode(previousChildren, children)
-        children = previousChildren
       } else {
         initial = true
         newEnteredElements = toElements(children)
@@ -95,6 +87,19 @@ export const Transition = selfUpdating(function <T>(props: {
     } else {
       state.children.delete(props.id)
       state.elements.delete(props.id)
+    }
+
+    if (previousId !== undefined) {
+      // We can assume the previous elements are an array, because we
+      // don't wrap entered elements in a container.
+      newLeavingElements = state.elements.get(previousId) as AnyElement[]
+
+      if (newLeavingElements.length) {
+        const container = <div key={Math.random()} style={leaveStyle} />
+        container.append(...newLeavingElements)
+        state.elements.set(previousId, container)
+        leavingElements.push(container)
+      }
     }
   }
 
@@ -115,7 +120,7 @@ export const Transition = selfUpdating(function <T>(props: {
 
     if (newLeavingElements) {
       if (newLeavingElements.length) {
-        const container = state.children.get(previousId) as JSX.Element
+        const container = state.elements.get(previousId) as JSX.Element
 
         let leavingCount = newLeavingElements.length
         const onTransitionEnd = () => {
@@ -176,7 +181,7 @@ export const Transition = selfUpdating(function <T>(props: {
 interface TransitionState {
   currentId: any
   /** The most recent `children` prop for each `id` prop. */
-  children: Map<any, AnyElement>
+  children: Map<any, JSX.Element>
   /** The animated elements of each `id` prop. */
   elements: Map<any, AnyElement | AnyElement[]>
 }
@@ -187,20 +192,4 @@ function initialState(): TransitionState {
     children: new Map(),
     elements: new Map(),
   }
-}
-
-function toElements(element: JSX.ElementOption) {
-  if (!element) {
-    return []
-  }
-  if (element.nodeType === kFragmentNodeType) {
-    const children: AnyElement[] = []
-    element.childNodes.forEach(child => {
-      if (child.nodeType === kElementNodeType) {
-        children.push(child as AnyElement)
-      }
-    })
-    return children
-  }
-  return [element]
 }

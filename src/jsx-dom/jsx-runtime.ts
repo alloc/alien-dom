@@ -85,13 +85,13 @@ export function createFactory(tag: string) {
 export function Fragment(props: {
   children: JSX.Children
   manualUpdates?: boolean
-}) {
+}): JSX.Element {
   const fragment = document.createDocumentFragment()
   if (props.manualUpdates) {
     kAlienManualUpdates(fragment, true)
   }
   appendChild(props.children, fragment)
-  return fragment
+  return fragment as any
 }
 
 export class Component {
