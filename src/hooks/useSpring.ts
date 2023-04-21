@@ -1,11 +1,11 @@
 import {
   SpringAnimation,
-  copyAnimatedStyle,
+  AnimatedProps,
+  AnimatedProp,
   animate,
   getAnimatedKeys,
 } from '../animate'
 import { DefaultElement } from '../internal/types'
-import { useMicrotask } from './useMicrotask'
 import { useState } from './useState'
 import { shallowEquals } from '../internal/shallowEquals'
 import { toArray } from '../jsx-dom/util'
@@ -33,19 +33,20 @@ export function useSpring<Element extends DefaultElement>(
 
       const animatedKeys = getAnimatedKeys(element)
       for (const animation of toArray(animations)) {
+        let from = animation.from
         if (animation.to) {
-          animation.from ||= {} as any
+          from ||= {} as AnimatedProps<Element>
           for (const key in animation.to) {
             // The "to" value becomes the initial value if no "from" value
             // is defined and the key hasn't been animated before.
-            animation.from![key] ??= (animation.to as any)[key]
+            from[key] ??= (animation.to as any)[key]
           }
         }
-        if (animation.from && animatedKeys) {
+        if (from && animatedKeys) {
           // Always use the current value as the "from" value if the key
           // has already been animated before.
           for (const key of animatedKeys) {
-            delete (animation.from as any)[key]
+            delete from[key as AnimatedProp<Element>]
           }
         }
       }

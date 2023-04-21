@@ -1,4 +1,4 @@
-import { Any } from '@alloc/types'
+import { Any, Falsy, NoInfer } from '@alloc/types'
 import { Color, mixColor, parseColor } from 'linear-color'
 import { AnyElement, DefaultElement } from './internal/types'
 import { decamelize, toArray } from './jsx-dom/util'
@@ -10,7 +10,7 @@ export type SpringAnimation<
   Props extends object = AnimatedProps<Element>
 > = {
   to: Props
-  from?: Props
+  from?: Props | Falsy
   spring?: SpringConfig
   velocity?: number
   delay?: SpringDelay | { [K in keyof Props]?: SpringDelay }
@@ -185,7 +185,7 @@ export function animate(
 
       keys.forEach(key => {
         const to = animation.to?.[key]
-        const from = animation.from?.[key]
+        const from = animation.from ? animation.from[key] : null
         if (to != null || from != null) {
           definedKeys.add(key)
         }
@@ -387,7 +387,7 @@ function applyAnimation(
       state.svgMode,
       key,
       animation.to[key],
-      animation.from?.[key],
+      animation.from ? animation.from[key] : null,
       prop[0],
       frame,
       animation.velocity,
