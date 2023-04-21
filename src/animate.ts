@@ -12,7 +12,7 @@ export type SpringAnimation<
   to: Props
   from?: Props | Falsy
   spring?: SpringConfig
-  velocity?: number
+  velocity?: number | { [K in keyof Props]?: number }
   delay?: SpringDelay | { [K in keyof Props]?: SpringDelay }
   anchor?: [number, number]
   onChange?: FrameCallback<Element, Props>
@@ -390,7 +390,9 @@ function applyAnimation(
       animation.from ? animation.from[key] : null,
       prop[0],
       frame,
-      animation.velocity,
+      !animation.velocity || typeof animation.velocity === 'number'
+        ? animation.velocity
+        : animation.velocity[key],
       onChange,
       onRest
     )
