@@ -339,10 +339,15 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
 }
 
 function getPlaceholder(child: any): DefaultElement {
-  const tagName = child.tagName.toLowerCase()
-  const placeholder: any = child.namespaceURI
-    ? document.createElementNS(child.namespaceURI, tagName)
-    : document.createElement(tagName)
+  let placeholder: any
+  if (child.nodeType === kCommentNodeType) {
+    placeholder = document.createComment(child.textContent)
+  } else {
+    const tagName = child.tagName.toLowerCase()
+    placeholder = child.namespaceURI
+      ? document.createElementNS(child.namespaceURI, tagName)
+      : document.createElement(tagName)
+  }
   kAlienPlaceholder(placeholder, true)
   kAlienElementKey(placeholder, kAlienElementKey(child))
   return placeholder
