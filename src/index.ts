@@ -1,8 +1,10 @@
+export { AlienElement, AlienElementList, AlienEvent, AlienTag } from './element'
+export { fromElementProp } from './fromElementProp'
+export { updateNode } from './updateElement'
+
 export * from './animate'
 export * from './context'
 export * from './domObserver'
-export { AlienElement, AlienElementList, AlienEvent, AlienTag } from './element'
-export { fromElementProp } from './fromElementProp'
 export * from './events'
 export * from './hooks'
 export * from './signals'

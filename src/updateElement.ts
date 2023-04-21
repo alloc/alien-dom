@@ -10,11 +10,28 @@ import { AlienHooks } from './hooks'
 import { copyAnimatedStyle } from './animate'
 import { kAlienFragment, kAlienManualUpdates } from './symbols'
 import { AlienComponent } from './internal/component'
+import { currentComponent } from './global'
+import { kFragmentNodeType, kElementNodeType } from './internal/constants'
+
+/**
+ * Update the `node` (an element or fragment) to mirror the `newNode`.
+ *
+ * If you use this function, you should also wrap the `node` in a
+ * `<ManualUpdates>` element if you add it to a JSX tree.
+ */
+export function updateNode(node: AnyElement, newNode: AnyElement) {
+  const component = currentComponent.get()
+  if (node.nodeType === kFragmentNodeType) {
+    updateFragment(node as any, newNode as any, component?.newRefs)
+  } else if (node.nodeType === kElementNodeType) {
+    updateElement(node, newNode, component?.newRefs)
+  }
+}
 
 export function updateFragment(
-  fragment: any,
-  newFragment: any,
-  newRefs?: Map<any, AnyElement>
+  fragment: DocumentFragment,
+  newFragment: DocumentFragment,
+  newRefs?: Map<any, AnyElement> | null
 ) {
   const oldNodes = kAlienFragment(fragment)
   const oldKeys = oldNodes.map(kAlienElementKey.get)
@@ -70,10 +87,12 @@ export function updateFragment(
 export function updateElement(
   rootElement: AnyElement,
   newRootElement: AnyElement,
-  instance?: AlienComponent<any>
+  arg3?: AlienComponent<any> | Map<any, AnyElement> | null
 ) {
-  const elementMap = new Map<HTMLElement, HTMLElement>()
-  recursiveMorph(rootElement, newRootElement, instance?.newRefs, elementMap)
+  const newRefs = arg3 instanceof Map ? arg3 : arg3?.newRefs
+  const instance = arg3 instanceof AlienComponent ? arg3 : undefined
+  const elementMap = new Map<AnyElement, AnyElement>()
+  recursiveMorph(rootElement, newRootElement, newRefs, elementMap)
   if (instance) {
     retargetHooks(instance.newHooks!, rootElement, elementMap, true)
   }
@@ -92,7 +111,7 @@ export function updateElement(
 function retargetHooks(
   newHooks: AlienHooks,
   oldElement: AnyElement,
-  elementMap: Map<HTMLElement, HTMLElement>,
+  elementMap: Map<AnyElement, AnyElement>,
   isComponent?: boolean
 ) {
   const { enablers } = newHooks
