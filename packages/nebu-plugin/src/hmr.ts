@@ -1,6 +1,5 @@
 import { computeComponentHashes } from './hash'
 import type { Node, Plugin } from 'nebu'
-import type { ESTree } from 'nebu/dist/types'
 import { FunctionNode } from './helpers'
 
 type State = { file: string; code: string }
