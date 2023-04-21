@@ -1,10 +1,5 @@
 lockfileVersion: 5.4
 
-patchedDependencies:
-  morphdom@2.7.0:
-    hash: ye4w3sngvdchhu64z3n7nifjdy
-    path: patches/morphdom@2.7.0.patch
-
 importers:
 
   .:
@@ -15,21 +10,17 @@ importers:
       '@preact/signals-core': ^1.3.0
       csstype: ^3.1.2
       linear-color: ^1.2.0
-      morphdom: ^2.7.0
       prettier: ^2.8.7
       tsup: ^6.7.0
-      type-fest: ^3.8.0
       typescript: ^4.9.5
     dependencies:
-      '@alloc/types': 2.3.0
       '@preact/signals-core': 1.3.0
       csstype: 3.1.2
-      linear-color: 1.2.0
-      morphdom: 2.7.0_ye4w3sngvdchhu64z3n7nifjdy
-      type-fest: 3.8.0
     devDependencies:
       '@alloc/fast-rimraf': 1.0.8
       '@alloc/prettier-config': 1.0.0
+      '@alloc/types': 2.3.0
+      linear-color: 1.2.0
       prettier: 2.8.7
       tsup: 6.7.0_typescript@4.9.5
       typescript: 4.9.5
@@ -719,7 +710,7 @@ packages:
 
   /linear-color/1.2.0:
     resolution: {integrity: sha512-OWh5S8w72PUzASnHCBcWREmP1d1fe6FJzkWY9xgpV4DIYPcWnNfc5lYWMUALMicQ41mE+QBUKVO8kfjFv3LdRw==}
-    dev: false
+    dev: true
 
   /lines-and-columns/1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
@@ -781,11 +772,6 @@ packages:
   /mitt/3.0.0:
     resolution: {integrity: sha512-7dX2/10ITVyqh4aOSVI9gdape+t9l2/8QxHrFmUXu4EEUpdlxl6RudZUPZoc+zuY2hk1j7XxVroIVIan/pD/SQ==}
     dev: false
-
-  /morphdom/2.7.0_ye4w3sngvdchhu64z3n7nifjdy:
-    resolution: {integrity: sha512-8L8DwbdjjWwM/aNqj7BSoSn4G7SQLNiDcxCnMWbf506jojR6lNQ5YOmQqXEIE8u3C492UlkN4d0hQwz97+M1oQ==}
-    dev: false
-    patched: true
 
   /ms/2.1.2:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}
