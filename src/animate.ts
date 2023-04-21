@@ -11,7 +11,7 @@ export type SpringAnimation<
 > = {
   to: Props
   from?: Props | Falsy
-  spring?: SpringConfig
+  spring?: SpringConfigOption<Props>
   velocity?: number | { [K in keyof Props]?: number }
   delay?: SpringDelay | { [K in keyof Props]?: SpringDelay }
   anchor?: [number, number]
@@ -121,6 +121,13 @@ export type AnimatedElement = {
   style: Record<string, any>
 }
 
+type KeyArgument<T> = [T] extends [Any] ? any : keyof T
+
+type SpringConfigOption<Props> =
+  | ((key: KeyArgument<Props>) => SpringConfig | Falsy)
+  | SpringConfig
+  | Falsy
+
 type SpringTimeline = (SpringAnimation & {
   timerId?: number
   abortCtrl?: AbortController
@@ -156,7 +163,7 @@ export function animate(
 ) {
   const animations = toArray(_animations)
   const springs = animations.map(animation =>
-    resolveSpring(animation.spring || {})
+    toSpringResolver(animation.spring)
   )
   const targets = $$<HTMLElement>(selector)
   targets.forEach(target => {
@@ -287,7 +294,7 @@ function addTimelineTimeout(
   target: HTMLElement,
   state: AnimatedElement,
   animation: SpringAnimation,
-  spring: ResolvedSpringConfig,
+  spring: SpringResolver,
   delay: number,
   key: string
 ) {
@@ -309,7 +316,7 @@ function addTimelinePromise(
   target: HTMLElement,
   state: AnimatedElement,
   animation: SpringAnimation,
-  spring: ResolvedSpringConfig,
+  spring: SpringResolver,
   delay: SpringDelayFn,
   key: string
 ) {
@@ -362,7 +369,7 @@ function applyAnimation(
   target: HTMLElement,
   state: AnimatedElement,
   animation: SpringAnimation,
-  spring: ResolvedSpringConfig,
+  spring: SpringResolver,
   keys: AnimatedProp<any>[]
 ) {
   if (target.dataset.animatedId == null) {
@@ -381,7 +388,7 @@ function applyAnimation(
   const frame: Record<string, any> | null = onChange || onRest ? {} : null
 
   for (const key of keys) {
-    const prop: AnimationState = state.props[key] || [null!, spring]
+    const prop: AnimationState = state.props[key] || [null!, spring(key)]
     const node = applyAnimatedValue(
       target,
       state.svgMode,
@@ -400,7 +407,7 @@ function applyAnimation(
       continue
     }
     if (prop[0]) {
-      prop[1] = spring
+      prop[1] = spring(key)
     } else {
       prop[0] = node
       state.props[key] = prop
@@ -789,6 +796,8 @@ type ResolvedSpringConfig = SpringConfig & {
   mass: number
 }
 
+type SpringResolver = (key: string) => ResolvedSpringConfig
+
 function advance(
   node: AnimatedValue,
   config: ResolvedSpringConfig,
@@ -873,6 +882,16 @@ function advance(
   node.lastVelocity = velocity
   node.lastPosition = position
   return position
+}
+
+function toSpringResolver(
+  spring: SpringConfig | ((key: string) => SpringConfig | Falsy) | Falsy
+) {
+  if (typeof spring !== 'function') {
+    const resolved = resolveSpring(spring || {})
+    return () => resolved
+  }
+  return (key: string) => resolveSpring(spring(key) || {})
 }
 
 function resolveSpring(spring: SpringConfig) {
