@@ -56,3 +56,23 @@ export const attachRef = (
       : Reflect.set.bind(Reflect, ref, 'value'),
   })
 }
+
+const valueDescriptor = Object.getOwnPropertyDescriptor(
+  Ref.prototype,
+  'value'
+) as any
+
+Object.defineProperties(Ref.prototype, {
+  0: { get: valueDescriptor.get },
+  1: {
+    get() {
+      return valueDescriptor.set.bind(this)
+    },
+  },
+  [Symbol.iterator]: {
+    value: function* () {
+      yield this[0]
+      yield this[1]
+    },
+  },
+})
