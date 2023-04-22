@@ -1,18 +1,23 @@
-import { animate, SpringAnimation } from './animate'
+import { animate, SpringAnimation, stopAnimatingKey } from './animate'
 import { AlienElementMessage, events } from './events'
 import { Disposable, AlienHook, AlienEnabler } from './hooks'
 import { canMatch } from './internal/duck'
-import { AnyElement, AnyEvent, DefaultElement } from './internal/types'
+import {
+  AnyElement,
+  AnyEvent,
+  DefaultElement,
+  StyleAttributes,
+} from './internal/types'
 import { AlienNodeList } from './nodeList'
 import { kAlienElementKey, setSymbol } from './symbols'
-import { applyProps, updateStyle } from './jsx-dom/jsx-runtime'
+import { applyProps } from './jsx-dom/jsx-runtime'
 import { HTMLAttributes, DetailedHTMLProps } from './types/html'
-import { CSSProperties } from './types/dom'
 import { SVGAttributes } from './types/svg'
 import { targetedEffect } from './signals'
 import { elementEvent } from './elementEvents'
 import { updateElement } from './updateElement'
 import { getAlienHooks } from './internal/hooks'
+import { keys, formatStyleValue } from './jsx-dom/util'
 
 export interface AlienElementList<Element extends Node = DefaultElement>
   extends NodeListOf<Element>,
@@ -202,7 +207,11 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     return this.classList.toggle(name, value)
   }
   css(style: Partial<StyleAttributes>) {
-    updateStyle(this as any, style)
+    const element: DefaultElement = this as any
+    for (const key of keys(style)) {
+      element.style[key] = formatStyleValue(key, style[key])
+      stopAnimatingKey(element, key)
+    }
     return this
   }
   set(props: Partial<Attributes<Element>>) {
@@ -497,7 +506,3 @@ type Attributes<Element extends AnyElement> = (Element extends HTMLElement
   ? DetailedHTMLProps<HTMLAttributes<Element>, Element>
   : unknown) &
   (Element extends SVGElement ? SVGAttributes<Element> : unknown)
-
-type StyleAttributes = {
-  [Key in keyof CSSProperties]: CSSProperties[Key] | null
-}

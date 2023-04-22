@@ -7,12 +7,12 @@ import {
   isComponentClass,
   isElement,
   isFunction,
-  isNumber,
   isObject,
   isString,
   keys,
+  hasForEach,
+  formatStyleValue,
 } from './util'
-import { isUnitlessNumber } from './css-props'
 import { isShadowRoot } from './shadow'
 import { svgTags } from './svg-tags'
 import {
@@ -20,12 +20,11 @@ import {
   kAlienSelfUpdating,
   kAlienPlaceholder,
 } from '../symbols'
-import { DefaultElement } from '../internal/types'
+import { DefaultElement, StyleAttributes } from '../internal/types'
 import { elementEvent } from '../elementEvents'
 import { currentHooks, currentComponent, currentMode } from '../global'
 import { updateTagProps, AlienComponent } from '../internal/component'
 import { ElementKey } from '../types/attr'
-import { hasForEach } from './util'
 import { JSX } from '../types/jsx'
 import { selfUpdating } from '../selfUpdating'
 import { fromElementThunk } from '../fromElementProp'
@@ -397,26 +396,19 @@ function appendChildToNode(child: Node, node: Node) {
   }
 }
 
-export function updateStyle(
-  node: Element & HTMLOrSVGElement & { style?: any },
-  value?: any
-) {
-  if (value == null || value === false) {
-    return
-  } else if (Array.isArray(value)) {
-    value.forEach(v => updateStyle(node, v))
-  } else if (isObject(value)) {
-    forEach(value, (val, key) => {
-      if (isNumber(val) && !isUnitlessNumber[key]) {
-        node.style[key] = val + 'px'
-      } else {
-        node.style[key] = val
+function updateStyle(node: DefaultElement, value: any) {
+  if (value != null && value !== false) {
+    if (Array.isArray(value)) {
+      value.forEach(v => updateStyle(node, v))
+    } else if (isObject(value)) {
+      for (const key of keys<StyleAttributes>(value)) {
+        node.style[key] = formatStyleValue(key, value[key])
       }
-    })
+    }
   }
 }
 
-function applyProp(prop: string, value: any, node: Element & HTMLOrSVGElement) {
+function applyProp(prop: string, value: any, node: DefaultElement) {
   if (value === null) {
     node.removeAttribute(prop)
     return

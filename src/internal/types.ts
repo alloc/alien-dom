@@ -1,6 +1,14 @@
+import { CSSProperties } from '../types/dom'
+
 export type AnyElement = Element
 export type DefaultElement = HTMLElement | SVGElement
 export type AnyEvent = Event
+
+export type StyleAttributes = {
+  [Key in keyof CSSProperties & keyof CSSStyleDeclaration]:
+    | CSSProperties[Key]
+    | null
+}
 
 /**
  * The `currentMode` stack is mutated by self-updating components and

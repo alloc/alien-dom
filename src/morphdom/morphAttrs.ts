@@ -1,4 +1,6 @@
 import { kFragmentNodeType } from '../internal/constants'
+import { setNonAnimatedStyle } from '../animate'
+import { DefaultElement } from '../internal/types'
 
 export function morphAttrs(fromNode: Element, toNode: Element) {
   var toNodeAttrs = toNode.attributes
@@ -29,7 +31,9 @@ export function morphAttrs(fromNode: Element, toNode: Element) {
 
       if (fromValue !== attrValue) {
         if (attr.prefix === 'xmlns') {
-          attrName = attr.name // It's not allowed to set an attribute with the XMLNS namespace without specifying the `xmlns` prefix
+          // It's not allowed to set an attribute with the XMLNS
+          // namespace without specifying the `xmlns` prefix.
+          attrName = attr.name
         }
         fromNode.setAttributeNS(attrNamespaceURI, attrName, attrValue)
       }
@@ -37,7 +41,12 @@ export function morphAttrs(fromNode: Element, toNode: Element) {
       fromValue = fromNode.getAttribute(attrName)
 
       if (fromValue !== attrValue) {
-        fromNode.setAttribute(attrName, attrValue)
+        if (attrName === 'style') {
+          // Morphing should never interrupt animations.
+          setNonAnimatedStyle(fromNode as DefaultElement, attrValue)
+        } else {
+          fromNode.setAttribute(attrName, attrValue)
+        }
       }
     }
   }
@@ -59,7 +68,12 @@ export function morphAttrs(fromNode: Element, toNode: Element) {
       }
     } else {
       if (!toNode.hasAttribute(attrName)) {
-        fromNode.removeAttribute(attrName)
+        if (attrName === 'style') {
+          // Morphing should never interrupt animations.
+          setNonAnimatedStyle(fromNode as DefaultElement, attr.value, true)
+        } else {
+          fromNode.removeAttribute(attrName)
+        }
       }
     }
   }

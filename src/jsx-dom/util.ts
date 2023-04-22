@@ -1,7 +1,8 @@
 import type { ComponentClass } from '../types/component'
 import type { JSX } from '../types/jsx'
+import { isUnitlessNumber } from './css-props'
 
-export const keys: <T>(obj: T) => Array<keyof T> = Object.keys as any
+export const keys: <T>(obj: T) => Array<string & keyof T> = Object.keys as any
 
 export function isBoolean(val: any): val is boolean {
   return typeof val === 'boolean'
@@ -77,6 +78,10 @@ export function decamelize(s: string, separator: string) {
 }
 
 export const noop = <T>() => undefined as T
+
+export function formatStyleValue(key: string, value: any) {
+  return isNumber(value) && !isUnitlessNumber[key] ? value + 'px' : value
+}
 
 /**
  * Function that takes in two values and compares them.

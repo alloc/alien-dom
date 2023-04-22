@@ -268,17 +268,7 @@ export function animate(
     const oldTimelines = state.timelines
     if (oldTimelines) {
       definedKeys.forEach(key => {
-        if (!oldTimelines[key]) {
-          return
-        }
-        oldTimelines[key].forEach(timeline => {
-          if (timeline.timerId) {
-            clearTimeout(timeline.timerId)
-          } else {
-            timeline.abortCtrl?.abort()
-          }
-        })
-        delete oldTimelines[key]
+        deleteTimeline(oldTimelines, key)
       })
     }
 
@@ -287,6 +277,23 @@ export function animate(
     }
   })
   startLoop()
+}
+
+function deleteTimeline(
+  timelines: Record<string, SpringTimeline>,
+  key: string
+) {
+  const timeline = timelines[key]
+  if (timeline) {
+    timeline.forEach(animation => {
+      if (animation.timerId) {
+        clearTimeout(animation.timerId)
+      } else {
+        animation.abortCtrl?.abort()
+      }
+    })
+    delete timelines[key]
+  }
 }
 
 function addTimelineTimeout(
@@ -344,6 +351,44 @@ export function getAnimatedKeys(element: DefaultElement) {
     if (keys.length) {
       return keys
     }
+  }
+}
+
+/** @internal */
+export function stopAnimatingKey(element: DefaultElement, key: string) {
+  const state = animatedElements.get(element)
+  if (state) {
+    if (state.props[key]?.[0].done === false) {
+      const [node] = state.props[key]
+      node.done = true
+      node.lastPosition = null
+      node.lastVelocity = null
+      node.v0 = 0
+    }
+    if (state.timelines) {
+      deleteTimeline(state.timelines, key)
+    }
+  }
+}
+
+/** @internal */
+export function setNonAnimatedStyle(
+  element: DefaultElement,
+  inlineStyle: string,
+  remove?: boolean
+) {
+  const state = animatedElements.get(element)
+  if (state) {
+    inlineStyle.split(/\s*;\s*/).forEach(property => {
+      const [key, value] = property.split(/\s*:\s*/)
+      if (state.props[key] == null) {
+        element.style.setProperty(key, remove ? null : value)
+      }
+    })
+  } else if (remove) {
+    element.removeAttribute('style')
+  } else {
+    element.setAttribute('style', inlineStyle)
   }
 }
 
