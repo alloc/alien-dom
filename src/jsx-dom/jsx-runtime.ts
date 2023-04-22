@@ -29,6 +29,7 @@ import { hasForEach } from './util'
 import { JSX } from '../types/jsx'
 import { selfUpdating } from '../selfUpdating'
 import { fromElementThunk } from '../fromElementProp'
+import { getRenderFunc, isConnected } from '../getRenderFunc'
 import {
   kAlienFragment,
   kAlienElementTags,
@@ -297,12 +298,7 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
     if (kAlienElementTags.in(child)) {
       const tags = kAlienElementTags(child)!
       queueMicrotask(() => {
-        const rootNode =
-          (child as ChildNode).nodeType === kFragmentNodeType
-            ? kAlienFragment(child)![0]
-            : (child as ChildNode)
-
-        if (!rootNode.isConnected) {
+        if (!isConnected(child as Element)) {
           // The element hasn't mounted yet, so we'll have to rely on
           // the component to set an `onMount` listener.
           return

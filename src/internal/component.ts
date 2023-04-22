@@ -6,6 +6,7 @@ import { FunctionComponent } from '../types/component'
 import { getAlienHooks } from './hooks'
 import { Ref } from '../signals'
 import { AlienContext, currentContext } from '../context'
+import { getRenderFunc } from '../getRenderFunc'
 import { currentComponent } from '../global'
 import { kAlienRenderFunc } from '../symbols'
 import {
@@ -144,6 +145,7 @@ export function updateTagProps(element: AnyElement, tag: any, props: any) {
     const instance = tags.get(tag)
     if (instance) {
       batch(() => {
+        console.log('updateTagProps', getRenderFunc(tag), props)
         instance.reinitProps(props)
         currentContext.forEach((ref, key) => {
           const targetRef = instance.context.get(key)

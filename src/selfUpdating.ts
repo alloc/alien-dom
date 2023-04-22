@@ -1,18 +1,27 @@
 import { effect } from '@preact/signals-core'
 import { ref, attachRef } from './signals'
 import { DefaultElement } from './internal/types'
-import { kAlienHooks, kAlienElementKey, kAlienSelfUpdating } from './symbols'
+import {
+  kAlienHooks,
+  kAlienElementKey,
+  kAlienSelfUpdating,
+  createSymbol,
+} from './symbols'
 import { currentComponent, currentHooks, currentMode } from './global'
 import { updateElement, updateFragment } from './updateElement'
 import { kAlienFragment } from './symbols'
 import { AlienComponent } from './internal/component'
 import { currentContext, ContextStore } from './context'
 import { JSX } from './types/jsx'
+import { getRenderFunc, isConnected } from './getRenderFunc'
 import {
   kCommentNodeType,
   kFragmentNodeType,
   kElementNodeType,
 } from './internal/constants'
+
+let kAlienComponentId = createSymbol('componentId')
+let nextComponentId = 1
 
 /**
  * Create a self-updating component whose render function can mutate its
@@ -32,6 +41,7 @@ export function selfUpdating<
     update: (props: Partial<Props>) => void
   ) => Element | null | undefined
 ): (props: Props) => Element {
+  const componentId = nextComponentId++
   const Component = (initialProps: Props): any => {
     let oldPropChanged = false
     let newPropAdded = false
@@ -252,6 +262,7 @@ export function selfUpdating<
     return self.rootNode
   }
 
+  kAlienComponentId(Component, componentId)
   kAlienSelfUpdating(Component, render)
   return Component
 }
