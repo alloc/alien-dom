@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license found on
  * https://github.com/facebook/react/blob/b87aabdfe1b7461e7331abb3601d9e6bb27544bc/LICENSE
  */
-import { keys } from './util'
 
 /**
  * CSS properties which accept numbers but are not in units of "px".
@@ -70,13 +69,13 @@ function prefixKey(prefix: string, key: string) {
  * Support style names that may come passed in prefixed by adding
  * permutations of vendor prefixes.
  */
-const prefixes = ['Webkit', 'ms', 'Moz', 'O']
+const vendorPrefixes = ['Webkit', 'ms', 'Moz', 'O']
 
 // Using Object.keys here, or else the vanilla for-in loop makes IE8 go
 // into an infinite loop, because it iterates over the newly added props
 // too.
-keys(isUnitlessNumber).forEach(prop => {
-  prefixes.forEach(prefix => {
-    isUnitlessNumber[prefixKey(prefix, prop)] = 1 // isUnitlessNumber[prop]
+for (const key of Object.keys(isUnitlessNumber)) {
+  vendorPrefixes.forEach(prefix => {
+    isUnitlessNumber[prefixKey(prefix, key)] = 1 // isUnitlessNumber[key]
   })
-})
+}
