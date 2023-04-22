@@ -192,7 +192,7 @@ export function animate(
 
       keys.forEach(key => {
         const to = animation.to?.[key]
-        const from = animation.from ? animation.from[key] : null
+        const from = animation.from != null ? animation.from[key] : null
         if (to != null || from != null) {
           definedKeys.add(key)
         }
@@ -394,7 +394,7 @@ function applyAnimation(
       state.svgMode,
       key,
       animation.to[key],
-      animation.from ? animation.from[key] : null,
+      animation.from != null ? animation.from[key] : null,
       prop[0],
       frame,
       !animation.velocity || typeof animation.velocity === 'number'
