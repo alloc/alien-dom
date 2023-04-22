@@ -921,6 +921,7 @@ function advance(
 
   if (finished) {
     node.done = true
+    velocity = 0
     position = to
   }
 
