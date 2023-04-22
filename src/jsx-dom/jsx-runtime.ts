@@ -1,6 +1,5 @@
 import {
   decamelize,
-  forEach,
   hasTagName,
   isArrayLike,
   isBoolean,
@@ -463,11 +462,12 @@ function applyProp(prop: string, value: any, node: DefaultElement) {
       setAttribute(node, 'for', value)
       return
     case 'dataset':
-      forEach(value, (dataValue, dataKey) => {
-        if (dataValue != null) {
-          node.dataset[dataKey] = dataValue
+      if (value) {
+        for (const key of keys(value)) {
+          if (value[key] == null) continue
+          node.dataset[key] = value[key]
         }
-      })
+      }
       return
     case 'key':
     case 'namespaceURI':

@@ -58,16 +58,6 @@ export function hasForEach(obj: any): obj is { forEach: any } {
   return obj && isFunction(obj.forEach)
 }
 
-export function forEach<V = any>(
-  value: { [key: string]: V },
-  fn: (value: V, key: string) => void
-) {
-  if (!value) return
-  for (const key of keys(value)) {
-    fn(value[key], key as any)
-  }
-}
-
 export function toArray<T>(a: T): T extends readonly any[] ? T : T[] {
   // @ts-ignore
   return Array.isArray(a) ? a : [a]
