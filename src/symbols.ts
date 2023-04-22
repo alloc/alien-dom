@@ -1,6 +1,7 @@
 import type { ElementTags } from './internal/component'
 import type { AlienHooks } from './hooks'
 import type { ElementKey } from './types/attr'
+import type { FunctionComponent } from './types/component'
 
 export const setSymbol = (obj: any, key: symbol, value: any) =>
   Object.defineProperty(obj, key, { value, configurable: true })
@@ -28,5 +29,6 @@ export const kAlienHooks = createSymbol<AlienHooks>('hooks')
 export const kAlienManualUpdates = createSymbol<boolean>('manualUpdates')
 export const kAlienNewHooks = createSymbol<AlienHooks>('newHooks')
 export const kAlienPlaceholder = createSymbol<ChildNode>('placeholder')
+export const kAlienRenderFunc = createSymbol<FunctionComponent>('renderFunc')
 export const kAlienSelfUpdating = createSymbol<any>('selfUpdating')
 export const kAlienThunkResult = createSymbol<any>('thunkResult')

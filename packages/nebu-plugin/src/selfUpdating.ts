@@ -22,6 +22,9 @@ export default function (
       const globalId = state.globalNextId++
       let moduleNextId = 0
 
+      const componentFns = new Set<Node>()
+      let hasNestedComponent = false
+
       const handleElementRefs = (path: FunctionNode) => {
         const isSelfUpdating =
           path.parent.isCallExpression() &&
@@ -36,6 +39,7 @@ export default function (
         }
 
         const componentFn = path
+        componentFns.add(componentFn)
 
         const addStaticElementKeys = (path: Node.JSXOpeningElement) => {
           if (!path.name.isJSXIdentifier()) {
@@ -95,6 +99,14 @@ export default function (
         path.process({
           JSXOpeningElement: addStaticElementKeys,
         })
+
+        const nearestBlock = path.findParent(p => p.isBlockStatement())
+        if (nearestBlock?.parent && componentFns.has(nearestBlock.parent)) {
+          const wrappedNode = isSelfUpdating ? path.parent : path
+          wrappedNode.before(`__nestedTag("${globalId}#${moduleNextId++}", `)
+          wrappedNode.after(')')
+          hasNestedComponent = true
+        }
       }
 
       program.process({
@@ -102,6 +114,13 @@ export default function (
         FunctionExpression: handleElementRefs,
         FunctionDeclaration: handleElementRefs,
       })
+
+      if (hasNestedComponent) {
+        program.unshift(
+          'body',
+          `import { registerNestedTag as __nestedTag } from 'alien-dom'\n`
+        )
+      }
     },
   }
 }

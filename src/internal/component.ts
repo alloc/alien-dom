@@ -6,6 +6,8 @@ import { FunctionComponent } from '../types/component'
 import { getAlienHooks } from './hooks'
 import { Ref } from '../signals'
 import { AlienContext, currentContext } from '../context'
+import { currentComponent } from '../global'
+import { kAlienRenderFunc } from '../symbols'
 import {
   kAlienElementKey,
   kAlienElementTags,
@@ -20,16 +22,20 @@ export class AlienComponent<Props = any> {
   rootNode: ChildNode | null = null
   memory: any[] = []
   memoryIndex = 0
-  /** Stable references to the elements that are mounted. */
-  refs: Map<ElementKey, DefaultElement> | null = null
-  /** Effects tied to this component lifecycle. */
-  hooks: AlienHooks | null = null
-  /** Stable references that were added or reused by the current render pass. */
-  newRefs: Map<ElementKey, DefaultElement> | null = null
   /** Elements created by this component in the current render pass. */
   newElements: Map<ElementKey, DefaultElement> | null = null
+  /** Stable references to the elements that are mounted. */
+  refs: Map<ElementKey, DefaultElement> | null = null
+  /** Stable references that were added or reused by the current render pass. */
+  newRefs: Map<ElementKey, DefaultElement> | null = null
+  /** Effects tied to this component lifecycle. */
+  hooks: AlienHooks | null = null
   /** Effects added in the current render pass. */
   newHooks: AlienHooks | null = null
+  /** Tags created by this component. */
+  tags: Map<string, FunctionComponent> | null = null
+  /** Tags created in the current render pass. */
+  newTags: Map<string, FunctionComponent> | null = null
 
   constructor(
     readonly parent: AlienComponent | null,
@@ -59,10 +65,12 @@ export class AlienComponent<Props = any> {
     if (!threw) {
       this.refs = this.newRefs
       this.hooks = this.newHooks
+      this.tags = this.newTags
     }
-    this.newRefs = null
     this.newElements = null
+    this.newRefs = null
     this.newHooks = null
+    this.newTags = null
   }
 
   setRootNode(rootNode: ChildNode) {
@@ -94,6 +102,35 @@ export class AlienComponent<Props = any> {
       })
     }
   }
+}
+
+/**
+ * @internal
+ * This swaps out nested components with a stable reference so that
+ * elements created with it can be reused even if the parent component
+ * is re-rendered. The nested component is wrapped so it can be updated
+ * when the parent component re-renders, thereby avoiding stale closure
+ * issues.
+ */
+export function registerNestedTag(key: string, tag: FunctionComponent) {
+  const component = currentComponent.get()
+  if (component) {
+    const oldTag = component.tags?.get(key)
+    if (oldTag) {
+      kAlienRenderFunc(oldTag, tag)
+      tag = oldTag
+    } else {
+      const Component = (props: any) => {
+        const render = kAlienRenderFunc(Component)!
+        return render(props)
+      }
+      kAlienRenderFunc(Component, tag)
+      tag = Component
+    }
+    component.newTags ||= new Map()
+    component.newTags.set(key, tag)
+  }
+  return tag
 }
 
 /**

@@ -1,6 +1,7 @@
 export { AlienElement, AlienElementList, AlienEvent, AlienTag } from './element'
 export { fromElementProp } from './fromElementProp'
 export { updateNode } from './updateElement'
+export { registerNestedTag } from './internal/component'
 
 export * from './animate'
 export * from './context'
