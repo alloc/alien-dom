@@ -201,7 +201,6 @@ export function animate(
   if (typeof _animations === 'function') {
     const advance = _animations
     targets.forEach((target, index) => {
-      console.log('current animatedId:', target.dataset.animatedId)
       markAnimated(target)
       animatedFrames.set(target, {
         target,
