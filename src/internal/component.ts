@@ -23,7 +23,7 @@ export class AlienComponent<Props = any> {
   memory: any[] = []
   memoryIndex = 0
   /** Elements created by this component in the current render pass. */
-  newElements: Map<ElementKey, DefaultElement> | null = null
+  newElements: Map<ElementKey, JSX.Element> | null = null
   /** Stable references to the elements that are mounted. */
   refs: Map<ElementKey, DefaultElement> | null = null
   /** Stable references that were added or reused by the current render pass. */
@@ -55,7 +55,7 @@ export class AlienComponent<Props = any> {
     this.memoryIndex = 0
     return this as {
       rootNode: ChildNode | null
-      newElements: Map<ElementKey, DefaultElement>
+      newElements: Map<ElementKey, JSX.Element>
       newHooks: AlienHooks
       newRefs: Map<ElementKey, DefaultElement>
     }

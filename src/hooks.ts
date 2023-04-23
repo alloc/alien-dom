@@ -15,6 +15,7 @@ export * from './hooks/useMicrotask'
 export * from './hooks/useRef'
 export * from './hooks/useSpring'
 export * from './hooks/useState'
+export * from './hooks/useStyle'
 
 export interface AlienEnabler<
   Target = any,
