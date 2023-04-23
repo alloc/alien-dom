@@ -8,8 +8,8 @@ export function useEffect(
   const state = useState(initialState, deps)
   const prevDeps = state.deps
   const shouldRun =
-    deps == prevDeps ||
-    deps.length != prevDeps.length ||
+    deps === prevDeps ||
+    deps.length !== prevDeps.length ||
     deps.some((dep, i) => dep !== prevDeps[i])
 
   useMicrotask(() => {
@@ -21,7 +21,7 @@ export function useEffect(
 
 type State = {
   deps: readonly any[]
-  dispose?: (() => void) | void
+  dispose: (() => void) | void
 }
 
 function initialState(deps: readonly any[]): State {
