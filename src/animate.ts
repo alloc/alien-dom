@@ -953,6 +953,8 @@ type ResolvedSpringConfig = SpringConfig & {
 
 type SpringResolver = (key: string) => ResolvedSpringConfig
 
+const maxPrecision = 0.1 / (window.devicePixelRatio || 1)
+
 function advance(
   node: AnimatedValue,
   config: ResolvedSpringConfig,
@@ -979,7 +981,7 @@ function advance(
 
   const precision = equalFromTo
     ? 0.005
-    : Math.min(1, Math.abs(to - from) * 0.0005)
+    : Math.min(maxPrecision, Math.abs(to - from) * 0.0005)
 
   /** The velocity at which movement is essentially none */
   const restVelocity = config.restVelocity || precision / 10
