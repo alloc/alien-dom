@@ -740,7 +740,7 @@ function startLoop() {
         if (node.done) {
           continue
         }
-        const position = advance(node, config, dt)
+        const position = advance(node, config, dt, prop)
         if (node.frame) {
           const values = frames.get(node.frame) || []
           frames.set(node.frame, values)
@@ -954,11 +954,15 @@ type ResolvedSpringConfig = SpringConfig & {
 type SpringResolver = (key: string) => ResolvedSpringConfig
 
 const maxPrecision = 0.1 / (window.devicePixelRatio || 1)
+const defaultPrecisions: Record<string, number> = {
+  opacity: 0.01,
+}
 
 function advance(
   node: AnimatedValue,
   config: ResolvedSpringConfig,
-  dt: number
+  dt: number,
+  prop: string
 ): number {
   let from: number
   let to: number
@@ -979,9 +983,9 @@ function advance(
   let position = node.lastPosition == null ? from : node.lastPosition
   let velocity = node.lastVelocity == null ? node.v0 : node.lastVelocity
 
-  const precision = equalFromTo
-    ? 0.005
-    : Math.min(maxPrecision, Math.abs(to - from) * 0.0005)
+  const precision =
+    defaultPrecisions[prop] ||
+    (equalFromTo ? 0.005 : Math.min(Math.abs(to - from) * 0.001, maxPrecision))
 
   /** The velocity at which movement is essentially none */
   const restVelocity = config.restVelocity || precision / 10
