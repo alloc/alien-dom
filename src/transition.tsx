@@ -24,7 +24,7 @@ const leaveStyle: CSSProperties = {
   pointerEvents: 'none',
 }
 
-export const Transition = selfUpdating(function <T>(props: {
+export const Transition = /* @__PURE__ */ selfUpdating(function <T>(props: {
   id: T
   enter: (
     id: T,
