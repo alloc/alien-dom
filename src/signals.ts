@@ -10,6 +10,7 @@ export {
   computed,
   signal as ref,
   Signal as Ref,
+  ReadonlySignal as ReadonlyRef,
 } from '@preact/signals-core'
 
 export const effect = createHookType(createEffect)

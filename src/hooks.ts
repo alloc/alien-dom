@@ -10,6 +10,7 @@ type Promisable<T> = T | Promise<T>
 
 export * from './hooks/useContext'
 export * from './hooks/useEffect'
+export * from './hooks/useMemo'
 export * from './hooks/useMicrotask'
 export * from './hooks/useRef'
 export * from './hooks/useSpring'
