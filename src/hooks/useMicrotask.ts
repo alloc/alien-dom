@@ -24,10 +24,8 @@ export function useMicrotask(effect: () => void, shouldRun = true) {
   }
 }
 
-type State = {
+const initialState = (): {
   nextRun?: () => void
-}
-
-function initialState(): State {
-  return { nextRun: undefined }
-}
+} => ({
+  nextRun: undefined,
+})

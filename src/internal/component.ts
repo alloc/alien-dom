@@ -1,14 +1,13 @@
 import { batch } from '@preact/signals-core'
-import { ElementKey } from '../types/attr'
+import { JSX, ElementKey, FunctionComponent } from '../types'
 import { AnyElement, DefaultElement } from './types'
 import { AlienHooks } from '../hooks'
-import { FunctionComponent } from '../types/component'
 import { getAlienHooks } from './hooks'
 import { Ref } from '../signals'
 import { AlienContext, currentContext } from '../context'
 import { currentComponent } from '../global'
-import { kAlienRenderFunc } from '../symbols'
 import {
+  kAlienRenderFunc,
   kAlienElementKey,
   kAlienElementTags,
   kAlienHooks,

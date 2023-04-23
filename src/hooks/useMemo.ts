@@ -1,25 +1,22 @@
 import { useState } from './useState'
 import { computed, ReadonlyRef } from '../signals'
+import { depsHaveChanged } from '../internal/deps'
 
 export function useMemo<T>(get: () => T, deps: readonly any[]) {
   const state = useState(initialState, deps)
-  const prevDeps = state.deps
-  const shouldRun =
-    deps == prevDeps ||
-    deps.length != prevDeps.length ||
-    deps.some((dep, i) => dep !== prevDeps[i])
-
-  if (shouldRun) {
+  if (depsHaveChanged(deps, state.deps)) {
     state.ref = computed(get)
+    state.deps = deps
   }
   return state.ref!.value
 }
 
-type State = {
+const initialState = (
+  deps: readonly any[]
+): {
   deps: readonly any[]
   ref: ReadonlyRef | null
-}
-
-function initialState(deps: readonly any[]): State {
-  return { deps, ref: null }
-}
+} => ({
+  deps,
+  ref: null,
+})
