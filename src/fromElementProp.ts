@@ -5,16 +5,18 @@ import { currentComponent } from './global'
 import { isElement } from './jsx-dom/util'
 import { ElementKey } from './types/attr'
 
+type ElementResult = JSX.Element | false | null | undefined
+
 /**
  * Coerce a possible element thunk into an element (or a falsy value),
  * while ensuring the thunk isn't executed more than once in its
  * lifetime.
  */
-export function fromElementProp(element: JSX.ElementProp): JSX.ElementOption
+export function fromElementProp(element: JSX.ElementProp): ElementResult
 
 export function fromElementProp(
   element: JSX.ElementsProp
-): Exclude<JSX.ElementsProp, () => JSX.ElementsProp>
+): ElementResult | ElementResult[]
 
 export function fromElementProp(
   element: JSX.Children
