@@ -63,6 +63,9 @@ export class AlienComponent<Props = any> {
 
   endRender(threw?: boolean) {
     if (!threw) {
+      // Truncate the memory if the render function returned early.
+      this.memory.length = this.memoryIndex
+
       this.refs = this.newRefs
       this.hooks = this.newHooks
       this.tags = this.newTags
