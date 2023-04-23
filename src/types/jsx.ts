@@ -37,7 +37,7 @@ export declare namespace JSX {
 
   type Children = Thunkable<JSXChild>
 
-  type ElementOption = AnyElement | false | null | undefined
+  type ElementOption = HTMLElement | SVGElement | false | null | undefined
   type ElementsOption = ElementOption | ElementOption[]
 
   /**
