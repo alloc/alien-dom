@@ -1,4 +1,4 @@
-import { animate, SpringAnimation, stopAnimatingKey } from './animate'
+import { animate, stopAnimatingKey, AnimationsParam } from './animate'
 import { AlienElementMessage, events } from './events'
 import { Disposable, AlienHook, AlienEnabler } from './hooks'
 import { canMatch } from './internal/duck'
@@ -218,11 +218,7 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     applyProps(this as any, props)
     return this
   }
-  spring(
-    animations:
-      | SpringAnimation<Element, any>
-      | readonly SpringAnimation<Element, any>[]
-  ) {
+  spring(animations: AnimationsParam<Element, any>) {
     animate(this, animations as any)
     return this
   }
