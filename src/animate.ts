@@ -5,6 +5,8 @@ import { decamelize, toArray, keys } from './jsx-dom/util'
 import { $$, AlienSelector } from './selectors'
 import { svgTags } from './jsx-dom/svg-tags'
 
+export { Color, mixColor, parseColor }
+
 export type SpringAnimation<
   Element extends AnyElement = any,
   Props extends object = AnimatedProps<Element>

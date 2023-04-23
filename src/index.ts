@@ -2,8 +2,22 @@ export { AlienElement, AlienElementList, AlienEvent, AlienTag } from './element'
 export { fromElementProp } from './fromElementProp'
 export { updateNode } from './updateElement'
 export { registerNestedTag } from './internal/component'
+export {
+  animate,
+  AnimationsParam,
+  SpringAnimation,
+  FrameAnimation,
+  FrameCallback,
+  AnimatedFrame,
+  AnimatedProps,
+  HTMLAnimatedProps,
+  SVGAnimatedProps,
+  SpringConfig,
+  Color,
+  mixColor,
+  parseColor,
+} from './animate'
 
-export * from './animate'
 export * from './context'
 export * from './domObserver'
 export * from './events'
