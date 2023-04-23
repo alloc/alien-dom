@@ -255,7 +255,6 @@ export function animate(
           const { delay } = animation
           if (typeof delay === 'number') {
             if (delay > 0) {
-              timelines ||= {}
               keys.forEach(key => {
                 timelines = addTimelineTimeout(
                   timelines,
@@ -270,7 +269,6 @@ export function animate(
               keys.length = 0
             }
           } else if (typeof delay === 'function') {
-            timelines ||= {}
             keys.forEach(key => {
               timelines = addTimelinePromise(
                 timelines,
@@ -315,7 +313,9 @@ export function animate(
           }
         }
 
-        applyAnimation(target, state, animation, springs[i], keys)
+        if (keys.length) {
+          applyAnimation(target, state, animation, springs[i], keys)
+        }
       })
 
       const oldTimelines = state.timelines
