@@ -198,22 +198,27 @@ export function animate(
   _animations: AnimationsParam<any>
 ) {
   const targets = $$<HTMLElement>(selector)
+
   if (typeof _animations === 'function') {
     const advance = _animations
-    targets.forEach((target, index) => {
-      markAnimated(target)
-      animatedFrames.set(target, {
-        target,
-        advance,
-        svgMode: !!svgTags[target.tagName] && target.tagName != 'svg',
-        done: false,
-        t0: null!,
-        dt: 0,
-        duration: 0,
-        current: {},
-        index,
+    if (targets.length) {
+      targets.forEach((target, index) => {
+        markAnimated(target)
+        animatedFrames.set(target, {
+          target,
+          advance,
+          svgMode: !!svgTags[target.tagName] && target.tagName != 'svg',
+          done: false,
+          t0: null!,
+          dt: 0,
+          duration: 0,
+          current: {},
+          index,
+        })
       })
-    })
+
+      startLoop()
+    }
   } else {
     const animations = toArray(_animations)
     const springs = animations.map(animation =>
@@ -330,7 +335,6 @@ export function animate(
       }
     })
   }
-  startLoop()
 }
 
 function deleteTimeline(
@@ -478,6 +482,7 @@ function applyAnimation(
   keys: AnimatedProp<any>[]
 ) {
   markAnimated(target)
+  startLoop()
 
   state.anchor =
     animation.anchor ||
