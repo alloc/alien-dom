@@ -13,6 +13,8 @@ export {
   HTMLAnimatedProps,
   SVGAnimatedProps,
   SpringConfig,
+  SpringDelay,
+  SpringDelayFn,
   Color,
   mixColor,
   parseColor,

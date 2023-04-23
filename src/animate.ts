@@ -164,9 +164,9 @@ type SpringTimeline = (SpringAnimation & {
   abortCtrl?: AbortController
 })[]
 
-type SpringDelay = number | SpringDelayFn
+export type SpringDelay = number | SpringDelayFn
 
-type SpringDelayFn = (
+export type SpringDelayFn = (
   signal: AbortSignal,
   key: string
 ) => Promise<any> | null | void
