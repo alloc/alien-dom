@@ -21,17 +21,17 @@ export type SpringAnimation<
   onRest?: FrameCallback<Element, Props>
 }
 
-export type FrameAnimation<
+export type StepAnimationFn<
   Element extends AnyElement = any,
   Props extends object = AnimatedProps<Element>
-> = (frame: AnimatedFrame<Element, Props>) => Props | null
+> = (frame: StepAnimation<Element, Props>) => Props | null
 
-export type AnimatedFrame<
+export type StepAnimation<
   Element extends AnyElement = any,
   Props extends object = AnimatedProps<Element>
 > = {
+  step: StepAnimationFn<Element, Props>
   target: Element
-  advance: FrameAnimation<Element, Props>
   svgMode: boolean
   /** When true, the animation ends. */
   done: boolean
@@ -176,7 +176,7 @@ type OneOrMany<T> = T | readonly T[]
 export type AnimationsParam<
   Element extends AnyElement = any,
   Props extends object = AnimatedProps<Element>
-> = OneOrMany<SpringAnimation<Element, Props>> | FrameAnimation<Element, Props>
+> = OneOrMany<SpringAnimation<Element, Props>> | StepAnimationFn<Element, Props>
 
 export function animate(
   elements: OneOrMany<HTMLElement> | NodeListOf<HTMLElement>,
@@ -200,13 +200,13 @@ export function animate(
   const targets = $$<HTMLElement>(selector)
 
   if (typeof _animations === 'function') {
-    const advance = _animations
+    const step = _animations
     if (targets.length) {
       targets.forEach((target, index) => {
         markAnimated(target)
-        animatedFrames.set(target, {
+        stepAnimationMap.set(target, {
+          step,
           target,
-          advance,
           svgMode: !!svgTags[target.tagName] && target.tagName != 'svg',
           done: false,
           t0: null!,
@@ -652,7 +652,7 @@ const transformIdentity: Record<string, number | null> = {
 
 const animatedElementIds = new Set<string>()
 const animatedElements = new WeakMap<Element, AnimatedElement>()
-const animatedFrames = new WeakMap<Element, AnimatedFrame>()
+const stepAnimationMap = new WeakMap<Element, StepAnimation>()
 
 let loop: number | undefined
 let lastTime: number | undefined
@@ -664,7 +664,7 @@ function startLoop() {
     const dt = now - (lastTime || now)
     lastTime = now
 
-    const frameAnimations: AnimatedFrame[] = []
+    const stepAnimations: StepAnimation[] = []
     const springAnimations: [
       target: DefaultElement,
       state: AnimatedElement,
@@ -681,14 +681,14 @@ function startLoop() {
         continue
       }
 
-      const frame = animatedFrames.get(target)
+      const stepAnimation = stepAnimationMap.get(target)
       const state = animatedElements.get(target)
 
-      if (frame) {
-        if (frame.done) {
-          animatedFrames.delete(target)
+      if (stepAnimation) {
+        if (stepAnimation.done) {
+          stepAnimationMap.delete(target)
         } else {
-          frameAnimations.push(frame)
+          stepAnimations.push(stepAnimation)
           if (!state) {
             continue
           }
@@ -716,17 +716,17 @@ function startLoop() {
 
         resolveFromValues(target, state)
         springAnimations.push([target, state, width, height])
-      } else if (!frame || frame.done) {
+      } else if (!stepAnimation || stepAnimation.done) {
         animatedElementIds.delete(targetId)
       }
     }
 
-    const frameStyles = new Map<any, any>()
-    for (const frame of frameAnimations) {
-      frame.t0 ??= now
-      frame.dt = dt
-      frame.duration += dt
-      frameStyles.set(frame.target, frame.advance(frame))
+    const stepResults = new Map<any, any>()
+    for (const animation of stepAnimations) {
+      animation.t0 ??= now
+      animation.dt = dt
+      animation.duration += dt
+      stepResults.set(animation.target, animation.step(animation))
     }
 
     for (let [target, state, width, height] of springAnimations) {
@@ -796,19 +796,19 @@ function startLoop() {
         }
       }
 
-      const frameStyle = frameStyles.get(target)
-      if (frameStyle) {
-        const animatedFrame = animatedFrames.get(target)!
+      const stepResult = stepResults.get(target)
+      if (stepResult) {
+        const stepAnimation = stepAnimationMap.get(target)!
 
-        for (const key of keys(frameStyle)) {
-          const value = frameStyle[key]
+        for (const key of keys(stepResult)) {
+          const value = stepResult[key]
           if (value !== undefined) {
-            animatedFrame.current[key] = value
+            stepAnimation.current[key] = value
           }
 
           const transformFn =
             key in transformKeys
-              ? (!animatedFrame.svgMode && transformKeys[key]) || key
+              ? (!stepAnimation.svgMode && transformKeys[key]) || key
               : null
 
           if (transformFn) {
@@ -818,7 +818,7 @@ function startLoop() {
               newTransform.push([transformFn, parsed])
             }
           } else {
-            set(animatedFrame.target, null, animatedFrame.svgMode, key, value)
+            set(stepAnimation.target, null, stepAnimation.svgMode, key, value)
           }
         }
       }
@@ -862,7 +862,7 @@ function startLoop() {
         }
       }
 
-      if (done && !animatedFrames.has(target)) {
+      if (done && !stepAnimationMap.has(target)) {
         animatedElementIds.delete(target.dataset.animatedId!)
         delete target.dataset.animatedId
       }
