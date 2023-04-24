@@ -208,7 +208,7 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
   toggleClass(name: string, value?: boolean) {
     return this.classList.toggle(name, value)
   }
-  css(style: Partial<StyleAttributes & TransformAttributes>) {
+  css(style: StyleAttributes) {
     updateStyle(this as any, style, UpdateStyle.Interrupt)
     return this
   }

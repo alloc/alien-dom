@@ -6,8 +6,7 @@ import { $ } from './selectors'
 import { isElement } from './isElement'
 import { useEffect } from './hooks/useEffect'
 import { updateNode } from './updateElement'
-import { CSSProperties } from './types/dom'
-import { AnyElement } from './internal/types'
+import { AnyElement, StyleAttributes } from './internal/types'
 import { ManualUpdates } from './manualUpdates'
 import { Fragment } from './jsx-dom/jsx-runtime'
 import { toElements } from './toElements'
@@ -15,7 +14,7 @@ import { toElements } from './toElements'
 type Falsy = false | null | undefined
 
 /** The style applied to the container that wraps leaving elements. */
-const leaveStyle: CSSProperties = {
+const leaveStyle: StyleAttributes = {
   position: 'absolute',
   top: 0,
   left: 0,

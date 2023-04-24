@@ -17,7 +17,7 @@ import { depsHaveChanged } from '../internal/deps'
  */
 export function useStyle(
   element: JSX.Element,
-  style: Partial<StyleAttributes> | Falsy
+  style: StyleAttributes | Falsy
 ): void
 
 /**
@@ -30,17 +30,14 @@ export function useStyle(
  */
 export function useStyle(
   element: JSX.Element,
-  style: () => Partial<StyleAttributes> | Falsy,
+  style: () => StyleAttributes | Falsy,
   deps: readonly any[]
 ): void
 
 /** @internal */
 export function useStyle(
   element: JSX.Element,
-  style:
-    | Partial<StyleAttributes>
-    | (() => Partial<StyleAttributes> | Falsy)
-    | Falsy,
+  style: StyleAttributes | (() => StyleAttributes | Falsy) | Falsy,
   deps?: readonly any[]
 ) {
   const component = currentComponent.get()!
@@ -70,12 +67,12 @@ export function useStyle(
 }
 
 const initialState = (
-  style: () => Partial<StyleAttributes> | Falsy,
+  style: () => StyleAttributes | Falsy,
   deps: readonly any[]
 ): {
   deps: readonly any[]
   dispose: (() => void) | undefined
-  style: () => Partial<StyleAttributes> | Falsy
+  style: () => StyleAttributes | Falsy
 } => ({
   deps,
   dispose: undefined,

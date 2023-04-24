@@ -7,7 +7,7 @@ export type AnyEvent = Event
 type StyleAttributeName = Exclude<keyof CSSProperties, 'scale' | 'rotate'>
 
 export type StyleAttributes = TransformAttributes & {
-  [Key in StyleAttributeName]: CSSProperties[Key] | null
+  [Key in StyleAttributeName]?: CSSProperties[Key] | null
 }
 
 export type Length = number | string
