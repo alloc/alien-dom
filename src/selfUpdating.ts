@@ -119,6 +119,7 @@ export function selfUpdating<
       }
     }
     const disable = () => {
+      self.truncate(0)
       self.hooks?.disable()
       self.hooks = null
       preventUpdates?.()
