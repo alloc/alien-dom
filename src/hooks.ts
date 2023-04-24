@@ -8,6 +8,7 @@ import { kFragmentNodeType } from './internal/constants'
 
 type Promisable<T> = T | Promise<T>
 
+export * from './hooks/useAsync'
 export * from './hooks/useContext'
 export * from './hooks/useEffect'
 export * from './hooks/useMemo'
