@@ -1,4 +1,4 @@
-import { animate, stopAnimatingKey, AnimationsParam } from './animate'
+import { animate, AnimationsParam } from './animate'
 import { AlienElementMessage, events } from './events'
 import { Disposable, AlienHook, AlienEnabler } from './hooks'
 import { canMatch } from './internal/duck'
@@ -7,9 +7,10 @@ import {
   AnyEvent,
   DefaultElement,
   StyleAttributes,
+  TransformAttributes,
 } from './internal/types'
 import { AlienNodeList } from './nodeList'
-import { kAlienElementKey, setSymbol } from './symbols'
+import { kAlienElementKey } from './symbols'
 import { applyProps } from './jsx-dom/jsx-runtime'
 import { HTMLAttributes, DetailedHTMLProps } from './types/html'
 import { SVGAttributes } from './types/svg'
@@ -17,7 +18,8 @@ import { targetedEffect } from './signals'
 import { elementEvent } from './elementEvents'
 import { updateElement } from './updateElement'
 import { getAlienHooks } from './internal/hooks'
-import { keys, formatStyleValue } from './jsx-dom/util'
+import { updateStyle, UpdateStyle } from './jsx-dom/util'
+import { CSSProperties } from './types/dom'
 
 export interface AlienElementList<Element extends Node = DefaultElement>
   extends NodeListOf<Element>,
@@ -206,12 +208,8 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
   toggleClass(name: string, value?: boolean) {
     return this.classList.toggle(name, value)
   }
-  css(style: Partial<StyleAttributes>) {
-    const element: DefaultElement = this as any
-    for (const key of keys(style)) {
-      element.style[key] = formatStyleValue(key, style[key])
-      stopAnimatingKey(element, key)
-    }
+  css(style: Partial<StyleAttributes & TransformAttributes>) {
+    updateStyle(this as any, style, UpdateStyle.Interrupt)
     return this
   }
   set(props: Partial<Attributes<Element>>) {
@@ -260,11 +258,11 @@ const styleDeconflict = reverseLookup({
 type AlienStyleDeconflict = typeof styleDeconflict
 
 type AlienStyleMethods<Element extends AnyElement> = {
-  [P in keyof StyleAttributes as P extends keyof AlienStyleDeconflict
+  [P in keyof CSSProperties as P extends keyof AlienStyleDeconflict
     ? AlienStyleDeconflict[P]
     : P]: {
-    (): StyleAttributes[P]
-    (value: StyleAttributes[P] | null): Element
+    (): CSSProperties[P]
+    (value: CSSProperties[P] | null): Element
   }
 }
 

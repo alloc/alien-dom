@@ -1,3 +1,9 @@
+import { DefaultElement } from '../internal/types'
+
+export function isSvgChild(element: DefaultElement) {
+  return !!svgTags[element.tagName] && element.tagName !== 'svg'
+}
+
 export const svgTags: Record<string, 1> = {
   animate: 1,
   circle: 1,

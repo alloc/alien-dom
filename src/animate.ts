@@ -1,9 +1,19 @@
 import { Any, Falsy } from '@alloc/types'
 import { Color, mixColor, parseColor } from 'linear-color'
-import { AnyElement, DefaultElement } from './internal/types'
+import {
+  AnyElement,
+  DefaultElement,
+  TransformAttributes,
+} from './internal/types'
 import { decamelize, toArray, keys } from './jsx-dom/util'
 import { $$, AlienSelector } from './selectors'
 import { svgTags } from './jsx-dom/svg-tags'
+import { Length } from './internal/types'
+import {
+  cssTransformDefaults,
+  cssTransformAliases,
+  cssTransformUnits,
+} from './internal/transform'
 
 export { Color, mixColor, parseColor }
 
@@ -61,27 +71,14 @@ export type SpringConfig = {
   restVelocity?: number
 }
 
-type Length = number | string
-type Angle = number | string
-
-interface TransformProps {
-  rotate?: Angle
-  scale?: number
-  scaleX?: number
-  scaleY?: number
-  x?: Length
-  y?: Length
-  z?: Length
-}
-
-export interface HTMLAnimatedProps extends TransformProps {
+export interface HTMLAnimatedProps extends TransformAttributes {
   backgroundColor?: string
   borderRadius?: Length
   color?: string
   opacity?: number
 }
 
-export interface SVGAnimatedProps extends TransformProps {
+export interface SVGAnimatedProps extends TransformAttributes {
   fill?: string
   fillOpacity?: number
   stroke?: string
@@ -430,6 +427,12 @@ export function stopAnimatingKey(element: DefaultElement, key: string) {
 }
 
 /** @internal */
+export function isAnimatedStyleProp(element: DefaultElement, key: string) {
+  const state = animatedElements.get(element)
+  return state?.props[key] != null
+}
+
+/** @internal */
 export function setNonAnimatedStyle(
   element: DefaultElement,
   inlineStyle: string,
@@ -567,7 +570,9 @@ function applyAnimatedValue(
     lastVelocity: null,
     isRelative: false,
     transformFn:
-      key in transformKeys ? (!svgMode && transformKeys[key]) || key : null,
+      key in cssTransformAliases
+        ? (!svgMode && cssTransformAliases[key]) || key
+        : null,
     frame: null,
     onChange: null,
     onRest: null,
@@ -610,11 +615,8 @@ function isColorKey(key: string, svgMode: boolean) {
 }
 
 const defaultUnits: Record<string, string | undefined> = {
+  ...cssTransformUnits,
   borderRadius: 'px',
-  x: 'px',
-  y: 'px',
-  z: 'px',
-  rotate: 'deg',
 }
 
 const svgNonZeroDefaults: Record<string, string> = {
@@ -626,29 +628,6 @@ const svgNonZeroDefaults: Record<string, string> = {
 }
 
 const scaleKeys = ['scale', 'scaleX', 'scaleY']
-const transformKeys: Record<string, string | 0> = {
-  x: 'translateX',
-  y: 'translateY',
-  z: 'translateZ',
-
-  // These functions are not aliased.
-  rotate: 0,
-  scale: 0,
-  scaleX: 0,
-  scaleY: 0,
-}
-
-const transformIdentity: Record<string, number | null> = {
-  rotate: 0,
-  scale: 1,
-  scaleX: 1,
-  scaleY: 1,
-  translateX: 0,
-  translateY: 0,
-  // Ensure that translateZ(0) stays in the transform, so the browser
-  // continues to use hardware acceleration.
-  translateZ: null,
-}
 
 const animatedElementIds = new Set<string>()
 const animatedElements = new WeakMap<Element, AnimatedElement>()
@@ -782,7 +761,7 @@ function startLoop() {
 
             if (
               noTransform &&
-              position != transformIdentity[node.transformFn]
+              position != cssTransformDefaults[node.transformFn]
             ) {
               noTransform = false
             }
@@ -807,8 +786,8 @@ function startLoop() {
           }
 
           const transformFn =
-            key in transformKeys
-              ? (!stepAnimation.svgMode && transformKeys[key]) || key
+            key in cssTransformAliases
+              ? (!stepAnimation.svgMode && cssTransformAliases[key]) || key
               : null
 
           if (transformFn) {
@@ -1145,7 +1124,7 @@ function resolveFromValues(target: Element, state: AnimatedElement) {
 
       const to = node.to as ParsedValue
       if (!from || from[1] == to[1]) {
-        node.from = from || [transformIdentity[node.transformFn] || 0, to[1]]
+        node.from = from || [cssTransformDefaults[node.transformFn] || 0, to[1]]
       } else {
         console.error(`Unit mismatch for "${key}": ${from[1]} != ${to[1]}`)
       }

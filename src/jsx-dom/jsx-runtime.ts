@@ -10,7 +10,6 @@ import {
   isString,
   keys,
   hasForEach,
-  formatStyleValue,
 } from './util'
 import { isShadowRoot } from './shadow'
 import { svgTags } from './svg-tags'
@@ -19,7 +18,7 @@ import {
   kAlienSelfUpdating,
   kAlienPlaceholder,
 } from '../symbols'
-import { DefaultElement, StyleAttributes } from '../internal/types'
+import { DefaultElement } from '../internal/types'
 import { elementEvent } from '../elementEvents'
 import { currentHooks, currentComponent, currentMode } from '../global'
 import { updateTagProps, AlienComponent } from '../internal/component'
@@ -27,6 +26,7 @@ import { ElementKey } from '../types/attr'
 import { JSX } from '../types/jsx'
 import { selfUpdating } from '../selfUpdating'
 import { fromElementThunk } from '../fromElementProp'
+import { updateStyle } from './util'
 import {
   kAlienFragment,
   kAlienElementTags,
@@ -395,14 +395,12 @@ function appendChildToNode(child: Node, node: Node) {
   }
 }
 
-function updateStyle(node: DefaultElement, value: any) {
+function applyStyleProp(node: DefaultElement, value: any) {
   if (value != null && value !== false) {
     if (Array.isArray(value)) {
-      value.forEach(v => updateStyle(node, v))
+      value.forEach(v => applyStyleProp(node, v))
     } else if (isObject(value)) {
-      for (const key of keys<StyleAttributes>(value)) {
-        node.style[key] = formatStyleValue(key, value[key])
-      }
+      updateStyle(node, value)
     }
   }
 }
@@ -431,7 +429,7 @@ function applyProp(prop: string, value: any, node: DefaultElement) {
       if (isString(value)) {
         setAttribute(node, 'style', value)
       } else {
-        updateStyle(node, value)
+        applyStyleProp(node, value)
       }
       return
     case 'children':

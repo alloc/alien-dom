@@ -1,6 +1,11 @@
+import { DefaultElement, StyleAttributes } from '../internal/types'
 import type { ComponentClass } from '../types/component'
 import type { JSX } from '../types/jsx'
 import { isUnitlessNumber } from './css-props'
+import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
+import { stopAnimatingKey, isAnimatedStyleProp } from '../animate'
+import { isSvgChild } from './svg-tags'
+import { CSSProperties } from '../types/dom'
 
 export const keys: <T>(obj: T) => Array<string & keyof T> = Object.keys as any
 
@@ -69,8 +74,52 @@ export function decamelize(s: string, separator: string) {
 
 export const noop = <T>() => undefined as T
 
-export function formatStyleValue(key: string, value: any) {
-  return isNumber(value) && !isUnitlessNumber[key] ? value + 'px' : value
+export const enum UpdateStyle {
+  /** Interrupt related animations. */
+  Interrupt = 1 << 0,
+  /** Skip animated style properties. */
+  NonAnimated = 1 << 1,
+}
+
+type StyleKey = Omit<keyof CSSStyleDeclaration, 'length' | 'parentRule'>
+
+export function updateStyle(
+  element: DefaultElement,
+  style: any,
+  flags: UpdateStyle = 0
+) {
+  let transform: string[] | undefined
+  const skipAnimated = flags & UpdateStyle.NonAnimated
+  const stopAnimated = flags & UpdateStyle.Interrupt
+  for (const key of keys<StyleKey>(style)) {
+    if (skipAnimated && isAnimatedStyleProp(element, key)) {
+      continue
+    }
+    let value = style[key]
+    let transformFn = cssTransformAliases[key]
+    if (transformFn !== undefined) {
+      const needSvgTransform = isSvgChild(element)
+      if (!transformFn || needSvgTransform) {
+        transformFn = key
+      }
+      if (isNumber(value) && !needSvgTransform) {
+        value += (cssTransformUnits[key] || '') as any
+      }
+      transform ||= []
+      transform.push(transformFn + '(' + value + ')')
+    } else {
+      if (isNumber(value) && !isUnitlessNumber[key]) {
+        value += 'px' as any
+      }
+      element.style[key] = value
+    }
+    if (stopAnimated) {
+      stopAnimatingKey(element, key)
+    }
+  }
+  if (transform) {
+    element.style.transform = transform.join(' ')
+  }
 }
 
 /**

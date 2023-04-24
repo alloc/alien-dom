@@ -2,7 +2,7 @@ import type { JSX } from '../types/jsx'
 import type { StyleAttributes } from '../internal/types'
 import { currentComponent } from '../global'
 import { kAlienElementKey } from '../symbols'
-import { keys, formatStyleValue } from '../jsx-dom/util'
+import { updateStyle, UpdateStyle } from '../jsx-dom/util'
 import { effect } from '@preact/signals-core'
 import { useState } from './useState'
 import { onUnmount } from '../domObserver'
@@ -44,31 +44,32 @@ export function useStyle(
   if (typeof style !== 'function') {
     const newElement = component.newElements!.get(key)
     if (newElement) {
-      for (const prop of keys(style)) {
-        newElement.style[prop] = formatStyleValue(prop, style[prop])
-      }
+      updateStyle(newElement, style)
     }
   } else if (deps) {
-    const state = useState(initialState, deps)
+    const state = useState(initialState, style, deps)
     if (depsHaveChanged(deps, state.deps)) {
       state.dispose = undefined
+      state.style = style
+      state.deps = deps
     }
     const dispose = (state.dispose ||= effect(() => {
-      const target = component.newElements?.get(key) || element
-      for (const prop of keys(style)) {
-        target.style[prop] = formatStyleValue(prop, style[prop])
-      }
+      const newElement = component.newElements?.get(key)
+      updateStyle(newElement || element, state.style(), UpdateStyle.NonAnimated)
     }))
     onUnmount(element, dispose)
   }
 }
 
 const initialState = (
+  style: () => Partial<StyleAttributes>,
   deps: readonly any[]
 ): {
   deps: readonly any[]
   dispose: (() => void) | undefined
+  style: () => Partial<StyleAttributes>
 } => ({
   deps,
   dispose: undefined,
+  style,
 })

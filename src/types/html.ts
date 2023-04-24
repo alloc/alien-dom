@@ -2,6 +2,7 @@ import type { AnyElement } from '../internal/types'
 import type { AriaAttributes, AriaRole } from './aria'
 import type { Booleanish, AttrWithRef } from './attr'
 import type { JSX } from './jsx'
+import { StyleAttributes, TransformAttributes } from '../internal/types'
 import type {
   CSSProperties,
   DOMAttributes,
@@ -28,8 +29,8 @@ export type DetailedHTMLProps<E extends HTMLAttributes<T>, T> = E &
   AttrWithRef<Extract<T, AnyElement>>
 
 export type HTMLStyleAttribute =
-  | readonly (CSSProperties | string)[]
-  | CSSProperties
+  | readonly StyleAttributes[]
+  | StyleAttributes
   | string
 
 export interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
