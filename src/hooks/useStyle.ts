@@ -1,5 +1,6 @@
-import type { JSX } from '../types/jsx'
+import type { Falsy } from '@alloc/types'
 import type { StyleAttributes } from '../internal/types'
+import type { JSX } from '../types/jsx'
 import { currentComponent } from '../global'
 import { kAlienElementKey } from '../symbols'
 import { updateStyle, UpdateStyle } from '../jsx-dom/util'
@@ -16,7 +17,7 @@ import { depsHaveChanged } from '../internal/deps'
  */
 export function useStyle(
   element: JSX.Element,
-  style: Partial<StyleAttributes>
+  style: Partial<StyleAttributes> | Falsy
 ): void
 
 /**
@@ -29,19 +30,23 @@ export function useStyle(
  */
 export function useStyle(
   element: JSX.Element,
-  style: () => Partial<StyleAttributes>,
+  style: () => Partial<StyleAttributes> | Falsy,
   deps: readonly any[]
 ): void
 
 /** @internal */
 export function useStyle(
   element: JSX.Element,
-  style: Partial<StyleAttributes> | (() => Partial<StyleAttributes>),
+  style:
+    | Partial<StyleAttributes>
+    | (() => Partial<StyleAttributes> | Falsy)
+    | Falsy,
   deps?: readonly any[]
 ) {
   const component = currentComponent.get()!
   const key = kAlienElementKey(element)!
   if (typeof style !== 'function') {
+    if (!style) return
     const newElement = component.newElements!.get(key)
     if (newElement) {
       updateStyle(newElement, style)
@@ -54,20 +59,23 @@ export function useStyle(
       state.deps = deps
     }
     const dispose = (state.dispose ||= effect(() => {
-      const newElement = component.newElements?.get(key)
-      updateStyle(newElement || element, state.style(), UpdateStyle.NonAnimated)
+      const style = state.style()
+      if (style) {
+        const newElement = component.newElements?.get(key)
+        updateStyle(newElement || element, style, UpdateStyle.NonAnimated)
+      }
     }))
     onUnmount(element, dispose)
   }
 }
 
 const initialState = (
-  style: () => Partial<StyleAttributes>,
+  style: () => Partial<StyleAttributes> | Falsy,
   deps: readonly any[]
 ): {
   deps: readonly any[]
   dispose: (() => void) | undefined
-  style: () => Partial<StyleAttributes>
+  style: () => Partial<StyleAttributes> | Falsy
 } => ({
   deps,
   dispose: undefined,
