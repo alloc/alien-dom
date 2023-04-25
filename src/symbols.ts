@@ -1,5 +1,5 @@
 import type { ElementTags } from './internal/component'
-import type { AlienEffectContext } from './effects'
+import type { AlienEffects } from './effects'
 import type { ElementKey } from './types/attr'
 import type { FunctionComponent } from './types/component'
 
@@ -25,9 +25,9 @@ export function createSymbol<T = unknown>(name: string) {
 export const kAlienElementKey = createSymbol<ElementKey>('elementKey')
 export const kAlienElementTags = createSymbol<ElementTags>('elementTags')
 export const kAlienFragment = createSymbol<ChildNode[]>('fragment')
-export const kAlienEffects = createSymbol<AlienEffectContext>('effects')
+export const kAlienEffects = createSymbol<AlienEffects>('effects')
 export const kAlienManualUpdates = createSymbol<boolean>('manualUpdates')
-export const kAlienNewEffects = createSymbol<AlienEffectContext>('newEffects')
+export const kAlienNewEffects = createSymbol<AlienEffects>('newEffects')
 export const kAlienPlaceholder = createSymbol<ChildNode>('placeholder')
 export const kAlienPureComponent = createSymbol<boolean>('pureComponent')
 export const kAlienRenderFunc = createSymbol<FunctionComponent>('renderFunc')

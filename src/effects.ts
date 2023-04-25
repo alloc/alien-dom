@@ -17,7 +17,7 @@ export interface AlienEffect<
     target: Target,
     ...args: Async extends true ? [AbortSignal, ...Args] : Args
   ): Async extends true ? Promisable<(() => void) | void> : (() => void) | void
-  context?: AlienEffectContext
+  context?: AlienEffects
   target?: Target
   args?: Args
   async?: Async
@@ -32,7 +32,7 @@ export interface AlienEffect<
  * mounted or unmounted, respectively. If the element is already mounted,
  * any `enable` callbacks will be run immediately.
  */
-export class AlienEffectContext<Element extends AnyElement = any> {
+export class AlienEffects<Element extends AnyElement = any> {
   enabled = false
   mounted = false
   element?: AlienElement<Element> = undefined
@@ -351,7 +351,7 @@ export function enableEffect<
 
 export function enableAsyncEffect<
   Effect extends AlienEffect<void, [], true> | AlienBoundEffect<any, any, true>
->(effect: Effect, context?: AlienEffectContext): Disposable<Effect> {
+>(effect: Effect, context?: AlienEffects): Disposable<Effect> {
   if (typeof effect == 'function') {
     effect.async = true
   } else {

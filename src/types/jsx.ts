@@ -4,7 +4,7 @@ import type { ReactEventHandler, ChangeEventHandler } from './dom'
 import type { Attributes, AttrWithRef } from './attr'
 import type { SVGProps } from './svg'
 import type { DragEventHandler } from './dom'
-import { AlienEffectContext } from '../effects'
+import { AlienEffects } from '../effects'
 import type {
   DetailedHTMLProps,
   HTMLAttributes,
@@ -51,7 +51,7 @@ export declare namespace JSX {
 
   type ElementType<T> = T extends keyof IntrinsicElements
     ? IntrinsicElements[T]['ref'] extends
-        | AlienEffectContext<infer Element>
+        | AlienEffects<infer Element>
         | undefined
       ? Element
       : never

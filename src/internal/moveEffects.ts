@@ -1,12 +1,12 @@
 import type { AnyElement } from './types'
-import type { AlienEffectContext } from '../effects'
+import type { AlienEffects } from '../effects'
 
 /**
  * Retarget any new enablers whose target is found in the new->old
  * element map.
  */
 export function moveEffects(
-  newEffects: AlienEffectContext,
+  newEffects: AlienEffects,
   oldElement: AnyElement,
   elementMap: Map<AnyElement, AnyElement>,
   isComponent?: boolean

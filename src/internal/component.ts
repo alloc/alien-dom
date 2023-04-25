@@ -1,7 +1,7 @@
 import { batch } from '@preact/signals-core'
 import { JSX, ElementKey, FunctionComponent } from '../types'
 import { AnyElement, DefaultElement } from './types'
-import { AlienEffectContext } from '../effects'
+import { AlienEffects } from '../effects'
 import { getAlienEffects } from './effects'
 import { Ref } from '../signals'
 import { AlienContext, currentContext } from '../context'
@@ -28,9 +28,9 @@ export class AlienComponent<Props = any> {
   /** Stable references that were added or reused by the current render pass. */
   newRefs: Map<ElementKey, DefaultElement> | null = null
   /** Effects tied to the last finished render pass. */
-  effects: AlienEffectContext | null = null
+  effects: AlienEffects | null = null
   /** Effects added in the current render pass. */
-  newEffects: AlienEffectContext | null = null
+  newEffects: AlienEffects | null = null
   /** Tags created by this component. */
   tags: Map<string, FunctionComponent> | null = null
   /** Tags created in the current render pass. */
@@ -50,12 +50,12 @@ export class AlienComponent<Props = any> {
   startRender() {
     this.newRefs = new Map()
     this.newElements = new Map()
-    this.newEffects = new AlienEffectContext()
+    this.newEffects = new AlienEffects()
     this.memoryIndex = 0
     return this as {
       rootNode: ChildNode | null
       newElements: Map<ElementKey, JSX.Element>
-      newEffects: AlienEffectContext
+      newEffects: AlienEffects
       newRefs: Map<ElementKey, DefaultElement>
     }
   }
