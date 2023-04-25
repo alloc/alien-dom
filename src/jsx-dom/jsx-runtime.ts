@@ -31,6 +31,7 @@ import {
   kAlienFragment,
   kAlienElementTags,
   kAlienManualUpdates,
+  kAlienPureComponent,
 } from '../symbols'
 import {
   kCommentNodeType,
@@ -123,9 +124,13 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
       oldNode = component.refs?.get(key)
     }
     if (typeof tag !== 'string' && tag !== Fragment) {
-      // When a plain function component is used by a self-updating
-      // component, the former is made to be self-updating as well.
-      if (!kAlienSelfUpdating.in(tag)) {
+      // To reduce the cost of component updates, plain function
+      // components are wrapped with `selfUpdating` when used by a
+      // self-updating parent component. This prevents the wrapped
+      // component from updating if none of its props changed. Effects
+      // in the wrapped component are also localized, so they'll be
+      // cleaned up when unmounted.
+      if (!kAlienSelfUpdating.in(tag) && !kAlienPureComponent.in(tag)) {
         let selfUpdatingTag = selfUpdatingTags.get(tag)
         if (!selfUpdatingTag) {
           selfUpdatingTag = selfUpdating(tag)
