@@ -62,6 +62,8 @@ export const Transition = /* @__PURE__ */ selfUpdating(function <T>(props: {
   }
 
   if (previousId !== undefined || state.children.size === 0) {
+    state.currentId = props.id
+
     if (children.childNodes.length) {
       if (previousChildren) {
         const previousElements = state.elements.get(props.id)!
@@ -103,8 +105,6 @@ export const Transition = /* @__PURE__ */ selfUpdating(function <T>(props: {
   }
 
   useEffect(() => {
-    state.currentId = props.id
-
     newEnteredElements?.forEach(element => {
       const transition = props.enter(
         props.id,
