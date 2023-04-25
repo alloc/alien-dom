@@ -10,27 +10,25 @@ import { createAlienElementList } from './internal/nodeList'
 
 export function $<Element extends AlienTag<DefaultElement>>(
   element: AnyElement
-): AlienElement<AlienSelect<Element>>
+): AlienSelect<Element>
 
-export function $(element: AnyElement): AlienElement<AnyElement>
+export function $(element: AnyElement): AlienElement & AnyElement
 
 export function $<Element extends AlienTag<DefaultElement>>(
   element: AnyElement | null
-): AlienElement<AlienSelect<Element>> | null
+): AlienSelect<Element> | null
 
-export function $(element: AnyElement | null): AlienElement<AnyElement> | null
+export function $(
+  element: AnyElement | null
+): (AlienElement & AnyElement) | null
 
 export function $<Element extends AlienTag<DefaultElement> = DefaultElement>(
   selector: string
-): AlienElement<AlienSelect<Element>> | null
+): AlienSelect<Element> | null
 
 export function $(arg: any) {
   return typeof arg == 'string' ? document.querySelector(arg) : arg
 }
-
-export type AlienElements<Element extends AnyElement = DefaultElement> =
-  | AlienElement<Element>
-  | AlienElementList<Element>
 
 export type AlienSelector =
   | string
