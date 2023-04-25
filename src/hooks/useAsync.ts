@@ -1,6 +1,6 @@
 import { Exclusive, Falsy } from '@alloc/types'
-import { isObject } from '../jsx-dom/util'
-import { ref } from '../signals'
+import { isObject, keys } from '../jsx-dom/util'
+import { batch, ref } from '../signals'
 import { useState } from './useState'
 import { depsHaveChanged } from '../internal/deps'
 
@@ -36,12 +36,12 @@ export function useAsync<T>(
   return instance
 }
 
-type UseAsyncResult = Exclusive<
-  { value: any } | { error: any } | { retries: number }
+type UseAsyncState = Exclusive<
+  { loaded: any } | { error: any } | { retries: number } | { aborted: true }
 >
 
 export class UseAsync<T> {
-  private status = ref<UseAsyncResult | null>(null)
+  private state = ref<UseAsyncState | null>(null)
   private abortCtrl = new AbortController()
   timestamp: number | null = null
   promise: Promise<void> | null = null
@@ -50,20 +50,33 @@ export class UseAsync<T> {
 
   constructor(public deps: readonly any[]) {}
 
+  get status() {
+    const state = this.state.value
+    return state
+      ? state.aborted
+        ? 'idle'
+        : state.retries
+        ? 'loading'
+        : (keys(state)[0] as Exclude<keyof typeof state, 'aborted' | 'retries'>)
+      : this.promise
+      ? 'loading'
+      : 'idle'
+  }
   get result(): T | undefined {
-    return this.status.value?.value
+    return this.state.value?.loaded
   }
   get error() {
-    return this.status.value?.error
-  }
-  get isPending() {
-    return this.promise !== null
+    return this.state.value?.error
   }
   get abort() {
     return () => {
-      this.abortCtrl.abort()
-      this.promise = null
-      this.numAttempts = 0
+      const state = this.state.peek()
+      if (state && !state.aborted) {
+        this.abortCtrl.abort()
+        this.promise = null
+        this.numAttempts = 0
+        this.state.value = { aborted: true }
+      }
     }
   }
   get aborted() {
@@ -73,15 +86,19 @@ export class UseAsync<T> {
     return this.abortCtrl.signal
   }
   get retry() {
-    return () => {
-      const status = this.status.peek()
-      if (status && !('value' in status)) {
-        this.disabled = true
-        this.status.value = {
-          retries: status?.retries !== undefined ? status.retries + 1 : 1,
+    return (reset?: boolean) =>
+      batch(() => {
+        if (reset) {
+          this.abort()
         }
-      }
-    }
+        const state = this.state.peek()
+        if (state && !('value' in state)) {
+          this.disabled = true
+          this.state.value = {
+            retries: (state.retries || 0) + 1,
+          }
+        }
+      })
   }
 
   markAttempt() {
@@ -95,22 +112,22 @@ export class UseAsync<T> {
 
   setPromise(promise: Promise<any>) {
     this.promise = promise = promise.then(
-      value => {
+      loaded => {
         if (promise === this.promise) {
           this.promise = null
-          this.status.value = { value }
+          this.state.value = { loaded }
         }
       },
       error => {
         if (promise === this.promise) {
           this.promise = null
-          this.status.value = { error }
+          this.state.value = { error }
         }
       }
     )
 
     // Subscribe to changes.
-    this.status.value
+    this.state.value
   }
 
   protected dispose() {
