@@ -4,6 +4,7 @@ export * from './domObserver'
 export * from './element'
 export * from './events'
 export * from './effects'
+export * from './hooks'
 export * from './signals'
 export * from './selectors'
 
