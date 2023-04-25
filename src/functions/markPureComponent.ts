@@ -9,6 +9,6 @@ import { kAlienPureComponent } from '../symbols'
  * effects and don't mind being re-rendered every time their parent is
  * re-rendered.
  */
-export function markPureComponent(component: FunctionComponent) {
+export function markPureComponent(component: FunctionComponent<any>) {
   kAlienPureComponent(component, true)
 }
