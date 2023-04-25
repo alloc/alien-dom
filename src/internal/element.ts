@@ -2,7 +2,8 @@ import { AlienElement, AlienEvent } from '../element'
 import { AnyElement, AnyEvent } from './types'
 import { CSSProperties } from '../types/dom'
 import { elementEvent } from '../elementEvents'
-import { Disposable, AlienBoundEffect } from '../effects'
+import { AlienBoundEffect } from '../effects'
+import { Disposable } from '../disposable'
 
 export const AlienElementPrototype = new Proxy(AlienElement.prototype, {
   get(target, key, receiver) {

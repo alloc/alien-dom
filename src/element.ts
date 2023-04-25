@@ -13,21 +13,17 @@ import type {
 } from './internal/types'
 import { animate, AnimationsParam } from './animate'
 import { AlienElementMessage, events } from './events'
-import {
-  Disposable,
-  AlienBoundEffect,
-  AlienEffect,
-  AlienEffects,
-} from './effects'
+import { AlienBoundEffect, AlienEffect, AlienEffects } from './effects'
 import { canMatch } from './internal/duck'
 import { AlienNodeList } from './internal/nodeList'
 import { kAlienElementKey } from './symbols'
 import { applyProps } from './jsx-dom/jsx-runtime'
 import { targetedEffect } from './signals'
 import { updateElement } from './internal/updateElement'
-import { getAlienEffects } from './internal/effects'
+import { EffectFlags, getAlienEffects, enableEffect } from './internal/effects'
 import { updateStyle, UpdateStyle } from './jsx-dom/util'
 import { unwrap } from './internal/element'
+import { Disposable } from './disposable'
 
 export interface AlienElementList<Element extends Node = DefaultElement>
   extends NodeListOf<Element>,
@@ -213,19 +209,6 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     animate(this, animations as any)
     return this
   }
-  effect(enabler: AlienEffect<void, [], false>): Disposable<typeof enabler>
-  effect<Args extends any[]>(
-    enabler: AlienEffect<void, Args, false>,
-    args: Args
-  ): Disposable<typeof enabler>
-  effect<T extends object | void, Args extends any[] = []>(
-    enabler: AlienEffect<T, Args, false>,
-    target: T,
-    args?: Args
-  ): Disposable<typeof enabler>
-  effect(enabler: any, arg2?: any, arg3?: any) {
-    return this.effects().enable(enabler, arg2, arg3)
-  }
 }
 
 export interface AlienElement<Element extends AnyElement>
@@ -248,6 +231,52 @@ export interface AlienElement<Element extends AnyElement>
    * component).
    */
   effects(): AlienEffects<this>
+
+  effect(effect: AlienEffect<void, [], false>): Disposable<typeof effect>
+  effect<Args extends any[]>(
+    effect: AlienEffect<void, Args, false>,
+    args: Args
+  ): Disposable<typeof effect>
+  effect<T extends object | void, Args extends any[] = []>(
+    effect: AlienEffect<T, Args, false>,
+    target: T,
+    args?: Args
+  ): Disposable<typeof effect>
+
+  effectOnce(effect: AlienEffect<void, [], false>): Disposable<typeof effect>
+  effectOnce<Args extends any[]>(
+    effect: AlienEffect<void, Args, false>,
+    args: Args
+  ): Disposable<typeof effect>
+  effectOnce<T extends object | void, Args extends any[] = []>(
+    effect: AlienEffect<T, Args, false>,
+    target: T,
+    args?: Args
+  ): Disposable<typeof effect>
+
+  effectAsync(effect: AlienEffect<void, [], true>): Disposable<typeof effect>
+  effectAsync<Args extends any[]>(
+    effect: AlienEffect<void, Args, true>,
+    args: Args
+  ): Disposable<typeof effect>
+  effectAsync<T extends object | void, Args extends any[] = []>(
+    effect: AlienEffect<T, Args, true>,
+    target: T,
+    args?: Args
+  ): Disposable<typeof effect>
+
+  effectOnceAsync(
+    effect: AlienEffect<void, [], true>
+  ): Disposable<typeof effect>
+  effectOnceAsync<Args extends any[]>(
+    effect: AlienEffect<void, Args, true>,
+    args: Args
+  ): Disposable<typeof effect>
+  effectOnceAsync<T extends object | void, Args extends any[] = []>(
+    effect: AlienEffect<T, Args, true>,
+    target: T,
+    args?: Args
+  ): Disposable<typeof effect>
 }
 
 const setMethodImpl = <ThisArg extends AnyElement, Rest extends any[], Result>(
@@ -261,6 +290,27 @@ const setMethodImpl = <ThisArg extends AnyElement, Rest extends any[], Result>(
 
 setMethodImpl(AlienElement, 'unwrap', unwrap)
 setMethodImpl(AlienElement, 'effects', getAlienEffects)
+
+for (const [suffix, flags] of [
+  ['', 0],
+  ['Once', EffectFlags.Once],
+  ['Async', EffectFlags.Async],
+  ['OnceAsync', EffectFlags.Once | EffectFlags.Async],
+] as [string, EffectFlags | 0][]) {
+  setMethodImpl(
+    AlienElement,
+    'effect' + suffix,
+    function (node, effect: AlienEffect, target?: any, args?: any) {
+      return enableEffect(
+        getAlienEffects(node),
+        effect,
+        flags,
+        target,
+        arguments.length > 2 && args
+      )
+    }
+  )
+}
 
 /**
  * Allows type casting via tag name (eg: `"a"` → `HTMLAnchorElement`)

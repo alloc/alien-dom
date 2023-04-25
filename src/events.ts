@@ -1,12 +1,8 @@
 import { AlienElementList } from './element'
 import { hasForEach } from './internal/duck'
 import { AnyElement, DefaultElement } from './internal/types'
-import {
-  defineEffectType,
-  Disposable,
-  AlienBoundEffect,
-  enableEffect,
-} from './effects'
+import { Disposable } from './disposable'
+import { defineEffectType, AlienBoundEffect, createEffect } from './effects'
 
 const globalEvents = new Map<string, Set<Function>>()
 const targets = new WeakMap<Element, Map<string, Set<Function>>>()
@@ -77,7 +73,7 @@ export const events: AlienMessenger = {
     }
     if (target) {
       if (!(target instanceof Element)) {
-        return enableEffect({
+        return createEffect({
           target,
           enable(targets: AlienElementList) {
             const effects = targets.map(target =>
