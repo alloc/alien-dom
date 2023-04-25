@@ -1,4 +1,3 @@
-import { $, $$ } from './selectors'
 import { defineEffectType, getCurrentEffect } from './effects'
 import { binaryInsert } from './jsx-dom/util'
 import { kElementNodeType } from './internal/constants'
@@ -88,7 +87,8 @@ export function matchDescendants<E extends Element>(
   effect: (node: E) => void
 ) {
   return observeNewDescendants(target, node => {
-    $$($(node).filter(selector), $(node).$$(selector)).forEach(effect as any)
+    node.matches(selector) && effect(node as E)
+    node.querySelectorAll(selector).forEach(effect as any)
   })
 }
 

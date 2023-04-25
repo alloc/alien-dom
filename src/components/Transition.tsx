@@ -4,13 +4,13 @@ import type { AnyElement, StyleAttributes } from '../internal/types'
 import { selfUpdating } from '../functions/selfUpdating'
 import { SpringAnimation, animate } from '../animate'
 import { useState } from '../hooks/useState'
-import { isElement } from '../functions/isElement'
+import { isElement } from '../jsx-dom/util'
 import { useEffect } from '../hooks/useEffect'
 import { updateNode } from '../functions/updateNode'
 import { ManualUpdates } from './ManualUpdates'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import { toElements } from '../functions/toElements'
-import { $ } from '../selectors'
+import { unwrap } from '../internal/element'
 
 /** The style applied to the container that wraps leaving elements. */
 const leaveStyle: StyleAttributes = {
@@ -74,9 +74,9 @@ export const Transition = /* @__PURE__ */ selfUpdating(function <T>(props: {
           // Leaving elements are wrapped in an absolute-positioned
           // container, which we want to remove now that the elements are
           // re-entering.
-          newEnteredElements = $(previousElements)
-            .unwrap()
-            .filter(child => isElement(child)) as JSX.Element[]
+          newEnteredElements = unwrap(previousElements).filter(child =>
+            isElement(child)
+          ) as JSX.Element[]
         }
       } else {
         initial = true

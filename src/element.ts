@@ -13,7 +13,12 @@ import type {
 } from './internal/types'
 import { animate, AnimationsParam } from './animate'
 import { AlienElementMessage, events } from './events'
-import { Disposable, AlienBoundEffect, AlienEffect } from './effects'
+import {
+  Disposable,
+  AlienBoundEffect,
+  AlienEffect,
+  AlienEffects,
+} from './effects'
 import { canMatch } from './internal/duck'
 import { AlienNodeList } from './internal/nodeList'
 import { kAlienElementKey } from './symbols'
@@ -22,6 +27,7 @@ import { targetedEffect } from './signals'
 import { updateElement } from './internal/updateElement'
 import { getAlienEffects } from './internal/effects'
 import { updateStyle, UpdateStyle } from './jsx-dom/util'
+import { unwrap } from './internal/element'
 
 export interface AlienElementList<Element extends Node = DefaultElement>
   extends NodeListOf<Element>,
@@ -173,21 +179,6 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     }
     return this
   }
-  /**
-   * Replace this node with its children.
-   */
-  unwrap<T extends Node = ChildNode>() {
-    const children: T[] = []
-    const parent = this.parentNode
-    if (parent) {
-      while (this.firstChild) {
-        children.push(this.firstChild as any)
-        parent.insertBefore(this.firstChild, this)
-      }
-      parent.removeChild(this)
-    }
-    return children
-  }
   appendTo(parent: AlienParentElement<Element>) {
     parent.appendChild(this)
     return this
@@ -222,14 +213,6 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     animate(this, animations as any)
     return this
   }
-  /**
-   * ⚠️ It's not safe to call this from within a `selfUpdating`
-   * component's render function (if this element is returned by the
-   * component).
-   */
-  effects() {
-    return getAlienEffects(this)
-  }
   effect(enabler: AlienEffect<void, [], false>): Disposable<typeof enabler>
   effect<Args extends any[]>(
     enabler: AlienEffect<void, Args, false>,
@@ -253,7 +236,31 @@ export interface AlienElement<Element extends AnyElement>
   onChangeCapture: AlienEventMethod<this>
   oneChange: AlienEventMethod<this>
   oneChangeCapture: AlienEventMethod<this>
+
+  /**
+   * Replace this node with its children.
+   */
+  unwrap<T extends Node = ChildNode>(): T[]
+
+  /**
+   * ⚠️ It's not safe to call this from within a `selfUpdating`
+   * component's render function (if this element is returned by the
+   * component).
+   */
+  effects(): AlienEffects<this>
 }
+
+const setMethodImpl = <ThisArg extends AnyElement, Rest extends any[], Result>(
+  obj: { prototype: any },
+  name: string,
+  method: (first: ThisArg, ...args: Rest) => Result
+) =>
+  (obj.prototype[name] = function (this: ThisArg, ...args: Rest) {
+    return method(this, ...args)
+  })
+
+setMethodImpl(AlienElement, 'unwrap', unwrap)
+setMethodImpl(AlienElement, 'effects', getAlienEffects)
 
 /**
  * Allows type casting via tag name (eg: `"a"` → `HTMLAnchorElement`)
