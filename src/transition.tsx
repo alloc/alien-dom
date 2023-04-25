@@ -1,3 +1,4 @@
+import { Falsy } from '@alloc/types'
 import { selfUpdating } from './selfUpdating'
 import { SpringAnimation, animate } from './animate'
 import { JSX } from './types/jsx'
@@ -10,8 +11,6 @@ import { AnyElement, StyleAttributes } from './internal/types'
 import { ManualUpdates } from './manualUpdates'
 import { Fragment } from './jsx-dom/jsx-runtime'
 import { toElements } from './toElements'
-
-type Falsy = false | null | undefined
 
 /** The style applied to the container that wraps leaving elements. */
 const leaveStyle: StyleAttributes = {
@@ -177,18 +176,14 @@ export const Transition = /* @__PURE__ */ selfUpdating(function <T>(props: {
   )
 })
 
-interface TransitionState {
+const initialState = (): {
   currentId: any
   /** The most recent `children` prop for each `id` prop. */
   children: Map<any, JSX.Element>
   /** The animated elements of each `id` prop. */
   elements: Map<any, AnyElement | AnyElement[]>
-}
-
-function initialState(): TransitionState {
-  return {
-    currentId: undefined,
-    children: new Map(),
-    elements: new Map(),
-  }
-}
+} => ({
+  currentId: undefined,
+  children: new Map(),
+  elements: new Map(),
+})
