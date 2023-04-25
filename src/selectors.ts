@@ -6,7 +6,7 @@ import type {
 } from './element'
 import { hasForEach, isIterable } from './internal/duck'
 import { AnyElement, DefaultElement } from './internal/types'
-import { createAlienElementList } from './nodeList'
+import { createAlienElementList } from './internal/nodeList'
 
 export function $<Element extends AlienTag<DefaultElement>>(
   element: AnyElement
@@ -67,10 +67,4 @@ export const $$ = <Element extends AlienTag<DefaultElement> = DefaultElement>(
     }
   }
   return list as any
-}
-
-export function isAlienElement<Element extends AnyElement = DefaultElement>(
-  arg: any
-): arg is Element | AlienElementList<Element> {
-  return arg instanceof Element || arg instanceof NodeList
 }

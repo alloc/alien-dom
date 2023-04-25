@@ -1,18 +1,19 @@
 import { effect } from '@preact/signals-core'
-import { ref, attachRef } from './signals'
-import { DefaultElement } from './internal/types'
-import { kAlienHooks, kAlienElementKey, kAlienSelfUpdating } from './symbols'
-import { currentComponent, currentHooks, currentMode } from './global'
-import { updateElement, updateFragment } from './updateElement'
-import { kAlienFragment } from './symbols'
-import { AlienComponent } from './internal/component'
-import { currentContext, ContextStore } from './context'
-import { JSX } from './types/jsx'
+import type { JSX } from '../types/jsx'
+import type { DefaultElement } from '../internal/types'
+import { ref, attachRef } from '../signals'
+import { kAlienHooks, kAlienElementKey, kAlienSelfUpdating } from '../symbols'
+import { currentComponent, currentHooks, currentMode } from '../global'
+import { updateElement } from '../internal/updateElement'
+import { updateFragment } from '../internal/updateFragment'
+import { kAlienFragment } from '../symbols'
+import { AlienComponent } from '../internal/component'
+import { currentContext, ContextStore } from '../context'
 import {
   kCommentNodeType,
   kFragmentNodeType,
   kElementNodeType,
-} from './internal/constants'
+} from '../internal/constants'
 
 /**
  * Create a self-updating component whose render function can mutate its

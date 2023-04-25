@@ -1,5 +1,5 @@
 import { kFragmentNodeType } from '../internal/constants'
-import { setNonAnimatedStyle } from '../animate'
+import { setNonAnimatedStyle } from '../internal/animate'
 import { DefaultElement } from '../internal/types'
 
 export function morphAttrs(fromNode: Element, toNode: Element) {

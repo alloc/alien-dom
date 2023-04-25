@@ -1,5 +1,5 @@
-import type { JSX } from './types/jsx'
-import { Fragment } from './jsx-dom/jsx-runtime'
+import type { JSX } from '../types/jsx'
+import { Fragment } from '../jsx-dom/jsx-runtime'
 
 export function ManualUpdates({
   children,

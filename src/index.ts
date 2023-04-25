@@ -1,33 +1,25 @@
-export { AlienElement, AlienElementList, AlienEvent, AlienTag } from './element'
-export { fromElementProp } from './fromElementProp'
-export { updateNode } from './updateElement'
-export { registerNestedTag } from './internal/component'
-export {
-  animate,
-  AnimationsParam,
-  SpringAnimation,
-  StepAnimation,
-  StepAnimationFn,
-  AnimatedProps,
-  HTMLAnimatedProps,
-  SVGAnimatedProps,
-  FrameCallback,
-  SpringConfig,
-  SpringDelay,
-  SpringDelayFn,
-  Color,
-  mixColor,
-  parseColor,
-} from './animate'
-
+export * from './animate'
 export * from './context'
 export * from './domObserver'
+export * from './element'
 export * from './events'
 export * from './hooks'
 export * from './signals'
 export * from './selectors'
-export * from './selfUpdating'
-export * from './manualUpdates'
-export * from './transition'
-export * from './toElements'
-export * from './isElement'
+
+/// Functions
+export * from './functions/isElement'
+export * from './functions/fromElementProp'
+export * from './functions/selfUpdating'
+export * from './functions/toElements'
+export * from './functions/updateNode'
+
+/// Components
+export * from './components/ManualUpdates'
+export * from './components/Transition'
+
+/// Internal
+export { registerNestedTag } from './internal/component'
+
+/// Third Party
+export { Color, mixColor, parseColor } from 'linear-color'

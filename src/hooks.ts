@@ -6,8 +6,6 @@ import { kAlienHooks, kAlienFragment } from './symbols'
 import { noop } from './jsx-dom/util'
 import { kFragmentNodeType } from './internal/constants'
 
-type Promisable<T> = T | Promise<T>
-
 export * from './hooks/useAsync'
 export * from './hooks/useContext'
 export * from './hooks/useEffect'
@@ -17,6 +15,8 @@ export * from './hooks/useRef'
 export * from './hooks/useSpring'
 export * from './hooks/useState'
 export * from './hooks/useStyle'
+
+type Promisable<T> = T | Promise<T>
 
 export interface AlienEnabler<
   Target = any,

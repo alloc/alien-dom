@@ -1,35 +1,10 @@
 import { computed } from '@preact/signals-core'
-import { JSX } from './types/jsx'
-import { kAlienThunkResult, kAlienElementKey, kAlienHooks } from './symbols'
-import { currentComponent } from './global'
-import { isElement } from './jsx-dom/util'
-import { ElementKey } from './types/attr'
+import type { JSX } from '../types/jsx'
+import type { ElementKey } from '../types/attr'
+import { kAlienThunkResult, kAlienElementKey, kAlienHooks } from '../symbols'
+import { currentComponent } from '../global'
+import { isElement } from '../jsx-dom/util'
 
-type ElementResult = JSX.Element | false | null | undefined
-
-/**
- * Coerce a possible element thunk into an element (or a falsy value),
- * while ensuring the thunk isn't executed more than once in its
- * lifetime.
- */
-export function fromElementProp(element: JSX.ElementProp): ElementResult
-
-export function fromElementProp(
-  element: JSX.ElementsProp
-): ElementResult | ElementResult[]
-
-export function fromElementProp(
-  element: JSX.Children
-): Exclude<JSX.Children, () => JSX.Children>
-
-export function fromElementProp(element: JSX.Children) {
-  if (typeof element === 'function') {
-    return fromElementThunk(element)
-  }
-  return element
-}
-
-/** @internal */
 export function fromElementThunk(thunk: () => JSX.Children) {
   if (!kAlienThunkResult.in(thunk)) {
     // The first component to call the thunk owns it.

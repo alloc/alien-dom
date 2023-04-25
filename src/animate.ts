@@ -5,17 +5,25 @@ import {
   DefaultElement,
   TransformAttributes,
 } from './internal/types'
-import { decamelize, toArray, keys } from './jsx-dom/util'
+import { toArray, keys } from './jsx-dom/util'
 import { $$, AlienSelector } from './selectors'
 import { svgTags } from './jsx-dom/svg-tags'
 import { Length } from './internal/types'
+import {
+  ResolvedSpringConfig,
+  AnimatedNode,
+  SpringTimeline,
+  AnimatedElement,
+  ParsedValue,
+  ParsedTransform,
+} from './internal/animate/types'
 import {
   cssTransformDefaults,
   cssTransformAliases,
   cssTransformUnits,
 } from './internal/transform'
-
-export { Color, mixColor, parseColor }
+import { deleteTimeline, applyAnimatedValue } from './internal/animate'
+import { animatedElements } from './global'
 
 export type SpringAnimation<
   Element extends AnyElement = any,
@@ -30,6 +38,17 @@ export type SpringAnimation<
   onChange?: FrameCallback<Element, Props>
   onRest?: FrameCallback<Element, Props>
 }
+
+export type SpringDelay = number | SpringDelayFn
+export type SpringDelayFn = (
+  signal: AbortSignal,
+  key: string
+) => Promise<any> | null | void
+
+export type FrameCallback<
+  T extends AnyElement,
+  Props extends object = AnimatedProps<T>
+> = (props: [T] extends [Any] ? any : Required<Props>, target: T) => void
 
 export type StepAnimationFn<
   Element extends AnyElement = any,
@@ -59,6 +78,11 @@ export type StepAnimation<
    */
   index: number
 }
+
+export type SpringConfigOption<Props> =
+  | ((key: KeyArgument<Props>) => SpringConfig | Falsy)
+  | SpringConfig
+  | Falsy
 
 export type SpringConfig = {
   frequency?: number
@@ -105,68 +129,7 @@ export type AnimatedProps<T extends AnyElement> = [T] extends [Any]
 
 export type AnimatedProp<T extends AnyElement> = string & keyof AnimatedProps<T>
 
-export type ParsedValue = [number, string]
-
-export type ParsedTransform = [string, ParsedValue[]][]
-
-export type AnimatedType = Color | ParsedValue
-
-export type AnimatedValue<T extends AnimatedType = AnimatedType> = {
-  to: T
-  from: T | null
-  done: boolean
-  v0: number
-  lastVelocity: number | null
-  lastPosition: number | null
-  isRelative: boolean
-  transformFn: string | null
-  frame: Record<string, any> | null
-  onChange: FrameCallback<any> | null
-  onRest: FrameCallback<any> | null
-}
-
-export type AnimationState<T extends AnimatedType = any> = [
-  AnimatedValue<T>,
-  ResolvedSpringConfig
-]
-
-export type FrameCallback<
-  T extends AnyElement,
-  Props extends object = AnimatedProps<T>
-> = (props: [T] extends [Any] ? any : Required<Props>, target: T) => void
-
-export type AnimatedElement = {
-  props: { [prop: string]: AnimationState<AnimatedType> }
-  svgMode: boolean
-  transform: ParsedTransform | null
-  anchor: readonly [number, number] | null
-  timelines: { [prop: string]: SpringTimeline } | null
-  /**
-   * This contains the most recent values applied by an animation.
-   *
-   * The keys are the animated CSS properties.
-   */
-  style: Record<string, any>
-}
-
 type KeyArgument<T> = [T] extends [Any] ? any : keyof T
-
-type SpringConfigOption<Props> =
-  | ((key: KeyArgument<Props>) => SpringConfig | Falsy)
-  | SpringConfig
-  | Falsy
-
-type SpringTimeline = (SpringAnimation & {
-  timerId?: number
-  abortCtrl?: AbortController
-})[]
-
-export type SpringDelay = number | SpringDelayFn
-
-export type SpringDelayFn = (
-  signal: AbortSignal,
-  key: string
-) => Promise<any> | null | void
 
 type OneOrMany<T> = T | readonly T[]
 
@@ -226,7 +189,7 @@ export function animate(
       let state = animatedElements.get(target)!
       if (!state) {
         state = {
-          props: {},
+          nodes: {},
           svgMode: !!svgTags[target.tagName] && target.tagName != 'svg',
           transform: null,
           anchor: null,
@@ -334,23 +297,6 @@ export function animate(
   }
 }
 
-function deleteTimeline(
-  timelines: Record<string, SpringTimeline>,
-  key: string
-) {
-  const timeline = timelines[key]
-  if (timeline) {
-    timeline.forEach(animation => {
-      if (animation.timerId) {
-        clearTimeout(animation.timerId)
-      } else {
-        animation.abortCtrl?.abort()
-      }
-    })
-    delete timelines[key]
-  }
-}
-
 function addTimelineTimeout(
   timelines: Record<string, SpringTimeline> | undefined,
   target: HTMLElement,
@@ -398,79 +344,6 @@ function addTimelinePromise(
   return timelines
 }
 
-/** @internal */
-export function getAnimatedKeys(element: DefaultElement) {
-  const state = animatedElements.get(element)
-  if (state) {
-    const keys = Object.keys(state.style)
-    if (keys.length) {
-      return keys
-    }
-  }
-}
-
-/** @internal */
-export function stopAnimatingKey(element: DefaultElement, key: string) {
-  const state = animatedElements.get(element)
-  if (state) {
-    if (state.props[key]?.[0].done === false) {
-      const [node] = state.props[key]
-      node.done = true
-      node.lastPosition = null
-      node.lastVelocity = null
-      node.v0 = 0
-    }
-    if (state.timelines) {
-      deleteTimeline(state.timelines, key)
-    }
-  }
-}
-
-/** @internal */
-export function isAnimatedStyleProp(element: DefaultElement, key: string) {
-  const state = animatedElements.get(element)
-  return state?.props[key] != null
-}
-
-/** @internal */
-export function setNonAnimatedStyle(
-  element: DefaultElement,
-  inlineStyle: string,
-  remove?: boolean
-) {
-  const state = animatedElements.get(element)
-  if (state) {
-    inlineStyle.split(/\s*;\s*/).forEach(property => {
-      const [key, value] = property.split(/\s*:\s*/)
-      if (state.props[key] == null) {
-        element.style.setProperty(key, remove ? null : value)
-      }
-    })
-  } else if (remove) {
-    element.removeAttribute('style')
-  } else {
-    element.setAttribute('style', inlineStyle)
-  }
-}
-
-/** @internal */
-export function copyAnimatedStyle(
-  oldElement: DefaultElement,
-  newElement: DefaultElement
-) {
-  const state = animatedElements.get(oldElement)
-  if (state) {
-    const { svgMode, style } = state
-    for (const key in style) {
-      set(newElement as any, style, svgMode, key, style[key])
-    }
-  }
-  const { animatedId } = oldElement.dataset
-  if (animatedId) {
-    newElement.dataset.animatedId = animatedId
-  }
-}
-
 function markAnimated(target: HTMLElement) {
   if (target.dataset.animatedId == null) {
     animatedElementIds.add((target.dataset.animatedId = '' + nextElementId++))
@@ -499,45 +372,40 @@ function applyAnimation(
   const frame: Record<string, any> | null = onChange || onRest ? {} : null
 
   for (const key of keys) {
-    const prop: AnimationState = state.props[key] || [null!, spring(key)]
-    const node = applyAnimatedValue(
+    const node = updateAnimatedNode(
       target,
       state.svgMode,
       key,
       animation.to[key],
       animation.from != null ? animation.from[key] : null,
-      prop[0],
-      frame,
+      state.nodes[key],
+      spring,
       !animation.velocity || typeof animation.velocity === 'number'
         ? animation.velocity
         : animation.velocity[key],
+      frame,
       onChange,
       onRest
     )
-    if (!node) {
-      continue
-    }
-    if (prop[0]) {
-      prop[1] = spring(key)
-    } else {
-      prop[0] = node
-      state.props[key] = prop
+    if (node) {
+      state.nodes[key] = node
     }
   }
 }
 
-function applyAnimatedValue(
+function updateAnimatedNode(
   target: HTMLElement,
   svgMode: boolean,
   key: string,
   to: any,
-  from?: any,
-  node?: AnimatedValue | null,
-  frame?: Record<string, any> | null,
+  from: any,
+  node: AnimatedNode | null,
+  spring: SpringResolver,
   velocity?: number,
+  frame?: Record<string, any> | null,
   onChange?: FrameCallback<any>,
   onRest?: FrameCallback<any>
-): AnimatedValue | null {
+): AnimatedNode | null {
   let parsedFrom: Color | ParsedValue | null
   let parsedTo: Color | ParsedValue | null
 
@@ -573,6 +441,7 @@ function applyAnimatedValue(
       key in cssTransformAliases
         ? (!svgMode && cssTransformAliases[key]) || key
         : null,
+    spring: null!,
     frame: null,
     onChange: null,
     onRest: null,
@@ -581,6 +450,7 @@ function applyAnimatedValue(
   node.done = false
   node.to = parsedTo
   node.from = parsedFrom
+  node.spring = spring(key)
   node.frame = frame || null
   node.onChange = onChange || null
   node.onRest = onRest || null
@@ -630,7 +500,6 @@ const svgNonZeroDefaults: Record<string, string> = {
 const scaleKeys = ['scale', 'scaleX', 'scaleY']
 
 const animatedElementIds = new Set<string>()
-const animatedElements = new WeakMap<Element, AnimatedElement>()
 const stepAnimationMap = new WeakMap<Element, StepAnimation>()
 
 let loop: number | undefined
@@ -681,8 +550,8 @@ function startLoop() {
         // Relative values always work in HTML, but SVG only allows
         // absolute values in the `transform` attribute.
         if (state.svgMode) {
-          const needMeasuredSize = Object.values(state.props).some(
-            ([node]) => !node.done && node.isRelative && !!node.transformFn
+          const needMeasuredSize = Object.values(state.nodes).some(
+            node => !node.done && node.isRelative && !!node.transformFn
           )
           if (needMeasuredSize) {
             // TODO: what if width/height are also animated? this will be
@@ -709,9 +578,9 @@ function startLoop() {
     }
 
     for (let [target, state, width, height] of springAnimations) {
-      const { props, svgMode, style } = state
+      const { nodes, svgMode, style } = state
 
-      type FrameValue = [string, AnimatedValue<any>]
+      type FrameValue = [string, AnimatedNode<any>]
       const frames = new Map<Record<string, any>, FrameValue[]>()
 
       let newScale: [number, number] | undefined
@@ -719,15 +588,15 @@ function startLoop() {
       let noTransform = !svgMode
       let done = true
 
-      for (const [prop, [node, config]] of Object.entries(props)) {
+      for (const [key, node] of Object.entries(nodes)) {
         if (node.done) {
           continue
         }
-        const position = advance(node, config, dt, prop)
+        const position = advance(node, node.spring, dt, key)
         if (node.frame) {
           const values = frames.get(node.frame) || []
           frames.set(node.frame, values)
-          values.push([prop, node])
+          values.push([key, node])
         }
         if (!node.done) {
           done = false
@@ -750,7 +619,7 @@ function startLoop() {
               }
               if (to[1] == '%') {
                 const dimension = (
-                  prop == 'x' ? width : prop == 'y' ? height : NaN
+                  key == 'x' ? width : key == 'y' ? height : NaN
                 )!
                 value = `${dimension * (position / 100)}`
               }
@@ -767,11 +636,11 @@ function startLoop() {
             }
           } else {
             const value = position + to[1]
-            set(target as any, style, svgMode, prop, value)
+            applyAnimatedValue(target, style, svgMode, key, value)
           }
         } else {
           const value = mixColor(node.from as Color, to, position)
-          set(target as any, style, svgMode, prop, value)
+          applyAnimatedValue(target, style, svgMode, key, value)
         }
       }
 
@@ -797,15 +666,21 @@ function startLoop() {
               newTransform.push([transformFn, parsed])
             }
           } else {
-            set(stepAnimation.target, null, stepAnimation.svgMode, key, value)
+            applyAnimatedValue(
+              stepAnimation.target,
+              null,
+              stepAnimation.svgMode,
+              key,
+              value
+            )
           }
         }
       }
 
       if (newTransform || newScale) {
         if (state.anchor) {
-          set(
-            target as any,
+          applyAnimatedValue(
+            target,
             style,
             svgMode,
             'transformOrigin',
@@ -816,12 +691,13 @@ function startLoop() {
           newTransform ||= []
           newTransform.push(['scale', newScale.join(', ')])
         }
-        const transform = renderTransform(
-          state.transform!,
-          newTransform!,
-          noTransform
+        applyAnimatedValue(
+          target,
+          style,
+          svgMode,
+          'transform',
+          renderTransform(state.transform!, newTransform!, noTransform)
         )
-        set(target as any, style, svgMode, 'transform', transform)
       }
 
       for (const [frame, values] of frames) {
@@ -856,7 +732,7 @@ function startLoop() {
   })
 }
 
-function readValue({ lastPosition, from, to }: AnimatedValue) {
+function readValue({ lastPosition, from, to }: AnimatedNode) {
   if (lastPosition == null) {
     return undefined
   }
@@ -868,23 +744,6 @@ function readValue({ lastPosition, from, to }: AnimatedValue) {
     return lastPosition
   }
   return mixColor(from as Color, to, lastPosition)
-}
-
-function set(
-  target: HTMLElement,
-  style: Record<string, any> | null,
-  svgMode: boolean,
-  key: string,
-  value: any
-) {
-  if (style) {
-    style[key] = value
-  }
-  if (svgMode) {
-    target.setAttribute(decamelize(key, '-'), value)
-  } else {
-    target.style[key as any] = value
-  }
 }
 
 type TransformCall = [string, string | ParsedValue]
@@ -928,12 +787,6 @@ function renderTransform(
     .join(' ')
 }
 
-type ResolvedSpringConfig = SpringConfig & {
-  tension: number
-  friction: number
-  mass: number
-}
-
 type SpringResolver = (key: string) => ResolvedSpringConfig
 
 const maxPrecision = 0.1 / (window.devicePixelRatio || 1)
@@ -942,7 +795,7 @@ const defaultPrecisions: Record<string, number> = {
 }
 
 function advance(
-  node: AnimatedValue,
+  node: AnimatedNode,
   config: ResolvedSpringConfig,
   dt: number,
   prop: string
@@ -1089,7 +942,7 @@ function resolveFromValues(target: Element, state: AnimatedElement) {
     )
   }
 
-  for (const [key, [node]] of Object.entries(state.props)) {
+  for (const [key, node] of Object.entries(state.nodes)) {
     if (node.transformFn) {
       // Note that we can't use the `computedStyle` here, because it
       // compacts the transform string into a matrix, which obfuscates

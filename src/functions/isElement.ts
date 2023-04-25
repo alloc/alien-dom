@@ -1,5 +1,7 @@
-import { kFragmentNodeType, kElementNodeType } from './internal/constants'
-import type { JSX } from './types/jsx'
+import { kFragmentNodeType, kElementNodeType } from '../internal/constants'
+import type { JSX } from '../types/jsx'
+import type { AlienElementList } from '../element'
+import type { AnyElement, DefaultElement } from '../internal/types'
 
 /**
  * ⚠️ This returns true for functions due to the possibility of element
@@ -16,4 +18,10 @@ export function isElement(value: any): value is JSX.Element {
   }
   const { nodeType } = value as { nodeType?: number }
   return nodeType === kElementNodeType || nodeType === kFragmentNodeType
+}
+
+export function isAlienElement<Element extends AnyElement = DefaultElement>(
+  arg: any
+): arg is Element | AlienElementList<Element> {
+  return arg instanceof Element || arg instanceof NodeList
 }

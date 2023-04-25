@@ -1,6 +1,6 @@
 import type { JSX } from './types/jsx'
 import type { FunctionComponent } from './types/component'
-import { selfUpdating } from './selfUpdating'
+import { selfUpdating } from './functions/selfUpdating'
 import { ref, attachRef } from './signals'
 import { jsx } from './jsx-dom/jsx-runtime'
 import { currentComponent } from './global'

@@ -3,7 +3,7 @@
     "declaration": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "./jsx-dom",
+    "jsxImportSource": "../jsx-dom",
     "lib": ["dom", "esnext"],
     "module": "esnext",
     "moduleResolution": "node",

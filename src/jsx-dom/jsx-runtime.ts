@@ -24,8 +24,8 @@ import { currentHooks, currentComponent, currentMode } from '../global'
 import { updateTagProps, AlienComponent } from '../internal/component'
 import { ElementKey } from '../types/attr'
 import { JSX } from '../types/jsx'
-import { selfUpdating } from '../selfUpdating'
-import { fromElementThunk } from '../fromElementProp'
+import { selfUpdating } from '../functions/selfUpdating'
+import { fromElementThunk } from '../internal/fromElementThunk'
 import { updateStyle } from './util'
 import {
   kAlienFragment,

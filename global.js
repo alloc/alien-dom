@@ -1,5 +1,5 @@
-import { AlienElementPrototype } from './dist/element.mjs'
-import { AlienNodeListPrototype } from './dist/nodeList.mjs'
+import { AlienElementPrototype } from './dist/internal/element.mjs'
+import { AlienNodeListPrototype } from './dist/internal/nodeList.mjs'
 
 Object.setPrototypeOf(AlienElementPrototype, Node.prototype)
 Object.setPrototypeOf(Element.prototype, AlienElementPrototype)

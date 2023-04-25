@@ -1,7 +1,7 @@
-import { kElementNodeType, kFragmentNodeType } from './internal/constants'
-import { AnyElement } from './internal/types'
-import { kAlienPlaceholder } from './symbols'
-import type { JSX } from './types'
+import type { JSX } from '../types'
+import type { AnyElement } from '../internal/types'
+import { kElementNodeType, kFragmentNodeType } from '../internal/constants'
+import { kAlienPlaceholder } from '../symbols'
 
 export function toElements(element: JSX.ElementOption): AnyElement[] {
   if (!element) {

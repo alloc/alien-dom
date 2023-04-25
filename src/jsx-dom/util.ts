@@ -1,11 +1,10 @@
-import { DefaultElement, StyleAttributes } from '../internal/types'
+import type { DefaultElement } from '../internal/types'
 import type { ComponentClass } from '../types/component'
 import type { JSX } from '../types/jsx'
 import { isUnitlessNumber } from './css-props'
 import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
-import { stopAnimatingKey, isAnimatedStyleProp } from '../animate'
+import { stopAnimatingKey, isAnimatedStyleProp } from '../internal/animate'
 import { isSvgChild } from './svg-tags'
-import { CSSProperties } from '../types/dom'
 
 export const keys: <T>(obj: T) => Array<string & keyof T> = Object.keys as any
 
