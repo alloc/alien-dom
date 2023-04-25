@@ -4,6 +4,7 @@ import { copyFileSync } from 'fs'
 export default defineConfig({
   entry: [
     'index.ts',
+    'element.ts',
     'animate.ts',
     'hmr.ts',
     'internal/element.ts',
