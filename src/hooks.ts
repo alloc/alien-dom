@@ -140,9 +140,13 @@ export class AlienHooks<Element extends AnyElement = any> {
       if (this.enabled) {
         // If the enabler is being retargeted, this is needed.
         disableHook(enabler)
-        enableHooks(this, () => {
-          enableHook(enabler, this)
-        })
+        currentHooks.push(this)
+        try {
+          this._enableHook(enabler)
+        } finally {
+          this.currentEnabler = null
+          currentHooks.pop(this)
+        }
       }
 
       return attachDisposer(enabler, () => {
@@ -150,12 +154,22 @@ export class AlienHooks<Element extends AnyElement = any> {
         this.enablers?.delete(enabler)
       })
     }
+
     if (!this.enabled) {
-      enableHooks(this, () => {
-        this.enablers?.forEach(enabler => {
-          enableHook(enabler, this)
-        })
-      })
+      this.enabled = true
+      currentHooks.push(this)
+      try {
+        this.enablers?.forEach(this._enableHook, this)
+        if (this.element) {
+          onUnmount(this.element, () => {
+            this.mounted = false
+            this.disable()
+          })
+        }
+      } finally {
+        this.currentEnabler = null
+        currentHooks.pop(this)
+      }
     }
   }
 
@@ -264,33 +278,17 @@ export class AlienHooks<Element extends AnyElement = any> {
       this.enable()
     })
   }
-}
 
-function enableHooks(hooks: AlienHooks, enable: () => void) {
-  const wasEnabled = hooks.enabled
-  hooks.enabled = true
-  currentHooks.push(hooks)
-  enable()
-  if (!wasEnabled && hooks.element) {
-    onUnmount(hooks.element, () => {
-      hooks.mounted = false
-      hooks.disable()
-    })
-  }
-  currentHooks.pop(hooks)
-}
+  protected _enableHook(enabler: AlienEnabler) {
+    this.currentEnabler = enabler
+    enabler.context = this
 
-function enableHook(enabler: AlienEnabler, context: AlienHooks) {
-  context.currentEnabler = enabler
-  enabler.context = context
+    let args = enabler.args || []
+    if (enabler.async) {
+      this.abortCtrl ||= new AbortController()
+      args = [this.abortCtrl.signal, ...args]
+    }
 
-  let args = enabler.args || []
-  if (enabler.async) {
-    context.abortCtrl ||= new AbortController()
-    args = [context.abortCtrl.signal, ...args]
-  }
-
-  try {
     const disable = enabler(enabler.target, ...args)
     if (disable instanceof Promise) {
       if (!enabler.async) {
@@ -311,8 +309,6 @@ function enableHook(enabler: AlienEnabler, context: AlienHooks) {
     } else if (typeof disable == 'function') {
       enabler.disable = disable
     }
-  } finally {
-    context.currentEnabler = null
   }
 }
 
