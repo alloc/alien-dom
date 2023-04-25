@@ -1,7 +1,7 @@
 import type { AnyElement } from './types'
-import { kAlienHooks } from '../symbols'
+import { kAlienEffects } from '../symbols'
 import { AlienComponent } from './component'
-import { retargetHooks } from './retargetHooks'
+import { moveEffects } from './moveEffects'
 import { recursiveMorph } from './recursiveMorph'
 
 export function updateElement(
@@ -14,14 +14,14 @@ export function updateElement(
   const elementMap = new Map<AnyElement, AnyElement>()
   recursiveMorph(rootElement, newRootElement, newRefs, elementMap)
   if (instance) {
-    retargetHooks(instance.newHooks!, rootElement, elementMap, true)
+    moveEffects(instance.newEffects!, rootElement, elementMap, true)
   }
   for (const [newElement, oldElement] of elementMap) {
-    const oldHooks = kAlienHooks(oldElement)
-    const newHooks = kAlienHooks(newElement)
-    if (newHooks) {
-      retargetHooks(newHooks, oldElement, elementMap)
+    const oldEffects = kAlienEffects(oldElement)
+    const newEffects = kAlienEffects(newElement)
+    if (newEffects) {
+      moveEffects(newEffects, oldElement, elementMap)
     }
-    oldHooks?.disable()
+    oldEffects?.disable()
   }
 }

@@ -1,7 +1,12 @@
 import { AlienElementList } from './element'
 import { hasForEach } from './internal/duck'
 import { AnyElement, DefaultElement } from './internal/types'
-import { createHookType, Disposable, AlienHook, createHook } from './hooks'
+import {
+  defineEffectType,
+  Disposable,
+  AlienBoundEffect,
+  enableEffect,
+} from './effects'
 
 const globalEvents = new Map<string, Set<Function>>()
 const targets = new WeakMap<Element, Map<string, Set<Function>>>()
@@ -20,7 +25,7 @@ const emit = (target: any, event: any) => {
   }
 }
 
-const targetedEvent = /* @__PURE__ */ createHookType(
+const targetedEvent = /* @__PURE__ */ defineEffectType(
   (target: Element, event: string, callback: (event: any) => void) => {
     const events = targets.get(target) || new Map<string, Set<Function>>()
     targets.set(target, events)
@@ -41,7 +46,7 @@ const targetedEvent = /* @__PURE__ */ createHookType(
   }
 )
 
-const globalEvent = /* @__PURE__ */ createHookType(
+const globalEvent = /* @__PURE__ */ defineEffectType(
   (event: string, callback: (event: any) => void) => {
     const callbacks = globalEvents.get(event) || new Set()
     globalEvents.set(event, callbacks)
@@ -61,7 +66,7 @@ export const events: AlienMessenger = {
     event: string,
     arg2: Element | AlienElementList | ((event: any) => void),
     arg3?: (event: any) => void
-  ): Disposable<AlienHook> {
+  ): Disposable<AlienBoundEffect> {
     let target: Element | AlienElementList | undefined
     let callback: ((event: any) => void) | undefined
     if (typeof arg2 == 'function') {
@@ -72,13 +77,13 @@ export const events: AlienMessenger = {
     }
     if (target) {
       if (!(target instanceof Element)) {
-        return createHook({
+        return enableEffect({
           target,
           enable(targets: AlienElementList) {
-            const hooks = targets.map(target =>
+            const effects = targets.map(target =>
               targetedEvent(target, event, callback!)
             )
-            return () => hooks.forEach(hook => hook.dispose())
+            return () => effects.forEach(effect => effect.dispose())
           },
         })
       }
@@ -118,18 +123,18 @@ interface AlienMessenger {
     event: string,
     target: Element,
     handler: (event: T & AlienElementMessage<Element>) => void
-  ): Disposable<AlienHook<Element>>
+  ): Disposable<AlienBoundEffect<Element>>
   on<T extends Record<string, any>, Element extends AnyElement>(
     this: AlienMessenger,
     event: string,
     target: AlienElementList<Element>,
     handler: (event: T & AlienElementMessage<Element>) => void
-  ): Disposable<AlienHook<AlienElementList<Element>>>
+  ): Disposable<AlienBoundEffect<AlienElementList<Element>>>
   on<T extends Record<string, any>>(
     this: AlienMessenger,
     event: string,
     handler: (event: T & AlienMessage) => void
-  ): Disposable<AlienHook<string>>
+  ): Disposable<AlienBoundEffect<string>>
 
   dispatch(
     this: AlienMessenger,

@@ -1,11 +1,11 @@
 import type { AnyElement } from './types'
 import {
   kAlienFragment,
-  kAlienHooks,
+  kAlienEffects,
   kAlienElementKey,
   kAlienManualUpdates,
 } from '../symbols'
-import { retargetHooks } from './retargetHooks'
+import { moveEffects } from './moveEffects'
 import { recursiveMorph } from './recursiveMorph'
 
 export function updateFragment(
@@ -52,7 +52,7 @@ export function updateFragment(
       prevChild = node
     } else {
       // The first node is always the placeholder comment node where the
-      // component hooks are attached.
+      // component effects are attached.
       prevChild = oldNode = oldNodes[0]
     }
     if (oldNode) {
@@ -77,11 +77,11 @@ export function updateFragment(
   kAlienFragment(fragment, newNodes)
 
   for (const [newElement, oldElement] of elementMap) {
-    const oldHooks = kAlienHooks(oldElement)
-    const newHooks = kAlienHooks(newElement)
-    if (newHooks) {
-      retargetHooks(newHooks, oldElement, elementMap)
+    const oldEffects = kAlienEffects(oldElement)
+    const newEffects = kAlienEffects(newElement)
+    if (newEffects) {
+      moveEffects(newEffects, oldElement, elementMap)
     }
-    oldHooks?.disable()
+    oldEffects?.disable()
   }
 }

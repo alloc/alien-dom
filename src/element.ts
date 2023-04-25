@@ -13,14 +13,14 @@ import type {
 } from './internal/types'
 import { animate, AnimationsParam } from './animate'
 import { AlienElementMessage, events } from './events'
-import { Disposable, AlienHook, AlienEnabler } from './hooks'
+import { Disposable, AlienBoundEffect, AlienEffect } from './effects'
 import { canMatch } from './internal/duck'
 import { AlienNodeList } from './internal/nodeList'
 import { kAlienElementKey } from './symbols'
 import { applyProps } from './jsx-dom/jsx-runtime'
 import { targetedEffect } from './signals'
 import { updateElement } from './internal/updateElement'
-import { getAlienHooks } from './internal/hooks'
+import { getAlienEffects } from './internal/effects'
 import { updateStyle, UpdateStyle } from './jsx-dom/util'
 
 export interface AlienElementList<Element extends Node = DefaultElement>
@@ -142,7 +142,7 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
   }
   /**
    * Morph this element into another element. If the given `element` had
-   * its `hooks` method called, all of its hooks will be transferred to
+   * its `effects` method called, all of its effects will be moved to
    * this element.
    */
   morph(element: Element) {
@@ -152,7 +152,7 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     return this
   }
   replaceText(value: string): this
-  replaceText(value: () => string): Disposable<AlienHook<this>>
+  replaceText(value: () => string): Disposable<AlienBoundEffect<this>>
   replaceText(value?: string | (() => string)) {
     if (typeof value == 'function') {
       return targetedEffect(this, target => {
@@ -227,21 +227,21 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
    * component's render function (if this element is returned by the
    * component).
    */
-  hooks() {
-    return getAlienHooks(this)
+  effects() {
+    return getAlienEffects(this)
   }
-  effect(enabler: AlienEnabler<void, [], false>): Disposable<typeof enabler>
+  effect(enabler: AlienEffect<void, [], false>): Disposable<typeof enabler>
   effect<Args extends any[]>(
-    enabler: AlienEnabler<void, Args, false>,
+    enabler: AlienEffect<void, Args, false>,
     args: Args
   ): Disposable<typeof enabler>
   effect<T extends object | void, Args extends any[] = []>(
-    enabler: AlienEnabler<T, Args, false>,
+    enabler: AlienEffect<T, Args, false>,
     target: T,
     args?: Args
   ): Disposable<typeof enabler>
   effect(enabler: any, arg2?: any, arg3?: any) {
-    return this.hooks().enable(enabler, arg2, arg3)
+    return this.effects().enable(enabler, arg2, arg3)
   }
 }
 

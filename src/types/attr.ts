@@ -1,5 +1,5 @@
 import type { AnyElement } from '../internal/types'
-import type { AlienHooks } from '../hooks'
+import type { AlienEffectContext } from '../effects'
 
 export type Booleanish = boolean | 'true' | 'false'
 
@@ -14,5 +14,5 @@ export interface Attributes {
 }
 
 export interface AttrWithRef<Element extends AnyElement> extends Attributes {
-  ref?: AlienHooks<Element> | undefined
+  ref?: AlienEffectContext<Element> | undefined
 }

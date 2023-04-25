@@ -1,8 +1,8 @@
 import { batch } from '@preact/signals-core'
 import { JSX, ElementKey, FunctionComponent } from '../types'
 import { AnyElement, DefaultElement } from './types'
-import { AlienHooks } from '../hooks'
-import { getAlienHooks } from './hooks'
+import { AlienEffectContext } from '../effects'
+import { getAlienEffects } from './effects'
 import { Ref } from '../signals'
 import { AlienContext, currentContext } from '../context'
 import { currentComponent } from '../global'
@@ -10,8 +10,8 @@ import {
   kAlienRenderFunc,
   kAlienElementKey,
   kAlienElementTags,
-  kAlienHooks,
-  kAlienNewHooks,
+  kAlienEffects,
+  kAlienNewEffects,
 } from '../symbols'
 
 export type ElementTags = Map<FunctionComponent, AlienComponent<any>>
@@ -27,10 +27,10 @@ export class AlienComponent<Props = any> {
   refs: Map<ElementKey, DefaultElement> | null = null
   /** Stable references that were added or reused by the current render pass. */
   newRefs: Map<ElementKey, DefaultElement> | null = null
-  /** Effects tied to this component lifecycle. */
-  hooks: AlienHooks | null = null
+  /** Effects tied to the last finished render pass. */
+  effects: AlienEffectContext | null = null
   /** Effects added in the current render pass. */
-  newHooks: AlienHooks | null = null
+  newEffects: AlienEffectContext | null = null
   /** Tags created by this component. */
   tags: Map<string, FunctionComponent> | null = null
   /** Tags created in the current render pass. */
@@ -50,12 +50,12 @@ export class AlienComponent<Props = any> {
   startRender() {
     this.newRefs = new Map()
     this.newElements = new Map()
-    this.newHooks = new AlienHooks()
+    this.newEffects = new AlienEffectContext()
     this.memoryIndex = 0
     return this as {
       rootNode: ChildNode | null
       newElements: Map<ElementKey, JSX.Element>
-      newHooks: AlienHooks
+      newEffects: AlienEffectContext
       newRefs: Map<ElementKey, DefaultElement>
     }
   }
@@ -64,12 +64,12 @@ export class AlienComponent<Props = any> {
     if (!threw) {
       this.truncate(this.memoryIndex)
       this.refs = this.newRefs
-      this.hooks = this.newHooks
+      this.effects = this.newEffects
       this.tags = this.newTags
     }
     this.newElements = null
     this.newRefs = null
-    this.newHooks = null
+    this.newEffects = null
     this.newTags = null
   }
 
@@ -94,16 +94,16 @@ export class AlienComponent<Props = any> {
     kAlienElementKey(element, key)
     this.newRefs!.set(key, element)
 
-    // If a component accesses the hooks of an old element during
-    // render, return the hooks of a new element instead.
-    const oldHooks = kAlienHooks(element)
-    if (oldHooks?.enabled) {
-      Object.defineProperty(element, kAlienNewHooks.symbol, {
+    // If a component accesses the effects of an old element during
+    // render, return the effects of a new element instead.
+    const oldEffects = kAlienEffects(element)
+    if (oldEffects?.enabled) {
+      Object.defineProperty(element, kAlienNewEffects.symbol, {
         configurable: true,
         get: () => {
           if (this.newElements) {
             const newElement = this.newElements.get(key)
-            return newElement && getAlienHooks(newElement)
+            return newElement && getAlienEffects(newElement)
           }
         },
       })

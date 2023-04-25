@@ -2,7 +2,7 @@ import { AlienElement, AlienEvent } from '../element'
 import { AnyElement, AnyEvent } from './types'
 import { CSSProperties } from '../types/dom'
 import { elementEvent } from '../elementEvents'
-import { Disposable, AlienHook } from '../hooks'
+import { Disposable, AlienBoundEffect } from '../effects'
 
 export const AlienElementPrototype = new Proxy(AlienElement.prototype, {
   get(target, key, receiver) {
@@ -137,7 +137,7 @@ export type AlienEventMethod<
 > = (
   callback: (this: This, event: AlienEvent<Event, This>) => void,
   options?: boolean | AddEventListenerOptions
-) => Disposable<AlienHook<This>>
+) => Disposable<AlienBoundEffect<This>>
 
 export type AlienEventMethods<This extends AnyElement> = {
   [P in keyof Omit<

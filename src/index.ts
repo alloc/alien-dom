@@ -3,7 +3,7 @@ export * from './context'
 export * from './domObserver'
 export * from './element'
 export * from './events'
-export * from './hooks'
+export * from './effects'
 export * from './signals'
 export * from './selectors'
 

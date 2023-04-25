@@ -1,15 +1,15 @@
 import { batch } from '@preact/signals-core'
 import { AnyElement } from './internal/types'
-import { createHookType, getCurrentHook } from './hooks'
+import { defineEffectType, getCurrentEffect } from './effects'
 
-export const elementEvent = createHookType(
+export const elementEvent = defineEffectType(
   <Element extends AnyElement, EventName extends string>(
     element: Element,
     eventName: EventName,
     callback: (event: any) => void,
     options?: boolean | AddEventListenerOptions
   ) => {
-    const self = getCurrentHook()
+    const self = getCurrentEffect()
     if (self) {
       const isOnce = options && typeof options != 'boolean' && options.once
       const userCallback = callback

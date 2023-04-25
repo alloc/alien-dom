@@ -2,8 +2,8 @@ import { effect } from '@preact/signals-core'
 import type { JSX } from '../types/jsx'
 import type { DefaultElement } from '../internal/types'
 import { ref, attachRef } from '../signals'
-import { kAlienHooks, kAlienElementKey, kAlienSelfUpdating } from '../symbols'
-import { currentComponent, currentHooks, currentMode } from '../global'
+import { kAlienEffects, kAlienElementKey, kAlienSelfUpdating } from '../symbols'
+import { currentComponent, currentEffects, currentMode } from '../global'
 import { updateElement } from '../internal/updateElement'
 import { updateFragment } from '../internal/updateFragment'
 import { kAlienFragment } from '../symbols'
@@ -64,7 +64,7 @@ export function selfUpdating<
     }
 
     const updateProps = (newProps: Partial<Props>) => {
-      if (self.newHooks) {
+      if (self.newEffects) {
         throw Error('Cannot update props during render')
       }
       for (const key in newProps) {
@@ -114,15 +114,15 @@ export function selfUpdating<
 
     const enable = () => {
       if (preventUpdates) {
-        self.hooks?.enable()
+        self.effects?.enable()
       } else {
         preventUpdates = effect(updateComponent)
       }
     }
     const disable = () => {
       self.truncate(0)
-      self.hooks?.disable()
-      self.hooks = null
+      self.effects?.disable()
+      self.effects = null
       preventUpdates?.()
       preventUpdates = null
     }
@@ -139,11 +139,11 @@ export function selfUpdating<
     )
 
     const updateComponent = () => {
-      let { rootNode, newElements, newHooks, newRefs } = self.startRender()
+      let { rootNode, newElements, newEffects, newRefs } = self.startRender()
 
       currentMode.push('ref')
       currentComponent.push(self)
-      currentHooks.push(newHooks)
+      currentEffects.push(newEffects)
 
       let threw = true
       let newRootNode: DefaultElement | null | undefined
@@ -151,7 +151,7 @@ export function selfUpdating<
         newRootNode = render(props, updateProps)
         threw = false
       } finally {
-        currentHooks.pop(newHooks)
+        currentEffects.pop(newEffects)
         currentComponent.pop(self)
         currentMode.pop('ref')
 
@@ -160,9 +160,9 @@ export function selfUpdating<
         }
       }
 
-      // If there are enabled component hooks, we are mounted.
-      const oldHooks = self.hooks
-      const isMounted = !!oldHooks && oldHooks.enabled
+      // If there are enabled component effects, we are mounted.
+      const oldEffects = self.effects
+      const isMounted = !!oldEffects && oldEffects.enabled
 
       // The render function might return an element reference.
       if (rootNode && rootNode === newRootNode) {
@@ -180,7 +180,7 @@ export function selfUpdating<
             newRootNode.childNodes.length > 0
           ) {
             // Document fragments need a placeholder comment node for
-            // the component hooks to be attached to.
+            // the component effects to be attached to.
             newRootNode.prepend(document.createComment(''))
           }
           if (rootNode?.nodeType === kElementNodeType) {
@@ -188,7 +188,7 @@ export function selfUpdating<
             const newKey = kAlienElementKey(newRootNode)
             kAlienElementKey(rootNode, newKey)
 
-            // Diff the root nodes and enable the new hooks.
+            // Diff the root nodes and retarget any new effects.
             updateElement(rootNode as Element, newRootNode, self)
           }
           // Fragments have their own update logic.
@@ -213,8 +213,8 @@ export function selfUpdating<
         if (!newRootNode && rootNode?.nodeType !== kCommentNodeType) {
           const placeholder = document.createComment('')
           if (rootNode?.nodeType === kElementNodeType) {
-            const oldHooks = kAlienHooks(rootNode)
-            oldHooks?.disable()
+            const oldEffects = kAlienEffects(rootNode)
+            oldEffects?.disable()
             rootNode.replaceWith(placeholder)
           } else if (rootNode?.nodeType === kFragmentNodeType) {
             const oldNodes = kAlienFragment(rootNode)!
@@ -231,16 +231,16 @@ export function selfUpdating<
       }
 
       if (isMounted && rootNode.isConnected) {
-        newHooks.enable()
-        oldHooks.disable()
+        newEffects.enable()
+        oldEffects.disable()
       } else {
         // If the root node isn't added to a JSX parent node by the next
         // microtask, assume the node has been or will be added to the
         // DOM with native methods.
         queueMicrotask(() => {
-          if (!newHooks.enabled && self.hooks === newHooks) {
-            newHooks.setElement(rootNode)
-            oldHooks?.setElement(null)
+          if (!newEffects.enabled && self.effects === newEffects) {
+            newEffects.setElement(rootNode)
+            oldEffects?.setElement(null)
           }
         })
       }

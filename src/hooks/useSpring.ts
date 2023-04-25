@@ -9,7 +9,7 @@ import { DefaultElement } from '../internal/types'
 import { useState } from './useState'
 import { shallowEquals } from '../internal/shallowEquals'
 import { toArray } from '../jsx-dom/util'
-import { currentHooks } from '../global'
+import { currentEffects } from '../global'
 
 export function useSpring<Element extends DefaultElement>(
   element: Element,
@@ -26,8 +26,8 @@ export function useSpring<Element extends DefaultElement>(
   }
 
   if (shouldRun) {
-    const hooks = currentHooks.get()!
-    hooks.enable(() => {
+    const effects = currentEffects.get()!
+    effects.enable(() => {
       state.to = to
       state.from = from
 

@@ -1,7 +1,7 @@
 import { computed } from '@preact/signals-core'
 import type { JSX } from '../types/jsx'
 import type { ElementKey } from '../types/attr'
-import { kAlienThunkResult, kAlienElementKey, kAlienHooks } from '../symbols'
+import { kAlienThunkResult, kAlienElementKey, kAlienEffects } from '../symbols'
 import { currentComponent } from '../global'
 import { isElement } from '../jsx-dom/util'
 
@@ -48,9 +48,9 @@ export function fromElementThunk(thunk: () => JSX.Children) {
               key ??= newKey
 
               // If the element is unchanged, we need to disable the old
-              // hooks before new hooks are added.
-              const hooks = kAlienHooks(rootNode)
-              hooks?.setElement(null)
+              // effects before new effects are added.
+              const effects = kAlienEffects(rootNode)
+              effects?.setElement(null)
             }
 
             if (rootNode && rootNode === oldRootNode) {

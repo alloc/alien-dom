@@ -6,7 +6,7 @@ export function useMicrotask(effect: () => void, shouldRun = true) {
   const component = currentComponent.get()!
   const state = useState(initialState)
   if (shouldRun) {
-    const hooks = component.newHooks!
+    const effects = component.newEffects!
     const nextRun = () => {
       if (nextRun == state.nextRun) {
         state.nextRun = undefined
@@ -18,9 +18,9 @@ export function useMicrotask(effect: () => void, shouldRun = true) {
     // The last call is always preferred.
     state.nextRun = nextRun
 
-    // The hook is enabled in the microtask after the parent element is
-    // set, so we don't need to call queueMicrotask() ourselves.
-    hooks.enable(nextRun)
+    // The effect is enabled in the microtask after the parent element
+    // is set, so we don't need to call queueMicrotask() ourselves.
+    effects.enable(nextRun)
   }
 }
 

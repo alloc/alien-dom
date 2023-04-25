@@ -3,7 +3,7 @@ import {
   signal as ref,
   Signal as Ref,
 } from '@preact/signals-core'
-import { createHookType } from './hooks'
+import { defineEffectType } from './effects'
 
 export {
   batch,
@@ -14,9 +14,9 @@ export {
 
 export type { ReadonlySignal as ReadonlyRef } from '@preact/signals-core'
 
-export const effect = /* @__PURE__ */ createHookType(createEffect)
+export const effect = /* @__PURE__ */ defineEffectType(createEffect)
 
-export const targetedEffect = /* @__PURE__ */ createHookType(
+export const targetedEffect = /* @__PURE__ */ defineEffectType(
   <T extends object | void>(target: T, action: (target: T) => void) =>
     createEffect(() => action(target))
 )

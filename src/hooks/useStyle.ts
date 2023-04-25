@@ -25,8 +25,6 @@ export function useStyle(
  * re-render. Instead, the element is updated directly. This is useful
  * for performance reasons when the style is updated frequently or the
  * component is expensive to re-render.
- *
- * ⚠️ Note that this hook currently interferes with animations.
  */
 export function useStyle(
   element: JSX.Element,

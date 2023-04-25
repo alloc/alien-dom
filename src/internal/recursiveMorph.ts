@@ -60,7 +60,7 @@ export function recursiveMorph(
 }
 
 export function onNodeDiscarded(node: Node) {
-  // Prevent components from re-rendering and disable their hooks
+  // Prevent components from re-rendering and disable their effects
   // when no parent element exists.
   if (kAlienElementTags.in(node)) {
     const tags = kAlienElementTags(node)!

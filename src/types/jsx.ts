@@ -4,7 +4,7 @@ import type { ReactEventHandler, ChangeEventHandler } from './dom'
 import type { Attributes, AttrWithRef } from './attr'
 import type { SVGProps } from './svg'
 import type { DragEventHandler } from './dom'
-import { AlienHooks } from '../hooks'
+import { AlienEffectContext } from '../effects'
 import type {
   DetailedHTMLProps,
   HTMLAttributes,
@@ -50,7 +50,9 @@ export declare namespace JSX {
   type ElementsProp = Thunkable<ElementOption | ElementOption[]>
 
   type ElementType<T> = T extends keyof IntrinsicElements
-    ? IntrinsicElements[T]['ref'] extends AlienHooks<infer Element> | undefined
+    ? IntrinsicElements[T]['ref'] extends
+        | AlienEffectContext<infer Element>
+        | undefined
       ? Element
       : never
     : never

@@ -20,7 +20,7 @@ import {
 } from '../symbols'
 import { DefaultElement } from '../internal/types'
 import { elementEvent } from '../elementEvents'
-import { currentHooks, currentComponent, currentMode } from '../global'
+import { currentEffects, currentComponent, currentMode } from '../global'
 import { updateTagProps, AlienComponent } from '../internal/component'
 import { ElementKey } from '../types/attr'
 import { JSX } from '../types/jsx'
@@ -296,7 +296,7 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
 
     appendChildToNode(child, parent)
 
-    // Enable component hooks when the parent element is set.
+    // Enable component effects when the parent element is set.
     if (kAlienElementTags.in(child)) {
       const tags = kAlienElementTags(child)!
       queueMicrotask(() => {
@@ -312,7 +312,7 @@ function appendChild(child: JSX.Children, parent: Node, key?: string) {
         }
 
         const components = Array.from(tags.values())
-        if (components[0].hooks) {
+        if (components[0].effects) {
           for (const component of components) {
             component.enable()
           }
@@ -524,7 +524,7 @@ function applyProp(prop: string, value: any, node: DefaultElement) {
         }
       }
 
-      if (currentHooks.get()) {
+      if (currentEffects.get()) {
         elementEvent(node, key, value, useCapture)
       } else {
         node.addEventListener(key, value, useCapture)

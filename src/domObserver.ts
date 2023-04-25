@@ -1,5 +1,5 @@
 import { $, $$ } from './selectors'
-import { createHookType, getCurrentHook } from './hooks'
+import { defineEffectType, getCurrentEffect } from './effects'
 import { binaryInsert } from './jsx-dom/util'
 import { kElementNodeType } from './internal/constants'
 
@@ -114,7 +114,7 @@ export function observeRemovedChildren(
   })
 }
 
-export const observeNewDescendants = /* @__PURE__ */ createHookType(
+export const observeNewDescendants = /* @__PURE__ */ defineEffectType(
   (target: Node, listener: (node: Element) => void) => {
     const observer = observe(target)
     observer.onAdded.add(listener)
@@ -122,7 +122,7 @@ export const observeNewDescendants = /* @__PURE__ */ createHookType(
   }
 )
 
-export const observeRemovedDescendants = /* @__PURE__ */ createHookType(
+export const observeRemovedDescendants = /* @__PURE__ */ defineEffectType(
   (target: Node, listener: (node: Element) => void) => {
     const observer = observe(target)
     observer.onRemoved.add(listener)
@@ -135,14 +135,14 @@ export const observeRemovedDescendants = /* @__PURE__ */ createHookType(
  * observing the document.
  */
 export const onMount = (target: ChildNode, effect: () => void) =>
-  observeElementHook(target, 'onAdded', effect)
+  createElementObserver(target, 'onAdded', effect)
 
 /**
  * Runs the effect when the given target is unmounted, then stops
  * observing the document.
  */
 export const onUnmount = (target: ChildNode, effect: () => void) =>
-  observeElementHook(target, 'onRemoved', effect)
+  createElementObserver(target, 'onRemoved', effect)
 
 type DepthFirstEffect = [
   effect: () => void,
@@ -153,9 +153,9 @@ type DepthFirstEffect = [
 
 let depthFirstBatch: DepthFirstEffect[] | null = null
 
-const observeElementHook = createHookType(
+const createElementObserver = defineEffectType(
   (target: ChildNode, key: 'onAdded' | 'onRemoved', effect: () => void) => {
-    const self = getCurrentHook()
+    const self = getCurrentEffect()
     if ((key == 'onAdded') == target.isConnected) {
       self?.context?.remove(self)
       return effect()
