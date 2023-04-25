@@ -179,6 +179,7 @@ export class AlienHooks<Element extends AnyElement = any> {
   disable() {
     if (this.enabled) {
       this.enabled = false
+      this.abortCtrl?.abort()
       this.enablers?.forEach(enabler => {
         disableHook(enabler)
         if (enabler.once) {
