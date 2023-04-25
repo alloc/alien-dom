@@ -1,15 +1,15 @@
+import type { DefaultElement } from '../internal/types'
+import { shallowEquals } from '../internal/shallowEquals'
+import { getAnimatedKeys } from '../internal/animate'
+import { toArray } from '../jsx-dom/util'
+import { currentEffects } from '../global'
+import { useState } from './useState'
 import {
   SpringAnimation,
   AnimatedProps,
   AnimatedProp,
   animate,
-  getAnimatedKeys,
 } from '../animate'
-import { DefaultElement } from '../internal/types'
-import { useState } from './useState'
-import { shallowEquals } from '../internal/shallowEquals'
-import { toArray } from '../jsx-dom/util'
-import { currentEffects } from '../global'
 
 export function useSpring<Element extends DefaultElement>(
   element: Element,
