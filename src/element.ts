@@ -7,7 +7,6 @@ import {
   AnyEvent,
   DefaultElement,
   StyleAttributes,
-  TransformAttributes,
 } from './internal/types'
 import { AlienNodeList } from './nodeList'
 import { kAlienElementKey } from './symbols'
@@ -245,7 +244,7 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
 
 const methodCache: Record<string, Function | null> = {}
 
-const styleDeconflict = reverseLookup({
+const styleDeconflict = /* @__PURE__ */ reverseLookup({
   border: 'cssBorder', // HTMLImageElement.border
   content: 'cssContent', // HTMLMetaElement.content
   filter: 'cssFilter', // AlienElement.filter()

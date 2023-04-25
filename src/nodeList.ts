@@ -5,7 +5,8 @@ import { AnyElement, DefaultElement } from './internal/types'
 export interface AlienNodeList<Element extends Node>
   extends ReturnType<typeof defineAlienNodeList<Element>> {}
 
-export const AlienNodeListPrototype = defineAlienNodeList<Element>()
+export const AlienNodeListPrototype =
+  /* @__PURE__ */ defineAlienNodeList<Element>()
 
 const AlienElementListPrototype = {
   ...AlienNodeListPrototype,

@@ -20,7 +20,7 @@ const emit = (target: any, event: any) => {
   }
 }
 
-const targetedEvent = createHookType(
+const targetedEvent = /* @__PURE__ */ createHookType(
   (target: Element, event: string, callback: (event: any) => void) => {
     const events = targets.get(target) || new Map<string, Set<Function>>()
     targets.set(target, events)
@@ -41,7 +41,7 @@ const targetedEvent = createHookType(
   }
 )
 
-const globalEvent = createHookType(
+const globalEvent = /* @__PURE__ */ createHookType(
   (event: string, callback: (event: any) => void) => {
     const callbacks = globalEvents.get(event) || new Set()
     globalEvents.set(event, callbacks)

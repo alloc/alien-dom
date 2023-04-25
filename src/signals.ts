@@ -14,9 +14,9 @@ export {
 
 export type { ReadonlySignal as ReadonlyRef } from '@preact/signals-core'
 
-export const effect = createHookType(createEffect)
+export const effect = /* @__PURE__ */ createHookType(createEffect)
 
-export const targetedEffect = createHookType(
+export const targetedEffect = /* @__PURE__ */ createHookType(
   <T extends object | void>(target: T, action: (target: T) => void) =>
     createEffect(() => action(target))
 )
@@ -59,7 +59,7 @@ export const attachRef = (
   })
 }
 
-const valueDescriptor = Object.getOwnPropertyDescriptor(
+const valueDescriptor = /* @__PURE__ */ Object.getOwnPropertyDescriptor(
   Ref.prototype,
   'value'
 ) as any

@@ -114,7 +114,7 @@ export function observeRemovedChildren(
   })
 }
 
-export const observeNewDescendants = createHookType(
+export const observeNewDescendants = /* @__PURE__ */ createHookType(
   (target: Node, listener: (node: Element) => void) => {
     const observer = observe(target)
     observer.onAdded.add(listener)
@@ -122,7 +122,7 @@ export const observeNewDescendants = createHookType(
   }
 )
 
-export const observeRemovedDescendants = createHookType(
+export const observeRemovedDescendants = /* @__PURE__ */ createHookType(
   (target: Node, listener: (node: Element) => void) => {
     const observer = observe(target)
     observer.onRemoved.add(listener)
