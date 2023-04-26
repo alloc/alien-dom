@@ -1,11 +1,11 @@
 import type { JSX } from '../types'
 import type { DefaultElement } from '../internal/types'
 import {
-  kAlienPlaceholder,
   kAlienElementKey,
-  kAlienFragment,
   kAlienElementTags,
-  kAlienManualUpdates,
+  kAlienFragment,
+  kAlienParentFragment,
+  kAlienPlaceholder,
 } from '../symbols'
 import {
   kCommentNodeType,
@@ -24,71 +24,70 @@ export function appendChild(child: JSX.Children, parent: Node, key?: string) {
     return
   }
   if (isElement(child)) {
+    const component = currentComponent.get()
+
     // The child nodes of a fragment are cached on the fragment itself
     // in case the fragment is cached and reused in a future render.
     if (child.nodeType === kFragmentNodeType) {
+      let childNodes: ChildNode[] | undefined
+
       if (currentMode.is('deref')) {
-        // Revert placeholders if not in a component. This should only
-        // happen when using the <ManualUpdates> component.
         child = revertAllPlaceholders(child)
-      } else {
-        const component = currentComponent.get()
-        if (component) {
-          const fragment: DocumentFragment = child as any
-          let childNodes = kAlienFragment(fragment)
-          if (childNodes) {
-            // For child nodes still in the DOM, generate a placeholder to
-            // indicate a no-op. Otherwise, reuse the child node.
-            childNodes.forEach(child => {
-              if (child.isConnected) {
-                child = getPlaceholder(child as any)
-              }
-              fragment.appendChild(child)
-            })
-          } else {
-            // This is the first time the fragment is being appended, so
-            // cache its child nodes.
-            childNodes = Array.from(fragment.childNodes)
-            kAlienFragment(fragment, childNodes)
+      } else if (component && (childNodes = kAlienFragment(child))) {
+        // For child nodes still in the DOM, generate a placeholder to
+        // indicate a no-op. Otherwise, reuse the child node.
+        const fragment = child
+        childNodes.forEach(child => {
+          if (child.isConnected) {
+            child = getPlaceholder(child as any)
           }
-        }
+          fragment.appendChild(child)
+        })
       }
+
+      if (!childNodes) {
+        // This is the first time the fragment is being appended, so
+        // cache its child nodes.
+        childNodes = Array.from(child.childNodes)
+        kAlienFragment(child, childNodes)
+      }
+
+      const parentFragment =
+        parent.nodeType === kFragmentNodeType
+          ? (parent as DocumentFragment)
+          : undefined
+
+      kAlienParentFragment(child, parentFragment)
     }
     // Text nodes cannot have an element key.
     else if (child.nodeType !== kTextNodeType) {
-      if (kAlienElementKey.in(child)) {
-        if (currentMode.is('deref')) {
-          // Revert placeholders if not in a component. This should only
-          // happen when using the <ManualUpdates> component.
-          child = revertAllPlaceholders(child)
-        } else {
-          const component = currentComponent.get()
-          if (component) {
-            const key = kAlienElementKey(child)!
+      if (currentMode.is('deref')) {
+        child = revertAllPlaceholders(child)
+      } else if (component && kAlienElementKey.in(child)) {
+        key = kAlienElementKey(child)!
 
-            // Find the element's new version. The element may have been
-            // passed by reference, so its new version could exist in a
-            // parent component, hence the for loop.
-            let newChild: Element | undefined
-            for (let c: AlienComponent | null = component; c; c = c.parent) {
-              if (!c.newElements || (newChild = c.newElements.get(key))) break
-            }
-
-            // Use the new version of the element if it exists.
-            if (newChild && child !== newChild) {
-              child = newChild
-            }
-            // If an element reference was cached, there won't exist a new
-            // version in the `newElements` map. In this case, let's
-            // ensure it's not forgotten by the reference tracker and
-            // replace it with a placeholder to skip morphing.
-            else if (child.isConnected) {
-              component.setRef(key, child as JSX.Element)
-              child = getPlaceholder(child)
-            }
-          }
+        // Find the element's new version. The element may have been
+        // passed by reference, so its new version could exist in a
+        // parent component, hence the for loop.
+        let newChild: Element | undefined
+        for (let c: AlienComponent | null = component; c; c = c.parent) {
+          if (!c.newElements || (newChild = c.newElements.get(key))) break
         }
-      } else {
+
+        // Use the new version of the element if it exists.
+        if (newChild && child !== newChild) {
+          child = newChild
+        }
+        // If an element reference was cached, there won't exist a new
+        // version in the `newElements` map. In this case, let's
+        // ensure it's not forgotten by the reference tracker and
+        // replace it with a placeholder to skip morphing.
+        else if (child.isConnected) {
+          component.setRef(key, child as JSX.Element)
+          child = getPlaceholder(child)
+        }
+      }
+      if (!kAlienElementKey.in(child)) {
         kAlienElementKey(child, key || '*0')
       }
     }
@@ -124,16 +123,7 @@ export function appendChild(child: JSX.Children, parent: Node, key?: string) {
       })
     }
   } else if (isFunction(child)) {
-    if (kAlienManualUpdates.in(parent)) {
-      currentMode.push('deref')
-      try {
-        appendChild(fromElementThunk(child), parent, key)
-      } finally {
-        currentMode.pop('deref')
-      }
-    } else {
-      appendChild(fromElementThunk(child), parent, key)
-    }
+    appendChild(fromElementThunk(child), parent, key)
   } else if (isArrayLike(child)) {
     let children = child
     if (!hasForEach(children)) {

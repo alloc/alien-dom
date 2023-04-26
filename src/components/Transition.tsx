@@ -11,6 +11,8 @@ import { ManualUpdates } from './ManualUpdates'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import { toElements } from '../functions/toElements'
 import { unwrap } from '../internal/element'
+import { kAlienFragment } from '../symbols'
+import { toChildNodes } from '../internal/fragment'
 
 /** The style applied to the container that wraps leaving elements. */
 const leaveStyle: StyleAttributes = {
@@ -22,7 +24,7 @@ const leaveStyle: StyleAttributes = {
   pointerEvents: 'none',
 }
 
-export const Transition = /* @__PURE__ */ selfUpdating(function <T>(props: {
+export function Transition<T>(props: {
   id: T
   enter: (
     id: T,
@@ -42,7 +44,7 @@ export const Transition = /* @__PURE__ */ selfUpdating(function <T>(props: {
   const previousId = props.id !== state.currentId ? state.currentId : undefined
   const leavingElements = Array.from(
     state.elements,
-    ([id, element]) => id !== props.id && id !== previousId && element
+    ([id, element]) => id !== props.id && element
   ).filter(Boolean)
 
   let newLeavingElements: AnyElement[] | undefined
@@ -54,27 +56,27 @@ export const Transition = /* @__PURE__ */ selfUpdating(function <T>(props: {
   // placeholder if nothing changed).
   let children = Fragment(props)
 
-  const previousChildren = state.children.get(props.id)
-  if (previousChildren) {
-    updateNode(previousChildren, children)
-    children = previousChildren
+  const reusedChildren = state.children.get(props.id)
+  if (reusedChildren) {
+    updateNode(reusedChildren, children)
+    children = reusedChildren
   }
 
   if (previousId !== undefined || state.children.size === 0) {
     state.currentId = props.id
 
     if (children.childNodes.length) {
-      if (previousChildren) {
-        const previousElements = state.elements.get(props.id)!
-        if (Array.isArray(previousElements)) {
+      if (reusedChildren) {
+        const reusedElements = state.elements.get(props.id)!
+        if (Array.isArray(reusedElements)) {
           // If an array is found, then no elements were rendered before,
           // so this an empty array was stored (and never wrapped).
-          newEnteredElements = previousElements
+          newEnteredElements = reusedElements
         } else {
           // Leaving elements are wrapped in an absolute-positioned
           // container, which we want to remove now that the elements are
           // re-entering.
-          newEnteredElements = unwrap(previousElements).filter(child =>
+          newEnteredElements = unwrap(reusedElements).filter(child =>
             isElement(child)
           ) as JSX.Element[]
         }
@@ -92,13 +94,20 @@ export const Transition = /* @__PURE__ */ selfUpdating(function <T>(props: {
     if (previousId !== undefined) {
       // We can assume the previous elements are an array, because we
       // don't wrap entered elements in a container.
-      newLeavingElements = state.elements.get(previousId) as AnyElement[]
+      const previousChildren = state.children.get(previousId)!
+      newLeavingElements = toElements(previousChildren)
 
       if (newLeavingElements.length) {
-        const container = <div key={Math.random()} style={leaveStyle} />
-        container.append(...newLeavingElements)
-        state.elements.set(previousId, container)
-        leavingElements.push(container)
+        // Use a random key to prevent morphdom from merging two "leave
+        // containers" together.
+        const leaveKey = Math.random()
+        const leaveContainer = <div key={leaveKey} style={leaveStyle} />
+        leaveContainer.append(...toChildNodes(previousChildren as any))
+
+        const previousElements = state.elements.get(previousId)!
+        const previousIndex = leavingElements.indexOf(previousElements)
+        state.elements.set(previousId, leaveContainer)
+        leavingElements[previousIndex] = leaveContainer
       }
     }
   }
@@ -118,12 +127,12 @@ export const Transition = /* @__PURE__ */ selfUpdating(function <T>(props: {
 
     if (newLeavingElements) {
       if (newLeavingElements.length) {
-        const container = state.elements.get(previousId) as JSX.Element
+        const leaveContainer = state.elements.get(previousId) as JSX.Element
 
         let leavingCount = newLeavingElements.length
         const onTransitionEnd = () => {
           if (--leavingCount === 0) {
-            container.remove()
+            leaveContainer.remove()
             state.children.delete(previousId)
           }
         }
@@ -174,7 +183,10 @@ export const Transition = /* @__PURE__ */ selfUpdating(function <T>(props: {
       }}
     />
   )
-})
+}
+
+// @ts-ignore: Prevent rename to Transition2 by esbuild.
+Transition = /* @__PURE__ */ selfUpdating(Transition)
 
 const initialState = (): {
   currentId: any

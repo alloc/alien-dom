@@ -7,33 +7,28 @@ import {
 } from '../symbols'
 import { moveEffects } from './moveEffects'
 import { recursiveMorph } from './recursiveMorph'
+import { kAlienParentFragment } from '../symbols'
+import { toChildNodes } from './fragment'
 
 export function updateFragment(
   fragment: DocumentFragment,
   newFragment: DocumentFragment,
   newRefs?: Map<any, AnyElement> | null
 ) {
-  const oldNodes = kAlienFragment(fragment)!.filter(
-    // In the event that any of the fragment's child nodes are moved to
-    // a new parent than the comment node (e.g. the first child), we
-    // should avoid updating the moved nodes.
-    (oldNode, index, oldNodes) =>
-      oldNode.isConnected &&
-      (index === 0 || oldNode.parentNode === oldNodes[0].parentNode)
-  )
-  const oldKeys = oldNodes.map(kAlienElementKey.get)
-  const newNodes: ChildNode[] = Array.from<any>(newFragment.childNodes)
+  const isManuallyUpdated = kAlienManualUpdates.in(newFragment)
+  const newNodes = Array.from(newFragment.childNodes)
   const newKeys = newNodes.map(kAlienElementKey.get)
-
-  const elementMap = new Map<AnyElement, AnyElement>()
-  const isManualUpdate = kAlienManualUpdates.in(newFragment)
+  const oldNodes = toChildNodes(fragment)
+  const oldKeys = oldNodes.map(kAlienElementKey.get)
 
   let prevChild: ChildNode | undefined
+  let elementMap: Map<AnyElement, AnyElement> | undefined
+
   newKeys.forEach((newKey, newIndex) => {
     let oldNode: ChildNode | undefined
     // When the root fragment is a <ManualUpdates> element, skip reuse
     // of old nodes and prefer the latest nodes instead.
-    if (!isManualUpdate && newKey !== undefined) {
+    if (!isManuallyUpdated && newKey !== undefined) {
       const oldIndex = oldKeys.indexOf(newKey)
       if (oldIndex !== -1) {
         oldNode = oldNodes[oldIndex]
@@ -41,7 +36,7 @@ export function updateFragment(
           oldNode as Element,
           newNodes[newIndex] as Element,
           newRefs,
-          elementMap,
+          (elementMap ||= new Map()),
           true /* isFragment */
         )
       }
@@ -75,13 +70,54 @@ export function updateFragment(
   }
 
   kAlienFragment(fragment, newNodes)
+  updateParentFragment(fragment, oldNodes, newNodes)
 
-  for (const [newElement, oldElement] of elementMap) {
-    const oldEffects = kAlienEffects(oldElement)
-    const newEffects = kAlienEffects(newElement)
-    if (newEffects) {
-      moveEffects(newEffects, oldElement, elementMap)
+  if (elementMap) {
+    for (const [newElement, oldElement] of elementMap) {
+      const oldEffects = kAlienEffects(oldElement)
+      const newEffects = kAlienEffects(newElement)
+      if (newEffects) {
+        moveEffects(newEffects, oldElement, elementMap)
+      }
+      oldEffects?.disable()
     }
-    oldEffects?.disable()
+  }
+
+  return fragment
+}
+
+function updateParentFragment(
+  fragment: DocumentFragment,
+  oldNodes: ChildNode[],
+  newNodes: ChildNode[]
+) {
+  const parentFragment = kAlienParentFragment(fragment)
+  if (parentFragment) {
+    spliceFragment(parentFragment, oldNodes, newNodes)
+  }
+}
+
+function spliceFragment(
+  fragment: DocumentFragment,
+  oldSlice: ChildNode[],
+  newSlice: ChildNode[]
+) {
+  const oldNodes = fragment.childNodes.length
+    ? Array.from(fragment.childNodes)
+    : kAlienFragment(fragment)!
+
+  const offset = oldNodes.indexOf(oldSlice[0])
+  if (offset < 0) {
+    return
+  }
+
+  const newNodes = [...oldNodes]
+  newNodes.splice(offset, oldSlice.length, ...newSlice)
+
+  if (fragment.childNodes.length) {
+    fragment.replaceChildren(...newNodes)
+  } else {
+    kAlienFragment(fragment, newNodes)
+    updateParentFragment(fragment, oldNodes, newNodes)
   }
 }

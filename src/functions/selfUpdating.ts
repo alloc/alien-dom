@@ -2,7 +2,12 @@ import { effect } from '@preact/signals-core'
 import type { JSX } from '../types/jsx'
 import type { DefaultElement } from '../internal/types'
 import { ref, attachRef } from '../signals'
-import { kAlienEffects, kAlienElementKey, kAlienSelfUpdating } from '../symbols'
+import {
+  kAlienEffects,
+  kAlienElementKey,
+  kAlienSelfUpdating,
+  kAlienRenderFunc,
+} from '../symbols'
 import { currentComponent, currentEffects, currentMode } from '../global'
 import { updateElement } from '../internal/updateElement'
 import { updateFragment } from '../internal/updateFragment'
@@ -181,7 +186,11 @@ export function selfUpdating<
           ) {
             // Document fragments need a placeholder comment node for
             // the component effects to be attached to.
-            newRootNode.prepend(document.createComment(''))
+            newRootNode.prepend(
+              document.createComment(
+                DEV ? (kAlienRenderFunc(render) || render).name : ''
+              )
+            )
           }
           if (rootNode?.nodeType === kElementNodeType) {
             // Root nodes must have same key for morphing to work.
@@ -211,7 +220,10 @@ export function selfUpdating<
         // If nothing is returned (e.g. null, undefined, empty fragment),
         // use a comment node to hold the position of the element.
         if (!newRootNode && rootNode?.nodeType !== kCommentNodeType) {
-          const placeholder = document.createComment('')
+          const placeholder = document.createComment(
+            DEV ? (kAlienRenderFunc(render) || render).name : ''
+          )
+
           if (rootNode?.nodeType === kElementNodeType) {
             const oldEffects = kAlienEffects(rootNode)
             oldEffects?.disable()
@@ -222,6 +234,7 @@ export function selfUpdating<
             oldNodes.forEach(node => node.remove())
             kAlienFragment(rootNode, [placeholder])
           }
+
           self.setRootNode((rootNode = placeholder))
         }
       }

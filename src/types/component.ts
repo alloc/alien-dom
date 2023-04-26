@@ -1,6 +1,6 @@
 import { JSX } from './jsx'
 
-export type PropsWithChildren<P> = P & { children?: JSX.Children | undefined }
+export type PropsWithChildren<P> = P & { children: JSX.Children | undefined }
 
 export type ComponentType<P = {}, T extends Element = JSX.Element> =
   | ComponentClass<P, T>
