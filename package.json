@@ -6,7 +6,7 @@
   "types": "index.d.ts",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aleclarson/alien-dom.git"
+    "url": "git+https://github.com/alloc/alien-dom.git"
   },
   "files": [
     "dist",
@@ -26,10 +26,6 @@
   ],
   "author": "Alec Larson",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/aleclarson/alien-dom/issues"
-  },
-  "homepage": "https://github.com/aleclarson/alien-dom#readme",
   "prettier": "@alloc/prettier-config",
   "scripts": {
     "build": "rimraf dist && cd src && tsup-node --treeshake smallest --define.DEV false",
