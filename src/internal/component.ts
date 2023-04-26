@@ -12,7 +12,7 @@ import {
   kAlienElementTags,
   kAlienEffects,
   kAlienNewEffects,
-} from '../symbols'
+} from './symbols'
 
 export type ElementTags = Map<FunctionComponent, AlienComponent<any>>
 

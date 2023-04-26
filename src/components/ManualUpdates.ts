@@ -1,6 +1,6 @@
 import type { JSX } from '../types/jsx'
 import { markPureComponent } from '../functions/markPureComponent'
-import { kAlienManualUpdates } from '../symbols'
+import { kAlienManualUpdates } from '../internal/symbols'
 import { appendChild } from '../jsx-dom/appendChild'
 import { currentMode } from '../global'
 

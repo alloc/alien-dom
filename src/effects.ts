@@ -1,7 +1,7 @@
 import type { AnyElement } from './internal/types'
 import type { AlienElement } from './element'
 import { onMount, onUnmount } from './domObserver'
-import { kAlienEffects, kAlienFragment } from './symbols'
+import { kAlienEffects, kAlienFragment } from './internal/symbols'
 import { kFragmentNodeType } from './internal/constants'
 import { currentEffects } from './global'
 import { isFunction } from './jsx-dom/util'

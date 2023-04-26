@@ -4,10 +4,10 @@ import {
   kAlienEffects,
   kAlienElementKey,
   kAlienManualUpdates,
-} from '../symbols'
+} from './symbols'
 import { moveEffects } from './moveEffects'
 import { recursiveMorph } from './recursiveMorph'
-import { kAlienParentFragment } from '../symbols'
+import { kAlienParentFragment } from './symbols'
 import { toChildNodes } from './fragment'
 
 export function updateFragment(

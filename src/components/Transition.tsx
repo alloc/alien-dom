@@ -11,7 +11,7 @@ import { ManualUpdates } from './ManualUpdates'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import { toElements } from '../functions/toElements'
 import { unwrap } from '../internal/element'
-import { kAlienFragment } from '../symbols'
+import { kAlienFragment } from '../internal/symbols'
 import { toChildNodes } from '../internal/fragment'
 
 /** The style applied to the container that wraps leaving elements. */

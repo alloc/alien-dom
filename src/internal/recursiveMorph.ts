@@ -3,7 +3,7 @@ import {
   kAlienElementTags,
   kAlienElementKey,
   kAlienPlaceholder,
-} from '../symbols'
+} from './symbols'
 import { morph } from '../morphdom'
 import { copyAnimatedStyle } from './animate'
 

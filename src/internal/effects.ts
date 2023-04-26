@@ -1,5 +1,5 @@
 import { AlienEffects, AlienEffect } from '../effects'
-import { kAlienNewEffects, kAlienEffects } from '../symbols'
+import { kAlienNewEffects, kAlienEffects } from './symbols'
 import { AnyElement } from './types'
 import { currentEffects } from '../global'
 import { attachDisposer, Disposable } from '../disposable'
@@ -21,8 +21,8 @@ export function enableEffect<Effect extends AlienEffect<any, any>>(
   context: AlienEffects,
   effect: Effect,
   flags: EffectFlags | 0,
-  target?: any,
-  args?: any[] | false
+  target: any,
+  args: any[] | false
 ): Disposable<Effect> {
   effect.target = target
   if (args !== false) {

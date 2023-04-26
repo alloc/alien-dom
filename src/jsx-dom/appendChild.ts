@@ -6,7 +6,7 @@ import {
   kAlienFragment,
   kAlienParentFragment,
   kAlienPlaceholder,
-} from '../symbols'
+} from '../internal/symbols'
 import {
   kCommentNodeType,
   kFragmentNodeType,

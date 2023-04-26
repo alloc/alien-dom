@@ -1,4 +1,4 @@
-import { kAlienFragment } from '../symbols'
+import { kAlienFragment } from './symbols'
 
 export function toChildNodes(parent: Element) {
   const oldNodes = kAlienFragment(parent)

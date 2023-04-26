@@ -7,11 +7,11 @@ import {
   kAlienElementKey,
   kAlienSelfUpdating,
   kAlienRenderFunc,
-} from '../symbols'
+} from '../internal/symbols'
 import { currentComponent, currentEffects, currentMode } from '../global'
 import { updateElement } from '../internal/updateElement'
 import { updateFragment } from '../internal/updateFragment'
-import { kAlienFragment } from '../symbols'
+import { kAlienFragment } from '../internal/symbols'
 import { AlienComponent } from '../internal/component'
 import { currentContext, ContextStore } from '../context'
 import {

@@ -6,7 +6,7 @@ import {
   kAlienPureComponent,
   kAlienElementKey,
   kAlienSelfUpdating,
-} from '../symbols'
+} from '../internal/symbols'
 import { Fragment } from '../components/Fragment'
 import { selfUpdating } from '../functions/selfUpdating'
 import { currentEffects, currentComponent } from '../global'

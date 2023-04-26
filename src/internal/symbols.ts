@@ -1,7 +1,7 @@
-import type { AlienComponent, ElementTags } from './internal/component'
-import type { AlienEffects } from './effects'
-import type { ElementKey } from './types/attr'
-import type { FunctionComponent } from './types/component'
+import type { ElementTags } from './component'
+import type { AlienEffects } from '../effects'
+import type { ElementKey } from '../types/attr'
+import type { FunctionComponent } from '../types/component'
 
 export const setSymbol = (obj: any, key: symbol, value: any) =>
   Object.defineProperty(obj, key, { value, configurable: true })

@@ -4,7 +4,7 @@ import { selfUpdating } from './functions/selfUpdating'
 import { ref, attachRef } from './signals'
 import { jsx } from './jsx-dom/jsx-runtime'
 import { currentComponent } from './global'
-import { createSymbol, kAlienRenderFunc } from './symbols'
+import { createSymbol, kAlienRenderFunc } from './internal/symbols'
 import { kFragmentNodeType } from './internal/constants'
 
 const kAlienComponentKey = createSymbol<string>('componentKey')

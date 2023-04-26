@@ -1,5 +1,5 @@
 import type { AnyElement } from './types'
-import { kAlienEffects } from '../symbols'
+import { kAlienEffects } from './symbols'
 import { AlienComponent } from './component'
 import { moveEffects } from './moveEffects'
 import { recursiveMorph } from './recursiveMorph'
