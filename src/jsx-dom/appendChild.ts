@@ -15,7 +15,7 @@ import {
 import { hasForEach } from '../internal/duck'
 import { AlienComponent } from '../internal/component'
 import { fromElementThunk } from '../internal/fromElementThunk'
-import { currentMode, currentComponent } from '../global'
+import { currentMode, currentComponent } from '../internal/global'
 import { isArrayLike, hasTagName, isElement, isFunction } from './util'
 import { isShadowRoot } from './shadow'
 

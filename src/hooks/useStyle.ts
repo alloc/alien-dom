@@ -1,7 +1,7 @@
 import type { Falsy } from '@alloc/types'
 import type { StyleAttributes } from '../internal/types'
 import type { JSX } from '../types/jsx'
-import { currentComponent } from '../global'
+import { currentComponent } from '../internal/global'
 import { kAlienElementKey } from '../internal/symbols'
 import { updateStyle, UpdateStyle } from '../jsx-dom/util'
 import { effect } from '@preact/signals-core'

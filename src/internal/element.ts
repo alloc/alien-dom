@@ -1,7 +1,7 @@
 import { AlienElement, AlienEvent } from '../element'
 import { AnyElement, AnyEvent } from './types'
 import { CSSProperties } from '../types/dom'
-import { elementEvent } from '../elementEvents'
+import { elementEvent } from './elementEvent'
 import { AlienBoundEffect } from '../effects'
 import { Disposable } from '../disposable'
 

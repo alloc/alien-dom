@@ -1,12 +1,13 @@
 export * from './animate'
 export * from './context'
+export * from './disposable'
 export * from './domObserver'
 export * from './element'
 export * from './events'
 export * from './effects'
 export * from './hooks'
-export * from './signals'
 export * from './selectors'
+export * from './signals'
 
 /// Functions
 export * from './functions/isElement'

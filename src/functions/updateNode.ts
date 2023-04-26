@@ -1,5 +1,5 @@
 import type { AnyElement } from '../internal/types'
-import { currentComponent } from '../global'
+import { currentComponent } from '../internal/global'
 import { kFragmentNodeType, kElementNodeType } from '../internal/constants'
 import { updateFragment } from '../internal/updateFragment'
 import { updateElement } from '../internal/updateElement'

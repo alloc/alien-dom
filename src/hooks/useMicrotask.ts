@@ -1,6 +1,6 @@
 import { batch } from '@preact/signals-core'
 import { useState } from './useState'
-import { currentComponent } from '../global'
+import { currentComponent } from '../internal/global'
 
 export function useMicrotask(effect: () => void, shouldRun = true) {
   const component = currentComponent.get()!

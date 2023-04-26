@@ -1,4 +1,4 @@
-import { currentComponent } from '../global'
+import { currentComponent } from '../internal/global'
 
 export function useState<State extends object, Params extends any[]>(
   init: (...params: Params) => State,

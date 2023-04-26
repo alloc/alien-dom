@@ -23,7 +23,7 @@ import {
   cssTransformUnits,
 } from './internal/transform'
 import { deleteTimeline, applyAnimatedValue } from './internal/animate'
-import { animatedElements } from './global'
+import { animatedElements } from './internal/global'
 
 export type SpringAnimation<
   Element extends AnyElement = any,

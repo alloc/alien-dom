@@ -9,8 +9,8 @@ import {
 } from '../internal/symbols'
 import { Fragment } from '../components/Fragment'
 import { selfUpdating } from '../functions/selfUpdating'
-import { currentEffects, currentComponent } from '../global'
-import { elementEvent } from '../elementEvents'
+import { currentEffects, currentComponent } from '../internal/global'
+import { elementEvent } from '../internal/elementEvent'
 import { appendChild } from './appendChild'
 import { svgTags } from './svg-tags'
 import {

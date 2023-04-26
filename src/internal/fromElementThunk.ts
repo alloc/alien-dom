@@ -2,7 +2,7 @@ import { computed } from '@preact/signals-core'
 import type { JSX } from '../types/jsx'
 import type { ElementKey } from '../types/attr'
 import { kAlienThunkResult, kAlienElementKey, kAlienEffects } from './symbols'
-import { currentComponent } from '../global'
+import { currentComponent } from './global'
 import { isElement } from '../jsx-dom/util'
 
 export function fromElementThunk(thunk: () => JSX.Children) {

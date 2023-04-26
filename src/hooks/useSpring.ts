@@ -2,7 +2,7 @@ import type { DefaultElement } from '../internal/types'
 import { shallowEquals } from '../internal/shallowEquals'
 import { getAnimatedKeys } from '../internal/animate'
 import { toArray } from '../jsx-dom/util'
-import { currentEffects } from '../global'
+import { currentEffects } from '../internal/global'
 import { useState } from './useState'
 import {
   SpringAnimation,

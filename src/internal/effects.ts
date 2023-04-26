@@ -1,7 +1,7 @@
 import { AlienEffects, AlienEffect } from '../effects'
 import { kAlienNewEffects, kAlienEffects } from './symbols'
 import { AnyElement } from './types'
-import { currentEffects } from '../global'
+import { currentEffects } from './global'
 import { attachDisposer, Disposable } from '../disposable'
 import { isFunction, noop } from '../jsx-dom/util'
 

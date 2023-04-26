@@ -1,7 +1,7 @@
 import type { JSX } from './types/jsx'
 import { Fragment } from './jsx-dom/jsx-runtime'
 import { ref, Ref } from './signals'
-import { currentComponent } from './global'
+import { currentComponent } from './internal/global'
 
 export type AlienContext<T = any> = {
   (props: { value: T; children: JSX.Children }): JSX.Element

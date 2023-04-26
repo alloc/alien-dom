@@ -1,5 +1,5 @@
 import { Ref, ref } from '../signals'
-import { currentComponent } from '../global'
+import { currentComponent } from '../internal/global'
 
 export function useRef<T>(
   init: T | (() => T)

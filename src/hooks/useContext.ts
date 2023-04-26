@@ -1,4 +1,4 @@
-import { currentComponent } from '../global'
+import { currentComponent } from '../internal/global'
 import {
   currentContext,
   createContext,

@@ -8,7 +8,11 @@ import {
   kAlienSelfUpdating,
   kAlienRenderFunc,
 } from '../internal/symbols'
-import { currentComponent, currentEffects, currentMode } from '../global'
+import {
+  currentComponent,
+  currentEffects,
+  currentMode,
+} from '../internal/global'
 import { updateElement } from '../internal/updateElement'
 import { updateFragment } from '../internal/updateFragment'
 import { kAlienFragment } from '../internal/symbols'

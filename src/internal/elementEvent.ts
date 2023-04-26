@@ -1,6 +1,6 @@
 import { batch } from '@preact/signals-core'
-import { AnyElement } from './internal/types'
-import { defineEffectType, getCurrentEffect } from './effects'
+import { AnyElement } from './types'
+import { defineEffectType, getCurrentEffect } from '../effects'
 
 export const elementEvent = defineEffectType(
   <Element extends AnyElement, EventName extends string>(

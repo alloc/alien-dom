@@ -5,7 +5,7 @@ import { AlienEffects } from '../effects'
 import { getAlienEffects } from './effects'
 import { Ref } from '../signals'
 import { AlienContext, currentContext } from '../context'
-import { currentComponent } from '../global'
+import { currentComponent } from './global'
 import {
   kAlienRenderFunc,
   kAlienElementKey,
