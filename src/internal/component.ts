@@ -1,4 +1,4 @@
-import { batch } from '@preact/signals-core'
+import { batch, effect } from '@preact/signals-core'
 import { JSX, ElementKey, FunctionComponent } from '../types'
 import { AnyElement, DefaultElement } from './types'
 import { AlienEffects } from '../effects'
@@ -42,10 +42,44 @@ export class AlienComponent<Props = any> {
     readonly props: Props,
     readonly context: Map<AlienContext, Ref>,
     readonly reinitProps: (props: Partial<Props>) => void,
-    readonly updateProps: (props: Partial<Props>) => void,
-    readonly enable: () => void,
-    readonly disable: () => void
+    readonly updateProps: (props: Partial<Props>) => void
   ) {}
+
+  /**
+   * When non-null, this component will re-render on prop changes and
+   * other observables accessed during render.
+   */
+  private unwatch: (() => void) | null = null
+  private render: (() => void) | null = null
+
+  /**
+   * Note: This doesn't add the root node to a document.
+   */
+  enable(render?: () => void) {
+    if (this.unwatch) {
+      if (!render) return
+      this.unwatch()
+    }
+    this.render = render!
+    this.unwatch = effect(this.render)
+  }
+
+  /**
+   * Note: This doesn't remove the root node from its document.
+   */
+  disable() {
+    if (this.unwatch) {
+      this.truncate(0)
+      this.effects?.disable()
+      this.effects = null
+      this.unwatch()
+      this.unwatch = null
+    }
+  }
+
+  update() {
+    this.enable(this.render!)
+  }
 
   startRender() {
     this.newRefs = new Map()

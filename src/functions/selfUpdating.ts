@@ -1,4 +1,3 @@
-import { effect } from '@preact/signals-core'
 import type { JSX } from '../types/jsx'
 import type { DefaultElement } from '../internal/types'
 import { ref, attachRef } from '../signals'
@@ -83,9 +82,8 @@ export function selfUpdating<
           didSetProp(key, newProps[key])
         }
       }
-      if (preventUpdates && (oldPropChanged || newPropAdded)) {
-        preventUpdates()
-        preventUpdates = effect(updateComponent)
+      if (oldPropChanged || newPropAdded) {
+        self.update()
       }
     }
 
@@ -103,37 +101,9 @@ export function selfUpdating<
         }
         isPropReinit = false
       }
-      if (preventUpdates) {
-        if (oldPropChanged || newPropAdded) {
-          preventUpdates()
-          preventUpdates = effect(updateComponent)
-        }
-      } else {
-        // The component is disabled but the parent component is being
-        // re-enabled, so we should re-render too.
-        preventUpdates = effect(updateComponent)
+      if (oldPropChanged || newPropAdded) {
+        self.update()
       }
-    }
-
-    /**
-     * When non-null, this component will re-render on prop changes and
-     * other observables accessed during render.
-     */
-    let preventUpdates: (() => void) | null
-
-    const enable = () => {
-      if (preventUpdates) {
-        self.effects?.enable()
-      } else {
-        preventUpdates = effect(updateComponent)
-      }
-    }
-    const disable = () => {
-      self.truncate(0)
-      self.effects?.disable()
-      self.effects = null
-      preventUpdates?.()
-      preventUpdates = null
     }
 
     const self = new AlienComponent(
@@ -142,9 +112,7 @@ export function selfUpdating<
       props,
       context,
       reinitProps,
-      updateProps,
-      enable,
-      disable
+      updateProps
     )
 
     const updateComponent = () => {
@@ -267,7 +235,7 @@ export function selfUpdating<
       newPropAdded = false
     }
 
-    preventUpdates = effect(updateComponent)
+    self.enable(updateComponent)
     return self.rootNode
   }
 
