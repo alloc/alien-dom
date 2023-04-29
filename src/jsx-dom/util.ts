@@ -1,5 +1,4 @@
 import type { DefaultElement } from '../internal/types'
-import type { ComponentClass } from '../types/component'
 import type { JSX } from '../types/jsx'
 import { isUnitlessNumber } from './css-props'
 import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
@@ -41,13 +40,6 @@ export function isObject(val: any) {
 
 export function isFunction(val: any): val is Function {
   return typeof val === 'function'
-}
-
-export function isComponentClass(
-  Component: Function
-): Component is ComponentClass {
-  const { prototype } = Component
-  return !!(prototype && prototype.isReactComponent)
 }
 
 export function isArrayLike(obj: any): obj is object & ArrayLike<any> {

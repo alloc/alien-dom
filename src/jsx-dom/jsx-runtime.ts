@@ -17,7 +17,6 @@ import {
   decamelize,
   hasTagName,
   isBoolean,
-  isComponentClass,
   isFunction,
   isObject,
   isString,
@@ -67,20 +66,6 @@ const nonPresentationSVGAttributes =
 export function createFactory(tag: string) {
   return createElement.bind(null, tag)
 }
-
-export class Component {
-  constructor(readonly props: any) {}
-
-  render() {
-    return null
-  }
-}
-
-/* @__PURE__ */ Object.defineProperties(Component.prototype, {
-  isReactComponent: {
-    value: true,
-  },
-})
 
 const selfUpdatingTags = new WeakMap<any, any>()
 
@@ -148,14 +133,7 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
       }
     }
   } else if (isFunction(tag)) {
-    if (tag.defaultProps) {
-      props = { ...tag.defaultProps, ...props }
-    }
-    if (isComponentClass(tag)) {
-      node = new tag(props).render()
-    } else {
-      node = tag(props)
-    }
+    node = tag(props)
   } else {
     throw new TypeError(`Invalid JSX element type: ${tag}`)
   }
