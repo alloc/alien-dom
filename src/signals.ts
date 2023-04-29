@@ -4,6 +4,7 @@ import {
   Signal as Ref,
 } from '@preact/signals-core'
 import { defineEffectType } from './effects'
+import { isFunction } from './jsx-dom/util'
 
 export {
   batch,
@@ -68,7 +69,12 @@ Object.defineProperties(Ref.prototype, {
   0: { get: valueDescriptor.get },
   1: {
     get() {
-      return valueDescriptor.set.bind(this)
+      return (arg: any) => {
+        if (isFunction(arg)) {
+          arg = arg(this.peek())
+        }
+        this.value = arg
+      }
     },
   },
   [Symbol.iterator]: {
