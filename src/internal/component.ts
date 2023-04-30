@@ -20,8 +20,8 @@ export type ElementTags = Map<FunctionComponent, AlienComponent<any>>
 /** Internal state for a component instance. */
 export class AlienComponent<Props = any> {
   rootNode: ChildNode | null = null
-  memory: any[] = []
-  memoryIndex = 0
+  hooks: any[] = []
+  nextHookIndex = 0
   /** Elements created by this component in the current render pass. */
   newElements: Map<ElementKey, JSX.Element> | null = null
   /** Stable references to the elements that are mounted. */
@@ -86,7 +86,7 @@ export class AlienComponent<Props = any> {
     this.newRefs = new Map()
     this.newElements = new Map()
     this.newEffects = new AlienEffects()
-    this.memoryIndex = 0
+    this.nextHookIndex = 0
     return this as {
       rootNode: ChildNode | null
       newElements: Map<ElementKey, JSX.Element>
@@ -97,7 +97,7 @@ export class AlienComponent<Props = any> {
 
   endRender(threw?: boolean) {
     if (!threw) {
-      this.truncate(this.memoryIndex)
+      this.truncate(this.nextHookIndex)
       this.refs = this.newRefs
       this.effects = this.newEffects
       this.memos = this.newMemos
@@ -109,10 +109,10 @@ export class AlienComponent<Props = any> {
   }
 
   truncate(length: number) {
-    for (let i = length; i < this.memory.length; i++) {
-      this.memory[i]?.dispose?.()
+    for (let i = length; i < this.hooks.length; i++) {
+      this.hooks[i]?.dispose?.()
     }
-    this.memory.length = length
+    this.hooks.length = length
   }
 
   setRootNode(rootNode: ChildNode) {

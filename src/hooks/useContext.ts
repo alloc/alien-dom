@@ -13,8 +13,8 @@ import {
 export function useContext(): AlienForwardedContext {
   const component = currentComponent.get()
   if (component) {
-    const index = component.memoryIndex++
-    return (component.memory[index] ||= createContext(component.context))
+    const index = component.nextHookIndex++
+    return (component.hooks[index] ||= createContext(component.context))
   }
   return createContext(new ContextStore(currentContext))
 }

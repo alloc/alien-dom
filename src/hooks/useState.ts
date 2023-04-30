@@ -12,8 +12,8 @@ export function useState<State extends object, Params extends any[]>(
 
 export function useState(init: StateInitializer, ...params: any[]) {
   const component = currentComponent.get()!
-  const index = component.memoryIndex++
-  return (component.memory[index] ||= isClass(init)
+  const index = component.nextHookIndex++
+  return (component.hooks[index] ||= isClass(init)
     ? new init(...params)
     : init(...params))
 }
