@@ -6,6 +6,7 @@ import { getAlienEffects } from './effects'
 import { Ref } from '../signals'
 import { AlienContext, currentContext } from '../context'
 import { currentComponent } from './global'
+import { depsHaveChanged } from './deps'
 import {
   kAlienRenderFunc,
   kAlienElementKey,
@@ -31,10 +32,10 @@ export class AlienComponent<Props = any> {
   effects: AlienEffects | null = null
   /** Effects added in the current render pass. */
   newEffects: AlienEffects | null = null
-  /** Tags created by this component. */
-  tags: Map<string, FunctionComponent> | null = null
-  /** Tags created in the current render pass. */
-  newTags: Map<string, FunctionComponent> | null = null
+  /** Values memoized in the last finished render pass. */
+  memos: Record<string, any> | null = null
+  /** Values memoized in the current render pass. */
+  newMemos: Record<string, any> | null = null
 
   constructor(
     readonly parent: AlienComponent | null,
@@ -99,12 +100,12 @@ export class AlienComponent<Props = any> {
       this.truncate(this.memoryIndex)
       this.refs = this.newRefs
       this.effects = this.newEffects
-      this.tags = this.newTags
+      this.memos = this.newMemos
     }
     this.newElements = null
     this.newRefs = null
     this.newEffects = null
-    this.newTags = null
+    this.newMemos = null
   }
 
   truncate(length: number) {
@@ -146,35 +147,6 @@ export class AlienComponent<Props = any> {
 }
 
 /**
- * @internal
- * This swaps out nested components with a stable reference so that
- * elements created with it can be reused even if the parent component
- * is re-rendered. The nested component is wrapped so it can be updated
- * when the parent component re-renders, thereby avoiding stale closure
- * issues.
- */
-export function registerNestedTag(key: string, tag: FunctionComponent) {
-  const component = currentComponent.get()
-  if (component) {
-    const oldTag = component.tags?.get(key)
-    if (oldTag) {
-      kAlienRenderFunc(oldTag, tag)
-      tag = oldTag
-    } else {
-      const Component = (props: any) => {
-        const render = kAlienRenderFunc(Component)!
-        return render(props)
-      }
-      kAlienRenderFunc(Component, tag)
-      tag = Component
-    }
-    component.newTags ||= new Map()
-    component.newTags.set(key, tag)
-  }
-  return tag
-}
-
-/**
  * Update the props of a component instance if possible.
  *
  * Returns `true` if a component instance is found for the given tag.
@@ -196,4 +168,60 @@ export function updateTagProps(element: AnyElement, tag: any, props: any) {
       return true
     }
   }
+}
+
+/**
+ * @internal
+ * The compiler inserts `registerCallback` calls for inline callback props.
+ */
+export function registerCallback(
+  key: string,
+  callback: Function,
+  deps?: readonly any[]
+) {
+  const component = currentComponent.get()!
+  if (component) {
+    let memo = component.memos?.[key]
+    if (deps) {
+      if (memo && !depsHaveChanged(deps, memo[1])) {
+        callback = memo[0]
+      } else {
+        memo = [callback, deps]
+      }
+    } else if (memo) {
+      callback = memo
+    }
+    component.newMemos ||= {}
+    component.newMemos[key] = memo || callback
+  }
+  return callback
+}
+
+/**
+ * @internal
+ * This swaps out nested components with a stable reference so that
+ * elements created with it can be reused even if the parent component
+ * is re-rendered. The nested component is wrapped so it can be updated
+ * when the parent component re-renders, thereby avoiding stale closure
+ * issues.
+ */
+export function registerNestedTag(key: string, tag: FunctionComponent) {
+  const component = currentComponent.get()
+  if (component) {
+    const oldTag = component.memos?.[key]
+    if (oldTag) {
+      kAlienRenderFunc(oldTag, tag)
+      tag = oldTag
+    } else {
+      const Component = (props: any) => {
+        const render = kAlienRenderFunc(Component)!
+        return render(props)
+      }
+      kAlienRenderFunc(Component, tag)
+      tag = Component
+    }
+    component.newMemos ||= {}
+    component.newMemos[key] = tag
+  }
+  return tag
 }

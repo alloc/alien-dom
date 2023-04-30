@@ -21,8 +21,5 @@ export * from './functions/updateNode'
 export * from './components/ManualUpdates'
 export * from './components/Transition'
 
-/// Internal
-export { registerNestedTag } from './internal/component'
-
 /// Third Party
 export { Color, mixColor, parseColor } from 'linear-color'

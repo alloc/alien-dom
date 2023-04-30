@@ -1,5 +1,5 @@
 import type { Node, Plugin } from 'nebu'
-import { isHostElement } from './helpers'
+import { isHostElement, findExternalReferences } from './helpers'
 import {
   FunctionNode,
   getComponentName,
@@ -96,8 +96,26 @@ export default function (
           }
         }
 
+        const wrapInlineCallbacks = (path: Node.JSXOpeningElement) => {
+          for (const attr of path.attributes) {
+            if (attr.isJSXSpreadAttribute()) {
+              continue
+            }
+            attr.value?.process({
+              ArrowFunctionExpression(path) {
+                const deps = findExternalReferences(path)
+                path.before(`__callback("${globalId}#${moduleNextId++}", `)
+                path.after(deps.length > 0 ? `, [${deps}])` : `)`)
+              },
+            })
+          }
+        }
+
         path.process({
-          JSXOpeningElement: addStaticElementKeys,
+          JSXOpeningElement(path) {
+            addStaticElementKeys(path)
+            wrapInlineCallbacks(path)
+          },
         })
 
         const nearestBlock = path.findParent(p => p.isBlockStatement())
@@ -118,7 +136,7 @@ export default function (
       if (hasNestedComponent) {
         program.unshift(
           'body',
-          `import { registerNestedTag as __nestedTag } from 'alien-dom'\n`
+          `import { registerCallback as __callback, registerNestedTag as __nestedTag } from 'alien-dom'\n`
         )
       }
     },
