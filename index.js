@@ -1,7 +1,5 @@
 export {
   className,
-  Component,
-  Component as PureComponent,
   createElement,
   createFactory,
   Fragment,

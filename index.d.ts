@@ -1,36 +1,34 @@
-import type { JSX } from './dist/types'
 import type { ShadowRootContainer } from './dist/jsx-dom/shadow'
 import type {
-  HTMLElementTagNames,
+  Attributes,
+  AttrWithRef,
+  DOMAttributes,
+  FunctionComponent,
   HTMLAttributes,
+  HTMLElementTagNames,
   HTMLFactory,
-} from './dist/types'
-import type {
+  JSX,
+  PropsWithChildren,
   SVGAttributes,
   SVGElementTagName,
   SVGElementTagNames,
   SVGFactory,
 } from './dist/types'
-import type { AttrWithRef, Attributes } from './dist/types'
-import type { DOMAttributes } from './dist/types'
-import type { PropsWithChildren, ComponentType } from './dist/types'
 
 export * from './dist/index'
 export { SVGNamespace } from './dist/jsx-dom/jsx-runtime'
 
-export type { JSX } from './dist/types'
-export type { HTML, SVG } from './dist/types'
-export type { SVGAttributes } from './dist/types'
-export type { CSSProperties, DOMClassAttribute } from './dist/types'
-export type { HTMLAttributes, HTMLStyleAttribute } from './dist/types'
-
 export type {
-  Component,
-  ComponentClass,
-  ComponentType,
+  CSSProperties,
+  DOMClassAttribute,
   FunctionComponent,
+  HTML,
+  HTMLAttributes,
+  HTMLStyleAttribute,
+  JSX,
   PropsWithChildren,
-  PureComponent,
+  SVG,
+  SVGAttributes,
 } from './dist/types'
 
 // DOM Elements
@@ -65,7 +63,7 @@ export declare function createElement<T extends Element>(
 
 // Custom components
 export declare function createElement<P extends {}, T extends Element>(
-  type: ComponentType<P, T>,
+  type: FunctionComponent<P, T>,
   props?: (Attributes & P) | null,
   ...children: JSX.Children[]
 ): T
@@ -101,7 +99,7 @@ export declare function jsx<T extends Element>(
 
 // Custom components
 export declare function jsx<P extends {}, T extends Element>(
-  type: ComponentType<P, T>,
+  type: FunctionComponent<P, T>,
   props?: PropsWithChildren<Attributes & P> | null,
   key?: string
 ): T
