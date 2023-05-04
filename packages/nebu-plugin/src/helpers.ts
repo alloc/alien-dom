@@ -77,15 +77,13 @@ export function findExternalReferences(
       scope.references.add(path.name)
     },
     Identifier(path) {
-      // Ignore property access.
-      if (
-        path.parent.isMemberExpression() &&
-        path.parent.property === path &&
-        !path.parent.computed
-      ) {
+      // Don't track property names as variable references.
+      if (path.parent.isMemberExpression() && path.parent.property === path) {
         const scope = findScope(path, scopes)
         scope.propertyAccess.add(path)
-        return
+        if (!path.parent.computed) {
+          return
+        }
       }
 
       // Ignore static object keys.
