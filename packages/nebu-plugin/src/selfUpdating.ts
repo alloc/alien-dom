@@ -38,8 +38,18 @@ export default function (
       const createDeps = (node: Node, memo = true) => {
         if (memo) {
           const { deps, hasPropertyAccess } = findExternalReferences(node)
+
+          // Skip memoizing if property access is used in a JSX child
+          // thunk during render.
+          if (
+            hasPropertyAccess &&
+            (node.isJSXElement() || node.parent.parent.isJSXElement())
+          ) {
+            return ``
+          }
+
           return deps.length > 0
-            ? isFunctionNode(node) || !hasPropertyAccess
+            ? isFunctionNode(node) || node.isJSXElement() || !hasPropertyAccess
               ? `, [${deps}])`
               : // Memoized objects/arrays with property access must
                 // use deep equality, so that computed properties aren't
@@ -111,8 +121,11 @@ export default function (
         const wrapInlineObject =
           (shouldWrap: (node: ObjectNode) => boolean) => (node: ObjectNode) => {
             if (shouldWrap(node)) {
-              node.before(createMemo())
-              node.after(createDeps(node))
+              const deps = createDeps(node)
+              if (deps) {
+                node.before(createMemo())
+                node.after(deps)
+              }
             }
           }
 
@@ -156,20 +169,33 @@ export default function (
         }
 
         path.process({
-          JSXOpeningElement(path) {
+          JSXOpeningElement(openingElem) {
+            if (
+              openingElem.name.isJSXIdentifier() &&
+              /^[a-z]/.test(openingElem.name.name)
+            ) {
+              return // Inline object props (e.g. the "style" prop) are not memoized for host elements.
+            }
             // Elements within loops and non-component functions cannot
             // be assigned static keys or have auto-memoized inline
             // callback props.
-            const nearestFnOrLoop = path.parent.findParent(isFunctionOrLoop)
+            const nearestFnOrLoop =
+              openingElem.parent.findParent(isFunctionOrLoop)
             if (nearestFnOrLoop !== componentFn) {
               return
             }
-            addStaticElementKeys(path)
-            wrapInlineObjects(path)
+            addStaticElementKeys(openingElem)
+            wrapInlineObjects(openingElem)
           },
           // Auto-memoize any variables declared during render with
           // function/object/array expressions as values.
           VariableDeclarator(varDeclarator) {
+            if (
+              varDeclarator.id.isIdentifier() &&
+              /^[A-Z]/.test(varDeclarator.id.name)
+            ) {
+              return // Inline components are wrapped with registerNestedTag instead.
+            }
             const nearestFnOrLoop =
               varDeclarator.parent.findParent(isFunctionOrLoop)
             if (nearestFnOrLoop !== componentFn) {
@@ -181,7 +207,8 @@ export default function (
                   node === varDeclarator ||
                   isObjectNode(node) ||
                   // Skip inline callbacks.
-                  node.isCallExpression()
+                  node.isCallExpression() ||
+                  node.isJSXElement()
               )
               return nearestObject === varDeclarator
             })
@@ -235,20 +262,25 @@ export default function (
 
         if (thunk.children.size) {
           path.children.forEach((child, i, children) => {
-            if (thunk.children.has(child)) {
-              if (child.isJSXExpressionContainer()) {
-                child.expression.before(createThunk(needsMemo))
-                child.expression.after(createDeps(child.expression, needsMemo))
-                return
+            if (!thunk.children.has(child)) {
+              return
+            }
+            if (child.isJSXExpressionContainer()) {
+              const deps = createDeps(child.expression, needsMemo)
+              child.expression.before(createThunk(!!deps && needsMemo))
+              if (deps) {
+                child.expression.after(deps)
               }
+            } else {
+              const deps = createDeps(child, needsMemo)
               // HACK: we can't do this the easier way, due to a nebu bug
               const prevChild = children[i - 1]
               if (prevChild && thunk.children.has(prevChild)) {
-                prevChild.after(`{` + createThunk(needsMemo))
+                prevChild.after(`{` + createThunk(!!deps && needsMemo))
               } else {
-                child.before(`{` + createThunk(needsMemo))
+                child.before(`{` + createThunk(!!deps && needsMemo))
               }
-              child.after(createDeps(child, needsMemo) + `}`)
+              child.after(deps + `}`)
             }
           })
         }

@@ -56,16 +56,14 @@ export function findExternalReferences(
   rootNode: Node,
   scopes = new Map<Node, Scope>([[rootNode, createScope(rootNode)]])
 ) {
+  const rootScope = scopes.get(rootNode)!
   if (isFunctionNode(rootNode)) {
-    const rootScope = scopes.get(rootNode)!
     rootNode.params.forEach(param => {
       toIdentifierSet(param).forEach(ident => {
         rootScope.context[ident.name] = ident
       })
     })
   }
-
-  let hasPropertyAccess = false
 
   rootNode.process({
     JSXIdentifier(path) {
@@ -85,7 +83,8 @@ export function findExternalReferences(
         path.parent.property === path &&
         !path.parent.computed
       ) {
-        hasPropertyAccess = true
+        const scope = findScope(path, scopes)
+        scope.propertyAccess.add(path)
         return
       }
 
@@ -135,7 +134,7 @@ export function findExternalReferences(
 
   return {
     deps: [...externalReferences],
-    hasPropertyAccess,
+    hasPropertyAccess: rootScope.propertyAccess.size > 0,
   }
 }
 
@@ -170,6 +169,7 @@ export type Scope = {
   path: Node
   context: Record<string, Node.Identifier>
   references: Set<string>
+  propertyAccess: Set<Node.Identifier>
 }
 
 export function createScope(
@@ -180,6 +180,7 @@ export function createScope(
     path,
     context,
     references: new Set(),
+    propertyAccess: new Set(),
   }
 }
 

@@ -6,7 +6,7 @@ const result = nebu.process(
   `import {selfUpdating} from 'alien-dom'
 function Foo() {
   return <Transition enter={() => ({ opacity: 1 })}>
-    {() => <Slide />}
+    <Slide index={foo.index} onSlide={() => console.log("onSlide")} />
   </Transition>
 }
 `,
