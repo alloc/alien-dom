@@ -1,1 +1,1 @@
-export { registerCallback, registerNestedTag } from './internal/component'
+export { registerObject, registerNestedTag } from './internal/component'

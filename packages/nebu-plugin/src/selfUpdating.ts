@@ -1,6 +1,8 @@
 import type { Node, Plugin } from 'nebu'
-import { isHostElement, findExternalReferences } from './helpers'
+import { JSXThunkParent, collectThunkParents } from './thunk'
 import {
+  isHostElement,
+  findExternalReferences,
   FunctionNode,
   getComponentName,
   hasElementProp,
@@ -22,8 +24,31 @@ export default function (
       const globalId = state.globalNextId++
       let moduleNextId = 0
 
+      const jsxThunkParents = new Map<Node.JSXElement, JSXThunkParent>()
       const componentFns = new Set<Node>()
-      let hasNestedComponent = false
+      const helpers = new Map<string, string>()
+
+      const createMemo = () => {
+        helpers.set('registerObject', '__objectMemo')
+        return `__objectMemo("${globalId}#${moduleNextId++}", `
+      }
+
+      const createThunk = (memo = true) => (memo ? createMemo() : ``) + `() => `
+
+      const createDeps = (node: Node, memo = true) => {
+        if (memo) {
+          const { deps, hasPropertyAccess } = findExternalReferences(node)
+          return deps.length > 0
+            ? isFunctionNode(node) || !hasPropertyAccess
+              ? `, [${deps}])`
+              : // Memoized objects/arrays with property access must
+                // use deep equality, so that computed properties aren't
+                // accessed twice.
+                `, true)`
+            : `)`
+        }
+        return ``
+      }
 
       const handleElementRefs = (path: FunctionNode) => {
         const isSelfUpdating =
@@ -44,19 +69,6 @@ export default function (
         const addStaticElementKeys = (path: Node.JSXOpeningElement) => {
           if (!path.name.isJSXIdentifier()) {
             return // Dynamic element types are not supported.
-          }
-
-          // Elements within loops and non-component functions must have
-          // dynamic keys in order to be reused.
-          const nearestFnOrLoop = path.parent.findParent(
-            parent =>
-              isFunctionNode(parent) ||
-              parent.isForStatement() ||
-              parent.isWhileStatement() ||
-              parent.isDoWhileStatement()
-          )
-          if (nearestFnOrLoop !== componentFn) {
-            return
           }
 
           if (hasElementProp(path, 'key')) {
@@ -96,25 +108,67 @@ export default function (
           }
         }
 
-        const wrapInlineCallbacks = (path: Node.JSXOpeningElement) => {
-          for (const attr of path.attributes) {
-            if (attr.isJSXSpreadAttribute()) {
+        const wrapInlineObjects = (openingElement: Node.JSXOpeningElement) => {
+          const element = openingElement.parent as Node.JSXElement
+          const inlineValues: Node[] = []
+
+          for (const attr of openingElement.attributes) {
+            if (!attr.isJSXSpreadAttribute() && attr.value) {
+              inlineValues.push(attr.value)
+            }
+          }
+
+          let firstChild: Node | undefined
+          for (const child of element.children) {
+            if (child.isJSXText() && !child.value.trim()) {
               continue
             }
-            attr.value?.process({
-              ArrowFunctionExpression(path) {
-                const deps = findExternalReferences(path)
-                path.before(`__callback("${globalId}#${moduleNextId++}", `)
-                path.after(deps.length > 0 ? `, [${deps}])` : `)`)
-              },
+            firstChild = child
+            break
+          }
+          if (firstChild?.isJSXExpressionContainer()) {
+            inlineValues.push(firstChild)
+          }
+
+          const wrapInlineObject = (
+            path:
+              | Node.ArrowFunctionExpression
+              | Node.ObjectExpression
+              | Node.ArrayExpression
+          ) => {
+            const nearestObject = path.findParent(
+              parent =>
+                parent === element ||
+                parent.isArrowFunctionExpression() ||
+                parent.isObjectExpression() ||
+                parent.isArrayExpression()
+            )
+            if (nearestObject === element) {
+              path.before(createMemo())
+              path.after(createDeps(path))
+            }
+          }
+
+          for (const inlineValue of inlineValues) {
+            inlineValue.process({
+              ArrowFunctionExpression: wrapInlineObject,
+              ObjectExpression: wrapInlineObject,
+              ArrayExpression: wrapInlineObject,
             })
           }
         }
 
         path.process({
           JSXOpeningElement(path) {
+            // Elements within loops and non-component functions cannot
+            // be assigned static keys or have auto-memoized inline
+            // callback props.
+            const nearestFnOrLoop = path.parent.findParent(isFunctionOrLoop)
+            if (nearestFnOrLoop !== componentFn) {
+              return
+            }
             addStaticElementKeys(path)
-            wrapInlineCallbacks(path)
+            wrapInlineObjects(path)
           },
         })
 
@@ -123,7 +177,7 @@ export default function (
           const wrappedNode = isSelfUpdating ? path.parent : path
           wrappedNode.before(`__nestedTag("${globalId}#${moduleNextId++}", `)
           wrappedNode.after(')')
-          hasNestedComponent = true
+          helpers.set('registerNestedTag', '__nestedTag')
         }
       }
 
@@ -131,14 +185,61 @@ export default function (
         ArrowFunctionExpression: handleElementRefs,
         FunctionExpression: handleElementRefs,
         FunctionDeclaration: handleElementRefs,
+        JSXElement(path) {
+          collectThunkParents(path, jsxThunkParents)
+        },
       })
 
-      if (hasNestedComponent) {
+      if (helpers.size) {
         program.unshift(
           'body',
-          `import { registerCallback as __callback, registerNestedTag as __nestedTag } from 'alien-dom'\n`
+          `import { ${Array.from(
+            helpers,
+            ([from, alias]) => `${from} as ${alias}`
+          ).join(', ')} } from 'alien-dom/dist/helpers.mjs'\n`
         )
       }
+
+      // Wrap the children of each thunk parent in a closure.
+      jsxThunkParents.forEach((thunk, path) => {
+        const nearestFnOrLoop = path.parent.findParent(isFunctionOrLoop)!
+        const needsMemo = componentFns.has(nearestFnOrLoop)
+
+        thunk.attributes.forEach(attr => {
+          const value = attr.value as Node.JSXExpressionContainer
+          value.expression.before(createThunk(needsMemo))
+          value.expression.after(createDeps(value.expression, needsMemo))
+        })
+
+        if (thunk.children.size) {
+          path.children.forEach((child, i, children) => {
+            if (thunk.children.has(child)) {
+              if (child.isJSXExpressionContainer()) {
+                child.expression.before(createThunk(needsMemo))
+                child.expression.after(createDeps(child.expression, needsMemo))
+                return
+              }
+              // HACK: we can't do this the easier way, due to a nebu bug
+              const prevChild = children[i - 1]
+              if (prevChild && thunk.children.has(prevChild)) {
+                prevChild.after(`{` + createThunk(needsMemo))
+              } else {
+                child.before(`{` + createThunk(needsMemo))
+              }
+              child.after(createDeps(child, needsMemo) + `}`)
+            }
+          })
+        }
+      })
     },
   }
+}
+
+function isFunctionOrLoop(node: Node) {
+  return (
+    isFunctionNode(node) ||
+    node.isForStatement() ||
+    node.isWhileStatement() ||
+    node.isDoWhileStatement()
+  )
 }

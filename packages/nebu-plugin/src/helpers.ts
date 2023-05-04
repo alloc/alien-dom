@@ -53,13 +53,31 @@ export function hasElementProp(path: Node.JSXOpeningElement, name: string) {
 }
 
 export function findExternalReferences(
-  rootFn: FunctionNode,
-  scopes = new Map<ScopeNode, Scope>([[rootFn, createScope(rootFn)]])
+  rootNode: Node,
+  scopes = new Map<Node, Scope>([[rootNode, createScope(rootNode)]])
 ) {
-  const rootScope = scopes.get(rootFn)!
-  rootFn.params.forEach(param => {})
+  if (isFunctionNode(rootNode)) {
+    const rootScope = scopes.get(rootNode)!
+    rootNode.params.forEach(param => {
+      toIdentifierSet(param).forEach(ident => {
+        rootScope.context[ident.name] = ident
+      })
+    })
+  }
 
-  rootFn.process({
+  let hasPropertyAccess = false
+
+  rootNode.process({
+    JSXIdentifier(path) {
+      if (path.parent.isJSXAttribute() || path.parent.isJSXClosingElement()) {
+        return
+      }
+      if (/^[a-z]/.test(path.name)) {
+        return
+      }
+      const scope = findScope(path, scopes, true)
+      scope.references.add(path.name)
+    },
     Identifier(path) {
       // Ignore property access.
       if (
@@ -67,6 +85,7 @@ export function findExternalReferences(
         path.parent.property === path &&
         !path.parent.computed
       ) {
+        hasPropertyAccess = true
         return
       }
 
@@ -114,35 +133,47 @@ export function findExternalReferences(
     }
   }
 
-  return [...externalReferences]
+  return {
+    deps: [...externalReferences],
+    hasPropertyAccess,
+  }
 }
 
-export function getDeclarationKind(path: Node.Identifier) {
+export type DeclarationKind = 'var' | 'let' | 'const' | 'param' | 'function'
+
+export function getDeclarationKind(path: Node): DeclarationKind | null {
   if (path.parent.isVariableDeclarator()) {
     return (path.parent.parent as Node.VariableDeclaration).kind
   }
-  if (isFunctionNode(path.parent) && path.parent.params.includes(path)) {
-    return 'param'
+  if (isFunctionNode(path.parent)) {
+    if (path.parent.params.includes(path as any)) {
+      return 'param'
+    }
+    if (path.parent.isFunctionDeclaration() && path.parent.id === path) {
+      return 'function'
+    }
+    return null
   }
-  if (path.parent.isAssignmentPattern() && path.parent.left === path) {
-    return 'param'
+  // Before the variable declarator or function parameter is reached,
+  // disqualify any identifier found on the right-hand side of an
+  // assignment pattern.
+  if (path.parent.isAssignmentPattern() && path.parent.left !== path) {
+    return null
   }
-  if (path.parent.isFunctionDeclaration() && path.parent.id === path) {
-    return 'function'
+  if (path.parent) {
+    return getDeclarationKind(path.parent)
   }
   return null
 }
 
-export type ScopeNode = Node.BlockStatement | FunctionNode
-
 export type Scope = {
-  path: ScopeNode
+  path: Node
   context: Record<string, Node.Identifier>
   references: Set<string>
 }
 
 export function createScope(
-  path: ScopeNode,
+  path: Node,
   context: Record<string, Node.Identifier> = {}
 ): Scope {
   return {
@@ -157,17 +188,52 @@ export function findScope(
   scopes: Map<Node, Scope>,
   includeBlocks?: boolean
 ): Scope {
+  let scope = scopes.get(path.parent)
+  if (scope) {
+    return scope
+  }
   if (
     isFunctionNode(path.parent) ||
     (includeBlocks && path.parent.isBlockStatement())
   ) {
-    let scope = scopes.get(path.parent)
-    if (!scope) {
-      const parentScope = findScope(path.parent, scopes, true)
-      scope = createScope(path.parent, Object.create(parentScope.context))
-      scopes.set(path.parent, scope)
-    }
+    const parentScope = findScope(path.parent, scopes, true)
+    scope = createScope(path.parent, Object.create(parentScope.context))
+    scopes.set(path.parent, scope)
     return scope
   }
   return findScope(path.parent, scopes, includeBlocks)
+}
+
+export function toIdentifierSet(
+  param:
+    | Node.Identifier
+    | Node.AssignmentPattern
+    | Node.ArrayPattern
+    | Node.ObjectPattern
+    | Node.RestElement
+    | Node.Property
+): Node.Identifier[] {
+  if (param.isIdentifier()) {
+    return [param]
+  }
+  if (param.isAssignmentPattern()) {
+    return toIdentifierSet(param.left)
+  }
+  if (param.isArrayPattern()) {
+    return param.elements.flatMap(
+      toIdentifierSet as (param: any) => Node.Identifier[]
+    )
+  }
+  if (param.isObjectPattern()) {
+    return param.properties.flatMap(
+      toIdentifierSet as (param: any) => Node.Identifier[]
+    )
+  }
+  if (param.isRestElement()) {
+    return [param.argument as Node.Identifier]
+  }
+  if (param.isProperty()) {
+    return toIdentifierSet(param.value as any)
+  }
+  return []
 }

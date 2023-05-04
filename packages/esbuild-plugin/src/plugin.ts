@@ -1,6 +1,6 @@
 import { Plugin } from 'esbuild'
 import { getBuildExtensions } from 'esbuild-extra'
-import { nebuSelfUpdating, nebuTopDownThunks, nebuHMR } from '@alien-dom/nebu'
+import { nebuSelfUpdating, nebuHMR } from '@alien-dom/nebu'
 import { nebu } from 'nebu'
 import { relative } from 'path'
 
@@ -27,7 +27,6 @@ export default function esbuildAlienDOM(
             onHmrAdded: options.onHmrAdded,
           }),
         nebuSelfUpdating(options.selfUpdating),
-        nebuTopDownThunks,
       ]
 
       const { onTransform } = getBuildExtensions(build, plugin.name)

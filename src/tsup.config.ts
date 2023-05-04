@@ -7,6 +7,7 @@ export default defineConfig({
     'element.ts',
     'animate.ts',
     'hmr.ts',
+    'helpers.ts',
     'internal/element.ts',
     'internal/nodeList.ts',
     'morphdom/index.ts',

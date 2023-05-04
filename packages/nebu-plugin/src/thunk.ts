@@ -1,54 +1,14 @@
-import type { Node, Plugin } from 'nebu'
+import type { Node } from 'nebu'
 import { isHostElement, isFunctionNode } from './helpers'
 
-const plugin: Plugin = {
-  Program(program) {
-    const jsxThunkParents = new Map<Node.JSXElement, JSXThunkParent>()
-    program.process({
-      JSXElement(path) {
-        collectThunkParents(path, jsxThunkParents)
-      },
-    })
-
-    // Wrap the children of each thunk parent in a closure.
-    jsxThunkParents.forEach((thunk, path) => {
-      thunk.attributes.forEach(attr => {
-        const value = attr.value as Node.JSXExpressionContainer
-        value.expression.before(`() => `)
-      })
-
-      if (thunk.children.size) {
-        path.children.forEach((child, i, children) => {
-          if (thunk.children.has(child)) {
-            if (child.isJSXExpressionContainer()) {
-              child.expression.before(`() => `)
-              return
-            }
-            // HACK: we can't do this the easier way, due to a nebu bug
-            const prevChild = children[i - 1]
-            if (prevChild && thunk.children.has(prevChild)) {
-              prevChild.after(`{() => `)
-            } else {
-              child.before(`{() => `)
-            }
-            child.after(`}`)
-          }
-        })
-      }
-    })
-  },
-}
-
-export default plugin
-
-type JSXThunkParent = {
+export type JSXThunkParent = {
   attributes: Set<Node.JSXAttribute>
   children: Set<Node>
 }
 
 // Checks if the given `jsxPath` is nested in another JSX element
 // without a closure in between them.
-function collectThunkParents(
+export function collectThunkParents(
   jsxPath: Node.JSXElement,
   jsxThunkParents: Map<Node.JSXElement, JSXThunkParent>
 ) {

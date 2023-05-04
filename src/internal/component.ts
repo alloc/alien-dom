@@ -7,6 +7,7 @@ import { Ref } from '../signals'
 import { AlienContext, currentContext } from '../context'
 import { currentComponent } from './global'
 import { depsHaveChanged } from './deps'
+import { deepEquals } from './deepEquals'
 import {
   kAlienRenderFunc,
   kAlienElementKey,
@@ -172,29 +173,35 @@ export function updateTagProps(element: AnyElement, tag: any, props: any) {
 
 /**
  * @internal
- * The compiler inserts `registerCallback` calls for inline callback props.
+ * The compiler inserts `registerObject` calls for inline callback props.
  */
-export function registerCallback(
+export function registerObject(
   key: string,
-  callback: Function,
-  deps?: readonly any[]
+  newObject: object,
+  // Pass true for deep equality check.
+  deps?: readonly any[] | true
 ) {
   const component = currentComponent.get()!
   if (component) {
     let memo = component.memos?.[key]
     if (deps) {
-      if (memo && !depsHaveChanged(deps, memo[1])) {
-        callback = memo[0]
+      if (
+        memo &&
+        (deps === true
+          ? deepEquals(newObject, memo[0])
+          : !depsHaveChanged(deps, memo[1]))
+      ) {
+        newObject = memo[0]
       } else {
-        memo = [callback, deps]
+        memo = [newObject, deps]
       }
     } else if (memo) {
-      callback = memo
+      newObject = memo
     }
     component.newMemos ||= {}
-    component.newMemos[key] = memo || callback
+    component.newMemos[key] = memo || newObject
   }
-  return callback
+  return newObject
 }
 
 /**
