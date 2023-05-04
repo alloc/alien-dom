@@ -108,6 +108,14 @@ export default function (
           }
         }
 
+        const wrapInlineObject =
+          (shouldWrap: (node: ObjectNode) => boolean) => (node: ObjectNode) => {
+            if (shouldWrap(node)) {
+              node.before(createMemo())
+              node.after(createDeps(node))
+            }
+          }
+
         const wrapInlineObjects = (openingElement: Node.JSXOpeningElement) => {
           const element = openingElement.parent as Node.JSXElement
           const inlineValues: Node[] = []
@@ -130,30 +138,19 @@ export default function (
             inlineValues.push(firstChild)
           }
 
-          const wrapInlineObject = (
-            path:
-              | Node.ArrowFunctionExpression
-              | Node.ObjectExpression
-              | Node.ArrayExpression
-          ) => {
-            const nearestObject = path.findParent(
-              parent =>
-                parent === element ||
-                parent.isArrowFunctionExpression() ||
-                parent.isObjectExpression() ||
-                parent.isArrayExpression()
+          const wrap = wrapInlineObject(node => {
+            const nearestObject = node.findParent(
+              parent => parent === element || isObjectNode(parent)
             )
-            if (nearestObject === element) {
-              path.before(createMemo())
-              path.after(createDeps(path))
-            }
-          }
+            return nearestObject === element
+          })
 
           for (const inlineValue of inlineValues) {
             inlineValue.process({
-              ArrowFunctionExpression: wrapInlineObject,
-              ObjectExpression: wrapInlineObject,
-              ArrayExpression: wrapInlineObject,
+              FunctionExpression: wrap,
+              ArrowFunctionExpression: wrap,
+              ObjectExpression: wrap,
+              ArrayExpression: wrap,
             })
           }
         }
@@ -169,6 +166,31 @@ export default function (
             }
             addStaticElementKeys(path)
             wrapInlineObjects(path)
+          },
+          // Auto-memoize any variables declared during render with
+          // function/object/array expressions as values.
+          VariableDeclarator(varDeclarator) {
+            const nearestFnOrLoop =
+              varDeclarator.parent.findParent(isFunctionOrLoop)
+            if (nearestFnOrLoop !== componentFn) {
+              return
+            }
+            const wrap = wrapInlineObject(node => {
+              const nearestObject = node.findParent(
+                node =>
+                  node === varDeclarator ||
+                  isObjectNode(node) ||
+                  // Skip inline callbacks.
+                  node.isCallExpression()
+              )
+              return nearestObject === varDeclarator
+            })
+            varDeclarator.process({
+              FunctionExpression: wrap,
+              ArrowFunctionExpression: wrap,
+              ObjectExpression: wrap,
+              ArrayExpression: wrap,
+            })
           },
         })
 
@@ -233,6 +255,20 @@ export default function (
       })
     },
   }
+}
+
+type ObjectNode =
+  | Node.FunctionExpression
+  | Node.ArrowFunctionExpression
+  | Node.ObjectExpression
+  | Node.ArrayExpression
+
+function isObjectNode(node: Node) {
+  return (
+    isFunctionNode(node) ||
+    node.isObjectExpression() ||
+    node.isArrayExpression()
+  )
 }
 
 function isFunctionOrLoop(node: Node) {
