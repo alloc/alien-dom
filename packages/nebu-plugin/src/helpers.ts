@@ -140,7 +140,10 @@ export type DeclarationKind = 'var' | 'let' | 'const' | 'param' | 'function'
 
 export function getDeclarationKind(path: Node): DeclarationKind | null {
   if (path.parent.isVariableDeclarator()) {
-    return (path.parent.parent as Node.VariableDeclaration).kind
+    if (path.parent.id === path) {
+      return (path.parent.parent as Node.VariableDeclaration).kind
+    }
+    return null
   }
   if (isFunctionNode(path.parent)) {
     if (path.parent.params.includes(path as any)) {
