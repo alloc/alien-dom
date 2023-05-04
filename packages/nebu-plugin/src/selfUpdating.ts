@@ -215,8 +215,6 @@ export default function (
             varDeclarator.process({
               FunctionExpression: wrap,
               ArrowFunctionExpression: wrap,
-              ObjectExpression: wrap,
-              ArrayExpression: wrap,
             })
           },
         })
