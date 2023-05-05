@@ -1,6 +1,6 @@
 {
   "name": "alien-dom",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Enhanced DOM APIs mixed with jsx-dom",
   "main": "index.js",
   "types": "index.d.ts",
