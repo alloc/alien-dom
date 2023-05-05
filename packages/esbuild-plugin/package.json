@@ -1,6 +1,6 @@
 {
   "name": "@alien-dom/esbuild",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "main": "dist/plugin.js",
   "types": "dist/plugin.d.ts",
