@@ -42,7 +42,7 @@ importers:
 
   packages/htmelt-plugin:
     specifiers:
-      '@alien-dom/esbuild': ^0.1.0
+      '@alien-dom/esbuild': workspace:^0.2.0
       '@htmelt/plugin': ^0.2.0
     dependencies:
       '@alien-dom/esbuild': link:../esbuild-plugin
