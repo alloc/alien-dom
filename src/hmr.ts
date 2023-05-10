@@ -4,13 +4,14 @@ import { selfUpdating } from './functions/selfUpdating'
 import { ref, attachRef } from './signals'
 import { jsx } from './jsx-dom/jsx-runtime'
 import { currentComponent } from './internal/global'
-import { createSymbol, kAlienRenderFunc } from './internal/symbols'
+import { kAlienRenderFunc } from './internal/symbols'
+import { createSymbolProperty } from './internal/symbolProperty'
 import { kFragmentNodeType } from './internal/constants'
 import { isFunction } from './jsx-dom/util'
 import { AlienComponent } from './internal/component'
 
-const kAlienComponentKey = createSymbol<string>('componentKey')
-const kAlienHotUpdate = createSymbol<boolean>('hotUpdate')
+const kAlienComponentKey = createSymbolProperty<string>('componentKey')
+const kAlienHotUpdate = createSymbolProperty<boolean>('hotUpdate')
 
 export function hmrSelfUpdating(
   render: (props: any, update: (props: any) => void) => JSX.Element
