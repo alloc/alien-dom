@@ -59,9 +59,23 @@ export function appendChild(child: JSX.Children, parent: Node, key?: string) {
           child = getPlaceholder(child)
         }
       }
+
+      // If the element doesn't have an explicit key, use a generated
+      // positional key.
       if (!kAlienElementKey.in(child)) {
         kAlienElementKey(child, key || '*0')
       }
+
+      const parentFragment =
+        parent.nodeType === kFragmentNodeType
+          ? (parent as DocumentFragment)
+          : undefined
+
+      // Cache the parent fragment on the child element, in case the
+      // element is a component's root node, which may be replaced with
+      // a fragment in the future. If that happens, the parent fragment
+      // would need to be updated.
+      kAlienParentFragment(child, parentFragment)
     }
 
     appendChildToNode(child, parent)
@@ -131,8 +145,9 @@ export function appendChild(child: JSX.Children, parent: Node, key?: string) {
  */
 export function prepareFragment(
   fragment: DocumentFragment,
-  newParent: Node,
-  component?: AlienComponent | null
+  newParent: ParentNode,
+  component?: AlienComponent | null,
+  parentFragment?: DocumentFragment
 ) {
   let childNodes: ChildNode[] | undefined
 
@@ -156,7 +171,7 @@ export function prepareFragment(
     kAlienFragment(fragment, childNodes)
   }
 
-  const parentFragment =
+  parentFragment ||=
     newParent.nodeType === kFragmentNodeType
       ? (newParent as DocumentFragment)
       : undefined

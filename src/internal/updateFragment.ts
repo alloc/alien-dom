@@ -86,7 +86,7 @@ export function updateFragment(
   return fragment
 }
 
-function updateParentFragment(
+export function updateParentFragment(
   fragment: DocumentFragment,
   oldNodes: ChildNode[],
   newNodes: ChildNode[]

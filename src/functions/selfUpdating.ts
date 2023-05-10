@@ -13,8 +13,11 @@ import {
   currentMode,
 } from '../internal/global'
 import { updateElement } from '../internal/updateElement'
-import { updateFragment } from '../internal/updateFragment'
-import { kAlienFragment } from '../internal/symbols'
+import {
+  updateFragment,
+  updateParentFragment,
+} from '../internal/updateFragment'
+import { kAlienFragment, kAlienParentFragment } from '../internal/symbols'
 import { AlienComponent } from '../internal/component'
 import { currentContext, ContextStore } from '../context'
 import { prepareFragment } from '../jsx-dom/appendChild'
@@ -194,6 +197,7 @@ export function selfUpdating<
             }
           }
 
+          // If the root node could not be updated, replace it instead.
           if (!updated) {
             if (rootNode) {
               if (isFragment(rootNode)) {
@@ -208,11 +212,20 @@ export function selfUpdating<
               }
               if (rootNode.parentElement) {
                 if (isFragment(newRootNode)) {
+                  const parentFragment = kAlienParentFragment(rootNode)
                   newRootNode = prepareFragment(
                     newRootNode,
                     rootNode.parentElement,
-                    self
+                    self,
+                    parentFragment
                   )
+                  if (parentFragment) {
+                    updateParentFragment(
+                      parentFragment,
+                      [rootNode],
+                      kAlienFragment(newRootNode)!
+                    )
+                  }
                 }
                 // If the rootNode and newRootNode have different node types,
                 // then we can do a simple replacement.
