@@ -17,6 +17,7 @@ import { updateFragment } from '../internal/updateFragment'
 import { kAlienFragment } from '../internal/symbols'
 import { AlienComponent } from '../internal/component'
 import { currentContext, ContextStore } from '../context'
+import { isFragment } from '../jsx-dom/util'
 import {
   kCommentNodeType,
   kFragmentNodeType,
@@ -123,7 +124,7 @@ export function selfUpdating<
       currentEffects.push(newEffects)
 
       let threw = true
-      let newRootNode: DefaultElement | null | undefined
+      let newRootNode: DefaultElement | DocumentFragment | null | undefined
       try {
         newRootNode = render(props, updateProps)
         threw = false
@@ -180,13 +181,13 @@ export function selfUpdating<
               updateElement(rootNode as Element, newRootNode, self)
             }
             // Fragments have their own update logic.
-            else if ((updated = rootNode.nodeType === kFragmentNodeType)) {
+            else if ((updated = isFragment(rootNode))) {
               // When the root node is an empty fragment, we have to
               // create a placeholder comment node.
               needsPlaceholder = !newRootNode.childNodes.length
 
               if (!needsPlaceholder) {
-                updateFragment(rootNode as any, newRootNode as any, newRefs)
+                updateFragment(rootNode, newRootNode as any, newRefs)
               }
             }
           }
@@ -209,15 +210,17 @@ export function selfUpdating<
             DEV ? (kAlienRenderFunc(render) || render).name : ''
           )
 
-          if (rootNode?.nodeType === kElementNodeType) {
-            const oldEffects = kAlienEffects(rootNode)
-            oldEffects?.disable()
-            rootNode.replaceWith(placeholder)
-          } else if (rootNode?.nodeType === kFragmentNodeType) {
-            const oldNodes = kAlienFragment(rootNode)!
-            oldNodes[0].before(placeholder)
-            oldNodes.forEach(node => node.remove())
-            kAlienFragment(rootNode, [placeholder])
+          if (rootNode) {
+            if (isFragment(rootNode)) {
+              const oldNodes = kAlienFragment(rootNode)!
+              oldNodes[0].before(placeholder)
+              oldNodes.forEach(node => node.remove())
+              kAlienFragment(rootNode, [placeholder])
+            } else if (rootNode.nodeType === kElementNodeType) {
+              const oldEffects = kAlienEffects(rootNode)
+              oldEffects?.disable()
+              rootNode.replaceWith(placeholder)
+            }
           }
 
           self.setRootNode((rootNode = placeholder))

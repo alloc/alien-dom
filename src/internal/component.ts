@@ -20,7 +20,7 @@ export type ElementTags = Map<FunctionComponent, AlienComponent<any>>
 
 /** Internal state for a component instance. */
 export class AlienComponent<Props = any> {
-  rootNode: ChildNode | null = null
+  rootNode: ChildNode | DocumentFragment | null = null
   hooks: any[] = []
   nextHookIndex = 0
   /** Elements created by this component in the current render pass. */
@@ -89,7 +89,7 @@ export class AlienComponent<Props = any> {
     this.newEffects = new AlienEffects()
     this.nextHookIndex = 0
     return this as {
-      rootNode: ChildNode | null
+      rootNode: ChildNode | DocumentFragment | null
       newElements: Map<ElementKey, JSX.Element>
       newEffects: AlienEffects
       newRefs: Map<ElementKey, DefaultElement>
@@ -116,7 +116,7 @@ export class AlienComponent<Props = any> {
     this.hooks.length = length
   }
 
-  setRootNode(rootNode: ChildNode) {
+  setRootNode(rootNode: ChildNode | DocumentFragment) {
     let tags = kAlienElementTags(rootNode)
     if (!tags) {
       tags = new Map()
