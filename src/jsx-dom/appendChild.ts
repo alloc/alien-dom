@@ -19,7 +19,11 @@ import { currentMode, currentComponent } from '../internal/global'
 import { isArrayLike, hasTagName, isElement, isFunction } from './util'
 import { isShadowRoot } from './shadow'
 
-export function appendChild(child: JSX.Children, parent: Node, key?: string) {
+export function appendChild(
+  child: JSX.Children,
+  parent: ParentNode,
+  key?: string
+) {
   if (child === undefined || child === null || child === false) {
     return
   }
