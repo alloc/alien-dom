@@ -6,8 +6,11 @@ import { jsx } from './jsx-dom/jsx-runtime'
 import { currentComponent } from './internal/global'
 import { createSymbol, kAlienRenderFunc } from './internal/symbols'
 import { kFragmentNodeType } from './internal/constants'
+import { isFunction } from './jsx-dom/util'
+import { AlienComponent } from './internal/component'
 
 const kAlienComponentKey = createSymbol<string>('componentKey')
+const kAlienHotUpdate = createSymbol<boolean>('hotUpdate')
 
 export function hmrSelfUpdating(
   render: (props: any, update: (props: any) => void) => JSX.Element
@@ -15,6 +18,10 @@ export function hmrSelfUpdating(
   const renderRef = ref(render)
   const Component = selfUpdating((props, update) => {
     const render = renderRef.value
+    if (kAlienHotUpdate.in(render)) {
+      const component = currentComponent.get()!
+      clearMemoized(component)
+    }
     const result = render(props, update)
     registerComponent(Component)
     return result
@@ -26,13 +33,19 @@ export function hmrSelfUpdating(
 export function hmrComponent(render: (props: any) => JSX.Element) {
   const renderRef = ref(render)
   const Component = (props: any) => {
+    const component = currentComponent.get()
+
     const render = renderRef.value
+    if (component && kAlienHotUpdate.in(render)) {
+      clearMemoized(component)
+    }
+
     const result = render(props)
 
     // Elements are only registered when this component isn't used by a
     // self-updating ancestor, since this component will be made
     // self-updating in that case.
-    if (!currentComponent.get()) {
+    if (!component) {
       registerElements(result, Component, props)
     }
 
@@ -68,6 +81,16 @@ export function hmrComponent(render: (props: any) => JSX.Element) {
   return Component
 }
 
+function clearMemoized(component: AlienComponent) {
+  component.memos = null
+  component.hooks.forEach((hook, index, hooks) => {
+    if (hook && isFunction(hook.dispose)) {
+      hook.dispose()
+      hooks[index] = undefined
+    }
+  })
+}
+
 const componentRegistry: {
   [key: string]: [component: Set<FunctionComponent>, hash: string]
 } = {}
@@ -94,11 +117,9 @@ export function hmrRegister(
       const oldComponents = [...components]
       components.clear()
       oldComponents.forEach(oldComponent => {
-        Reflect.set(
-          oldComponent,
-          kAlienRenderFunc.symbol,
-          kAlienRenderFunc(component)
-        )
+        const newRender = kAlienRenderFunc(component)
+        kAlienHotUpdate(newRender, true)
+        Reflect.set(oldComponent, kAlienRenderFunc.symbol, newRender)
       })
     })
   }
