@@ -151,6 +151,10 @@ export function selfUpdating<
       }
 
       if (!rootNode || rootNode !== newRootNode) {
+        // When this is true, a comment node will be used as a
+        // placeholder, so the component can insert a node later.
+        let needsPlaceholder: boolean | undefined
+
         if (newRootNode) {
           if (
             newRootNode.nodeType === kFragmentNodeType &&
@@ -164,34 +168,43 @@ export function selfUpdating<
               )
             )
           }
-          if (rootNode?.nodeType === kElementNodeType) {
-            // Root nodes must have same key for morphing to work.
-            const newKey = kAlienElementKey(newRootNode)
-            kAlienElementKey(rootNode, newKey)
 
-            // Diff the root nodes and retarget any new effects.
-            updateElement(rootNode as Element, newRootNode, self)
-          }
-          // Fragments have their own update logic.
-          else if (rootNode?.nodeType === kFragmentNodeType) {
-            if (newRootNode.childNodes.length) {
-              updateFragment(rootNode as any, newRootNode as any, newRefs)
-            } else {
-              // Empty fragment needs a placeholder. Setting this to null
-              // allows for that.
-              newRootNode = null
+          let updated: boolean | undefined
+          if (rootNode && rootNode.nodeType === newRootNode.nodeType) {
+            if ((updated = rootNode.nodeType === kElementNodeType)) {
+              // Root nodes must have same key for morphing to work.
+              const newKey = kAlienElementKey(newRootNode)
+              kAlienElementKey(rootNode, newKey)
+
+              // Diff the root nodes and retarget any new effects.
+              updateElement(rootNode as Element, newRootNode, self)
             }
-          } else {
-            // The `rootNode` might be a comment node that was being used
-            // to hold the position of this element in the DOM.
+            // Fragments have their own update logic.
+            else if ((updated = rootNode.nodeType === kFragmentNodeType)) {
+              // When the root node is an empty fragment, we have to
+              // create a placeholder comment node.
+              needsPlaceholder = !newRootNode.childNodes.length
+
+              if (!needsPlaceholder) {
+                updateFragment(rootNode as any, newRootNode as any, newRefs)
+              }
+            }
+          }
+
+          // If the rootNode and newRootNode have different node types,
+          // then we can do a simple replacement.
+          if (!updated) {
             rootNode?.replaceWith(newRootNode)
             self.setRootNode((rootNode = newRootNode))
           }
+        } else {
+          // Use a placeholder if the new root node is falsy.
+          needsPlaceholder = true
         }
 
         // If nothing is returned (e.g. null, undefined, empty fragment),
         // use a comment node to hold the position of the element.
-        if (!newRootNode && rootNode?.nodeType !== kCommentNodeType) {
+        if (needsPlaceholder && rootNode?.nodeType !== kCommentNodeType) {
           const placeholder = document.createComment(
             DEV ? (kAlienRenderFunc(render) || render).name : ''
           )
