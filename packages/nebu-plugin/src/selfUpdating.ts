@@ -168,7 +168,28 @@ export default function (
           }
         }
 
-        path.process({
+        componentFn.params.forEach(param => {
+          const wrap = wrapInlineObject(node => {
+            const nearestObject = node.findParent(
+              parent =>
+                parent === param ||
+                isObjectNode(parent) ||
+                // Skip inline callbacks.
+                node.isCallExpression() ||
+                node.isJSXElement()
+            )
+            return nearestObject === param
+          })
+
+          param.process({
+            FunctionExpression: wrap,
+            ArrowFunctionExpression: wrap,
+            ObjectExpression: wrap,
+            ArrayExpression: wrap,
+          })
+        })
+
+        componentFn.process({
           JSXOpeningElement(openingElem) {
             if (
               openingElem.name.isJSXIdentifier() &&
