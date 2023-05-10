@@ -113,7 +113,7 @@ export function appendChild(
           // Re-render the top-most component and the updates will
           // trickle down the component tree.
           const topMostComponent = components.at(-1)!
-          topMostComponent.enable()
+          topMostComponent.update()
         }
       })
     }
