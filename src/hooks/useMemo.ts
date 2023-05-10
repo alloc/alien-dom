@@ -2,7 +2,7 @@ import { useState } from './useState'
 import { computed, ReadonlyRef } from '../signals'
 import { depsHaveChanged } from '../internal/deps'
 
-export function useMemo<T>(get: () => T, deps: readonly any[]) {
+export function useMemo<T>(get: () => T, deps: readonly any[]): T {
   const state = useState(initialState, deps)
   if (depsHaveChanged(deps, state.deps)) {
     state.ref = computed(get)
