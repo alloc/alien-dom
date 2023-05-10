@@ -85,8 +85,10 @@ export function hmrComponent(render: (props: any) => JSX.Element) {
 function clearMemoized(component: AlienComponent) {
   component.memos = null
   component.hooks.forEach((hook, index, hooks) => {
-    if (hook && isFunction(hook.dispose)) {
-      hook.dispose()
+    if (hook && 'dispose' in hook) {
+      if (isFunction(hook.dispose)) {
+        hook.dispose()
+      }
       hooks[index] = undefined
     }
   })
