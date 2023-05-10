@@ -48,7 +48,8 @@ export function useStyle(
     }
   } else if (deps) {
     const state = useState(initialState, style, deps)
-    if (depsHaveChanged(deps, state.deps)) {
+    if (state.dispose && depsHaveChanged(deps, state.deps)) {
+      state.dispose()
       state.dispose = undefined
       state.style = style
       state.deps = deps
