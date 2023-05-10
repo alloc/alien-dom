@@ -1,6 +1,6 @@
 import { kAlienFragment } from './symbols'
 
-export function toChildNodes(parent: Element) {
+export function toChildNodes(parent: Element | DocumentFragment) {
   const oldNodes = kAlienFragment(parent)
   return oldNodes?.filter(filterMovedNodes) || Array.from(parent.childNodes)
 }

@@ -29,35 +29,7 @@ export function appendChild(child: JSX.Children, parent: Node, key?: string) {
     // The child nodes of a fragment are cached on the fragment itself
     // in case the fragment is cached and reused in a future render.
     if (child.nodeType === kFragmentNodeType) {
-      let childNodes: ChildNode[] | undefined
-
-      if (currentMode.is('deref')) {
-        child = revertAllPlaceholders(child)
-      } else if (component && (childNodes = kAlienFragment(child))) {
-        // For child nodes still in the DOM, generate a placeholder to
-        // indicate a no-op. Otherwise, reuse the child node.
-        const fragment = child
-        childNodes.forEach(child => {
-          if (child.isConnected) {
-            child = getPlaceholder(child as any)
-          }
-          fragment.appendChild(child)
-        })
-      }
-
-      if (!childNodes) {
-        // This is the first time the fragment is being appended, so
-        // cache its child nodes.
-        childNodes = Array.from(child.childNodes)
-        kAlienFragment(child, childNodes)
-      }
-
-      const parentFragment =
-        parent.nodeType === kFragmentNodeType
-          ? (parent as DocumentFragment)
-          : undefined
-
-      kAlienParentFragment(child, parentFragment)
+      child = prepareFragment(child as any, parent, component)
     }
     // Text nodes cannot have an element key.
     else if (child.nodeType !== kTextNodeType) {
@@ -154,6 +126,45 @@ export function appendChild(child: JSX.Children, parent: Node, key?: string) {
   }
 }
 
+/**
+ * Prepare a fragment node for insertion into the DOM.
+ */
+export function prepareFragment(
+  fragment: DocumentFragment,
+  newParent: Node,
+  component?: AlienComponent | null
+) {
+  let childNodes: ChildNode[] | undefined
+
+  if (currentMode.is('deref')) {
+    fragment = revertAllPlaceholders(fragment)
+  } else if (component && (childNodes = kAlienFragment(fragment))) {
+    // For child nodes still in the DOM, generate a placeholder to
+    // indicate a no-op. Otherwise, reuse the child node.
+    childNodes.forEach(child => {
+      if (child.isConnected) {
+        child = getPlaceholder(child as any)
+      }
+      fragment.appendChild(child)
+    })
+  }
+
+  if (!childNodes) {
+    // This is the first time the fragment is being appended, so
+    // cache its child nodes.
+    childNodes = Array.from(fragment.childNodes)
+    kAlienFragment(fragment, childNodes)
+  }
+
+  const parentFragment =
+    newParent.nodeType === kFragmentNodeType
+      ? (newParent as DocumentFragment)
+      : undefined
+
+  kAlienParentFragment(fragment, parentFragment)
+  return fragment
+}
+
 function getPlaceholder(child: Element): DefaultElement {
   let placeholder: any
   if (child.nodeType === kCommentNodeType) {
@@ -169,7 +180,7 @@ function getPlaceholder(child: Element): DefaultElement {
   return placeholder
 }
 
-function revertAllPlaceholders<T extends ChildNode>(child: T) {
+function revertAllPlaceholders<T extends ParentNode | ChildNode>(child: T) {
   child = kAlienPlaceholder<T>(child) || child
   child.childNodes.forEach(grandChild => {
     const oldGrandChild = grandChild

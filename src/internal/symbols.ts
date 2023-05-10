@@ -31,7 +31,9 @@ export const kAlienNewEffects = createSymbol<AlienEffects>('newEffects')
 export const kAlienParentFragment = createSymbol<DocumentFragment | undefined>(
   'parentFragment'
 )
-export const kAlienPlaceholder = createSymbol<ChildNode>('placeholder')
+export const kAlienPlaceholder = createSymbol<ParentNode | ChildNode>(
+  'placeholder'
+)
 export const kAlienPureComponent = createSymbol<boolean>('pureComponent')
 export const kAlienRenderFunc = createSymbol<FunctionComponent>('renderFunc')
 export const kAlienSelfUpdating = createSymbol<any>('selfUpdating')

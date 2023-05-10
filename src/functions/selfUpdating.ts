@@ -17,7 +17,9 @@ import { updateFragment } from '../internal/updateFragment'
 import { kAlienFragment } from '../internal/symbols'
 import { AlienComponent } from '../internal/component'
 import { currentContext, ContextStore } from '../context'
+import { prepareFragment } from '../jsx-dom/appendChild'
 import { isFragment } from '../jsx-dom/util'
+import { toChildNodes } from '../internal/fragment'
 import {
   kCommentNodeType,
   kFragmentNodeType,
@@ -192,10 +194,31 @@ export function selfUpdating<
             }
           }
 
-          // If the rootNode and newRootNode have different node types,
-          // then we can do a simple replacement.
           if (!updated) {
-            rootNode?.replaceWith(newRootNode)
+            if (rootNode) {
+              if (isFragment(rootNode)) {
+                // Replace the comment placeholder with the new root
+                // node. But first, remove any other nodes added by the
+                // old fragment.
+                const oldNodes = toChildNodes(rootNode)
+                if (oldNodes[0].parentElement) {
+                  oldNodes.slice(1).forEach(node => node.remove())
+                }
+                rootNode = rootNode.childNodes[0] as Comment
+              }
+              if (rootNode.parentElement) {
+                if (isFragment(newRootNode)) {
+                  newRootNode = prepareFragment(
+                    newRootNode,
+                    rootNode.parentElement,
+                    self
+                  )
+                }
+                // If the rootNode and newRootNode have different node types,
+                // then we can do a simple replacement.
+                rootNode.replaceWith(newRootNode)
+              }
+            }
             self.setRootNode((rootNode = newRootNode))
           }
         } else {
