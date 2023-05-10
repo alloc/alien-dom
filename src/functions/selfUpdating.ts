@@ -177,22 +177,22 @@ export function selfUpdating<
 
           let updated: boolean | undefined
           if (rootNode && rootNode.nodeType === newRootNode.nodeType) {
-            if ((updated = rootNode.nodeType === kElementNodeType)) {
-              // Root nodes must have same key for morphing to work.
-              const newKey = kAlienElementKey(newRootNode)
-              kAlienElementKey(rootNode, newKey)
-
-              // Diff the root nodes and retarget any new effects.
-              updateElement(rootNode as Element, newRootNode, self)
-            }
-            // Fragments have their own update logic.
-            else if ((updated = isFragment(rootNode))) {
+            if ((updated = isFragment(rootNode))) {
               // When the root node is an empty fragment, we have to
               // create a placeholder comment node.
               needsPlaceholder = !newRootNode.childNodes.length
 
               if (!needsPlaceholder) {
                 updateFragment(rootNode, newRootNode as any, newRefs)
+              }
+            } else if (rootNode.nodeType === kElementNodeType) {
+              if ((updated = rootNode.nodeName === newRootNode.nodeName)) {
+                // Root nodes must have same key for morphing to work.
+                const newKey = kAlienElementKey(newRootNode)
+                kAlienElementKey(rootNode, newKey)
+
+                // Diff the root nodes and retarget any new effects.
+                updateElement(rootNode as Element, newRootNode, self)
               }
             }
           }
@@ -212,23 +212,20 @@ export function selfUpdating<
               }
               if (rootNode.parentElement) {
                 if (isFragment(newRootNode)) {
-                  const parentFragment = kAlienParentFragment(rootNode)
-                  newRootNode = prepareFragment(
-                    newRootNode,
-                    rootNode.parentElement,
-                    self,
-                    parentFragment
-                  )
-                  if (parentFragment) {
-                    updateParentFragment(
-                      parentFragment,
-                      [rootNode],
-                      kAlienFragment(newRootNode)!
-                    )
-                  }
+                  newRootNode = prepareFragment(newRootNode, self)
                 }
-                // If the rootNode and newRootNode have different node types,
-                // then we can do a simple replacement.
+                const parentFragment = kAlienParentFragment(rootNode)
+                if (parentFragment) {
+                  kAlienParentFragment(newRootNode, parentFragment)
+                  updateParentFragment(
+                    parentFragment,
+                    [rootNode],
+                    kAlienFragment(newRootNode) || [newRootNode as Element]
+                  )
+                }
+                // If the rootNode and newRootNode have different
+                // nodeType or nodeName properties, then we can do a
+                // simple replacement.
                 rootNode.replaceWith(newRootNode)
               }
             }

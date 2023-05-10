@@ -16,7 +16,13 @@ import { hasForEach } from '../internal/duck'
 import { AlienComponent } from '../internal/component'
 import { fromElementThunk } from '../internal/fromElementThunk'
 import { currentMode, currentComponent } from '../internal/global'
-import { isArrayLike, hasTagName, isElement, isFunction } from './util'
+import {
+  isArrayLike,
+  hasTagName,
+  isElement,
+  isFunction,
+  isFragment,
+} from './util'
 import { isShadowRoot } from './shadow'
 
 export function appendChild(
@@ -30,44 +36,43 @@ export function appendChild(
   if (isElement(child)) {
     const component = currentComponent.get()
 
-    // The child nodes of a fragment are cached on the fragment itself
-    // in case the fragment is cached and reused in a future render.
-    if (child.nodeType === kFragmentNodeType) {
-      child = prepareFragment(child as any, parent, component)
-    }
     // Text nodes cannot have an element key.
-    else if (child.nodeType !== kTextNodeType) {
-      if (currentMode.is('deref')) {
-        child = revertAllPlaceholders(child)
-      } else if (component && kAlienElementKey.in(child)) {
-        key = kAlienElementKey(child)!
+    if (child.nodeType !== kTextNodeType) {
+      if (isFragment(child)) {
+        child = prepareFragment(child, component)
+      } else {
+        if (currentMode.is('deref')) {
+          child = revertAllPlaceholders(child)
+        } else if (component && kAlienElementKey.in(child)) {
+          key = kAlienElementKey(child)!
 
-        // Find the element's new version. The element may have been
-        // passed by reference, so its new version could exist in a
-        // parent component, hence the for loop.
-        let newChild: Element | undefined
-        for (let c: AlienComponent | null = component; c; c = c.parent) {
-          if (!c.newElements || (newChild = c.newElements.get(key))) break
+          // Find the element's new version. The element may have been
+          // passed by reference, so its new version could exist in a
+          // parent component, hence the for loop.
+          let newChild: Element | undefined
+          for (let c: AlienComponent | null = component; c; c = c.parent) {
+            if (!c.newElements || (newChild = c.newElements.get(key))) break
+          }
+
+          // Use the new version of the element if it exists.
+          if (newChild && child !== newChild) {
+            child = newChild
+          }
+          // If an element reference was cached, there won't exist a new
+          // version in the `newElements` map. In this case, let's
+          // ensure it's not forgotten by the reference tracker and
+          // replace it with a placeholder to skip morphing.
+          else if (child.isConnected) {
+            component.setRef(key, child as JSX.Element)
+            child = getPlaceholder(child)
+          }
         }
 
-        // Use the new version of the element if it exists.
-        if (newChild && child !== newChild) {
-          child = newChild
+        // If the element doesn't have an explicit key, use a generated
+        // positional key.
+        if (!kAlienElementKey.in(child)) {
+          kAlienElementKey(child, key || '*0')
         }
-        // If an element reference was cached, there won't exist a new
-        // version in the `newElements` map. In this case, let's
-        // ensure it's not forgotten by the reference tracker and
-        // replace it with a placeholder to skip morphing.
-        else if (child.isConnected) {
-          component.setRef(key, child as JSX.Element)
-          child = getPlaceholder(child)
-        }
-      }
-
-      // If the element doesn't have an explicit key, use a generated
-      // positional key.
-      if (!kAlienElementKey.in(child)) {
-        kAlienElementKey(child, key || '*0')
       }
 
       const parentFragment =
@@ -77,8 +82,8 @@ export function appendChild(
 
       // Cache the parent fragment on the child element, in case the
       // element is a component's root node, which may be replaced with
-      // a fragment in the future. If that happens, the parent fragment
-      // would need to be updated.
+      // an incompatible node in the future. If that happens, the parent
+      // fragment would need to be updated.
       kAlienParentFragment(child, parentFragment)
     }
 
@@ -149,9 +154,7 @@ export function appendChild(
  */
 export function prepareFragment(
   fragment: DocumentFragment,
-  newParent: ParentNode,
-  component?: AlienComponent | null,
-  parentFragment?: DocumentFragment
+  component?: AlienComponent | null
 ) {
   let childNodes: ChildNode[] | undefined
 
@@ -175,12 +178,6 @@ export function prepareFragment(
     kAlienFragment(fragment, childNodes)
   }
 
-  parentFragment ||=
-    newParent.nodeType === kFragmentNodeType
-      ? (newParent as DocumentFragment)
-      : undefined
-
-  kAlienParentFragment(fragment, parentFragment)
   return fragment
 }
 
