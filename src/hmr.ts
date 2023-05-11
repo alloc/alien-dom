@@ -86,6 +86,9 @@ function clearMemoized(component: AlienComponent) {
   component.memos = null
   component.hooks.forEach((hook, index, hooks) => {
     if (hook && 'dispose' in hook) {
+      if (Array.isArray(hook.deps) && !hook.deps.length) {
+        return // Skip mount effects.
+      }
       if (isFunction(hook.dispose)) {
         hook.dispose()
       }
