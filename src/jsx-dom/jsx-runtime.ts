@@ -197,11 +197,7 @@ function applyProp(prop: string, value: any, node: DefaultElement) {
       return
     case 'class':
     case 'className':
-      if (isFunction(value)) {
-        value(node)
-      } else {
-        setAttribute(node, 'class', className(value))
-      }
+      setAttribute(node, 'class', className(value))
       return
     case 'style':
       if (isString(value)) {
