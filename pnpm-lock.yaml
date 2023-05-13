@@ -27,7 +27,7 @@ importers:
 
   packages/esbuild-plugin:
     specifiers:
-      '@alien-dom/nebu': workspace:^0.2.0
+      '@alien-dom/nebu': workspace:^0.3.0
       '@types/node': ^18.15.11
       esbuild: ^0.17.17
       esbuild-extra: ^0.1.9
