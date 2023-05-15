@@ -118,9 +118,16 @@ export default function (
           }
         }
 
-        const wrapInlineObject =
-          (shouldWrap: (node: ObjectNode) => boolean) => (node: ObjectNode) => {
-            if (shouldWrap(node)) {
+        const createMemoizer =
+          (context: Node) => (node: AutoMemoizableNode) => {
+            const nearestContext = node.findParent(
+              parent =>
+                parent === context ||
+                isObjectNode(parent) ||
+                parent.isCallExpression() ||
+                parent.isJSXElement()
+            )
+            if (nearestContext === context) {
               const deps = createDeps(node)
               if (deps) {
                 node.before(createMemo())
@@ -129,7 +136,7 @@ export default function (
             }
           }
 
-        const wrapInlineObjects = (openingElement: Node.JSXOpeningElement) => {
+        const autoMemoizeProps = (openingElement: Node.JSXOpeningElement) => {
           const element = openingElement.parent as Node.JSXElement
           const inlineValues: Node[] = []
 
@@ -151,41 +158,26 @@ export default function (
             inlineValues.push(firstChild)
           }
 
-          const wrap = wrapInlineObject(node => {
-            const nearestObject = node.findParent(
-              parent => parent === element || isObjectNode(parent)
-            )
-            return nearestObject === element
-          })
-
+          const memoize = createMemoizer(element)
           for (const inlineValue of inlineValues) {
             inlineValue.process({
-              FunctionExpression: wrap,
-              ArrowFunctionExpression: wrap,
-              ObjectExpression: wrap,
-              ArrayExpression: wrap,
+              CallExpression: memoize,
+              FunctionExpression: memoize,
+              ArrowFunctionExpression: memoize,
+              ObjectExpression: memoize,
+              ArrayExpression: memoize,
             })
           }
         }
 
         componentFn.params.forEach(param => {
-          const wrap = wrapInlineObject(node => {
-            const nearestObject = node.findParent(
-              parent =>
-                parent === param ||
-                isObjectNode(parent) ||
-                // Skip inline callbacks.
-                node.isCallExpression() ||
-                node.isJSXElement()
-            )
-            return nearestObject === param
-          })
-
+          const memoize = createMemoizer(param)
           param.process({
-            FunctionExpression: wrap,
-            ArrowFunctionExpression: wrap,
-            ObjectExpression: wrap,
-            ArrayExpression: wrap,
+            CallExpression: memoize,
+            FunctionExpression: memoize,
+            ArrowFunctionExpression: memoize,
+            ObjectExpression: memoize,
+            ArrayExpression: memoize,
           })
         })
 
@@ -206,7 +198,7 @@ export default function (
               return
             }
             addStaticElementKeys(openingElem)
-            wrapInlineObjects(openingElem)
+            autoMemoizeProps(openingElem)
           },
           // Auto-memoize any variables declared during render with
           // function/object/array expressions as values.
@@ -222,20 +214,10 @@ export default function (
             if (nearestFnOrLoop !== componentFn) {
               return
             }
-            const wrap = wrapInlineObject(node => {
-              const nearestObject = node.findParent(
-                node =>
-                  node === varDeclarator ||
-                  isObjectNode(node) ||
-                  // Skip inline callbacks.
-                  node.isCallExpression() ||
-                  node.isJSXElement()
-              )
-              return nearestObject === varDeclarator
-            })
+            const memoize = createMemoizer(varDeclarator)
             varDeclarator.process({
-              FunctionExpression: wrap,
-              ArrowFunctionExpression: wrap,
+              FunctionExpression: memoize,
+              ArrowFunctionExpression: memoize,
             })
           },
         })
@@ -308,11 +290,12 @@ export default function (
   }
 }
 
-type ObjectNode =
+type AutoMemoizableNode =
   | Node.FunctionExpression
   | Node.ArrowFunctionExpression
   | Node.ObjectExpression
   | Node.ArrayExpression
+  | Node.CallExpression
 
 function isObjectNode(node: Node) {
   return (
