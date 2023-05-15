@@ -23,11 +23,6 @@ export default (options: {
       return
     }
 
-    program.unshift(
-      'body',
-      `import { hmrSelfUpdating, hmrComponent, hmrRegister } from "alien-dom/dist/hmr.mjs"\n`
-    )
-
     for (const component of components) {
       if (component.selfUpdating) {
         const selfUpdatingCall = component.function
@@ -51,6 +46,11 @@ export default (options: {
         `\nhmrRegister("${file}", "${component.id.name}", ${component.id.name}, "${component.hash}")`
       )
     }
+
+    program.unshift(
+      'body',
+      `import { hmrSelfUpdating, hmrComponent, hmrRegister } from "alien-dom/dist/hmr.mjs"\n`
+    )
 
     options.onHmrAdded?.(file)
   },
