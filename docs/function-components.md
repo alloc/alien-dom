@@ -7,8 +7,13 @@ Even if a plain function component isn't explicitly wrapped with a
 runtime. Specifically, if it has a self-updating ancestor, it will also
 become self-updating.
 
-In practice, the only major effect this has is in relation to JSX
-element references.
+Note that elements created outside (i.e. in a `useEffect` callback or
+other callback) of a self-updating component's render phase do **NOT**
+have their component forced into self-updating mode.
+
+In practice, when a plain component becomes a self-updating component,
+the only major side effect is in relation to JSX element references (see
+below).
 
 ## Element references
 
