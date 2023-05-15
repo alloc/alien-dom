@@ -1,6 +1,5 @@
 import type { Falsy } from '@alloc/types'
-import type { StyleAttributes } from '../internal/types'
-import type { JSX } from '../types/jsx'
+import type { DefaultElement, StyleAttributes } from '../internal/types'
 import { currentComponent } from '../internal/global'
 import { kAlienElementKey } from '../internal/symbols'
 import { updateStyle, UpdateStyle } from '../jsx-dom/util'
@@ -16,7 +15,7 @@ import { depsHaveChanged } from '../internal/deps'
  * which means it won't interfere with animations.
  */
 export function useStyle(
-  element: JSX.Element,
+  element: DefaultElement,
   style: StyleAttributes | Falsy
 ): void
 
@@ -27,14 +26,14 @@ export function useStyle(
  * component is expensive to re-render.
  */
 export function useStyle(
-  element: JSX.Element,
+  element: DefaultElement,
   style: () => StyleAttributes | Falsy,
   deps: readonly any[]
 ): void
 
 /** @internal */
 export function useStyle(
-  element: JSX.Element,
+  element: DefaultElement,
   style: StyleAttributes | (() => StyleAttributes | Falsy) | Falsy,
   deps?: readonly any[]
 ) {
