@@ -8,4 +8,5 @@ export const currentEffects = createStack<AlienEffects>()
 export const currentComponent = createStack<AlienComponent>()
 export const currentMode = createStack<ElementMode>('noop')
 
+export const animatedElementIds = new Set<string>()
 export const animatedElements = new WeakMap<Element, AnimatedElement>()

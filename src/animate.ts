@@ -23,7 +23,7 @@ import {
   cssTransformUnits,
 } from './internal/transform'
 import { deleteTimeline, applyAnimatedValue } from './internal/animate'
-import { animatedElements } from './internal/global'
+import { animatedElements, animatedElementIds } from './internal/global'
 
 export type SpringAnimation<
   Element extends AnyElement = any,
@@ -59,9 +59,7 @@ export type StepAnimation<
   Element extends AnyElement = any,
   Props extends object = AnimatedProps<Element>
 > = {
-  step: StepAnimationFn<Element, Props>
   target: Element
-  svgMode: boolean
   /** When true, the animation ends. */
   done: boolean
   /** When the animation started as a `requestAnimationFrame` timestamp. */
@@ -164,17 +162,17 @@ export function animate(
     if (targets.length) {
       targets.forEach((target, index) => {
         markAnimated(target)
-        stepAnimationMap.set(target, {
-          step,
+        const state = ensureAnimatedElement(target)
+        state.step = step
+        state.frame = {
           target,
-          svgMode: !!svgTags[target.tagName] && target.tagName != 'svg',
           done: false,
-          t0: null!,
+          t0: 0,
           dt: 0,
           duration: 0,
           current: {},
           index,
-        })
+        }
       })
 
       startLoop()
@@ -186,18 +184,8 @@ export function animate(
     )
     targets.forEach(target => {
       let timelines: Record<string, SpringTimeline> | undefined
-      let state = animatedElements.get(target)!
-      if (!state) {
-        state = {
-          nodes: {},
-          svgMode: !!svgTags[target.tagName] && target.tagName != 'svg',
-          transform: null,
-          anchor: null,
-          timelines: null,
-          style: {},
-        }
-        animatedElements.set(target, state)
-      }
+      let state = ensureAnimatedElement(target)
+      state.nodes ||= {}
 
       // Any defined keys will be removed from the previous timelines object.
       const definedKeys = new Set<string>()
@@ -297,6 +285,23 @@ export function animate(
   }
 }
 
+function ensureAnimatedElement(target: Element): AnimatedElement {
+  let state: any = animatedElements.get(target)
+  if (!state) {
+    state = {
+      svgMode: !!svgTags[target.tagName] && target.tagName != 'svg',
+      nodes: null,
+      frame: null,
+      timelines: null,
+      transform: null,
+      anchor: null,
+      style: {},
+    }
+    animatedElements.set(target, state)
+  }
+  return state
+}
+
 function addTimelineTimeout(
   timelines: Record<string, SpringTimeline> | undefined,
   target: HTMLElement,
@@ -378,7 +383,7 @@ function applyAnimation(
       key,
       animation.to[key],
       animation.from != null ? animation.from[key] : null,
-      state.nodes[key],
+      state.nodes![key],
       spring,
       !animation.velocity || typeof animation.velocity === 'number'
         ? animation.velocity
@@ -388,7 +393,7 @@ function applyAnimation(
       onRest
     )
     if (node) {
-      state.nodes[key] = node
+      state.nodes![key] = node
     }
   }
 }
@@ -499,9 +504,6 @@ const svgNonZeroDefaults: Record<string, string> = {
 
 const scaleKeys = ['scale', 'scaleX', 'scaleY']
 
-const animatedElementIds = new Set<string>()
-const stepAnimationMap = new WeakMap<Element, StepAnimation>()
-
 let loop: number | undefined
 let lastTime: number | undefined
 let nextElementId = 1
@@ -512,13 +514,14 @@ function startLoop() {
     const dt = now - (lastTime || now)
     lastTime = now
 
-    const stepAnimations: StepAnimation[] = []
-    const springAnimations: [
-      target: DefaultElement,
-      state: AnimatedElement,
-      width?: number,
+    interface ActiveAnimation {
+      target: DefaultElement
+      state: AnimatedElement
+      width?: number
       height?: number
-    ][] = []
+    }
+
+    const animations: ActiveAnimation[] = []
 
     for (const targetId of animatedElementIds) {
       const target = document.querySelector(
@@ -529,55 +532,36 @@ function startLoop() {
         continue
       }
 
-      const stepAnimation = stepAnimationMap.get(target)
       const state = animatedElements.get(target)
-
-      if (stepAnimation) {
-        if (stepAnimation.done) {
-          stepAnimationMap.delete(target)
-        } else {
-          stepAnimations.push(stepAnimation)
-          if (!state) {
-            continue
-          }
-        }
-      }
-
       if (state) {
         let width: number | undefined
         let height: number | undefined
 
         // Relative values always work in HTML, but SVG only allows
         // absolute values in the `transform` attribute.
-        if (state.svgMode) {
-          const needMeasuredSize = Object.values(state.nodes).some(
-            node => !node.done && node.isRelative && !!node.transformFn
-          )
-          if (needMeasuredSize) {
-            // TODO: what if width/height are also animated? this will be
-            // immediately stale.
-            const bbox: DOMRect = (target as any).getBBox()
-            width = bbox.width
-            height = bbox.height
+        if (state.nodes) {
+          if (state.svgMode) {
+            const needMeasuredSize = Object.values(state.nodes).some(
+              node => !node.done && node.isRelative && !!node.transformFn
+            )
+            if (needMeasuredSize) {
+              // T-315 what if width/height are also animated? this will be
+              // immediately stale.
+              const bbox: DOMRect = (target as any).getBBox()
+              width = bbox.width
+              height = bbox.height
+            }
           }
+          resolveFromValues(target, state, state.nodes)
         }
 
-        resolveFromValues(target, state)
-        springAnimations.push([target, state, width, height])
-      } else if (!stepAnimation || stepAnimation.done) {
+        animations.push({ target, state, width, height })
+      } else {
         animatedElementIds.delete(targetId)
       }
     }
 
-    const stepResults = new Map<any, any>()
-    for (const animation of stepAnimations) {
-      animation.t0 ??= now
-      animation.dt = dt
-      animation.duration += dt
-      stepResults.set(animation.target, animation.step(animation))
-    }
-
-    for (let [target, state, width, height] of springAnimations) {
+    for (let { target, state, width, height } of animations) {
       const { nodes, svgMode, style } = state
 
       type FrameValue = [string, AnimatedNode<any>]
@@ -588,91 +572,97 @@ function startLoop() {
       let noTransform = !svgMode
       let done = true
 
-      for (const [key, node] of Object.entries(nodes)) {
-        if (node.done) {
-          continue
-        }
-        const position = advance(node, node.spring, dt, key)
-        if (node.frame) {
-          const values = frames.get(node.frame) || []
-          frames.set(node.frame, values)
-          values.push([key, node])
-        }
-        if (!node.done) {
-          done = false
-        }
-        const { to } = node
-        if (Array.isArray(to)) {
-          if (node.transformFn) {
-            let fn = node.transformFn
-            let value: string | ParsedValue | undefined
-            if (svgMode) {
-              if (fn == 'scaleX') {
-                newScale ||= [1, 1]
-                newScale[0] = position
-                continue
+      if (nodes) {
+        for (const [key, node] of Object.entries(nodes)) {
+          if (node.done) {
+            continue
+          }
+          const position = advance(node, node.spring, dt, key)
+          if (node.frame) {
+            const values = frames.get(node.frame) || []
+            frames.set(node.frame, values)
+            values.push([key, node])
+          }
+          if (!node.done) {
+            done = false
+          }
+          const { to } = node
+          if (Array.isArray(to)) {
+            if (node.transformFn) {
+              let fn = node.transformFn
+              let value: string | ParsedValue | undefined
+              if (svgMode) {
+                if (fn == 'scaleX') {
+                  newScale ||= [1, 1]
+                  newScale[0] = position
+                  continue
+                }
+                if (fn == 'scaleY') {
+                  newScale ||= [1, 1]
+                  newScale[1] = position
+                  continue
+                }
+                if (to[1] == '%') {
+                  const dimension = (
+                    key == 'x' ? width : key == 'y' ? height : NaN
+                  )!
+                  value = `${dimension * (position / 100)}`
+                }
               }
-              if (fn == 'scaleY') {
-                newScale ||= [1, 1]
-                newScale[1] = position
-                continue
-              }
-              if (to[1] == '%') {
-                const dimension = (
-                  key == 'x' ? width : key == 'y' ? height : NaN
-                )!
-                value = `${dimension * (position / 100)}`
-              }
-            }
 
-            newTransform ||= []
-            newTransform.push([fn, value || [position, to[1]]])
+              newTransform ||= []
+              newTransform.push([fn, value || [position, to[1]]])
 
-            if (
-              noTransform &&
-              position != cssTransformDefaults[node.transformFn]
-            ) {
-              noTransform = false
+              if (
+                noTransform &&
+                position != cssTransformDefaults[node.transformFn]
+              ) {
+                noTransform = false
+              }
+            } else {
+              const value = position + to[1]
+              applyAnimatedValue(target, style, svgMode, key, value)
             }
           } else {
-            const value = position + to[1]
+            const value = mixColor(node.from as Color, to, position)
             applyAnimatedValue(target, style, svgMode, key, value)
           }
-        } else {
-          const value = mixColor(node.from as Color, to, position)
-          applyAnimatedValue(target, style, svgMode, key, value)
         }
       }
 
-      const stepResult = stepResults.get(target)
-      if (stepResult) {
-        const stepAnimation = stepAnimationMap.get(target)!
+      if (state.step) {
+        const { step, frame } = state as {
+          step: StepAnimationFn
+          frame: StepAnimation
+        }
 
-        for (const key of keys(stepResult)) {
-          const value = stepResult[key]
-          if (value !== undefined) {
-            stepAnimation.current[key] = value
-          }
+        done = false
+        frame.t0 ??= now
+        frame.dt = dt
+        frame.duration += dt
 
-          const transformFn =
-            key in cssTransformAliases
-              ? (!stepAnimation.svgMode && cssTransformAliases[key]) || key
-              : null
-
-          if (transformFn) {
-            const parsed = parseValue(value, defaultUnits[key])
-            if (parsed) {
-              newTransform ||= []
-              newTransform.push([transformFn, parsed])
+        const stepResult = step(frame)
+        if (stepResult) {
+          for (const key of keys(stepResult)) {
+            const value = stepResult[key]
+            if (value !== undefined) {
+              frame.current[key] = value
             }
-          } else {
-            applyAnimatedValue(
-              stepAnimation.target,
-              null,
-              stepAnimation.svgMode,
-              key,
-              value
-            )
+
+            const transformFn =
+              key in cssTransformAliases
+                ? (!svgMode && cssTransformAliases[key]) || key
+                : null
+
+            if (transformFn) {
+              const parsed = parseValue(value, defaultUnits[key])
+              if (parsed) {
+                newTransform ||= []
+                newTransform.push([transformFn, parsed])
+              }
+            } else {
+              applyAnimatedValue(target, null, svgMode, key, value)
+            }
           }
         }
       }
@@ -696,7 +686,7 @@ function startLoop() {
           style,
           svgMode,
           'transform',
-          renderTransform(state.transform!, newTransform!, noTransform)
+          renderTransform(state.transform || [], newTransform!, noTransform)
         )
       }
 
@@ -717,7 +707,7 @@ function startLoop() {
         }
       }
 
-      if (done && !stepAnimationMap.has(target)) {
+      if (done) {
         animatedElementIds.delete(target.dataset.animatedId!)
         delete target.dataset.animatedId
       }
@@ -928,7 +918,13 @@ function parseValue(
   return match ? [parseFloat(match[1]), match[2]] : null
 }
 
-function resolveFromValues(target: Element, state: AnimatedElement) {
+function resolveFromValues(
+  target: Element,
+  state: AnimatedElement,
+  nodes: {
+    [key: string]: AnimatedNode
+  }
+) {
   let computedStyle: CSSStyleDeclaration | undefined
   let transform: ParsedTransform | null = null
 
@@ -942,7 +938,7 @@ function resolveFromValues(target: Element, state: AnimatedElement) {
     )
   }
 
-  for (const [key, node] of Object.entries(state.nodes)) {
+  for (const [key, node] of Object.entries(nodes)) {
     if (node.transformFn) {
       // Note that we can't use the `computedStyle` here, because it
       // compacts the transform string into a matrix, which obfuscates

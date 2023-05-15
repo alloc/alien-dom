@@ -1,6 +1,8 @@
 import type { Color } from 'linear-color'
 import type {
   FrameCallback,
+  StepAnimation,
+  StepAnimationFn,
   SpringAnimation,
   SpringConfig,
 } from '../../animate'
@@ -9,6 +11,7 @@ export type ParsedValue = [number, string]
 export type ParsedTransform = [string, ParsedValue[]][]
 export type AnimatedType = Color | ParsedValue
 
+/** The animation state of a single property. */
 export type AnimatedNode<T extends AnimatedType = AnimatedType> = {
   to: T
   from: T | null
@@ -25,11 +28,13 @@ export type AnimatedNode<T extends AnimatedType = AnimatedType> = {
 }
 
 export type AnimatedElement = {
-  nodes: { [key: string]: AnimatedNode<AnimatedType> }
   svgMode: boolean
+  nodes: { [key: string]: AnimatedNode<AnimatedType> } | null
+  step: StepAnimationFn | null
+  frame: StepAnimation | null
+  timelines: { [prop: string]: SpringTimeline } | null
   transform: ParsedTransform | null
   anchor: readonly [number, number] | null
-  timelines: { [prop: string]: SpringTimeline } | null
   /**
    * This contains the most recent values applied by an animation.
    *

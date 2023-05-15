@@ -32,7 +32,7 @@ export function getAnimatedKeys(element: DefaultElement) {
 
 export function stopAnimatingKey(element: DefaultElement, key: string) {
   const state = animatedElements.get(element)
-  if (state) {
+  if (state?.nodes) {
     const node = state.nodes[key]
     if (node?.done === false) {
       node.done = true
@@ -48,7 +48,7 @@ export function stopAnimatingKey(element: DefaultElement, key: string) {
 
 export function isAnimatedStyleProp(element: DefaultElement, key: string) {
   const state = animatedElements.get(element)
-  return state?.nodes[key] != null
+  return state?.nodes?.[key] != null
 }
 
 export function setNonAnimatedStyle(
@@ -57,10 +57,10 @@ export function setNonAnimatedStyle(
   remove?: boolean
 ) {
   const state = animatedElements.get(element)
-  if (state) {
+  if (state?.nodes) {
     inlineStyle.split(/\s*;\s*/).forEach(property => {
       const [key, value] = property.split(/\s*:\s*/)
-      if (state.nodes[key] == null) {
+      if (state.nodes![key] == null) {
         element.style.setProperty(key, remove ? null : value)
       }
     })
