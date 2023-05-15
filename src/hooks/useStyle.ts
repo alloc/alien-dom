@@ -42,10 +42,10 @@ export function useStyle(
   const key = kAlienElementKey(element)!
   if (typeof style !== 'function') {
     if (!style) return
+    // If the element has no key, it won't be found in the newElements
+    // cache. In that case, we just update the element directly.
     const newElement = component.newElements!.get(key)
-    if (newElement) {
-      updateStyle(newElement, style)
-    }
+    updateStyle(newElement || element, style)
   } else if (deps) {
     const state = useState(initialState, style, deps)
     if (state.dispose && depsHaveChanged(deps, state.deps)) {
