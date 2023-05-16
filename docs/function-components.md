@@ -1,5 +1,9 @@
 # Function Components
 
+- **While your component is rendering...**
+  - Avoid mutating state your component didn't create.
+  - Avoid mutating _observable_ state (i.e. created with `ref` or `refs`) even if your component created it. (**Why?** If your component is invoked by a `fromElementProp` call, it runs inside a `computed` callback, which `@preact/signals` forbids mutations in.)
+
 ## Self-updating ancestors
 
 Even if a plain function component isn't explicitly wrapped with a
