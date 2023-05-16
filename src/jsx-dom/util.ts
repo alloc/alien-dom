@@ -40,7 +40,7 @@ export function isNumber(val: any): val is number {
 }
 
 export function isObject(val: any) {
-  return typeof val === 'object' ? val !== null : isFunction(val)
+  return val !== null && typeof val === 'object'
 }
 
 export function isFunction(val: any): val is Function {

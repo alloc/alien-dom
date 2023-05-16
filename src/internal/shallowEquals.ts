@@ -1,3 +1,5 @@
+import { isObject } from '../jsx-dom/util'
+
 export function shallowEquals(a: any, b: any) {
   if (a === b) {
     return true
@@ -7,10 +9,6 @@ export function shallowEquals(a: any, b: any) {
     return keys && keys.every(key => a[key] === b[key])
   }
   return false
-}
-
-function isObject(value: any) {
-  return value !== null && typeof value === 'object'
 }
 
 function keysEqual<K extends keyof any>(left: K[], right: K[]) {
