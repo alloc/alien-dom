@@ -19,6 +19,10 @@ export class AnimatedTransform {
     this.isIdentity = !svgMode
   }
 
+  /**
+   * Read the current `style.transform` property value. The result is
+   * cached until the transform is next applied.
+   */
   read() {
     return (this.value ||= parseTransform(this.target, this.svgMode))
   }
@@ -83,6 +87,7 @@ export class AnimatedTransform {
       newScale,
       newCalls,
       isIdentity: isNoTransform,
+      value,
     } = this
 
     if (newScale) {
@@ -95,8 +100,9 @@ export class AnimatedTransform {
       return
     }
 
-    this.width = null
-    this.height = null
+    value ||= parseTransform(target, svgMode)
+
+    this.value = this.width = this.height = null
     this.isIdentity = !svgMode
 
     if (anchor) {
@@ -109,17 +115,8 @@ export class AnimatedTransform {
       )
     }
 
-    applyAnimatedValue(
-      target,
-      style,
-      svgMode,
-      'transform',
-      renderTransform(
-        (this.value ||= parseTransform(target, svgMode)),
-        newCalls,
-        isNoTransform
-      )
-    )
+    const newTransform = renderTransform(value, newCalls, isNoTransform)
+    applyAnimatedValue(target, style, svgMode, 'transform', newTransform)
   }
 }
 
