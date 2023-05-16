@@ -1,4 +1,5 @@
 import type { Color } from 'linear-color'
+import type { AnimatedTransform } from './transform'
 import type {
   FrameCallback,
   StepAnimation,
@@ -33,7 +34,7 @@ export type AnimatedElement = {
   step: StepAnimationFn | null
   frame: StepAnimation | null
   timelines: { [prop: string]: SpringTimeline } | null
-  transform: ParsedTransform | null
+  transform: AnimatedTransform | null
   anchor: readonly [number, number] | null
   /**
    * This contains the most recent values applied by an animation.
