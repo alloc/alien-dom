@@ -18,12 +18,10 @@ export function hmrSelfUpdating(
 ) {
   const renderRef = ref(render)
   const Component = selfUpdating((props, update) => {
+    const component = currentComponent.get()
     const render = renderRef.value
-    if (kAlienHotUpdate.in(render)) {
-      const component = currentComponent.get()!
-      clearMemoized(component)
-    }
-    const result = render(props, update)
+    const result = hmrRender(component, render, props, update)
+
     registerComponent(Component)
     return result
   })
@@ -35,13 +33,8 @@ export function hmrComponent(render: (props: any) => JSX.Element) {
   const renderRef = ref(render)
   const Component = (props: any) => {
     const component = currentComponent.get()
-
     const render = renderRef.value
-    if (component && kAlienHotUpdate.in(render)) {
-      clearMemoized(component)
-    }
-
-    const result = render(props)
+    const result = hmrRender(component, render, props)
 
     // Elements are only registered when this component isn't used by a
     // self-updating ancestor, since this component will be made
@@ -80,6 +73,46 @@ export function hmrComponent(render: (props: any) => JSX.Element) {
     }
   })
   return Component
+}
+
+function hmrRender(
+  component: AlienComponent | null,
+  render: (props: any) => JSX.Element,
+  props: any
+): JSX.Element | null
+
+function hmrRender(
+  component: AlienComponent | null,
+  render: (props: any, update: any) => JSX.Element,
+  props: any,
+  update: any
+): JSX.Element | null
+
+function hmrRender(
+  component: AlienComponent | null,
+  render: (props: any, update?: any) => JSX.Element,
+  props: any,
+  update?: any
+): JSX.Element | null {
+  if (!component) {
+    return render(props, update)
+  }
+  if (kAlienHotUpdate.in(render)) {
+    clearMemoized(component)
+  }
+  try {
+    return render(props, update)
+  } catch (e: any) {
+    // If rendering fails, try resetting the hook state.
+    try {
+      component.truncate(0)
+      return render(props, update)
+    } catch (e: any) {
+      // If rendering still fails, return null.
+      console.error(e)
+      return null
+    }
+  }
 }
 
 function clearMemoized(component: AlienComponent) {
