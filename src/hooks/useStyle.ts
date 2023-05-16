@@ -7,6 +7,7 @@ import { effect } from '@preact/signals-core'
 import { useState } from './useState'
 import { onUnmount } from '../domObserver'
 import { depsHaveChanged } from '../internal/deps'
+import { usePrevious } from './usePrevious'
 
 /**
  * Update the style of an element during render. This hook is preferred
@@ -40,7 +41,8 @@ export function useStyle(
   const component = currentComponent.get()!
   const key = kAlienElementKey(element)!
   if (typeof style !== 'function') {
-    if (!style) return
+    const prevStyle = usePrevious(style, [element])
+    if (!style || style === prevStyle) return
     // If the element has no key, it won't be found in the newElements
     // cache. In that case, we just update the element directly.
     const newElement = component.newElements!.get(key)
