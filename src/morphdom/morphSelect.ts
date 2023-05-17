@@ -1,4 +1,4 @@
-import { hasTagName } from '../jsx-dom/util'
+import { hasTagName } from '../internal/duck'
 
 export function morphSelectElement(
   fromEl: HTMLSelectElement,

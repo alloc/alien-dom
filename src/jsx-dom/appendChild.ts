@@ -1,3 +1,4 @@
+import { isFunction } from '@alloc/is'
 import type { JSX } from '../types'
 import type { DefaultElement } from '../internal/types'
 import {
@@ -12,17 +13,11 @@ import {
   kFragmentNodeType,
   kTextNodeType,
 } from '../internal/constants'
-import { hasForEach } from '../internal/duck'
+import { hasForEach, hasTagName, isArrayLike } from '../internal/duck'
 import { AlienComponent } from '../internal/component'
 import { fromElementThunk } from '../internal/fromElementThunk'
 import { currentMode, currentComponent } from '../internal/global'
-import {
-  isArrayLike,
-  hasTagName,
-  isElement,
-  isFunction,
-  isFragment,
-} from './util'
+import { isElement, isFragment } from './util'
 import { isShadowRoot } from './shadow'
 
 export function appendChild(

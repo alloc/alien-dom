@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "@alloc/fast-rimraf": "^1.0.8",
+    "@alloc/is": "^3.1.2",
     "@alloc/prettier-config": "^1.0.0",
     "linear-color": "^1.2.0",
     "prettier": "^2.8.7",

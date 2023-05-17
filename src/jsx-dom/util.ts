@@ -1,5 +1,5 @@
+import { isNumber } from '@alloc/is'
 import type { DefaultElement } from '../internal/types'
-import type { JSX } from '../types/jsx'
 import { isUnitlessNumber } from './css-props'
 import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
 import { stopAnimatingKey, isAnimatedStyleProp } from '../internal/animate'
@@ -7,10 +7,6 @@ import { isSvgChild } from './svg-tags'
 import { kFragmentNodeType } from '../internal/constants'
 
 export const keys: <T>(obj: T) => Array<string & keyof T> = Object.keys as any
-
-export function isBoolean(val: any): val is boolean {
-  return typeof val === 'boolean'
-}
 
 export function isElement(val: any, nodeType?: number): val is Element {
   return (
@@ -22,41 +18,6 @@ export function isElement(val: any, nodeType?: number): val is Element {
 
 export function isFragment(node: Node): node is DocumentFragment {
   return node.nodeType === kFragmentNodeType
-}
-
-export function hasTagName<Tag extends string>(
-  node: any,
-  tagName: Tag
-): node is JSX.ElementType<Lowercase<Tag>> {
-  return node && node.tagName === tagName
-}
-
-export function isString(val: any): val is string {
-  return typeof val === 'string'
-}
-
-export function isNumber(val: any): val is number {
-  return typeof val === 'number'
-}
-
-export function isObject(val: any) {
-  return val !== null && typeof val === 'object'
-}
-
-export function isFunction(val: any): val is Function {
-  return typeof val === 'function'
-}
-
-export function isArrayLike(obj: any): obj is object & ArrayLike<any> {
-  return (
-    isObject(obj) &&
-    typeof obj.length === 'number' &&
-    typeof obj.nodeType !== 'number'
-  )
-}
-
-export function hasForEach(obj: any): obj is { forEach: any } {
-  return obj && isFunction(obj.forEach)
 }
 
 export function toArray<T>(a: T): T extends readonly any[] ? T : T[] {
@@ -82,7 +43,7 @@ type StyleKey = Omit<keyof CSSStyleDeclaration, 'length' | 'parentRule'>
 export function updateStyle(
   element: DefaultElement,
   style: any,
-  flags: UpdateStyle = 0
+  flags: UpdateStyle | 0 = 0
 ) {
   let transform: string[] | undefined
   const skipAnimated = flags & UpdateStyle.NonAnimated

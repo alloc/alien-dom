@@ -1,10 +1,10 @@
-import { isObject } from '../jsx-dom/util'
+import { isPlainObject } from '@alloc/is'
 
 export function shallowEquals(a: any, b: any) {
   if (a === b) {
     return true
   }
-  if (isObject(a) && isObject(b)) {
+  if (isPlainObject(a) && isPlainObject(b)) {
     const keys = keysEqual(Object.keys(a), Object.keys(b))
     return keys && keys.every(key => a[key] === b[key])
   }

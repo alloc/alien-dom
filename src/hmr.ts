@@ -1,3 +1,4 @@
+import { isFunction } from '@alloc/is'
 import type { JSX } from './types/jsx'
 import type { FunctionComponent } from './types/component'
 import { selfUpdating } from './functions/selfUpdating'
@@ -7,7 +8,6 @@ import { currentComponent } from './internal/global'
 import { kAlienRenderFunc } from './internal/symbols'
 import { createSymbolProperty } from './internal/symbolProperty'
 import { kFragmentNodeType } from './internal/constants'
-import { isFunction } from './jsx-dom/util'
 import { AlienComponent } from './internal/component'
 
 const kAlienComponentKey = createSymbolProperty<string>('componentKey')

@@ -1,10 +1,10 @@
+import { isFunction } from '@alloc/is'
 import {
   effect as createEffect,
   signal as ref,
   Signal as Ref,
 } from '@preact/signals-core'
 import { defineEffectType } from './effects'
-import { isFunction } from './jsx-dom/util'
 
 export {
   batch,

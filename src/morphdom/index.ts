@@ -3,7 +3,8 @@ import { morphOptionElement } from './morphOption'
 import { morphSelectElement } from './morphSelect'
 import { morphTextAreaElement } from './morphTextArea'
 import { morphInputElement } from './morphInput'
-import { noop, hasTagName } from '../jsx-dom/util'
+import { hasTagName } from '../internal/duck'
+import { noop } from '../jsx-dom/util'
 import {
   kCommentNodeType,
   kFragmentNodeType,

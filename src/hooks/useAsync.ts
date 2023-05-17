@@ -1,5 +1,6 @@
+import { isPlainObject } from '@alloc/is'
 import { Exclusive, Falsy } from '@alloc/types'
-import { isObject, keys } from '../jsx-dom/util'
+import { keys } from '../jsx-dom/util'
 import { batch, ref } from '../signals'
 import { useState } from './useState'
 import { depsHaveChanged } from '../internal/deps'
@@ -140,7 +141,7 @@ function resolveAsyncResults(results: any): Promise<any> {
     if (Array.isArray(results)) {
       return Promise.all(results.map(resolveAsyncResults))
     }
-    if (isObject(results)) {
+    if (isPlainObject(results)) {
       const promises: PromiseLike<any>[] = []
       for (const key in results) {
         const value = results[key]

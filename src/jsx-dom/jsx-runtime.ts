@@ -1,3 +1,4 @@
+import { isObject, isFunction, isBoolean, isString } from '@alloc/is'
 import type { JSX, ElementKey } from '../types'
 import type { DefaultElement } from '../internal/types'
 import { updateTagProps } from '../internal/component'
@@ -10,19 +11,11 @@ import {
 import { Fragment } from '../components/Fragment'
 import { selfUpdating } from '../functions/selfUpdating'
 import { currentEffects, currentComponent } from '../internal/global'
+import { hasTagName } from '../internal/duck'
 import { elementEvent } from '../internal/elementEvent'
 import { appendChild } from './appendChild'
 import { svgTags } from './svg-tags'
-import {
-  decamelize,
-  hasTagName,
-  isBoolean,
-  isFunction,
-  isObject,
-  isString,
-  keys,
-  updateStyle,
-} from './util'
+import { decamelize, keys, updateStyle } from './util'
 
 export type { JSX }
 export { Fragment }
@@ -300,6 +293,8 @@ function applyProp(prop: string, value: any, node: DefaultElement) {
       }
     }
   } else if (isObject(value)) {
+    // Custom elements might have object properties, which are set
+    // directly instead of as attributes.
     set(node, prop, value)
   } else if (value === true) {
     setAttribute(node, prop, '')
