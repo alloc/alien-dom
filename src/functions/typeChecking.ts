@@ -5,7 +5,9 @@ import { isNode } from '../internal/duck'
  * ⚠️ This returns true for functions due to the possibility of element
  * thunking.
  */
-export function isJSXChild(value: any): value is JSX.Element {
+export function isJSXChild(
+  value: any
+): value is JSX.Element | DocumentFragment | Comment {
   if (value === null || value === undefined) {
     return false
   }
