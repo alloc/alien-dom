@@ -1,8 +1,8 @@
 import type { AnyElement } from '../internal/types'
 import { currentComponent } from '../internal/global'
-import { kFragmentNodeType, kElementNodeType } from '../internal/constants'
 import { updateFragment } from '../internal/updateFragment'
 import { updateElement } from '../internal/updateElement'
+import { isFragment, isElement } from '../internal/duck'
 
 /**
  * Update the `node` (an element or fragment) to mirror the `newNode`.
@@ -12,9 +12,9 @@ import { updateElement } from '../internal/updateElement'
  */
 export function updateNode(node: AnyElement, newNode: AnyElement) {
   const component = currentComponent.get()
-  if (node.nodeType === kFragmentNodeType) {
+  if (isFragment(node)) {
     updateFragment(node as any, newNode as any, component?.newRefs)
-  } else if (node.nodeType === kElementNodeType) {
+  } else if (isElement(node)) {
     updateElement(node, newNode, component?.newRefs)
   }
 }

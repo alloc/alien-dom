@@ -1,11 +1,10 @@
 import { isFunction } from '@alloc/is'
 import type { AnyElement } from './internal/types'
-import type { AlienElement } from './element'
 import { onMount, onUnmount } from './domObserver'
 import { kAlienEffects, kAlienFragment } from './internal/symbols'
-import { kFragmentNodeType } from './internal/constants'
 import { currentEffects } from './internal/global'
 import { Disposable, attachDisposer } from './disposable'
+import { isFragment } from './internal/duck'
 import {
   enableEffect,
   disableEffect,
@@ -46,17 +45,17 @@ export interface AlienEffect<
 export class AlienEffects<Element extends AnyElement = any> {
   enabled = false
   mounted = false
-  element?: AlienElement<Element> = undefined
+  element?: Element | Comment = undefined
   effects?: Set<AlienEffect> = undefined
   currentEffect: AlienEffect | null = null
   abortCtrl?: AbortController = undefined
   protected _mountEffect: Disposable | null = null
 
-  constructor(element?: Element) {
+  constructor(element?: Element | Comment | DocumentFragment) {
     element && this.setElement(element)
   }
 
-  setElement(element: Element | null) {
+  setElement(element: Element | Comment | DocumentFragment | null) {
     if (element === null) {
       if (this.element) {
         if (kAlienEffects(this.element) === this) {
@@ -72,7 +71,7 @@ export class AlienEffects<Element extends AnyElement = any> {
       }
     } else {
       if (this.element !== undefined) {
-        if ((element as any) === this.element) {
+        if (element === this.element) {
           return
         }
         if (!this._mountEffect) {
@@ -86,13 +85,15 @@ export class AlienEffects<Element extends AnyElement = any> {
       // If the effects are being attached to a document fragment, use
       // the first child instead. For component effects, this should be
       // a comment node created for exactly this purpose.
-      if (element.nodeType === kFragmentNodeType) {
-        element = (kAlienFragment(element) || element.childNodes)[0] as any
+      if (isFragment(element)) {
+        element = (kAlienFragment(element) || element.childNodes)[0] as
+          | Element
+          | Comment
       }
 
       // Assume the element will be mounted soon, if it's not already.
       this.mounted = true
-      this.element = element as any
+      this.element = element
       kAlienEffects(element, this)
 
       if (element) {

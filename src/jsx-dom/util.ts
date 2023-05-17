@@ -4,21 +4,8 @@ import { isUnitlessNumber } from './css-props'
 import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
 import { stopAnimatingKey, isAnimatedStyleProp } from '../internal/animate'
 import { isSvgChild } from './svg-tags'
-import { kFragmentNodeType } from '../internal/constants'
 
 export const keys: <T>(obj: T) => Array<string & keyof T> = Object.keys as any
-
-export function isElement(val: any, nodeType?: number): val is Element {
-  return (
-    val &&
-    typeof val.nodeType === 'number' &&
-    (nodeType === undefined || val.nodeType === nodeType)
-  )
-}
-
-export function isFragment(node: Node): node is DocumentFragment {
-  return node.nodeType === kFragmentNodeType
-}
 
 export function toArray<T>(a: T): T extends readonly any[] ? T : T[] {
   // @ts-ignore

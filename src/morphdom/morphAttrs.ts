@@ -1,6 +1,6 @@
-import { kFragmentNodeType } from '../internal/constants'
 import { setNonAnimatedStyle } from '../internal/animate'
 import { DefaultElement } from '../internal/types'
+import { isFragment } from '../internal/duck'
 
 export function morphAttrs(fromNode: Element, toNode: Element) {
   var toNodeAttrs = toNode.attributes
@@ -11,10 +11,7 @@ export function morphAttrs(fromNode: Element, toNode: Element) {
   var fromValue
 
   // document-fragments dont have attributes so lets not do anything
-  if (
-    toNode.nodeType === kFragmentNodeType ||
-    fromNode.nodeType === kFragmentNodeType
-  ) {
+  if (isFragment(toNode) || isFragment(fromNode)) {
     return
   }
 

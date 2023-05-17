@@ -7,8 +7,8 @@ import { jsx } from './jsx-dom/jsx-runtime'
 import { currentComponent } from './internal/global'
 import { kAlienRenderFunc } from './internal/symbols'
 import { createSymbolProperty } from './internal/symbolProperty'
-import { kFragmentNodeType } from './internal/constants'
 import { AlienComponent } from './internal/component'
+import { isFragment } from './internal/duck'
 
 const kAlienComponentKey = createSymbolProperty<string>('componentKey')
 const kAlienHotUpdate = createSymbolProperty<boolean>('hotUpdate')
@@ -192,7 +192,7 @@ function registerElements(
   instances.add(instance)
 
   if (element) {
-    if (element.nodeType === kFragmentNodeType) {
+    if (isFragment(element)) {
       registerFragment(element, instance)
     } else {
       instance.elements.push(element)
@@ -200,10 +200,13 @@ function registerElements(
   }
 }
 
-function registerFragment(fragment: JSX.Element, instance: ComponentInstance) {
+function registerFragment(
+  fragment: JSX.Element | DocumentFragment,
+  instance: ComponentInstance
+) {
   fragment.childNodes.forEach(child => {
-    if (child.nodeType === kFragmentNodeType) {
-      registerFragment(child as JSX.Element, instance)
+    if (isFragment(child)) {
+      registerFragment(child, instance)
     } else {
       instance.elements.push(child as JSX.Element)
     }

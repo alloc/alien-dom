@@ -1,6 +1,6 @@
 import { defineEffectType, getCurrentEffect } from './effects'
 import { binaryInsert } from './jsx-dom/util'
-import { kElementNodeType } from './internal/constants'
+import { isElement } from './internal/duck'
 
 type ElementListener = (element: Element) => void
 
@@ -26,17 +26,13 @@ function observe(rootNode: Node) {
     const observer = new MutationObserver(mutations => {
       for (const mutation of mutations) {
         for (const node of Array.from(mutation.addedNodes)) {
-          if (node.nodeType == kElementNodeType) {
-            if (!removed.delete(node as Element)) {
-              added.add(node as Element)
-            }
+          if (isElement(node) && !removed.delete(node)) {
+            added.add(node)
           }
         }
         for (const node of Array.from(mutation.removedNodes)) {
-          if (node.nodeType == kElementNodeType) {
-            if (!added.delete(node as Element)) {
-              removed.add(node as Element)
-            }
+          if (isElement(node) && !added.delete(node)) {
+            removed.add(node)
           }
         }
       }

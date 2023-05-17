@@ -1,9 +1,10 @@
 import { computed } from '@preact/signals-core'
 import type { JSX } from '../types/jsx'
 import type { ElementKey } from '../types/attr'
+import { isElement } from '../internal/duck'
 import { kAlienThunkResult, kAlienElementKey, kAlienEffects } from './symbols'
 import { currentComponent } from './global'
-import { isElement } from '../jsx-dom/util'
+import { isNode } from './duck'
 
 export function fromElementThunk(thunk: () => JSX.Children) {
   if (!kAlienThunkResult.in(thunk)) {
@@ -26,7 +27,7 @@ export function fromElementThunk(thunk: () => JSX.Children) {
         let newRootNode = result.value
 
         // TODO: support more than single element nodes
-        if (isElement(newRootNode)) {
+        if (isNode(newRootNode) && isElement(newRootNode)) {
           const newKey = kAlienElementKey(newRootNode)
           if (newKey !== undefined) {
             // When no cached node exists, check the component refs in

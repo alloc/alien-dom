@@ -9,16 +9,18 @@ import {
   kAlienPlaceholder,
 } from '../internal/symbols'
 import {
-  kCommentNodeType,
-  kFragmentNodeType,
-  kTextNodeType,
-} from '../internal/constants'
-import { hasForEach, hasTagName, isArrayLike } from '../internal/duck'
+  hasForEach,
+  hasTagName,
+  isArrayLike,
+  isFragment,
+  isNode,
+  isTextNode,
+} from '../internal/duck'
 import { AlienComponent } from '../internal/component'
 import { fromElementThunk } from '../internal/fromElementThunk'
 import { currentMode, currentComponent } from '../internal/global'
-import { isElement, isFragment } from './util'
 import { isShadowRoot } from './shadow'
+import { isComment } from '../internal/duck'
 
 export function appendChild(
   child: JSX.Children,
@@ -28,11 +30,11 @@ export function appendChild(
   if (child === undefined || child === null || child === false) {
     return
   }
-  if (isElement(child)) {
+  if (isNode(child)) {
     const component = currentComponent.get()
 
     // Text nodes cannot have an element key.
-    if (child.nodeType !== kTextNodeType) {
+    if (!isTextNode(child)) {
       if (isFragment(child)) {
         child = prepareFragment(child, component)
       } else {
@@ -70,10 +72,9 @@ export function appendChild(
         }
       }
 
-      const parentFragment =
-        parent.nodeType === kFragmentNodeType
-          ? (parent as DocumentFragment)
-          : undefined
+      const parentFragment = isFragment(parent)
+        ? (parent as DocumentFragment)
+        : undefined
 
       // Cache the parent fragment on the child element, in case the
       // element is a component's root node, which may be replaced with
@@ -87,12 +88,9 @@ export function appendChild(
     // Enable component effects when the parent element is set.
     if (kAlienElementTags.in(child)) {
       const tags = kAlienElementTags(child)!
-      queueMicrotask(() => {
-        const rootNode =
-          (child as ChildNode).nodeType === kFragmentNodeType
-            ? kAlienFragment(child)![0]
-            : (child as ChildNode)
+      const rootNode = isFragment(child) ? kAlienFragment(child)![0] : child
 
+      queueMicrotask(() => {
         if (!rootNode.isConnected) {
           // The element hasn't mounted yet, so we'll have to rely on
           // the component to set an `onMount` listener.
@@ -125,7 +123,7 @@ export function appendChild(
 
       // Fragment children are merged into the nearest ancestor element,
       // so the arrayKey is prepended to avoid conflicts.
-      if (isElement(child, kFragmentNodeType)) {
+      if (isNode(child) && isFragment(child)) {
         child.childNodes.forEach(node => {
           const key = kAlienElementKey(node)
           if (typeof key === 'string' && key[0] === '*') {
@@ -176,9 +174,9 @@ export function prepareFragment(
   return fragment
 }
 
-function getPlaceholder(child: Element): DefaultElement {
+function getPlaceholder(child: Element | Comment): DefaultElement {
   let placeholder: any
-  if (child.nodeType === kCommentNodeType) {
+  if (isComment(child)) {
     placeholder = document.createComment(child.textContent || '')
   } else {
     const tagName = child.tagName.toLowerCase()

@@ -3,7 +3,13 @@ import { morphOptionElement } from './morphOption'
 import { morphSelectElement } from './morphSelect'
 import { morphTextAreaElement } from './morphTextArea'
 import { morphInputElement } from './morphInput'
-import { hasTagName } from '../internal/duck'
+import {
+  hasTagName,
+  isTextNode,
+  isComment,
+  isFragment,
+  isElement,
+} from '../internal/duck'
 import { noop } from '../jsx-dom/util'
 import {
   kCommentNodeType,
@@ -49,7 +55,7 @@ export function morph(
     childrenOnly = false,
   } = options
 
-  if (toNode.nodeType === kFragmentNodeType) {
+  if (isFragment(toNode)) {
     toNode = toNode.firstElementChild as Node.Element
   }
 
@@ -59,7 +65,7 @@ export function morph(
   var keyedRemovalList: any[] = []
 
   function walkDiscardedChildNodes(node: Node, skipKeyedNodes?: boolean) {
-    if (node.nodeType === kElementNodeType) {
+    if (isElement(node)) {
       var curChild = node.firstChild as Node
       while (curChild) {
         var key = undefined
@@ -104,14 +110,11 @@ export function morph(
     walkDiscardedChildNodes(node, skipKeyedNodes)
   }
 
-  if (
-    fromNode.nodeType === kElementNodeType ||
-    fromNode.nodeType === kFragmentNodeType
-  ) {
+  if (isElement(fromNode) || isFragment(fromNode)) {
     var curChild = fromNode.firstChild as Node
     while (curChild) {
       var key = getNodeKey(curChild)
-      if (key != null && curChild.nodeType === kElementNodeType) {
+      if (key != null && isElement(curChild)) {
         fromNodesLookup.set(key, curChild)
       }
       curChild = curChild.nextSibling as Node
@@ -132,7 +135,7 @@ export function morph(
         // cache value and morph it to the child node.
         if (unmatchedFromEl && compareNodeNames(curChild, unmatchedFromEl)) {
           curChild.parentNode!.replaceChild(unmatchedFromEl, curChild)
-          if (curChild.nodeType === kElementNodeType) {
+          if (isElement(curChild)) {
             morphEl(unmatchedFromEl, curChild)
           }
         } else {
@@ -243,7 +246,7 @@ export function morph(
         var isCompatible = undefined
 
         if (curFromNodeChild.nodeType === curToNodeChild.nodeType) {
-          if (curFromNodeChild.nodeType === kElementNodeType) {
+          if (isElement(curFromNodeChild)) {
             // Both nodes being compared are Element nodes
 
             if (curToNodeKey != null) {
@@ -316,8 +319,8 @@ export function morph(
               morphEl(curFromNodeChild, curToNodeChild as Node.Element)
             }
           } else if (
-            curFromNodeChild.nodeType === kTextNodeType ||
-            curFromNodeChild.nodeType === kCommentNodeType
+            isTextNode(curFromNodeChild) ||
+            isComment(curFromNodeChild)
           ) {
             // Both nodes being compared are Text or Comment nodes
             isCompatible = true
@@ -405,8 +408,8 @@ export function morph(
   if (!childrenOnly) {
     // Handle the case where we are given two DOM nodes that are not
     // compatible (e.g. <div> --> <span> or <div> --> TEXT)
-    if (fromNode.nodeType === kElementNodeType) {
-      if (toNode.nodeType === kElementNodeType) {
+    if (isElement(fromNode)) {
+      if (isElement(toNode)) {
         if (!compareNodeNames(fromNode, toNode)) {
           onNodeDiscarded(fromNode)
           morphedNode = moveChildren(
@@ -422,11 +425,7 @@ export function morph(
         // Going from an element node to a text node
         morphedNode = toNode
       }
-    } else if (
-      fromNode.nodeType === kTextNodeType ||
-      fromNode.nodeType === kCommentNodeType
-    ) {
-      // Text or comment node
+    } else if (isTextNode(fromNode) || isComment(fromNode)) {
       if (toNode.nodeType === fromNode.nodeType) {
         if (fromNode.nodeValue !== toNode.nodeValue) {
           fromNode.nodeValue = toNode.nodeValue

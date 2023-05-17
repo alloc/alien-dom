@@ -21,13 +21,9 @@ import { kAlienFragment, kAlienParentFragment } from '../internal/symbols'
 import { AlienComponent } from '../internal/component'
 import { currentContext, ContextStore } from '../context'
 import { prepareFragment } from '../jsx-dom/appendChild'
-import { isFragment } from '../jsx-dom/util'
 import { toChildNodes } from '../internal/fragment'
-import {
-  kCommentNodeType,
-  kFragmentNodeType,
-  kElementNodeType,
-} from '../internal/constants'
+import { isFragment, isElement } from '../internal/duck'
+import { kCommentNodeType } from '../internal/constants'
 
 /**
  * Create a self-updating component whose render function can mutate its
@@ -162,10 +158,7 @@ export function selfUpdating<
         let needsPlaceholder: boolean | undefined
 
         if (newRootNode) {
-          if (
-            newRootNode.nodeType === kFragmentNodeType &&
-            newRootNode.childNodes.length > 0
-          ) {
+          if (isFragment(newRootNode) && newRootNode.childNodes.length > 0) {
             // Document fragments need a placeholder comment node for
             // the component effects to be attached to.
             newRootNode.prepend(
@@ -185,7 +178,7 @@ export function selfUpdating<
               if (!needsPlaceholder) {
                 updateFragment(rootNode, newRootNode as any, newRefs)
               }
-            } else if (rootNode.nodeType === kElementNodeType) {
+            } else if (isElement(rootNode)) {
               if ((updated = rootNode.nodeName === newRootNode.nodeName)) {
                 // Root nodes must have same key for morphing to work.
                 const newKey = kAlienElementKey(newRootNode)
@@ -249,7 +242,7 @@ export function selfUpdating<
               oldNodes[0].before(placeholder)
               oldNodes.forEach(node => node.remove())
               kAlienFragment(rootNode, [placeholder])
-            } else if (rootNode.nodeType === kElementNodeType) {
+            } else if (isElement(rootNode)) {
               const oldEffects = kAlienEffects(rootNode)
               oldEffects?.disable()
               rootNode.replaceWith(placeholder)
