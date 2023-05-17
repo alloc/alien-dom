@@ -11,11 +11,11 @@ export * from './signals'
 
 /// Functions
 export * from './functions/depsHaveChanged'
-export * from './functions/isElement'
 export * from './functions/fromElementProp'
 export * from './functions/markPureComponent'
 export * from './functions/selfUpdating'
 export * from './functions/toElements'
+export * from './functions/typeChecking'
 export * from './functions/updateNode'
 
 /// Components
