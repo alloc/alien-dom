@@ -17,19 +17,23 @@ let nextId = Number.MIN_SAFE_INTEGER
  * always skipped. If this approach isn't good enough, you can pass a
  * custom `generateId` function.
  */
+export function useGlobalId(unstable?: boolean): number
+
 export function useGlobalId<Id extends string | number = number>(
-  unstable?: boolean,
-  generateId?: () => Id
+  unstable: boolean | null | undefined,
+  generateId: () => Id
+): Id
+
+export function useGlobalId(
+  unstable?: boolean | null,
+  generateId?: () => string | number
 ) {
   const component = currentComponent.get()!
   const index = component.nextHookIndex++
-  const cachedId: Id = component.hooks[index]
-  if (!cachedId || unstable) {
-    const id = generateId
-      ? generateId()
-      : ((nextId += nextId === -1 ? 2 : 1) as Id)
-    component.hooks[index] = id
-    return id
-  }
-  return cachedId
+  const cachedId = component.hooks[index]
+  return unstable || !cachedId
+    ? (component.hooks[index] = generateId
+        ? generateId()
+        : (nextId += nextId === -1 ? 2 : 1))
+    : cachedId
 }
