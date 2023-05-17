@@ -1,3 +1,4 @@
+import { isFunction, isNumber, isPromise } from '@alloc/is'
 import { Any, Falsy } from '@alloc/types'
 import { Color, mixColor, parseColor } from 'linear-color'
 import {
@@ -39,11 +40,11 @@ export type SpringAnimation<
   onRest?: FrameCallback<Element, Props>
 }
 
-export type SpringDelay = number | SpringDelayFn
+export type SpringDelay = number | SpringDelayFn | Promise<unknown>
 export type SpringDelayFn = (
   signal: AbortSignal,
   key: string
-) => Promise<any> | null | void
+) => Promise<unknown> | null | void
 
 export type FrameCallback<
   T extends AnyElement,
@@ -157,7 +158,7 @@ export function animate(
 ) {
   const targets = $$<HTMLElement>(selector)
 
-  if (typeof _animations === 'function') {
+  if (isFunction(_animations)) {
     const step = _animations
     if (targets.length) {
       targets.forEach((target, index) => {
@@ -206,7 +207,7 @@ export function animate(
 
         if (animation.delay) {
           const { delay } = animation
-          if (typeof delay === 'number') {
+          if (isNumber(delay)) {
             if (delay > 0) {
               keys.forEach(key => {
                 timelines = addTimelineTimeout(
@@ -221,7 +222,7 @@ export function animate(
               })
               keys.length = 0
             }
-          } else if (typeof delay === 'function') {
+          } else if (isFunction(delay) || isPromise(delay)) {
             keys.forEach(key => {
               timelines = addTimelinePromise(
                 timelines,
@@ -238,7 +239,7 @@ export function animate(
             keys = keys.filter(key => {
               const keyDelay = delay[key]
               if (keyDelay) {
-                if (typeof keyDelay === 'number') {
+                if (isNumber(keyDelay)) {
                   timelines = addTimelineTimeout(
                     timelines,
                     target,
@@ -330,11 +331,19 @@ function addTimelinePromise(
   state: AnimatedElement,
   animation: SpringAnimation,
   spring: SpringResolver,
-  delay: SpringDelayFn,
+  delay: SpringDelayFn | Promise<unknown>,
   key: string
 ) {
   const abortCtrl = new AbortController()
-  const promise = delay(abortCtrl.signal, key)
+  const promise = isFunction(delay)
+    ? delay(abortCtrl.signal, key)
+    : Promise.race([
+        delay,
+        new Promise(resolve =>
+          abortCtrl.signal.addEventListener('abort', resolve)
+        ),
+      ])
+
   if (promise) {
     const timeline = ((timelines ||= {})[key] ||= [])
     timeline.push({ ...animation, abortCtrl })
@@ -346,6 +355,7 @@ function addTimelinePromise(
   } else {
     applyAnimation(target, state, animation, spring, [key])
   }
+
   return timelines
 }
 
@@ -387,7 +397,7 @@ function applyAnimation(
       animation.from != null ? animation.from[key] : null,
       oldNode,
       spring,
-      !animation.velocity || typeof animation.velocity === 'number'
+      !animation.velocity || isNumber(animation.velocity)
         ? animation.velocity
         : animation.velocity[key],
       frame,
@@ -770,7 +780,7 @@ function advance(
 function toSpringResolver(
   spring: SpringConfig | ((key: string) => SpringConfig | Falsy) | Falsy
 ) {
-  if (typeof spring !== 'function') {
+  if (!isFunction(spring)) {
     const resolved = resolveSpring(spring || {})
     return () => resolved
   }
