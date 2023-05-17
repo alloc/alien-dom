@@ -1,4 +1,4 @@
-import { isFunction } from '@alloc/is'
+import { isFunction, isArray } from '@alloc/is'
 import type { JSX } from './types/jsx'
 import type { FunctionComponent } from './types/component'
 import { selfUpdating } from './functions/selfUpdating'
@@ -118,8 +118,8 @@ function hmrRender(
 function clearMemoized(component: AlienComponent) {
   component.memos = null
   component.hooks.forEach((hook, index, hooks) => {
-    if (hook && 'dispose' in hook) {
-      if (Array.isArray(hook.deps) && !hook.deps.length) {
+    if (hook && hook.hasOwnProperty('dispose')) {
+      if (isArray(hook.deps) && !hook.deps.length) {
         return // Skip mount effects.
       }
       if (isFunction(hook.dispose)) {
