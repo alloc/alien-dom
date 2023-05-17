@@ -42,8 +42,9 @@ export function useStyle(
   const component = currentComponent.get()!
   const key = kAlienElementKey(element)!
   if (typeof style !== 'function') {
-    const prevStyle = usePrevious(style, deps ? [element, ...deps] : [element])
-    if (!style || style === prevStyle) return
+    deps = deps ? [element, ...deps] : [element]
+    const prevDeps = usePrevious(deps)
+    if (!style || !depsHaveChanged(deps, prevDeps)) return
     // If the element has no key, it won't be found in the newElements
     // cache. In that case, we just update the element directly.
     const newElement = component.newElements!.get(key)
