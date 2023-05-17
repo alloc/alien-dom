@@ -29,11 +29,13 @@ export class AlienPromise<T> extends Promise<T> {
 
   readonly reject: (reason?: any) => void
 
-  get settled(): ReadonlyRef<boolean> {
+  get settled(): boolean {
     const settled = ref(false)
     this.finally(() => (settled.value = true))
-    Object.defineProperty(this, 'settled', { value: settled })
-    return settled
+    Object.defineProperty(this, 'settled', {
+      get: Reflect.get.bind(Reflect, settled, 'value'),
+    })
+    return settled.value
   }
 
   constructor(
