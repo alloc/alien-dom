@@ -158,23 +158,25 @@ export function selfUpdating<
         let needsPlaceholder: boolean | undefined
 
         if (newRootNode) {
-          if (isFragment(newRootNode) && newRootNode.childNodes.length > 0) {
-            // Document fragments need a placeholder comment node for
-            // the component effects to be attached to.
-            newRootNode.prepend(
-              document.createComment(
-                DEV ? (kAlienRenderFunc(render) || render).name : ''
+          if (isFragment(newRootNode)) {
+            if (newRootNode.childNodes.length) {
+              // Document fragments need a placeholder comment node for
+              // the component effects to be attached to.
+              newRootNode.prepend(
+                document.createComment(
+                  DEV ? (kAlienRenderFunc(render) || render).name : ''
+                )
               )
-            )
+            } else {
+              // When the root node is an empty fragment, we have to
+              // create a placeholder comment node.
+              needsPlaceholder = true
+            }
           }
 
           let updated: boolean | undefined
           if (rootNode && rootNode.nodeType === newRootNode.nodeType) {
             if ((updated = isFragment(rootNode))) {
-              // When the root node is an empty fragment, we have to
-              // create a placeholder comment node.
-              needsPlaceholder = !newRootNode.childNodes.length
-
               if (!needsPlaceholder) {
                 updateFragment(rootNode, newRootNode as any, newRefs)
               }
@@ -191,7 +193,7 @@ export function selfUpdating<
           }
 
           // If the root node could not be updated, replace it instead.
-          if (!updated) {
+          if (!updated && !needsPlaceholder) {
             if (rootNode) {
               if (isFragment(rootNode)) {
                 // Replace the comment placeholder with the new root
