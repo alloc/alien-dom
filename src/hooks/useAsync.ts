@@ -3,7 +3,7 @@ import { Exclusive, Falsy } from '@alloc/types'
 import { keys } from '../jsx-dom/util'
 import { batch, ref } from '../signals'
 import { useState } from './useState'
-import { depsHaveChanged } from '../internal/deps'
+import { depsHaveChanged } from '../functions/depsHaveChanged'
 
 export type UseAsyncFn<T> = (state: UseAsync<T>) => PromiseLike<T> | T
 

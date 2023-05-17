@@ -6,7 +6,7 @@ import { getAlienEffects } from './effects'
 import { Ref } from '../signals'
 import { AlienContext, currentContext } from '../context'
 import { currentComponent } from './global'
-import { depsHaveChanged } from './deps'
+import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { deepEquals } from './deepEquals'
 import {
   kAlienRenderFunc,

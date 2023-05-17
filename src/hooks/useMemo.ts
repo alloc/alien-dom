@@ -1,6 +1,6 @@
 import { useState } from './useState'
 import { computed, ReadonlyRef } from '../signals'
-import { depsHaveChanged } from '../internal/deps'
+import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { noop } from '../jsx-dom/util'
 
 export function useMemo<T>(get: () => T, deps: readonly any[]): T {

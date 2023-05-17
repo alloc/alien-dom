@@ -6,7 +6,7 @@ import { updateStyle, UpdateStyle } from '../jsx-dom/util'
 import { effect } from '@preact/signals-core'
 import { useState } from './useState'
 import { onUnmount } from '../domObserver'
-import { depsHaveChanged } from '../internal/deps'
+import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { usePrevious } from './usePrevious'
 
 /**

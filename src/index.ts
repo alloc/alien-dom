@@ -10,6 +10,7 @@ export * from './selectors'
 export * from './signals'
 
 /// Functions
+export * from './functions/depsHaveChanged'
 export * from './functions/isElement'
 export * from './functions/fromElementProp'
 export * from './functions/markPureComponent'

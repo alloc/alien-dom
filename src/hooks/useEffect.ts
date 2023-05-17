@@ -1,6 +1,6 @@
 import { useMicrotask } from './useMicrotask'
 import { useState } from './useState'
-import { depsHaveChanged } from '../internal/deps'
+import { depsHaveChanged } from '../functions/depsHaveChanged'
 
 export function useEffect(
   effect: () => (() => void) | void,
