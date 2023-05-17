@@ -6,10 +6,11 @@
  */
 export function depsHaveChanged(
   deps: readonly any[],
-  prevDeps: readonly any[]
+  prevDeps: readonly any[] | undefined
 ) {
   return (
     deps === prevDeps ||
+    prevDeps === undefined ||
     deps.length !== prevDeps.length ||
     deps.some((dep, i) => dep !== prevDeps[i])
   )
