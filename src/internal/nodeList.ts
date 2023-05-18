@@ -18,7 +18,7 @@ const AlienElementListPrototype = {
 }
 
 export function createAlienElementList<
-  Element extends AlienTag<DefaultElement> = DefaultElement,
+  Element extends AlienTag<DefaultElement> = DefaultElement
 >(
   arg?:
     | AnyElement

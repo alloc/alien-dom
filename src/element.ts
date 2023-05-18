@@ -54,7 +54,7 @@ export type AlienElementIterator<Element extends AnyElement> =
 
 export type AlienEvent<
   Event extends AnyEvent = AnyEvent,
-  Element extends AnyElement = DefaultElement,
+  Element extends AnyElement = DefaultElement
 > = Event & {
   currentTarget: Element
   target: AnyElement
@@ -340,7 +340,7 @@ type AlienTagNameMap<Element extends AnyElement> = Element extends any
  */
 export type AlienSelect<
   T extends string | AnyElement,
-  Context extends AnyElement = AnyElement,
+  Context extends AnyElement = AnyElement
 > = T extends string
   ? AlienTagNameMap<Context> extends infer TagNameMap
     ? TagNameMap extends any

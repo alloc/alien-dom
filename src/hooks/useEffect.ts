@@ -7,14 +7,11 @@ export function useEffect(
   deps: readonly any[]
 ) {
   const state = useState(initialState, deps)
-  useMicrotask(
-    () => {
-      state.dispose?.()
-      state.deps = deps
-      state.dispose = effect()
-    },
-    depsHaveChanged(deps, state.deps)
-  )
+  useMicrotask(() => {
+    state.dispose?.()
+    state.deps = deps
+    state.dispose = effect()
+  }, depsHaveChanged(deps, state.deps))
 }
 
 const initialState = (

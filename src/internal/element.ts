@@ -134,7 +134,7 @@ export type AlienStyleMethods<Element extends AnyElement> = {
 
 export type AlienEventMethod<
   This extends AnyElement,
-  Event extends AnyEvent = AnyEvent,
+  Event extends AnyEvent = AnyEvent
 > = (
   callback: (this: This, event: AlienEvent<Event, This>) => void,
   options?: boolean | AddEventListenerOptions

@@ -19,7 +19,7 @@ export type HTMLFactory<T extends HTMLElement> = DetailedHTMLFactory<
 
 interface DetailedHTMLFactory<
   P extends HTMLAttributes<T>,
-  T extends HTMLElement,
+  T extends HTMLElement
 > extends DOMFactory<P, T> {
   (props?: (P & AttrWithRef<T>) | null, ...children: JSX.Children[]): T
   (...children: JSX.Children[]): T

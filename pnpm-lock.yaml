@@ -11,7 +11,7 @@ importers:
       '@preact/signals-core': ^1.3.0
       csstype: ^3.1.2
       linear-color: ^1.2.0
-      prettier: 3.0.0-alpha.11
+      prettier: ^2.8.7
       tsup: ^6.7.0
       typescript: ^4.9.5
     dependencies:
@@ -23,7 +23,7 @@ importers:
       '@alloc/is': 3.1.2
       '@alloc/prettier-config': 1.0.0
       linear-color: 1.2.0
-      prettier: 3.0.0-alpha.11
+      prettier: 2.8.7
       tsup: 6.7.0_typescript@4.9.5
       typescript: 4.9.5
 
@@ -45,10 +45,10 @@ importers:
   packages/htmelt-plugin:
     specifiers:
       '@alien-dom/esbuild': workspace:^0.3.0
-      '@htmelt/plugin': ^0.2.0
+      '@htmelt/plugin': ^0.3.0
     dependencies:
       '@alien-dom/esbuild': link:../esbuild-plugin
-      '@htmelt/plugin': 0.2.0
+      '@htmelt/plugin': 0.3.2
 
   packages/nebu-plugin:
     specifiers:
@@ -261,16 +261,16 @@ packages:
     requiresBuild: true
     optional: true
 
-  /@htmelt/plugin/0.2.0:
-    resolution: {integrity: sha512-66kOyyocH5y+Yh8xGzCw1smfvRbZQNDwGGA6Eoi+VT131+6XIc0X1yW86XwpRR0K8oi5JTOds/kKuXO5puHfig==}
+  /@htmelt/plugin/0.3.2:
+    resolution: {integrity: sha512-HV9+LDd36xWqLvE3GAHsWwUdJpJfmC17FQoCVisagMte/EzHiR05O/Fby2Jpe+dT3grRk5SSAF5QB7o6NbMJ+A==}
     dependencies:
       '@rollup/pluginutils': 5.0.2
-      '@web/parse5-utils': 1.3.1
+      cac: 6.7.14
       esbuild: 0.17.17
-      esbuild-extra: 0.1.9_esbuild@0.17.17
+      esbuild-extra: 0.2.1_esbuild@0.17.17
       md5-hex: 4.0.0
       mitt: 3.0.0
-      type-fest: 3.8.0
+      parse5: 6.0.1
     transitivePeerDependencies:
       - rollup
       - typescript
@@ -351,18 +351,6 @@ packages:
     resolution: {integrity: sha512-E5Kwq2n4SbMzQOn6wnmBjuK9ouqlURrcZDVfbo9ftDDTFt3nk7ZKK4GMOzoYgnpQJKcxwQw+lGaBvvlMo0qN/Q==}
     dev: true
 
-  /@types/parse5/6.0.3:
-    resolution: {integrity: sha512-SuT16Q1K51EAVPz1K29DJ/sXjhSQ0zjvsypYJ6tlwVsRV9jwW5Adq2ch8Dq8kDBCkYnELS7N7VNCSB5nC56t/g==}
-    dev: false
-
-  /@web/parse5-utils/1.3.1:
-    resolution: {integrity: sha512-haCgDchZrAOB9EhBJ5XqiIjBMsS/exsM5Ru7sCSyNkXVEJWskyyKuKMFk66BonnIGMPpDtqDrTUfYEis5Zi3XA==}
-    engines: {node: '>=10.0.0'}
-    dependencies:
-      '@types/parse5': 6.0.3
-      parse5: 6.0.1
-    dev: false
-
   /any-promise/1.3.0:
     resolution: {integrity: sha512-7UvmKalWRt1wgjL1RrGxoSJW/0QZFIegpeGvZG9kjp8vrRu55XTHbwnqq2GpXm9uLbcuhxm3IqX9OB4MZR1b2A==}
     dev: true
@@ -420,7 +408,6 @@ packages:
   /cac/6.7.14:
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
     engines: {node: '>=8'}
-    dev: true
 
   /chokidar/3.5.3:
     resolution: {integrity: sha512-Dr3sfKRP6oTcjf2JmUmFJfeVMvXBdegxB0iVQ5eb2V10uFJUCAS8OByZdVAyVb8xXNz3GjjTgj9kLWsZTqE6kw==}
@@ -481,19 +468,6 @@ packages:
     dependencies:
       path-type: 4.0.0
     dev: true
-
-  /esbuild-extra/0.1.9_esbuild@0.17.17:
-    resolution: {integrity: sha512-HXDBPDwlNj+du8St9Fk9FUGMjrMxXtXby6iqBb34iuIjj20EDIz8uE/0Pz1QO1aS3og7LaRA85jF2HzWIQRlgg==}
-    peerDependencies:
-      esbuild: '>=0.15'
-    dependencies:
-      '@ampproject/remapping': 2.2.1
-      convert-source-map: 2.0.0
-      esbuild: 0.17.17
-      tsconfck: 2.1.1
-    transitivePeerDependencies:
-      - typescript
-    dev: false
 
   /esbuild-extra/0.2.1_esbuild@0.17.17:
     resolution: {integrity: sha512-PfuGpOWOKH7VpmelDp64YLsgBr6mvDnNDmWw2BTXeiEssvh31KK8M6axukvlkmf+412GnRw7jPkY/iRlHRDKZg==}
@@ -861,9 +835,9 @@ packages:
       yaml: 1.10.2
     dev: true
 
-  /prettier/3.0.0-alpha.11:
-    resolution: {integrity: sha512-/x61/kcsjjU8kUEDKnn8PtqRzMXROg68KbUOtRC09oOQ3Vs6Bjwz7tabF98xu/K/RP/jZzWIvxphWr881DaokQ==}
-    engines: {node: '>=14'}
+  /prettier/2.8.7:
+    resolution: {integrity: sha512-yPngTo3aXUUmyuTjeTUT75txrf+aMh9FiD7q9ZE/i6r0bPb22g4FsE6Y338PQX1bmfy08i9QQCB7/rcUAVntfw==}
+    engines: {node: '>=10.13.0'}
     hasBin: true
     dev: true
 
@@ -1074,11 +1048,6 @@ packages:
       - supports-color
       - ts-node
     dev: true
-
-  /type-fest/3.8.0:
-    resolution: {integrity: sha512-FVNSzGQz9Th+/9R6Lvv7WIAkstylfHN2/JYxkyhhmKFYh9At2DST8t6L6Lref9eYO8PXFTfG9Sg1Agg0K3vq3Q==}
-    engines: {node: '>=14.16'}
-    dev: false
 
   /typescript/4.9.5:
     resolution: {integrity: sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==}

@@ -144,7 +144,7 @@ type DepthFirstEffect = [
   effect: () => void,
   depth: number,
   target: ChildNode,
-  key: string,
+  key: string
 ]
 
 let depthFirstBatch: DepthFirstEffect[] | null = null
