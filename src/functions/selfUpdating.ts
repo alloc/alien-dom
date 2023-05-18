@@ -24,6 +24,7 @@ import { prepareFragment } from '../jsx-dom/appendChild'
 import { toChildNodes } from '../internal/fragment'
 import { isFragment, isElement } from '../internal/duck'
 import { kCommentNodeType } from '../internal/constants'
+import { noop } from '../jsx-dom/util'
 
 /**
  * Create a self-updating component whose render function can mutate its
@@ -43,6 +44,11 @@ export function selfUpdating<
     update: (props: Partial<Props>) => void
   ) => Element | null | undefined
 ): (props: Props) => Element {
+  const componentName = DEV
+    ? () =>
+        (kAlienRenderFunc(render) || kAlienRenderFunc(Component) || render).name
+    : noop
+
   const Component = (initialProps: Props): any => {
     let oldPropChanged = false
     let newPropAdded = false
@@ -163,9 +169,7 @@ export function selfUpdating<
               // Document fragments need a placeholder comment node for
               // the component effects to be attached to.
               newRootNode.prepend(
-                document.createComment(
-                  DEV ? (kAlienRenderFunc(render) || render).name : ''
-                )
+                document.createComment(DEV ? componentName() : '')
               )
             } else {
               // When the root node is an empty fragment, we have to
@@ -234,9 +238,7 @@ export function selfUpdating<
         // If nothing is returned (e.g. null, undefined, empty fragment),
         // use a comment node to hold the position of the element.
         if (needsPlaceholder && rootNode?.nodeType !== kCommentNodeType) {
-          const placeholder = document.createComment(
-            DEV ? (kAlienRenderFunc(render) || render).name : ''
-          )
+          const placeholder = document.createComment(DEV ? componentName() : '')
 
           if (rootNode) {
             if (isFragment(rootNode)) {
