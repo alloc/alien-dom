@@ -32,11 +32,11 @@ importers:
       '@alien-dom/nebu': workspace:^0.3.0
       '@types/node': ^18.15.11
       esbuild: ^0.17.17
-      esbuild-extra: ^0.1.9
+      esbuild-extra: ^0.2.1
       nebu: ^2.3.8
     dependencies:
       '@alien-dom/nebu': link:../nebu-plugin
-      esbuild-extra: 0.1.9_esbuild@0.17.17
+      esbuild-extra: 0.2.1_esbuild@0.17.17
       nebu: 2.3.8
     devDependencies:
       '@types/node': 18.15.11
@@ -484,6 +484,19 @@ packages:
 
   /esbuild-extra/0.1.9_esbuild@0.17.17:
     resolution: {integrity: sha512-HXDBPDwlNj+du8St9Fk9FUGMjrMxXtXby6iqBb34iuIjj20EDIz8uE/0Pz1QO1aS3og7LaRA85jF2HzWIQRlgg==}
+    peerDependencies:
+      esbuild: '>=0.15'
+    dependencies:
+      '@ampproject/remapping': 2.2.1
+      convert-source-map: 2.0.0
+      esbuild: 0.17.17
+      tsconfck: 2.1.1
+    transitivePeerDependencies:
+      - typescript
+    dev: false
+
+  /esbuild-extra/0.2.1_esbuild@0.17.17:
+    resolution: {integrity: sha512-PfuGpOWOKH7VpmelDp64YLsgBr6mvDnNDmWw2BTXeiEssvh31KK8M6axukvlkmf+412GnRw7jPkY/iRlHRDKZg==}
     peerDependencies:
       esbuild: '>=0.15'
     dependencies:
