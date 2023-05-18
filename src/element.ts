@@ -18,7 +18,7 @@ import { canMatch } from './internal/duck'
 import { AlienNodeList } from './internal/nodeList'
 import { kAlienElementKey } from './internal/symbols'
 import { applyProps } from './jsx-dom/jsx-runtime'
-import { targetedEffect } from './signals'
+import { observeAs } from './signals'
 import { updateElement } from './internal/updateElement'
 import { EffectFlags, getAlienEffects, enableEffect } from './internal/effects'
 import { updateStyle, UpdateStyle } from './jsx-dom/util'
@@ -157,7 +157,7 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
   replaceText(value: () => string): Disposable<AlienBoundEffect<this>>
   replaceText(value?: string | (() => string)) {
     if (typeof value == 'function') {
-      return targetedEffect(this, target => {
+      return observeAs(this, target => {
         target.textContent = value()
       })
     } else {
