@@ -1,4 +1,5 @@
 export * from './useAsync'
+export * from './useComputed'
 export * from './useContext'
 export * from './useEffect'
 export * from './useForceUpdate'
