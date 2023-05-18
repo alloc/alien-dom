@@ -224,10 +224,13 @@ export default function (
 
         const nearestBlock = path.findParent(p => p.isBlockStatement())
         if (nearestBlock?.parent && componentFns.has(nearestBlock.parent)) {
+          helpers.set('registerNestedTag', '__nestedTag')
           const wrappedNode = isSelfUpdating ? path.parent : path
           wrappedNode.before(`__nestedTag("${globalId}#${moduleNextId++}", `)
           wrappedNode.after(')')
-          helpers.set('registerNestedTag', '__nestedTag')
+          if (wrappedNode.isFunctionDeclaration()) {
+            wrappedNode.before(`const ${wrappedNode.id!.name} = `)
+          }
         }
       }
 
