@@ -1,26 +1,47 @@
 import { isFunction } from '@alloc/is'
 import {
-  effect as createEffect,
-  signal as ref,
+  effect as createObserver,
+  signal,
   Signal as Ref,
 } from '@preact/signals-core'
 import { defineEffectType } from './effects'
 
-export {
-  batch,
-  computed,
-  signal as ref,
-  Signal as Ref,
-} from '@preact/signals-core'
-
+export { batch, computed, Signal as Ref } from '@preact/signals-core'
 export type { ReadonlySignal as ReadonlyRef } from '@preact/signals-core'
 
-export const effect = /* @__PURE__ */ defineEffectType(createEffect)
+/**
+ * Any observable refs accessed inside your callback will cause it to
+ * rerun when changed.
+ *
+ * The `observe` function creates an `AlienEffect` that will be cached
+ * by the current `AlienEffects` context.
+ *
+ * It's **not recommended** to call this in a component (prefer
+ * `useObserver` instead), since `observe` is unable to avoid re-running
+ * on every render (even if nothing changed).
+ */
+export const observe = /* @__PURE__ */ defineEffectType(createObserver)
 
-export const targetedEffect = /* @__PURE__ */ defineEffectType(
+/**
+ * Like `observe` but with a `target` argument that can be retargeted
+ * later.
+ */
+export const observeAs = /* @__PURE__ */ defineEffectType(
   <T extends object | void>(target: T, action: (target: T) => void) =>
-    createEffect(() => action(target))
+    createObserver(() => action(target))
 )
+
+/**
+ * Create an observable reference. Use `.value` to access the current
+ * value or update it by assignment.
+ *
+ * If you access a ref's value during render, a self-updating component
+ * will re-render when its value is later changed.
+ *
+ * Same goes for `computed` and `observe` callbacks, which will rerun
+ * when a ref's value is changed.
+ */
+export const ref = signal
 
 export const refs = <Props extends object>(
   initialProps: Props,
