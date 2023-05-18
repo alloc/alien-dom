@@ -11,7 +11,7 @@ export function moveEffects(
   elementMap: Map<AnyElement, AnyElement>,
   isComponent?: boolean
 ) {
-  const { effects: enablers } = newEffects
+  const { effects } = newEffects
 
   if (!isComponent) {
     // The `setElement` call will run the enablers if we don't unset
@@ -21,7 +21,7 @@ export function moveEffects(
     newEffects.setElement(oldElement)
   }
 
-  enablers?.forEach(enabler => {
+  effects?.forEach(enabler => {
     const oldElement = elementMap.get(enabler.target)
     newEffects.enable(enabler as any, oldElement || enabler.target)
   })
