@@ -15,7 +15,10 @@ export class AnimatedTransform {
   newCalls: TransformCall[] | null = null
   isIdentity: boolean
 
-  constructor(readonly target: DefaultElement, readonly svgMode: boolean) {
+  constructor(
+    readonly target: DefaultElement,
+    readonly svgMode: boolean
+  ) {
     this.isIdentity = !svgMode
   }
 

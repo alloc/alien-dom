@@ -37,7 +37,7 @@ import { noop } from '../jsx-dom/util'
  */
 export function selfUpdating<
   Props extends object,
-  Element extends JSX.Element = JSX.Element
+  Element extends JSX.Element = JSX.Element,
 >(
   render: (
     props: Props,

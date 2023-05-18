@@ -17,7 +17,7 @@ type Promisable<T> = T | Promise<T>
 export interface AlienEffect<
   Target = any,
   Args extends any[] = any[],
-  Async extends boolean = boolean
+  Async extends boolean = boolean,
 > {
   (
     target: Target,
@@ -282,7 +282,7 @@ export class AlienEffects<Element extends AnyElement = any> {
 export type AlienBoundEffect<
   Target = any,
   Args extends any[] = any,
-  Async extends boolean = boolean
+  Async extends boolean = boolean,
 > = {
   enable: AlienEffect<Target, Args, Async>
   target?: Target
@@ -295,12 +295,11 @@ export type AlienBoundEffect<
  */
 export function createEffect<
   Effect extends
-    | AlienEffect<void, [], false>
-    | AlienBoundEffect<any, any, false>
+    AlienEffect<void, [], false> | AlienBoundEffect<any, any, false>,
 >(effect: Effect, context?: AlienEffects): Disposable<typeof effect>
 
 export function createEffect<
-  Effect extends AlienEffect<void, [], true> | AlienBoundEffect<any, any, true>
+  Effect extends AlienEffect<void, [], true> | AlienBoundEffect<any, any, true>,
 >(
   effect: Effect,
   context: AlienEffects | undefined,
@@ -323,7 +322,7 @@ export function createEffect(
 }
 
 export const createAsyncEffect = <
-  Effect extends AlienEffect<void, [], true> | AlienBoundEffect<any, any, true>
+  Effect extends AlienEffect<void, [], true> | AlienBoundEffect<any, any, true>,
 >(
   effect: Effect,
   context?: AlienEffects

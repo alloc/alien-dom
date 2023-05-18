@@ -62,7 +62,7 @@ export function moveChildren(fromEl: Element, toEl: Element) {
 
 export function syncBooleanAttrProp<
   T extends Element,
-  P extends string & keyof T
+  P extends string & keyof T,
 >(fromEl: T, toEl: T, name: P) {
   if (fromEl[name] !== toEl[name]) {
     fromEl[name] = toEl[name]

@@ -28,7 +28,7 @@ import {
 
 export type SpringAnimation<
   Element extends AnyElement = any,
-  Props extends object = AnimatedProps<Element>
+  Props extends object = AnimatedProps<Element>,
 > = {
   to: Props
   from?: Props | Falsy
@@ -48,17 +48,17 @@ export type SpringDelayFn = (
 
 export type FrameCallback<
   T extends AnyElement,
-  Props extends object = AnimatedProps<T>
+  Props extends object = AnimatedProps<T>,
 > = (props: [T] extends [Any] ? any : Required<Props>, target: T) => void
 
 export type StepAnimationFn<
   Element extends AnyElement = any,
-  Props extends object = AnimatedProps<Element>
+  Props extends object = AnimatedProps<Element>,
 > = (frame: StepAnimation<Element, Props>) => Props | null
 
 export type StepAnimation<
   Element extends AnyElement = any,
-  Props extends object = AnimatedProps<Element>
+  Props extends object = AnimatedProps<Element>,
 > = {
   target: Element
   /** When true, the animation ends. */
@@ -134,7 +134,7 @@ type OneOrMany<T> = T | readonly T[]
 
 export type AnimationsParam<
   Element extends AnyElement = any,
-  Props extends object = AnimatedProps<Element>
+  Props extends object = AnimatedProps<Element>,
 > = OneOrMany<SpringAnimation<Element, Props>> | StepAnimationFn<Element, Props>
 
 export function animate(

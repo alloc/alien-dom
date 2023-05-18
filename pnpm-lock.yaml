@@ -11,7 +11,7 @@ importers:
       '@preact/signals-core': ^1.3.0
       csstype: ^3.1.2
       linear-color: ^1.2.0
-      prettier: ^2.8.7
+      prettier: 3.0.0-alpha.11
       tsup: ^6.7.0
       typescript: ^4.9.5
     dependencies:
@@ -23,7 +23,7 @@ importers:
       '@alloc/is': 3.1.2
       '@alloc/prettier-config': 1.0.0
       linear-color: 1.2.0
-      prettier: 2.8.7
+      prettier: 3.0.0-alpha.11
       tsup: 6.7.0_typescript@4.9.5
       typescript: 4.9.5
 
@@ -861,9 +861,9 @@ packages:
       yaml: 1.10.2
     dev: true
 
-  /prettier/2.8.7:
-    resolution: {integrity: sha512-yPngTo3aXUUmyuTjeTUT75txrf+aMh9FiD7q9ZE/i6r0bPb22g4FsE6Y338PQX1bmfy08i9QQCB7/rcUAVntfw==}
-    engines: {node: '>=10.13.0'}
+  /prettier/3.0.0-alpha.11:
+    resolution: {integrity: sha512-/x61/kcsjjU8kUEDKnn8PtqRzMXROg68KbUOtRC09oOQ3Vs6Bjwz7tabF98xu/K/RP/jZzWIvxphWr881DaokQ==}
+    engines: {node: '>=14'}
     hasBin: true
     dev: true
 
