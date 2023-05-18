@@ -18,7 +18,7 @@ export default defineConfig({
   outDir: '../dist',
   format: ['esm'],
   dts: true,
-  noExternal: ['linear-color', '@alloc/types'],
+  noExternal: ['linear-color', '@alloc/types', '@alloc/is'],
   async onSuccess() {
     copyFileSync('jsx-dom/LICENSE', '../dist/jsx-dom/LICENSE')
     copyFileSync('morphdom/LICENSE', '../dist/morphdom/LICENSE')
