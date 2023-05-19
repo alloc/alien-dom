@@ -142,11 +142,16 @@ function parseTransform(target: Element, svgMode: boolean) {
   const regex = /([a-z]+)\(([^)]+)\)/gi
   let match: RegExpMatchArray | null
   while ((match = regex.exec(transform))) {
+    let transformFn = match[1]
+    if (transformFn === 'rotateZ') {
+      transformFn = 'rotate'
+    }
+
     const parsedValues = match[2]
       .split(/(?:, *| +)/)
       .map(rawValue => parseValue(rawValue)!)
 
-    result.push([match[1], parsedValues])
+    result.push([transformFn, parsedValues])
   }
   return result
 }
