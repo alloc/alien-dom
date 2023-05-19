@@ -26,6 +26,6 @@ const initialState = (
 } => ({
   deps,
   prev: undefined,
-  // This is defined so HMR knows to clear the useMemo cache.
+  // This is defined so HMR knows to clear the usePrevious cache.
   dispose: deps ? noop : undefined,
 })
