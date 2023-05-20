@@ -34,9 +34,9 @@ export class AlienComponent<Props = any> {
   /** Effects added in the current render pass. */
   newEffects: AlienEffects | null = null
   /** Values memoized in the last finished render pass. */
-  memos: Record<string, any> | null = null
+  memos: Map<any, any> | null = null
   /** Values memoized in the current render pass. */
-  newMemos: Record<string, any> | null = null
+  newMemos: Map<any, any> | null = null
 
   constructor(
     readonly parent: AlienComponent | null,
@@ -183,7 +183,7 @@ export function registerObject(
 ) {
   const component = currentComponent.get()!
   if (component) {
-    let memo = component.memos?.[key]
+    let memo = component.memos?.get(key)
     if (deps) {
       if (
         memo &&
@@ -198,8 +198,8 @@ export function registerObject(
     } else if (memo) {
       newObject = memo
     }
-    component.newMemos ||= {}
-    component.newMemos[key] = memo || newObject
+    component.newMemos ||= new Map()
+    component.newMemos.set(key, memo || newObject)
   }
   return newObject
 }
@@ -215,7 +215,7 @@ export function registerObject(
 export function registerNestedTag(key: string, tag: FunctionComponent) {
   const component = currentComponent.get()
   if (component) {
-    const oldTag = component.memos?.[key]
+    const oldTag = component.memos?.get(key)
     if (oldTag) {
       kAlienRenderFunc(oldTag, tag)
       tag = oldTag
@@ -227,8 +227,8 @@ export function registerNestedTag(key: string, tag: FunctionComponent) {
       kAlienRenderFunc(Component, tag)
       tag = Component
     }
-    component.newMemos ||= {}
-    component.newMemos[key] = tag
+    component.newMemos ||= new Map()
+    component.newMemos.set(key, tag)
   }
   return tag
 }
