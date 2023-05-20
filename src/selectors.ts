@@ -33,6 +33,7 @@ export function $(arg: any) {
 export type AlienSelector =
   | string
   | AnyElement
+  | readonly AnyElement[]
   | NodeListOf<AnyElement>
   | Iterable<AnyElement>
 

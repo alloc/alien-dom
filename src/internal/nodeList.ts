@@ -22,6 +22,7 @@ export function createAlienElementList<
 >(
   arg?:
     | AnyElement
+    | readonly AnyElement[]
     | NodeListOf<AnyElement>
     | Iterable<AnyElement>
     | false
