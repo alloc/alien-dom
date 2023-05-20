@@ -197,7 +197,7 @@ export function selfUpdating<
                 kAlienElementKey(rootNode, newKey)
 
                 // Diff the root nodes and retarget any new effects.
-                updateElement(rootNode as Element, newRootNode, self)
+                updateElement(rootNode, newRootNode as Element, self)
               }
             }
           }
