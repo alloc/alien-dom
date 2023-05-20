@@ -122,7 +122,8 @@ export function selfUpdating<
       props,
       context,
       reinitProps,
-      updateProps
+      updateProps,
+      componentName
     )
 
     const updateComponent = () => {

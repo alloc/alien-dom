@@ -44,7 +44,8 @@ export class AlienComponent<Props = any> {
     readonly props: Props,
     readonly context: Map<AlienContext, Ref>,
     readonly reinitProps: (props: Partial<Props>) => void,
-    readonly updateProps: (props: Partial<Props>) => void
+    readonly updateProps: (props: Partial<Props>) => void,
+    readonly name: () => string
   ) {}
 
   /**
