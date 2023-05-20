@@ -2,10 +2,9 @@ import type { Falsy } from '@alloc/types'
 import type { DefaultElement, StyleAttributes } from '../internal/types'
 import { currentComponent } from '../internal/global'
 import { kAlienElementKey } from '../internal/symbols'
-import { updateStyle, UpdateStyle } from '../jsx-dom/util'
-import { effect } from '@preact/signals-core'
+import { updateStyle, UpdateStyle, toArray } from '../jsx-dom/util'
+import { effect as observe } from '@preact/signals-core'
 import { useState } from './useState'
-import { onUnmount } from '../domObserver'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { usePrevious } from './usePrevious'
 
@@ -16,7 +15,7 @@ import { usePrevious } from './usePrevious'
  * which means it won't interfere with animations.
  */
 export function useStyle(
-  element: DefaultElement,
+  element: DefaultElement | readonly DefaultElement[],
   style: StyleAttributes | Falsy,
   deps?: readonly any[]
 ): void
@@ -28,27 +27,31 @@ export function useStyle(
  * component is expensive to re-render.
  */
 export function useStyle(
-  element: DefaultElement,
+  element: DefaultElement | readonly DefaultElement[],
   style: () => StyleAttributes | Falsy,
   deps: readonly any[]
 ): void
 
 /** @internal */
 export function useStyle(
-  element: DefaultElement,
+  element: DefaultElement | readonly DefaultElement[],
   style: StyleAttributes | (() => StyleAttributes | Falsy) | Falsy,
   deps?: readonly any[]
 ) {
+  const elements = toArray(element)
   const component = currentComponent.get()!
-  const key = kAlienElementKey(element)!
   if (typeof style !== 'function') {
-    deps = deps ? [element, ...deps] : [element]
+    deps = deps ? [...elements, ...deps] : elements
     const prevDeps = usePrevious(deps)
     if (!style || !depsHaveChanged(deps, prevDeps)) return
-    // If the element has no key, it won't be found in the newElements
-    // cache. In that case, we just update the element directly.
-    const newElement = component.newElements!.get(key)
-    updateStyle(newElement || element, style)
+
+    for (const element of elements) {
+      // If the element has no key, it won't be found in the newElements
+      // cache. In that case, we just update the element directly.
+      const key = kAlienElementKey(element)
+      const newElement = component.newElements!.get(key!)
+      updateStyle(newElement || element, style)
+    }
   } else if (deps) {
     const state = useState(initialState, style, deps)
     if (state.dispose && depsHaveChanged(deps, state.deps)) {
@@ -57,14 +60,16 @@ export function useStyle(
       state.style = style
       state.deps = deps
     }
-    const dispose = (state.dispose ||= effect(() => {
+    state.dispose ||= observe(() => {
       const style = state.style()
-      if (style) {
-        const newElement = component.newElements?.get(key)
+      if (!style) return
+
+      for (const element of elements) {
+        const key = kAlienElementKey(element)
+        const newElement = component.newElements?.get(key!)
         updateStyle(newElement || element, style, UpdateStyle.NonAnimated)
       }
-    }))
-    onUnmount(element, dispose)
+    })
   }
 }
 
