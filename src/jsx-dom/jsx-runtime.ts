@@ -94,9 +94,10 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
       // Updating the props of an existing element will only rerender
       // the component if a new value is defined for a stateless prop.
       if (oldNode) {
-        if (updateTagProps(oldNode, tag, props)) {
-          component.setRef(key!, oldNode)
-          return oldNode
+        const updatedNode = updateTagProps(oldNode, tag, props)
+        if (updatedNode) {
+          component.setRef(key!, updatedNode as DefaultElement)
+          return updatedNode
         }
         // Cannot reuse an old node if the tags differ.
         if (kAlienElementTags.in(oldNode)) {

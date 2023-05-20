@@ -27,6 +27,7 @@ import { kCommentNodeType } from '../internal/constants'
 import { noop } from '../jsx-dom/util'
 import { isFunction } from '@alloc/is'
 import { fromElementThunk } from '../internal/fromElementThunk'
+import { isConnected } from '../internal/isConnected'
 
 /**
  * Create a self-updating component whose render function can mutate its
@@ -267,7 +268,7 @@ export function selfUpdating<
         throw Error('expected root node to exist')
       }
 
-      if (isMounted && rootNode.isConnected) {
+      if (isMounted && isConnected(rootNode)) {
         newEffects.enable()
         oldEffects.disable()
       } else {

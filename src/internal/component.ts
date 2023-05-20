@@ -151,24 +151,23 @@ export class AlienComponent<Props = any> {
 /**
  * Update the props of a component instance if possible.
  *
- * Returns `true` if a component instance is found for the given tag.
+ * Returns the root node of the updated component instance, if one was
+ * found.
  */
 export function updateTagProps(element: AnyElement, tag: any, props: any) {
   const tags = kAlienElementTags(element)
-  if (tags) {
-    const instance = tags.get(tag)
-    if (instance) {
-      batch(() => {
-        instance.reinitProps(props)
-        currentContext.forEach((ref, key) => {
-          const targetRef = instance.context.get(key)
-          if (targetRef) {
-            targetRef.value = ref.peek()
-          }
-        })
+  const instance = tags?.get(tag)
+  if (instance) {
+    batch(() => {
+      instance.reinitProps(props)
+      currentContext.forEach((ref, key) => {
+        const targetRef = instance.context.get(key)
+        if (targetRef) {
+          targetRef.value = ref.peek()
+        }
       })
-      return true
-    }
+    })
+    return instance.rootNode
   }
 }
 
