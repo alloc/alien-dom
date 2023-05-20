@@ -197,6 +197,24 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
   toggleClass(name: string, value?: boolean) {
     return this.classList.toggle(name, value)
   }
+  /**
+   * Returns the first class name that matches the given pattern.
+   *
+   * If a capturing group exists in the pattern, the captured value will
+   * be returned. Otherwise, the entire match will be returned.
+   *
+   * An empty string is returned if no match is found.
+   */
+  matchClass(pattern: RegExp) {
+    for (let i = 0; i < this.classList.length; i++) {
+      const token = this.classList.item(i)!
+      const match = pattern.exec(token)
+      if (match) {
+        return match[1] ?? match[0]
+      }
+    }
+    return ''
+  }
   css(style: StyleAttributes) {
     updateStyle(this as any, style, UpdateStyle.Interrupt)
     return this
