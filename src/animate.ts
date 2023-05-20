@@ -67,6 +67,8 @@ export type StepAnimation<
   t0: number
   /** Milliseconds since the previous frame. */
   dt: number
+  /** Time of the current frame as a `requestAnimationFrame` timestamp. */
+  time: number
   /** Milliseconds since the animation started. */
   duration: number
   /** An accumulation of frames since the animation started. */
@@ -170,6 +172,7 @@ export function animate(
           done: false,
           t0: 0,
           dt: 0,
+          time: 0,
           duration: 0,
           current: {},
           index,
@@ -553,6 +556,7 @@ function startLoop() {
 
           frame.t0 ??= now
           frame.dt = dt
+          frame.time = now
           frame.duration += dt
 
           // Calculate the next step before any writes, in case the step
