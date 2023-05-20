@@ -1,4 +1,3 @@
-import { computed } from '@preact/signals-core'
 import type { JSX } from '../types/jsx'
 import type { ElementKey } from '../types/attr'
 import { isElement } from '../internal/duck'
@@ -14,8 +13,6 @@ export function fromElementThunk(thunk: () => JSX.Children) {
       return thunk()
     }
 
-    const result = computed(thunk)
-
     // By caching the element here, we can reuse a mounted element even if
     // a parent component overwrites its element key, which can happen if
     // the current component returns it as the root element.
@@ -24,7 +21,13 @@ export function fromElementThunk(thunk: () => JSX.Children) {
 
     Object.defineProperty(thunk, kAlienThunkResult.symbol, {
       get() {
-        let newRootNode = result.value
+        // Avoid evaluating an element thunk more than once per render.
+        let newRootNode: JSX.Children = component.memos?.get(thunk)
+        if (newRootNode === undefined) {
+          newRootNode = thunk()
+          component.memos ||= new Map()
+          component.memos.set(thunk, newRootNode)
+        }
 
         // TODO: support more than single element nodes
         if (isNode(newRootNode) && isElement(newRootNode)) {
