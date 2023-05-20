@@ -25,6 +25,8 @@ import { toChildNodes } from '../internal/fragment'
 import { isFragment, isElement } from '../internal/duck'
 import { kCommentNodeType } from '../internal/constants'
 import { noop } from '../jsx-dom/util'
+import { isFunction } from '@alloc/is'
+import { fromElementThunk } from '../internal/fromElementThunk'
 
 /**
  * Create a self-updating component whose render function can mutate its
@@ -134,6 +136,9 @@ export function selfUpdating<
       let newRootNode: DefaultElement | DocumentFragment | null | undefined
       try {
         newRootNode = render(props, updateProps)
+        if (isFunction(newRootNode)) {
+          newRootNode = fromElementThunk(newRootNode as any)
+        }
         threw = false
       } finally {
         currentEffects.pop(newEffects)
