@@ -1,13 +1,13 @@
 import type { Node, Plugin } from 'nebu'
-import { JSXThunkParent, collectThunkParents } from './thunk'
 import {
-  isHostElement,
-  findExternalReferences,
   FunctionNode,
+  findExternalReferences,
   getComponentName,
   hasElementProp,
   isFunctionNode,
+  isHostElement,
 } from './helpers'
+import { JSXThunkParent, collectThunkParents } from './thunk'
 
 export default function (
   state: {
@@ -183,12 +183,12 @@ export default function (
 
         componentFn.process({
           JSXOpeningElement(openingElem) {
-            if (
-              openingElem.name.isJSXIdentifier() &&
-              /^[a-z]/.test(openingElem.name.name)
-            ) {
-              return // Inline object props (e.g. the "style" prop) are not memoized for host elements.
-            }
+            // Inline object props (e.g. the "style" prop) are not
+            // memoized for host elements.
+            const canAutoMemoize =
+              !openingElem.name.isJSXIdentifier() ||
+              !/^[a-z]/.test(openingElem.name.name)
+
             // Elements within loops and non-component functions cannot
             // be assigned static keys or have auto-memoized inline
             // callback props.
@@ -197,8 +197,11 @@ export default function (
             if (nearestFnOrLoop !== componentFn) {
               return
             }
+
             addStaticElementKeys(openingElem)
-            autoMemoizeProps(openingElem)
+            if (canAutoMemoize) {
+              autoMemoizeProps(openingElem)
+            }
           },
           // Auto-memoize any variables declared during render with
           // function/object/array expressions as values.
