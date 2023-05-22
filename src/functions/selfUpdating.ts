@@ -186,7 +186,11 @@ export function selfUpdating<
           }
 
           let updated: boolean | undefined
-          if (rootNode && rootNode.nodeType === newRootNode.nodeType) {
+          if (
+            rootNode &&
+            rootNode.nodeType === newRootNode.nodeType &&
+            self.rootKey === kAlienElementKey(newRootNode)
+          ) {
             if ((updated = isFragment(rootNode))) {
               if (!needsPlaceholder) {
                 updateFragment(rootNode, newRootNode as any, newRefs)

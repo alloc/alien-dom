@@ -21,6 +21,7 @@ export type ElementTags = Map<FunctionComponent, AlienComponent<any>>
 /** Internal state for a component instance. */
 export class AlienComponent<Props = any> {
   rootNode: ChildNode | DocumentFragment | null = null
+  rootKey: ElementKey | undefined = undefined
   hooks: any[] = []
   nextHookIndex = 0
   /** Elements created by this component in the current render pass. */
@@ -125,6 +126,7 @@ export class AlienComponent<Props = any> {
     }
     tags.set(this.tag, this)
     this.rootNode = rootNode
+    this.rootKey = kAlienElementKey(rootNode)
   }
 
   setRef(key: ElementKey, element: DefaultElement) {
