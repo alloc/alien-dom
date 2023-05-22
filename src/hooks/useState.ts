@@ -1,12 +1,12 @@
 import { currentComponent } from '../internal/global'
 
 export function useState<State extends object, Params extends any[]>(
-  init: (...params: Params) => State,
+  init: new (...args: Params) => State,
   ...params: Params
 ): State
 
 export function useState<State extends object, Params extends any[]>(
-  init: new (...args: Params) => State,
+  init: (...params: Params) => State,
   ...params: Params
 ): State
 
