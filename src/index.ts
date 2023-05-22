@@ -6,6 +6,7 @@ export * from './element'
 export * from './events'
 export * from './effects'
 export * from './hooks'
+export * from './machine'
 export * from './selectors'
 export * from './signals'
 
