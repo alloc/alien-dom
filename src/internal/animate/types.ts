@@ -42,6 +42,7 @@ export type AnimatedElement = {
    * The keys are the animated CSS properties.
    */
   style: Record<string, any>
+  onStart: (() => void) | null
 }
 
 export type SpringTimeline = (SpringAnimation & {

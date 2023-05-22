@@ -36,6 +36,7 @@ export type SpringAnimation<
   velocity?: number | { [K in keyof Props]?: number }
   delay?: SpringDelay | { [K in keyof Props]?: SpringDelay }
   anchor?: [number, number]
+  onStart?: () => void
   onChange?: FrameCallback<Element, Props>
   onRest?: FrameCallback<Element, Props>
 }
@@ -300,6 +301,7 @@ function ensureAnimatedElement(target: Element): AnimatedElement {
       transform: null,
       anchor: null,
       style: {},
+      onStart: null,
     }
     animatedElements.set(target, state)
   }
@@ -382,13 +384,15 @@ function applyAnimation(
     nodes: Record<string, AnimatedNode>
     svgMode: boolean
   }
-  const { onChange, onRest } = animation
+  const { onStart, onChange, onRest } = animation
   const frame: Record<string, any> | null = onChange || onRest ? {} : null
 
   state.anchor =
     animation.anchor ||
     // If an anchor gets unset, we need to reset it to the default.
     (state.anchor && (svgMode ? svgDefaultAnchor : htmlDefaultAnchor))
+
+  state.onStart = onStart || null
 
   for (const key of keys) {
     const oldNode = nodes[key]
@@ -570,7 +574,12 @@ function startLoop() {
     }
 
     for (const [target, state, stepResult] of targets) {
-      const { nodes, svgMode, style } = state
+      const { nodes, svgMode, style, onStart } = state
+
+      if (onStart) {
+        onStart()
+        state.onStart = null
+      }
 
       type FrameValue = [string, AnimatedNode<any>]
       const frames = new Map<Record<string, any>, FrameValue[]>()
