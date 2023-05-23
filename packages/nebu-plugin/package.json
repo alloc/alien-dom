@@ -18,5 +18,17 @@
   },
   "peerDependencies": {
     "nebu": ">=2.3"
+  },
+  "ava": {
+    "files": [
+      "**/*.test.*"
+    ],
+    "snapshotDir": "snapshots",
+    "extensions": {
+      "ts": "module"
+    },
+    "nodeArguments": [
+      "--loader=tsx"
+    ]
   }
 }
