@@ -121,12 +121,21 @@ export function findExternalReferences(
     },
   })
 
+  const rootVariable =
+    rootNode.parent.isVariableDeclarator() && rootNode.parent.id.isIdentifier()
+      ? rootNode.parent.id.name
+      : null
+
   const externalReferences = new Set<string>()
   for (const scope of scopes.values()) {
     for (const name of scope.references) {
-      if (!scope.context[name]) {
-        externalReferences.add(name)
+      if (scope.context[name]) {
+        continue // Skip references to local bindings.
       }
+      if (name === rootVariable) {
+        continue // Skip references to root node's declarator.
+      }
+      externalReferences.add(name)
     }
   }
 
