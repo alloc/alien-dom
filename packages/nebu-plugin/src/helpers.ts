@@ -22,6 +22,12 @@ export function isFunctionNode(path: Node): path is FunctionNode {
   )
 }
 
+export function isBindingPattern(
+  path: Node
+): path is Node.ObjectPattern | Node.ArrayPattern | Node.Identifier {
+  return path.isObjectPattern() || path.isArrayPattern() || path.isIdentifier()
+}
+
 export function getComponentName(fn: FunctionNode) {
   let entity: Node.VariableDeclarator | Node.FunctionDeclaration | undefined
 
@@ -117,10 +123,22 @@ export function findExternalReferences(
     },
   })
 
-  const rootVariable =
-    rootNode.parent.isVariableDeclarator() && rootNode.parent.id.isIdentifier()
-      ? rootNode.parent.id.name
-      : null
+  // The variables whose initializer contains the `rootNode`
+  let rootVariables: string[] = []
+  rootNode.findParent(parent => {
+    if (parent.isBlockStatement()) {
+      return true
+    }
+    if (parent.isVariableDeclarator() && isBindingPattern(parent.id)) {
+      rootVariables = toIdentifierSet(parent.id).map(id => id.name)
+      return true
+    }
+    if (parent.isAssignmentPattern()) {
+      rootVariables = toIdentifierSet(parent.left).map(id => id.name)
+      return true
+    }
+    return false
+  })
 
   const externalReferences = new Set<string>()
   for (const scope of scopes.values()) {
@@ -128,8 +146,8 @@ export function findExternalReferences(
       if (scope.context[name]) {
         continue // Skip references to local bindings.
       }
-      if (name === rootVariable) {
-        continue // Skip references to root node's declarator.
+      if (rootVariables.includes(name)) {
+        continue // Skip references to root variables.
       }
       externalReferences.add(name)
     }
