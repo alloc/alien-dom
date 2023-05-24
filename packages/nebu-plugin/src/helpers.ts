@@ -27,14 +27,10 @@ export function getComponentName(fn: FunctionNode) {
 
   if (fn.isFunctionDeclaration()) {
     entity = fn
+  } else if (fn.parent?.isVariableDeclarator()) {
+    entity = fn.parent
   } else {
-    const match = fn.findParent(
-      parent => parent.isVariableDeclarator() || parent.isBlockStatement()
-    )
-    if (!match?.isVariableDeclarator()) {
-      return
-    }
-    entity = match
+    return
   }
 
   const entityName = entity.id?.isIdentifier() && entity.id.name
