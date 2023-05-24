@@ -36,3 +36,38 @@ test('self-referencing variable with function value', t => {
   )
   t.snapshot(result.js)
 })
+
+// TODO: When generating __objectMemo calls, omit any constants outside
+// of the component from any dependency arrays.
+test('constant referenced by auto-memoized function', t => {
+  // Referenced constant exists at top level.
+  let result = nebu.process(
+    'const inner = () => {}; function NewInput() { const outer = () => inner() }',
+    selfUpdatingTransform()
+  )
+  t.snapshot(result.js)
+
+  // Referenced constant exists in a component.
+  result = nebu.process(
+    'function Input() { const inner = () => {}; const outer = () => inner() }',
+    selfUpdatingTransform()
+  )
+  t.snapshot(result.js)
+
+  // Referenced constant exists in a function outside the component.
+  result = nebu.process(
+    'function createInput() { const inner = () => {}; return function Input() { const outer = () => inner() } }',
+    selfUpdatingTransform()
+  )
+  t.snapshot(result.js)
+})
+
+// BUG: This will cause a reference error due to access before lexical
+// declaration of the `outer` variable.
+test('auto-memoized function declared before variable referenced by it', t => {
+  let result = nebu.process(
+    'function Outer() { const Inner = () => <Input onChange={() => outer.remove()} />; const outer = <div><Inner /></div>; return outer }',
+    { jsx: true, plugins: [selfUpdatingTransform()] }
+  )
+  t.snapshot(result.js)
+})
