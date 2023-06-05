@@ -289,7 +289,7 @@ export class AlienEffects<Element extends AnyElement = any> {
   }
 
   protected _runEffect(effect: AlienEffect) {
-    return runEffect(effect, this)
+    runEffect(effect, this)
   }
 }
 

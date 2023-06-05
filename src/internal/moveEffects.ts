@@ -2,7 +2,7 @@ import type { AnyElement } from './types'
 import type { AlienEffects } from '../effects'
 
 /**
- * Retarget any new enablers whose target is found in the new->old
+ * Retarget any new effect with a target that exists in the new->old
  * element map.
  */
 export function moveEffects(
@@ -14,15 +14,15 @@ export function moveEffects(
   const { effects } = newEffects
 
   if (!isComponent) {
-    // The `setElement` call will run the enablers if we don't unset
-    // them here, which would be bad since we don't want to run them
-    // until they've been retargeted.
+    // The `setElement` call will run the effects if we don't unset them
+    // here, which would be bad since we don't want to run them until
+    // they've been retargeted.
     newEffects.effects = undefined
     newEffects.setElement(oldElement)
   }
 
-  effects?.forEach(enabler => {
-    const oldElement = elementMap.get(enabler.target)
-    newEffects.enable(enabler as any, oldElement || enabler.target)
+  effects?.forEach(effect => {
+    const oldElement = elementMap.get(effect.target)
+    newEffects.enable(effect as any, oldElement || effect.target)
   })
 }
