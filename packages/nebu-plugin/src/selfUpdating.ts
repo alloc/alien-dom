@@ -9,16 +9,25 @@ import {
 } from './helpers'
 import { JSXThunkParent, collectThunkParents } from './thunk'
 
-export default function (
-  state: {
-    /**
-     * This value is used to prevent key collisions across builds.
-     */
-    globalNextId: number
-  } = {
-    globalNextId: 0,
-  }
-): Plugin {
+declare const process: any
+
+type PluginState = {
+  /**
+   * This value is used to prevent key collisions across builds.
+   */
+  globalNextId: number
+  /**
+   * Sets the `displayName` property of any higher-order component to
+   * the component's variable name, so the component has a name for
+   * debugging purposes.
+   */
+  ensureComponentNames?: boolean
+}
+
+export default function (state: PluginState = { globalNextId: 0 }): Plugin {
+  const ensureComponentNames =
+    state.ensureComponentNames ?? process.env.NODE_ENV !== 'production'
+
   return {
     Program(program) {
       const globalId = state.globalNextId++
@@ -233,6 +242,29 @@ export default function (
           wrappedNode.after(')')
           if (wrappedNode.isFunctionDeclaration()) {
             wrappedNode.before(`const ${wrappedNode.id!.name} = `)
+          }
+        }
+
+        if (ensureComponentNames && !componentFn.isStatement()) {
+          const nearestStmt = componentFn.findParent(node => node.isStatement())
+          if (nearestStmt) {
+            let componentName = getComponentName(path)
+            if (!componentName) {
+              const nearestVariable = componentFn.findParent(
+                node => node.isVariableDeclarator() || node === nearestStmt
+              )
+              if (
+                nearestVariable?.isVariableDeclarator() &&
+                nearestVariable.id.isIdentifier()
+              ) {
+                componentName = nearestVariable.id.name
+              }
+            }
+            if (componentName) {
+              nearestStmt.after(
+                ` ${componentName}.displayName = "${componentName}";`
+              )
+            }
           }
         }
       }

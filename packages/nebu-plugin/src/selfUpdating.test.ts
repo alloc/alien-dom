@@ -71,3 +71,10 @@ test('auto-memoized function declared before variable referenced by it', t => {
   )
   t.snapshot(result.js)
 })
+
+test('displayName added to selfUpdating component', t => {
+  let result = nebu.process('const Foo = selfUpdating(() => null);', [
+    selfUpdatingTransform(),
+  ])
+  t.snapshot(result.js)
+})
