@@ -49,7 +49,8 @@ export function selfUpdating<
 ): (props: Props) => Element {
   const componentName = DEV
     ? () =>
-        (kAlienRenderFunc(render) || kAlienRenderFunc(Component) || render).name
+        (kAlienRenderFunc(render) || kAlienRenderFunc(Component) || render)
+          .name || (Component as any).displayName
     : noop
 
   const Component = (initialProps: Props): any => {
