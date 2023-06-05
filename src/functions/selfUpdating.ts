@@ -239,7 +239,7 @@ export function selfUpdating<
                 if (oldNodes[0].parentElement) {
                   oldNodes.slice(1).forEach(node => node.remove())
                 }
-                rootNode = rootNode.childNodes[0] as Comment
+                rootNode = oldNodes[0] as Comment
               }
               if (rootNode.parentElement) {
                 if (isFragment(newRootNode)) {
