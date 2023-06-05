@@ -127,7 +127,28 @@ export function selfUpdating<
       componentName
     )
 
+    let updateScheduled = false
+
     const updateComponent = () => {
+      const oldEffects = self.effects
+
+      // Schedule an update for the next microtask if the component
+      // effects from the previous render are still being enabled.
+      if (oldEffects?.partiallyEnabled) {
+        if (updateScheduled) {
+          return
+        }
+        updateScheduled = true
+        return queueMicrotask(() => {
+          updateScheduled = false
+
+          // Do nothing if the component instance was unmounted.
+          if (oldEffects.mounted) {
+            self.update()
+          }
+        })
+      }
+
       let { rootNode, newElements, newEffects, newRefs } = self.startRender()
 
       currentMode.push('ref')
@@ -153,7 +174,6 @@ export function selfUpdating<
       }
 
       // If there are enabled component effects, we are mounted.
-      const oldEffects = self.effects
       const isMounted = !!oldEffects && oldEffects.enabled
 
       // The render function might return an element reference.

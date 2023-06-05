@@ -35,6 +35,13 @@ export interface AlienEffect<
   once?: boolean
 }
 
+const enum AlienEffectState {
+  Disabled = 0,
+  Disabling = 1,
+  Enabling = 2,
+  Enabled = 3,
+}
+
 /**
  * Hook into an element's lifecycle (mount, unmount, enable, disable).
  *
@@ -43,7 +50,7 @@ export interface AlienEffect<
  * any `enable` callbacks will be run immediately.
  */
 export class AlienEffects<Element extends AnyElement = any> {
-  enabled = false
+  state = AlienEffectState.Disabled
   mounted = false
   element?: Element | Comment = undefined
   effects?: Set<AlienEffect> = undefined
@@ -53,6 +60,14 @@ export class AlienEffects<Element extends AnyElement = any> {
 
   constructor(element?: Element | Comment | DocumentFragment) {
     element && this.setElement(element)
+  }
+
+  get enabled() {
+    return this.state > AlienEffectState.Disabling
+  }
+
+  get partiallyEnabled() {
+    return this.state === AlienEffectState.Enabling
   }
 
   setElement(element: Element | Comment | DocumentFragment | null) {
@@ -136,7 +151,7 @@ export class AlienEffects<Element extends AnyElement = any> {
     }
 
     if (!this.enabled) {
-      this.enabled = true
+      this.state = AlienEffectState.Enabling
       currentEffects.push(this)
       try {
         this.effects?.forEach(this._runEffect, this)
@@ -146,6 +161,7 @@ export class AlienEffects<Element extends AnyElement = any> {
             this.disable()
           })
         }
+        this.state = AlienEffectState.Enabled
       } finally {
         this.currentEffect = null
         currentEffects.pop(this)
@@ -158,7 +174,7 @@ export class AlienEffects<Element extends AnyElement = any> {
    */
   disable() {
     if (this.enabled) {
-      this.enabled = false
+      this.state = AlienEffectState.Disabling
       this.abortCtrl?.abort()
       this.effects?.forEach(effect => {
         disableEffect(effect)
@@ -169,6 +185,7 @@ export class AlienEffects<Element extends AnyElement = any> {
       if (this.element && !this.element.isConnected) {
         this._enableOnceMounted()
       }
+      this.state = AlienEffectState.Disabled
     }
   }
 
