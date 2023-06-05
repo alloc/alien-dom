@@ -10,9 +10,8 @@ import {
 } from '../internal/symbols'
 import { Fragment } from '../components/Fragment'
 import { selfUpdating } from '../functions/selfUpdating'
-import { currentEffects, currentComponent } from '../internal/global'
+import { currentComponent } from '../internal/global'
 import { hasTagName } from '../internal/duck'
-import { elementEvent } from '../internal/elementEvent'
 import { appendChild } from './appendChild'
 import { svgTags } from './svg-tags'
 import { decamelize, keys, updateStyle } from './util'
@@ -287,11 +286,7 @@ function applyProp(prop: string, value: any, node: DefaultElement) {
         }
       }
 
-      if (currentEffects.get()) {
-        elementEvent(node, key, value, useCapture)
-      } else {
-        node.addEventListener(key, value, useCapture)
-      }
+      node.addEventListener(key, value, useCapture)
     }
   } else if (isObject(value)) {
     // Custom elements might have object properties, which are set
