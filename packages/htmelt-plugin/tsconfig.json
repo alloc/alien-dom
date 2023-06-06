@@ -1,7 +1,11 @@
 {
-  "extends": "../../tsconfig.json",
-  "include": ["src"],
   "compilerOptions": {
-    "types": ["node"]
+    "esModuleInterop": true,
+    "lib": ["esnext"],
+    "module": "esnext",
+    "moduleResolution": "node",
+    "noEmit": true,
+    "target": "esnext",
+    "strict": true
   }
 }

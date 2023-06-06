@@ -6,14 +6,15 @@
   "types": "dist/plugin.d.ts",
   "scripts": {
     "build": "rimraf dist && tsup src/plugin.ts src/client.ts --format esm --dts",
-    "dev": "tsup src/plugin.ts src/client.ts --format esm --dts --watch --sourcemap"
+    "dev": "tsup src/plugin.ts src/client.ts --format esm --dts --watch --sourcemap",
+    "prepublishOnly": "rimraf dist && tsup src/plugin.ts src/client.ts --format esm --dts"
   },
   "files": [
     "dist"
   ],
   "dependencies": {
     "@alien-dom/esbuild": "workspace:^0.3.0",
-    "@htmelt/plugin": "^0.3.0"
+    "@htmelt/plugin": "^0.3.4"
   },
   "devDependencies": {
     "@types/node": "^18.15.11"

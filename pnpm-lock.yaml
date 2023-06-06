@@ -49,11 +49,11 @@ importers:
   packages/htmelt-plugin:
     specifiers:
       '@alien-dom/esbuild': workspace:^0.3.0
-      '@htmelt/plugin': ^0.3.0
+      '@htmelt/plugin': ^0.3.4
       '@types/node': ^18.15.11
     dependencies:
       '@alien-dom/esbuild': link:../esbuild-plugin
-      '@htmelt/plugin': 0.3.2
+      '@htmelt/plugin': 0.3.4
     devDependencies:
       '@types/node': 18.15.11
 
@@ -289,10 +289,12 @@ packages:
     requiresBuild: true
     optional: true
 
-  /@htmelt/plugin/0.3.2:
-    resolution: {integrity: sha512-HV9+LDd36xWqLvE3GAHsWwUdJpJfmC17FQoCVisagMte/EzHiR05O/Fby2Jpe+dT3grRk5SSAF5QB7o6NbMJ+A==}
+  /@htmelt/plugin/0.3.4:
+    resolution: {integrity: sha512-FajPrD/f9YUe1Xc6hwdnKIDt1jlZCnwJYPUgksgCYHmo+3zzNciF5bccMYHjcDKyJoZxL/UySdzKShHTSu+QwA==}
     dependencies:
       '@rollup/pluginutils': 5.0.2
+      '@types/node': 20.2.5
+      '@types/parse5': 6.0.3
       cac: 6.7.14
       esbuild: 0.17.17
       esbuild-extra: 0.2.1_esbuild@0.17.17
@@ -378,6 +380,14 @@ packages:
   /@types/node/18.15.11:
     resolution: {integrity: sha512-E5Kwq2n4SbMzQOn6wnmBjuK9ouqlURrcZDVfbo9ftDDTFt3nk7ZKK4GMOzoYgnpQJKcxwQw+lGaBvvlMo0qN/Q==}
     dev: true
+
+  /@types/node/20.2.5:
+    resolution: {integrity: sha512-JJulVEQXmiY9Px5axXHeYGLSjhkZEnD+MDPDGbCbIAbMslkKwmygtZFy1X6s/075Yo94sf8GuSlFfPzysQrWZQ==}
+    dev: false
+
+  /@types/parse5/6.0.3:
+    resolution: {integrity: sha512-SuT16Q1K51EAVPz1K29DJ/sXjhSQ0zjvsypYJ6tlwVsRV9jwW5Adq2ch8Dq8kDBCkYnELS7N7VNCSB5nC56t/g==}
+    dev: false
 
   /acorn-walk/8.2.0:
     resolution: {integrity: sha512-k+iyHEuPgSw6SbuDpGQM+06HQUa04DZ3o+F6CSzXMvvI5KMvnaEqXe+YVe555R9nn6GPt404fos4wcgpw12SDA==}
