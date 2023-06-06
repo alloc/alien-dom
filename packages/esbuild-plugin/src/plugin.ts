@@ -1,8 +1,14 @@
 import { Plugin } from 'esbuild'
 import { getBuildExtensions } from 'esbuild-extra'
-import { nebuSelfUpdating, nebuHMR } from '@alien-dom/nebu'
+import {
+  nebuSelfUpdating,
+  nebuHMR,
+  SelfUpdatingPluginState,
+} from '@alien-dom/nebu'
 import { nebu } from 'nebu'
 import { relative } from 'path'
+
+export type { SelfUpdatingPluginState } from '@alien-dom/nebu'
 
 export default function esbuildAlienDOM(
   options: {
@@ -10,9 +16,7 @@ export default function esbuildAlienDOM(
     hmrHash?: (code: string) => string
     onHmrAdded?: (file: string) => void
     /** Internal state for the `nebuSelfUpdating` plugin. */
-    selfUpdating?: {
-      globalNextId: number
-    }
+    selfUpdating?: SelfUpdatingPluginState
   } = {}
 ) {
   const plugin: Plugin = {

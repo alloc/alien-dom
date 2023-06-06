@@ -50,9 +50,12 @@ importers:
     specifiers:
       '@alien-dom/esbuild': workspace:^0.3.0
       '@htmelt/plugin': ^0.3.0
+      '@types/node': ^18.15.11
     dependencies:
       '@alien-dom/esbuild': link:../esbuild-plugin
       '@htmelt/plugin': 0.3.2
+    devDependencies:
+      '@types/node': 18.15.11
 
   packages/nebu-plugin:
     specifiers:

@@ -11,7 +11,7 @@ import { JSXThunkParent, collectThunkParents } from './thunk'
 
 declare const process: any
 
-type PluginState = {
+export type SelfUpdatingPluginState = {
   /**
    * This value is used to prevent key collisions across builds.
    */
@@ -24,7 +24,9 @@ type PluginState = {
   ensureComponentNames?: boolean
 }
 
-export default function (state: PluginState = { globalNextId: 0 }): Plugin {
+export default function (
+  state: SelfUpdatingPluginState = { globalNextId: 0 }
+): Plugin {
   const ensureComponentNames =
     state.ensureComponentNames ?? process.env.NODE_ENV !== 'production'
 

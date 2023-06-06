@@ -1,4 +1,4 @@
-import esbuildAlienDom from '@alien-dom/esbuild'
+import esbuildAlienDom, { SelfUpdatingPluginState } from '@alien-dom/esbuild'
 import { md5Hex, Plugin } from '@htmelt/plugin'
 import path from 'path'
 
@@ -8,7 +8,11 @@ export default (): Plugin => (config, flags) => {
     return {}
   }
 
-  const selfUpdating = { globalNextId: 0 }
+  const selfUpdating: SelfUpdatingPluginState = {
+    globalNextId: 0,
+    ensureComponentNames: config.mode === 'development',
+  }
+
   const acceptableModules = new Set<string>()
   const acceptedModules = new Set<string>()
 
