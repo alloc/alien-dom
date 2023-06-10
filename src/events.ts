@@ -1,156 +1,182 @@
-import { AlienElementList } from './element'
-import { hasForEach } from './internal/duck'
+import { isNode } from './internal/duck'
 import { AnyElement, DefaultElement } from './internal/types'
 import { Disposable } from './disposable'
-import { defineEffectType, AlienBoundEffect, createEffect } from './effects'
+import { AlienBoundEffect, createEffect } from './effects'
+import { isFunction } from '@alloc/is'
+import { noop } from './jsx-dom/util'
+import { makeIterable } from './internal/iterable'
 
-const globalEvents = new Map<string, Set<Function>>()
-const targets = new WeakMap<Element, Map<string, Set<Function>>>()
-
-const emit = (target: any, event: any) => {
-  const events = targets.get(target)
-  if (events) {
-    const callbacks = events.get(event.type)
-    if (callbacks) {
-      event.currentTarget = target
-      callbacks.forEach(callback => callback(event))
-    }
-  }
-  if (target.parentElement) {
-    emit(target.parentElement, event)
-  }
+export interface AlienMessage {
+  readonly target?: Node
+  currentTarget?: Node
+  stopPropagation(): void
+  stopImmediatePropagation(): void
 }
 
-const targetedEvent = /* @__PURE__ */ defineEffectType(
-  (target: Element, event: string, callback: (event: any) => void) => {
-    const events = targets.get(target) || new Map<string, Set<Function>>()
-    targets.set(target, events)
+export interface AlienBubblingMessage<Target extends Node = any>
+  extends AlienMessage {
+  readonly target: Target
+  currentTarget: Node
+}
 
-    const callbacks = events.get(event) || new Set<Function>()
-    events.set(event, callbacks)
+export type AlienReceiver<
+  Message extends object = {},
+  Target extends Node | void = any
+> = (
+  message: (Target extends void ? AlienMessage : AlienBubblingMessage) & Message
+) => void
 
-    callbacks.add(callback!)
-    return () => {
-      callbacks.delete(callback!)
-      if (!callbacks.size) {
-        events.delete(event)
-        if (!events.size) {
-          targets.delete(target as Element)
+type MessageInput<Message extends object> = Message extends any
+  ? {} extends Message
+    ? void
+    : Message
+  : never
+
+type AddReceiverFn<Message extends object> = {
+  <Target extends Node>(
+    target: Target,
+    receiver: AlienReceiver<Message, Target>
+  ): Disposable<AlienBoundEffect<Target>>
+  (receiver: AlienReceiver<Message, void>): Disposable<AlienBoundEffect<void>>
+}
+
+type SendMessageFn<Message extends object> = {
+  <Target extends Node>(target: Target, message: MessageInput<Message>): void
+  (message: MessageInput<Message>): void
+}
+
+/**
+ * Channels are strongly typed event buses.
+ *
+ * When an element is passed as the first argument, the channel will
+ * only send messages to receivers that are bound to that element or to
+ * one of its ancestors.
+ *
+ * The `Message` type must be a plain object. Use the `{}` type to
+ * represent a message with no custom metadata.
+ */
+export type AlienChannel<Message extends object> = AddReceiverFn<Message> &
+  SendMessageFn<Message> &
+  [SendMessageFn<Message>, AddReceiverFn<Message>]
+
+/**
+ * Channels are strongly typed event buses.
+ *
+ * When an element is passed as the first argument, the channel will
+ * only send messages to receivers that are bound to that element or to
+ * one of its ancestors.
+ *
+ * The `Message` type must be a plain object. Use the `{}` type to
+ * represent a message with no custom metadata.
+ */
+export function defineChannel<
+  Message extends object = {}
+>(): AlienChannel<Message> {
+  let untargetedReceivers: Set<AlienReceiver<object, void>> | undefined
+  let targetedReceiverCaches: WeakMap<Node, Set<AlienReceiver>> | undefined
+
+  const bubble = (target: Node, message: AlienBubblingMessage) => {
+    const receivers = targetedReceiverCaches!.get(target)
+    if (receivers) {
+      message.currentTarget = target
+      for (const receiver of receivers) {
+        receiver(message)
+        if (message.stopImmediatePropagation === noop) {
+          return
+        }
+      }
+      if (message.stopPropagation === noop) {
+        return
+      }
+    }
+    if (target.parentNode) {
+      bubble(target.parentNode, message)
+    } else if (untargetedReceivers) {
+      for (const receiver of untargetedReceivers) {
+        receiver(message)
+        if (message.stopImmediatePropagation === noop) {
+          return
         }
       }
     }
   }
-)
 
-const globalEvent = /* @__PURE__ */ defineEffectType(
-  (event: string, callback: (event: any) => void) => {
-    const callbacks = globalEvents.get(event) || new Set()
-    globalEvents.set(event, callbacks)
-
-    callbacks.add(callback!)
-    return () => {
-      callbacks.delete(callback!)
-      if (!callbacks.size) {
-        globalEvents.delete(event)
-      }
+  const addReceiver: AddReceiverFn<Message> = (arg1: any, arg2?: any): any => {
+    if (isNode(arg1)) {
+      const receiversByTarget = (targetedReceiverCaches ||= new WeakMap())
+      return createEffect({
+        target: arg1,
+        args: [arg2],
+        enable(target: Node, receiver: AlienReceiver) {
+          const receivers = receiversByTarget.get(target) || new Set()
+          receiversByTarget.set(target, receivers)
+          receivers.add(receiver)
+          return () => {
+            receivers.delete(receiver)
+            if (!receivers.size) {
+              receiversByTarget.delete(target)
+            }
+          }
+        },
+      })
     }
+    const receivers = (untargetedReceivers ||= new Set())
+    return createEffect({
+      args: [arg1],
+      enable(_: void, receiver: AlienReceiver) {
+        receivers.add(receiver)
+        return () => {
+          receivers.delete(receiver)
+        }
+      },
+    })
   }
-)
 
-export const events: AlienMessenger = {
-  on(
-    event: string,
-    arg2: Element | AlienElementList | ((event: any) => void),
-    arg3?: (event: any) => void
-  ): Disposable<AlienBoundEffect> {
-    let target: Element | AlienElementList | undefined
-    let callback: ((event: any) => void) | undefined
-    if (typeof arg2 == 'function') {
-      callback = arg2
-    } else {
-      target = arg2
-      callback = arg3!
-    }
-    if (target) {
-      if (!(target instanceof Element)) {
-        return createEffect({
-          target,
-          enable(targets: AlienElementList) {
-            const effects = targets.map(target =>
-              targetedEvent(target, event, callback!)
-            )
-            return () => effects.forEach(effect => effect.dispose())
+  const sendMessage: SendMessageFn<Message> = (arg1: any, arg2?: any) => {
+    if (isNode(arg1)) {
+      if (targetedReceiverCaches) {
+        bubble(arg1, {
+          ...(arg2 as object),
+          target: arg1,
+          currentTarget: arg1,
+          stopPropagation() {
+            this.stopPropagation = noop
+          },
+          stopImmediatePropagation() {
+            this.stopImmediatePropagation = noop
           },
         })
       }
-      return targetedEvent(target, event, callback)
+    } else if (untargetedReceivers) {
+      let message: AlienMessage | null = {
+        ...(arg1 as object),
+        stopPropagation: noop,
+        stopImmediatePropagation() {
+          message = null
+        },
+      }
+      for (const receiver of untargetedReceivers) {
+        receiver(message)
+        if (!message) {
+          return
+        }
+      }
     }
-    return globalEvent(event, callback)
-  },
-  dispatch(
-    type: string,
-    target?: Record<string, any> | Element | AlienElementList,
-    event?: Record<string, any>
-  ) {
-    if (target && hasForEach(target)) {
-      return target.forEach(target => {
-        this.dispatch(type, target, event)
-      })
-    }
-    if (arguments.length == 2 && !(target instanceof Element)) {
-      event = target
-      target = undefined
-    }
-    event ||= {}
-    event.type = type
-    if (target) {
-      event.target = target
-      emit(target, event)
-    } else {
-      const callbacks = globalEvents.get(type)
-      callbacks?.forEach(callback => callback(event))
-    }
-  },
-}
-
-interface AlienMessenger {
-  on<T extends Record<string, any>, Element extends AnyElement>(
-    this: AlienMessenger,
-    event: string,
-    target: Element,
-    handler: (event: T & AlienElementMessage<Element>) => void
-  ): Disposable<AlienBoundEffect<Element>>
-  on<T extends Record<string, any>, Element extends AnyElement>(
-    this: AlienMessenger,
-    event: string,
-    target: AlienElementList<Element>,
-    handler: (event: T & AlienElementMessage<Element>) => void
-  ): Disposable<AlienBoundEffect<AlienElementList<Element>>>
-  on<T extends Record<string, any>>(
-    this: AlienMessenger,
-    event: string,
-    handler: (event: T & AlienMessage) => void
-  ): Disposable<AlienBoundEffect<string>>
-
-  dispatch(
-    this: AlienMessenger,
-    event: string,
-    data?: Record<string, any>
-  ): void
-  dispatch(
-    this: AlienMessenger,
-    event: string,
-    target: Element | AlienElementList,
-    data?: Record<string, any>
-  ): void
-}
-
-export type AlienMessage = Record<string, any> & {
-  readonly type: string
-}
-
-export type AlienElementMessage<Element extends AnyElement = DefaultElement> =
-  AlienMessage & {
-    readonly target: AnyElement
-    currentTarget: Element
   }
+
+  return makeIterable(
+    (arg1: any, arg2?: any): any => {
+      if (isFunction(arg1)) {
+        return addReceiver(arg1)
+      }
+      if (arg2 === undefined) {
+        return sendMessage(arg1)
+      }
+      if (isFunction(arg2)) {
+        return addReceiver(arg1, arg2)
+      }
+      return sendMessage(arg1, arg2)
+    },
+    [sendMessage, addReceiver]
+  ) as any
+}

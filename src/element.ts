@@ -12,7 +12,6 @@ import type {
   StyleAttributes,
 } from './internal/types'
 import { animate, AnimationsParam } from './animate'
-import { AlienElementMessage, events } from './events'
 import { AlienBoundEffect, AlienEffect, AlienEffects } from './effects'
 import { canMatch } from './internal/duck'
 import { AlienNodeList } from './internal/nodeList'
@@ -123,24 +122,6 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     selector: string
   ): AlienSelect<SelectedElement, this> | null {
     return this.matches(selector) ? (this as any) : null
-  }
-  /**
-   * Listen for `AlienElementMessage` messages that are dispatched
-   * from the global `events` messenger with a target of this element
-   * or one of its descendants.
-   */
-  on<T extends Record<string, any>>(
-    name: string,
-    callback: (event: T & AlienElementMessage<this>) => void
-  ) {
-    return events.on(name, this, callback)
-  }
-  /**
-   * Dispatch a bubbling `AlienElementMessage` with the global
-   * `events` messenger.
-   */
-  dispatch<T extends Record<string, any>>(name: string, data?: T) {
-    events.dispatch(name, this, data)
   }
   /**
    * Morph this element into another element. If the given `element` had
