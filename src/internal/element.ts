@@ -1,7 +1,7 @@
 import { AlienElement, AlienEvent } from '../element'
 import { AnyElement, AnyEvent } from './types'
 import { CSSProperties } from '../types/dom'
-import { elementEvent } from './elementEvent'
+import { createEventEffect } from './elementEvent'
 import { AlienBoundEffect } from '../effects'
 import { Disposable } from '../disposable'
 
@@ -106,7 +106,7 @@ function getEventMethod<Event extends AnyEvent>(
         options = baseOptions
       }
     }
-    return elementEvent(this, eventType, callback, options)
+    return createEventEffect(this, eventType, callback, options)
   })
 }
 

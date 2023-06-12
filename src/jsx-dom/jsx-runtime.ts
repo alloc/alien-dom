@@ -15,6 +15,7 @@ import { hasTagName } from '../internal/duck'
 import { appendChild } from './appendChild'
 import { svgTags } from './svg-tags'
 import { decamelize, keys, updateStyle } from './util'
+import { createEventEffect } from '../internal/elementEvent'
 
 export type { JSX }
 export { Fragment }
@@ -286,7 +287,15 @@ function applyProp(prop: string, value: any, node: DefaultElement) {
         }
       }
 
-      node.addEventListener(key, value, useCapture)
+      // If this element is being created within a self-updating
+      // component, we need to ensure the event listener can be removed
+      // by the next render. It also allows for transferring a new event
+      // listener to the original element of the same element key.
+      if (currentComponent.get()) {
+        createEventEffect(node, key, value, useCapture)
+      } else {
+        node.addEventListener(key, value, useCapture)
+      }
     }
   } else if (isObject(value)) {
     // Custom elements might have object properties, which are set
