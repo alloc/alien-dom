@@ -1,4 +1,4 @@
-import { isFunction, isString } from '@alloc/is'
+import { isArray, isFunction, isString } from '@alloc/is'
 import type { JSX } from '../types'
 import type { DefaultElement } from '../internal/types'
 import {
@@ -9,7 +9,6 @@ import {
   kAlienPlaceholder,
 } from '../internal/symbols'
 import {
-  hasForEach,
   hasTagName,
   isArrayLike,
   isFragment,
@@ -119,13 +118,18 @@ export function appendChild(
   } else if (isFunction(child)) {
     appendChild(fromElementThunk(child), parent, key)
   } else if (isArrayLike(child)) {
+    if (child.length === 0) return
+
     let children = child
-    if (!hasForEach(children)) {
-      children = Array.from(children)
+    if (!isArray(children) && isLiveContainer(children)) {
+      // Array.from supports NodeList but TypeScript thinks otherwise.
+      children = Array.from(children as HTMLCollection)
     }
+
     const slotKey = key || ''
-    children.forEach((child, i) => {
-      const arrayKey = slotKey + '*' + i
+    for (let childIndex = 0; childIndex < children.length; childIndex++) {
+      const child = children[childIndex]
+      const arrayKey = slotKey + '*' + childIndex
 
       // Fragment children are merged into the nearest ancestor element,
       // so the arrayKey is prepended to avoid conflicts.
@@ -139,13 +143,29 @@ export function appendChild(
       }
 
       appendChild(child as JSX.Children, parent, arrayKey)
-    })
+    }
   } else if (isShadowRoot(child)) {
     const shadowRoot = (parent as HTMLElement).attachShadow(child.attr)
     appendChild(child.children, shadowRoot)
   } else {
     appendChildToNode(document.createTextNode(String(child)), parent)
   }
+}
+
+/**
+ * For the purpose of appending children, we only need to copy the given
+ * container if it's the `childNodes` node list or `children` collection
+ * of some parent node. If we don't, not all children will be appended
+ * (some will be skipped as the container is updated).
+ */
+function isLiveContainer(container: HTMLCollection | NodeList) {
+  const parentNode = container[0].parentNode!
+  return (
+    container ===
+    (container.constructor === NodeList
+      ? parentNode.childNodes
+      : parentNode.children)
+  )
 }
 
 /**
