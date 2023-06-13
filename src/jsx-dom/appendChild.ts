@@ -1,4 +1,4 @@
-import { isFunction } from '@alloc/is'
+import { isFunction, isString } from '@alloc/is'
 import type { JSX } from '../types'
 import type { DefaultElement } from '../internal/types'
 import {
@@ -65,9 +65,15 @@ export function appendChild(
           }
         }
 
-        // If the element doesn't have an explicit key, use a generated
-        // positional key.
-        if (!kAlienElementKey.in(child)) {
+        // Use the positional key provided by the parent node if an
+        // element key isn't explicitly set. If the child is being moved
+        // and was using a positional key provided by its old parent, we
+        // need to update the key to avoid conflicts with new siblings.
+        const oldKey = kAlienElementKey(child)
+        if (
+          oldKey === undefined ||
+          (child.parentNode && isString(oldKey) && oldKey[0] === '*')
+        ) {
           kAlienElementKey(child, key || '*0')
         }
       }
