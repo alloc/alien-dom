@@ -280,16 +280,6 @@ export default function (
         },
       })
 
-      if (helpers.size) {
-        program.unshift(
-          'body',
-          `import { ${Array.from(
-            helpers,
-            ([from, alias]) => `${from} as ${alias}`
-          ).join(', ')} } from 'alien-dom/dist/helpers.mjs'\n`
-        )
-      }
-
       // Wrap the children of each thunk parent in a closure.
       jsxThunkParents.forEach((thunk, path) => {
         const nearestFnOrLoop = path.parent.findParent(isFunctionOrLoop)!
@@ -326,6 +316,16 @@ export default function (
           })
         }
       })
+
+      if (helpers.size) {
+        program.unshift(
+          'body',
+          `import { ${Array.from(
+            helpers,
+            ([from, alias]) => `${from} as ${alias}`
+          ).join(', ')} } from 'alien-dom/dist/helpers.mjs'\n`
+        )
+      }
     },
   }
 }
