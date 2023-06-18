@@ -79,7 +79,7 @@ export function defineChannel<
     const receivers = targetedReceiverCaches!.get(target)
     if (receivers) {
       message.currentTarget = target
-      for (const receiver of receivers) {
+      for (const receiver of [...receivers]) {
         receiver(message)
         if (message.stopImmediatePropagation === noop) {
           return
@@ -92,7 +92,7 @@ export function defineChannel<
     if (target.parentNode) {
       bubble(target.parentNode, message)
     } else if (untargetedReceivers) {
-      for (const receiver of untargetedReceivers) {
+      for (const receiver of [...untargetedReceivers]) {
         receiver(message)
         if (message.stopImmediatePropagation === noop) {
           return
@@ -155,7 +155,7 @@ export function defineChannel<
           message = null
         },
       }
-      for (const receiver of untargetedReceivers) {
+      for (const receiver of [...untargetedReceivers]) {
         receiver(message)
         if (!message) {
           return
