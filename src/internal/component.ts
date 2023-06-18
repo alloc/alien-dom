@@ -161,7 +161,9 @@ export function updateTagProps(element: AnyElement, tag: any, props: any) {
   const instance = tags?.get(tag)
   if (instance) {
     batch(() => {
+      // Update the props of the component instance.
       instance.reinitProps(props)
+      // Update the parent context of the component instance.
       currentContext.forEach((ref, key) => {
         const targetRef = instance.context.get(key)
         if (targetRef) {
