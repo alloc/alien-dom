@@ -293,6 +293,10 @@ export function selfUpdating<
         }
       }
 
+      self.endRender()
+      oldPropChanged = false
+      newPropAdded = false
+
       if (!rootNode) {
         throw Error('expected root node to exist')
       }
@@ -311,10 +315,6 @@ export function selfUpdating<
           }
         })
       }
-
-      self.endRender()
-      oldPropChanged = false
-      newPropAdded = false
     }
 
     self.enable(updateComponent)
