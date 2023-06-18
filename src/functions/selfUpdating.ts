@@ -19,7 +19,7 @@ import {
 } from '../internal/updateFragment'
 import { kAlienFragment, kAlienParentFragment } from '../internal/symbols'
 import { AlienComponent } from '../internal/component'
-import { currentContext, ContextStore } from '../context'
+import { currentContext, ContextStore, forwardContext } from '../context'
 import { prepareFragment } from '../jsx-dom/appendChild'
 import { toChildNodes } from '../internal/fragment'
 import { isFragment, isElement } from '../internal/duck'
@@ -156,6 +156,9 @@ export function selfUpdating<
       currentComponent.push(self)
       currentEffects.push(newEffects)
 
+      // Apply cached parent context if re-rendering.
+      const restoreContext = oldEffects ? forwardContext(context, true) : noop
+
       let threw = true
       let newRootNode: DefaultElement | DocumentFragment | null | undefined
       try {
@@ -165,6 +168,7 @@ export function selfUpdating<
         }
         threw = false
       } finally {
+        restoreContext()
         currentEffects.pop(newEffects)
         currentComponent.pop(self)
         currentMode.pop('ref')

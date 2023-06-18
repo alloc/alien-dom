@@ -17,9 +17,6 @@ export type AlienForwardedContext = {
   ): Result
 }
 
-/** @internal */
-export const currentContext = new Map<AlienContext, Ref<any>>()
-
 export class ContextStore extends Map<AlienContext, Ref<any>> {}
 
 export function createContext<T>(context: ContextStore): AlienForwardedContext
@@ -36,29 +33,21 @@ export function createContext<T>(initial?: T) {
     children: JSX.Children
   }) {
     if (children) {
-      let oldValues: Map<AlienContext, Ref<any>> | undefined
+      let restoreContext: (() => void) | undefined
       let oldValue: Ref<any> | undefined
+
       if (isForwardedContext) {
-        oldValues = new Map(currentContext)
-        initial.forEach((value, key) => {
-          currentContext.set(key, value)
-        })
+        restoreContext = forwardContext(initial)
       } else {
         oldValue = currentContext.get(Provider)
         currentContext.set(Provider, ref(value))
       }
+
       try {
         return Fragment({ children }) as any
       } finally {
         if (isForwardedContext) {
-          initial.forEach((_, key) => {
-            const oldValue = oldValues!.get(key)
-            if (oldValue) {
-              currentContext.set(key, oldValue)
-            } else {
-              currentContext.delete(key)
-            }
-          })
+          restoreContext!()
         } else if (oldValue !== undefined) {
           currentContext.set(Provider, oldValue)
         } else {
@@ -105,4 +94,33 @@ export function createContext<T>(initial?: T) {
   }
 
   return Provider
+}
+
+/** @internal */
+export const currentContext = new Map<AlienContext, Ref<any>>()
+
+/** @internal */
+export function forwardContext(context: ContextStore, isRerender?: boolean) {
+  const oldValues = new Map(currentContext)
+  context.forEach((value, key) => {
+    const ref = currentContext.get(key)
+    if (isRerender && ref) {
+      // If context exists, then we are being re-rendered by a parent,
+      // so we want to allow the parent's context to take precedence
+      // over the initial context.
+      context.set(key, ref)
+    } else {
+      currentContext.set(key, value)
+    }
+  })
+  return () => {
+    context.forEach((_, key) => {
+      const oldValue = oldValues.get(key)
+      if (oldValue) {
+        currentContext.set(key, oldValue)
+      } else {
+        currentContext.delete(key)
+      }
+    })
+  }
 }
