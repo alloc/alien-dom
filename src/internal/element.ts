@@ -71,11 +71,7 @@ function getStyleMethod(key: any) {
       if (arguments.length == 0) {
         return this.style[styleKey]
       }
-      if (value === null) {
-        this.style.removeProperty(styleKey)
-      } else {
-        this.style[styleKey] = value
-      }
+      this.style[styleKey] = value
       return this
     })
   }
