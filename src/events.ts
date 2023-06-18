@@ -110,9 +110,14 @@ export function defineChannel<
         enable(target: Node, receiver: AlienReceiver) {
           const receivers = receiversByTarget.get(target) || new Set()
           receiversByTarget.set(target, receivers)
-          receivers.add(receiver)
+
+          // Clone the receiver in case it was memoized by a component.
+          const newReceiver = receiver.bind(null)
+          receivers.add(newReceiver)
+
           return () => {
-            receivers.delete(receiver)
+            receivers.delete(newReceiver)
+
             if (!receivers.size) {
               receiversByTarget.delete(target)
             }
@@ -124,9 +129,12 @@ export function defineChannel<
     return createEffect({
       args: [arg1],
       enable(_: void, receiver: AlienReceiver) {
-        receivers.add(receiver)
+        // Clone the receiver in case it was memoized by a component.
+        const newReceiver = receiver.bind(null)
+        receivers.add(newReceiver)
+
         return () => {
-          receivers.delete(receiver)
+          receivers.delete(newReceiver)
         }
       },
     })
