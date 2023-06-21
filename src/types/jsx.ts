@@ -11,31 +11,31 @@ import type {
   HTMLAttributeAnchorTarget,
   HTMLAttributeReferrerPolicy,
 } from './html'
+import { AlienEffects } from '../effects'
 
 type HTMLWebViewElement = HTMLElement
 
 type Thunk<T = any> = () => T
 type Thunkable<T> = T | Thunk<T>
 
-type JSXChild =
-  | JSXChild[]
-  | NodeList
-  | HTMLCollection
-  | ShadowRootContainer
-  | DocumentFragment
-  | AnyElement
-  | Text
-  | Comment
-  | string
-  | number
-  | boolean
-  | null
-  | undefined
-
 export declare namespace JSX {
   type Element = HTMLElement
 
-  type Children = Thunkable<JSXChild>
+  type Child =
+    | NodeList
+    | HTMLCollection
+    | ShadowRootContainer
+    | DocumentFragment
+    | AnyElement
+    | Text
+    | Comment
+    | string
+    | number
+    | boolean
+    | null
+    | undefined
+
+  type Children = Thunkable<Child | Children[]>
 
   type ElementOption = HTMLElement | SVGElement | false | null | undefined
   type ElementsOption = ElementOption | ElementOption[]
