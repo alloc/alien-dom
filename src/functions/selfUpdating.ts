@@ -160,7 +160,7 @@ export function selfUpdating<
       const restoreContext = oldEffects ? forwardContext(context, true) : noop
 
       let threw = true
-      let newRootNode: DefaultElement | DocumentFragment | null | undefined
+      let newRootNode: JSX.ElementOption
       try {
         newRootNode = render(props, updateProps)
         if (isFunction(newRootNode)) {

@@ -4,7 +4,6 @@ import type { ReactEventHandler, ChangeEventHandler } from './dom'
 import type { Attributes, AttrWithRef } from './attr'
 import type { SVGProps } from './svg'
 import type { DragEventHandler } from './dom'
-import { AlienEffects } from '../effects'
 import type {
   DetailedHTMLProps,
   HTMLAttributes,
@@ -37,8 +36,14 @@ export declare namespace JSX {
 
   type Children = Thunkable<Child | Children[]>
 
-  type ElementOption = HTMLElement | SVGElement | false | null | undefined
   type ElementsOption = ElementOption | ElementOption[]
+  type ElementOption =
+    | HTMLElement
+    | SVGElement
+    | DocumentFragment
+    | false
+    | null
+    | undefined
 
   /**
    * If defining the type of a component prop that can be a JSX element,
@@ -49,13 +54,9 @@ export declare namespace JSX {
   type ElementProp = Thunkable<ElementOption>
   type ElementsProp = Thunkable<ElementOption | ElementOption[]>
 
-  type ElementType<T> = T extends keyof IntrinsicElements
-    ? IntrinsicElements[T]['ref'] extends
-        | AlienEffects<infer Element>
-        | undefined
-      ? Element
-      : never
-    : never
+  type ElementType =
+    | keyof IntrinsicElements
+    | ((props: { children: Children }) => ElementOption)
 
   type ElementAttributes<T> = keyof IntrinsicElements extends infer TagName
     ? TagName extends keyof IntrinsicElements
@@ -420,6 +421,14 @@ export declare namespace JSX {
     use: SVGProps<SVGUseElement>
     view: SVGProps<SVGViewElement>
   }
+
+  type InstanceType<T extends string> = T extends keyof IntrinsicElements
+    ? IntrinsicElements[T]['ref'] extends
+        | AlienEffects<infer Element>
+        | undefined
+      ? Element
+      : never
+    : never
 }
 
 interface AnchorHTMLAttributes<T> extends HTMLAttributes<T> {
