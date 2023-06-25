@@ -54,9 +54,7 @@ export declare namespace JSX {
   type ElementProp = Thunkable<ElementOption>
   type ElementsProp = Thunkable<ElementOption | ElementOption[]>
 
-  type ElementType =
-    | keyof IntrinsicElements
-    | ((props: { children: Children }) => ElementOption)
+  type ElementType = keyof IntrinsicElements | ((props: any) => ElementOption)
 
   type ElementAttributes<T> = keyof IntrinsicElements extends infer TagName
     ? TagName extends keyof IntrinsicElements
