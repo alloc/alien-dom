@@ -1,4 +1,3 @@
-import type { ShadowRootContainer } from './dist/jsx-dom/shadow'
 import type {
   Attributes,
   AttrWithRef,
@@ -121,4 +120,4 @@ export declare function ShadowRoot(
     // ref?: RefObject<ShadowRoot> | ((value: ShadowRoot) => void)
     children?: JSX.Children | undefined
   }
-): ShadowRootContainer
+): any // ShadowRootContainer

@@ -145,7 +145,7 @@ export function appendChild(
       appendChild(child as JSX.Children, parent, arrayKey)
     }
   } else if (isShadowRoot(child)) {
-    const shadowRoot = (parent as HTMLElement).attachShadow(child.attr)
+    const shadowRoot = (parent as HTMLElement).attachShadow(child.props)
     appendChild(child.children, shadowRoot)
   } else {
     appendChildToNode(document.createTextNode(String(child)), parent)

@@ -41,6 +41,7 @@ export declare namespace JSX {
     | HTMLElement
     | SVGElement
     | DocumentFragment
+    | ShadowRootContainer
     | false
     | null
     | undefined

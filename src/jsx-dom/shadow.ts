@@ -1,3 +1,4 @@
+import { markPureComponent } from '../functions/markPureComponent'
 import type { JSX } from '../types/jsx'
 
 const jsxDomType = Symbol.for('jsx-dom:type')
@@ -6,23 +7,26 @@ const enum JsxDomType {
   ShadowRoot = 'ShadowRoot',
 }
 
-export type ShadowRootContainer = ReturnType<typeof ShadowRoot>
+export type ShadowRootContainer = {
+  [jsxDomType]: JsxDomType.ShadowRoot
+  props: ShadowRootInit
+  children: JSX.Element | JSX.Element[]
+}
 
 export function ShadowRoot({
   children,
-  // ref,
-  ...attr
+  ...props
 }: ShadowRootInit & {
-  // ref?: RefObject<ShadowRoot> | ((value: ShadowRoot) => void)
   children: JSX.Element | JSX.Element[]
-}) {
+}): ShadowRootContainer {
   return {
     [jsxDomType]: JsxDomType.ShadowRoot,
-    // ref,
-    attr,
+    props,
     children,
   }
 }
+
+markPureComponent(ShadowRoot)
 
 export function isShadowRoot(el: any): el is ShadowRootContainer {
   return el != null && el[jsxDomType] === JsxDomType.ShadowRoot
