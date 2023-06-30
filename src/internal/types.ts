@@ -15,6 +15,8 @@ export type Angle = number | string
 
 export interface TransformAttributes {
   rotate?: Angle | null
+  rotateX?: Angle | null
+  rotateY?: Angle | null
   scale?: number | null
   scaleX?: number | null
   scaleY?: number | null

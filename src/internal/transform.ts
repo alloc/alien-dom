@@ -5,6 +5,8 @@ export const cssTransformAliases: Record<string, string | 0> = {
 
   // These functions are not aliased.
   rotate: 0,
+  rotateX: 0,
+  rotateY: 0,
   scale: 0,
   scaleX: 0,
   scaleY: 0,
@@ -12,6 +14,8 @@ export const cssTransformAliases: Record<string, string | 0> = {
 
 export const cssTransformDefaults: Record<string, number | null> = {
   rotate: 0,
+  rotateX: 0,
+  rotateY: 0,
   scale: 1,
   scaleX: 1,
   scaleY: 1,
@@ -27,4 +31,6 @@ export const cssTransformUnits: Record<string, string | undefined> = {
   y: 'px',
   z: 'px',
   rotate: 'deg',
+  rotateX: 'deg',
+  rotateY: 'deg',
 }
