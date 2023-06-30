@@ -19,7 +19,7 @@ import {
 } from './internal/animate/types'
 import { cssTransformDefaults, cssTransformUnits } from './internal/transform'
 import { deleteTimeline, applyAnimatedValue } from './internal/animate'
-import { animatedElements, animatedElementIds } from './internal/global'
+import { animatedElements } from './internal/global'
 import { parseValue } from './internal/animate/parseValue'
 import {
   resolveTransformFn,
@@ -165,7 +165,6 @@ export function animate(
     const step = _animations
     if (targets.length) {
       targets.forEach((target, index) => {
-        markAnimated(target)
         const state = ensureAnimatedElement(target)
         state.step = step
         state.frame = {
@@ -290,12 +289,13 @@ export function animate(
   }
 }
 
-function ensureAnimatedElement(target: Element): AnimatedElement {
-  let state: any = animatedElements.get(target)
+function ensureAnimatedElement(target: DefaultElement): AnimatedElement {
+  let state = animatedElements.get(target)
   if (!state) {
     state = {
       svgMode: !!svgTags[target.tagName] && target.tagName != 'svg',
       nodes: null,
+      step: null,
       frame: null,
       timelines: null,
       transform: null,
@@ -364,12 +364,6 @@ function addTimelinePromise(
   return timelines
 }
 
-function markAnimated(target: HTMLElement) {
-  if (target.dataset.animatedId == null) {
-    animatedElementIds.add((target.dataset.animatedId = '' + nextElementId++))
-  }
-}
-
 function applyAnimation(
   target: HTMLElement,
   state: AnimatedElement,
@@ -377,7 +371,6 @@ function applyAnimation(
   spring: SpringResolver,
   keys: AnimatedProp<any>[]
 ) {
-  markAnimated(target)
   startLoop()
 
   const { nodes, svgMode } = state as {
@@ -535,45 +528,38 @@ function startLoop() {
     const dt = now - (lastTime || now)
     lastTime = now
 
-    const targets: [DefaultElement, AnimatedElement, any][] = []
+    let stepResults: Map<DefaultElement, any> | undefined
 
-    for (const targetId of animatedElementIds) {
-      const target = document.querySelector(
-        `[data-animated-id="${targetId}"]`
-      ) as DefaultElement
-      if (!target) {
-        animatedElementIds.delete(targetId)
+    for (const [target, state] of animatedElements) {
+      if (!target.isConnected) {
+        animatedElements.delete(target)
         continue
       }
-      const state = animatedElements.get(target)
-      if (state) {
-        if (state.nodes) {
-          // Perform reads before writes for better performance.
-          ensureFromValues(target, state, state.nodes)
+      if (state.nodes) {
+        // Perform reads before writes for better performance.
+        ensureFromValues(target, state, state.nodes)
+      }
+      if (state.step) {
+        const { step, frame } = state as {
+          step: StepAnimationFn
+          frame: StepAnimation
         }
-        let stepResult: any
-        if (state.step) {
-          const { step, frame } = state as {
-            step: StepAnimationFn
-            frame: StepAnimation
-          }
 
-          frame.t0 ??= now
-          frame.dt = dt
-          frame.time = now
-          frame.duration += dt
+        frame.t0 ??= now
+        frame.dt = dt
+        frame.time = now
+        frame.duration += dt
 
-          // Calculate the next step before any writes, in case the step
-          // function wants to read from its target.
-          stepResult = step(frame)
-        }
-        targets.push([target, state, stepResult])
-      } else {
-        animatedElementIds.delete(targetId)
+        // Calculate the next step before any writes, in case the step
+        // function wants to read from its target.
+        const stepResult = step(frame)
+
+        stepResults ||= new Map()
+        stepResults.set(target, stepResult)
       }
     }
 
-    for (const [target, state, stepResult] of targets) {
+    for (const [target, state] of animatedElements) {
       const { nodes, svgMode, style, onStart } = state
 
       if (onStart) {
@@ -617,6 +603,7 @@ function startLoop() {
 
       if (state.step) {
         const frame = state.frame!
+        const stepResult = stepResults!.get(target)
 
         if (stepResult) {
           for (const key of keys(stepResult)) {
@@ -667,12 +654,11 @@ function startLoop() {
       }
 
       if (done) {
-        animatedElementIds.delete(target.dataset.animatedId!)
-        delete target.dataset.animatedId
+        animatedElements.delete(target)
       }
     }
 
-    if (animatedElementIds.size) {
+    if (animatedElements.size) {
       loop = requestAnimationFrame(step)
     } else {
       loop = undefined

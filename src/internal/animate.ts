@@ -82,10 +82,6 @@ export function copyAnimatedStyle(
       applyAnimatedValue(newElement, null, svgMode, key, style[key])
     }
   }
-  const { animatedId } = oldElement.dataset
-  if (animatedId) {
-    newElement.dataset.animatedId = animatedId
-  }
 }
 
 export function applyAnimatedValue(
