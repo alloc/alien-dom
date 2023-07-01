@@ -10,14 +10,14 @@ const enum JsxDomType {
 export type ShadowRootContainer = {
   [jsxDomType]: JsxDomType.ShadowRoot
   props: ShadowRootInit
-  children: JSX.Element | JSX.Element[]
+  children: JSX.Children
 }
 
 export function ShadowRoot({
   children,
   ...props
 }: ShadowRootInit & {
-  children: JSX.Element | JSX.Element[]
+  children: JSX.Children
 }): ShadowRootContainer {
   return {
     [jsxDomType]: JsxDomType.ShadowRoot,
