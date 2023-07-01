@@ -559,6 +559,8 @@ function startLoop() {
       }
     }
 
+    let loopDone = true
+
     for (const [target, state] of animatedElements) {
       const { nodes, svgMode, style, onStart } = state
 
@@ -653,16 +655,16 @@ function startLoop() {
         }
       }
 
-      if (done) {
-        animatedElements.delete(target)
+      if (!done) {
+        loopDone = false
       }
     }
 
-    if (animatedElements.size) {
-      loop = requestAnimationFrame(step)
-    } else {
+    if (loopDone) {
       loop = undefined
       lastTime = undefined
+    } else {
+      loop = requestAnimationFrame(step)
     }
   })
 }
