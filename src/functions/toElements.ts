@@ -3,9 +3,10 @@ import type { DefaultElement } from '../internal/types'
 import { kAlienPlaceholder } from '../internal/symbols'
 import { toChildNodes } from '../internal/fragment'
 import { isFragment, isElement } from '../internal/duck'
+import { isShadowRoot } from '../jsx-dom/shadow'
 
 export function toElements(element: JSX.ElementOption): DefaultElement[] {
-  if (!element) {
+  if (!element || isShadowRoot(element)) {
     return []
   }
   if (isFragment(element)) {
