@@ -474,7 +474,7 @@ function updateAnimatedNode(
   node.onChange = onChange || null
   node.onRest = onRest || null
 
-  if (parsedFrom) {
+  if (parsedFrom || isColor) {
     node.lastPosition = null
   }
 
