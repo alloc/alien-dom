@@ -1,5 +1,5 @@
 import type { JSX } from '../types/jsx'
-import type { DefaultElement } from '../internal/types'
+import type { AnyElement, DefaultElement } from '../internal/types'
 import { ref, attachRef } from '../signals'
 import {
   kAlienEffects,
@@ -22,12 +22,14 @@ import { AlienComponent } from '../internal/component'
 import { currentContext, ContextStore, forwardContext } from '../context'
 import { prepareFragment } from '../jsx-dom/appendChild'
 import { toChildNodes } from '../internal/fragment'
-import { isFragment, isElement } from '../internal/duck'
+import { isFragment, isElement, isNode } from '../internal/duck'
 import { kCommentNodeType } from '../internal/constants'
 import { noop } from '../jsx-dom/util'
 import { isFunction } from '@alloc/is'
 import { fromElementThunk } from '../internal/fromElementThunk'
 import { isConnected } from '../internal/isConnected'
+import { isShadowRoot } from '../jsx-dom/shadow'
+import { Fragment } from '../jsx-dom/jsx-runtime'
 
 /**
  * Create a self-updating component whose render function can mutate its
@@ -38,15 +40,9 @@ import { isConnected } from '../internal/isConnected'
  * event listeners can have side effects. Another exception is that any
  * object created within the render function can be mutated freely.
  */
-export function selfUpdating<
-  Props extends object,
-  Element extends JSX.Element = JSX.Element
->(
-  render: (
-    props: Props,
-    update: (props: Partial<Props>) => void
-  ) => Element | null | undefined
-): (props: Props) => Element {
+export function selfUpdating<Props extends object, Result extends JSX.Children>(
+  render: (props: Props, update: (props: Partial<Props>) => void) => Result
+): (props: Props) => Result {
   const componentName = DEV
     ? () =>
         (kAlienRenderFunc(render) || kAlienRenderFunc(Component) || render)
@@ -160,11 +156,18 @@ export function selfUpdating<
       const restoreContext = oldEffects ? forwardContext(context, true) : noop
 
       let threw = true
-      let newRootNode: JSX.ElementOption
+      let newRootNode: JSX.Children
       try {
         newRootNode = render(props, updateProps)
         if (isFunction(newRootNode)) {
           newRootNode = fromElementThunk(newRootNode as any)
+        }
+        if (isShadowRoot(newRootNode)) {
+          // TODO: support ShadowRoot morphing
+          throw Error('ShadowRoot cannot be returned by component')
+        }
+        if (newRootNode != null && !isNode(newRootNode)) {
+          newRootNode = Fragment({ children: newRootNode })
         }
         threw = false
       } finally {
@@ -227,7 +230,7 @@ export function selfUpdating<
                 kAlienElementKey(rootNode, newKey)
 
                 // Diff the root nodes and retarget any new effects.
-                updateElement(rootNode, newRootNode as Element, self)
+                updateElement(rootNode, newRootNode as AnyElement, self)
               }
             }
           }
@@ -255,7 +258,7 @@ export function selfUpdating<
                   updateParentFragment(
                     parentFragment,
                     [rootNode],
-                    kAlienFragment(newRootNode) || [newRootNode as Element]
+                    kAlienFragment(newRootNode) || [newRootNode as AnyElement]
                   )
                 }
                 // If the rootNode and newRootNode have different
