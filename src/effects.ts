@@ -11,8 +11,7 @@ import {
   EffectFlags,
   runEffect,
 } from './internal/effects'
-
-type Promisable<T> = T | Promise<T>
+import { Promisable } from './promises'
 
 export interface AlienEffect<
   Target = any,
