@@ -1,5 +1,14 @@
+import { isString } from '@alloc/is'
 import { noop } from './jsx-dom/util'
 import { ReadonlyRef, Ref, ref } from './signals'
+
+export type MachineStateSetter<State extends { value: string }> = {
+  <S extends State>(newState: S): S
+  <Value extends string, S extends Extract<State, { value: Value }>>(
+    value: Value,
+    newState: Omit<S, 'value'>
+  ): S
+}
 
 export function createMachine<
   State extends { value: string },
@@ -7,7 +16,7 @@ export function createMachine<
 >(
   setup: (
     params: Params,
-    setState: <S extends State>(newState: S) => S,
+    setState: MachineStateSetter<State>,
     machine: Machine<State, Params>
   ) => State
 ): MachineType<State, Params> {
@@ -20,9 +29,14 @@ export function createMachine<
       super(params, stateRef)
       stateRef.value = setup(
         params,
-        newState => {
+        (arg1: State | State['value'], arg2?: Omit<State, 'value'>) => {
+          const newState = isString(arg1)
+            ? { ...(arg2 as State), value: arg1 }
+            : arg1
+
           stateRef.value = newState
           onChange(newState)
+
           return newState
         },
         this
