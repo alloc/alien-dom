@@ -2,10 +2,9 @@ import { useMicrotask } from './useMicrotask'
 import { useState } from './useState'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 
-export function useEffect(
-  effect: () => (() => void) | void,
-  deps: readonly any[]
-) {
+export type EffectCallback = () => (() => void) | void
+
+export function useEffect(effect: EffectCallback, deps: readonly any[]) {
   const state = useState(initialState, deps)
   useMicrotask(() => {
     state.dispose?.()

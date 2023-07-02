@@ -1,6 +1,7 @@
 export * from './useAsync'
 export * from './useComputed'
 export * from './useContext'
+export * from './useDelayedEffect'
 export * from './useEffect'
 export * from './useForceUpdate'
 export * from './useGlobalId'
