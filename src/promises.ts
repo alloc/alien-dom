@@ -22,6 +22,14 @@ export function promiseEvent<T extends Event>(
   )
 }
 
+export function promiseTimeout(delay: number) {
+  let timerId: any, dispose: () => void
+  return attachDisposer(
+    new Promise<void>(resolve => (timerId = setTimeout(resolve, delay))),
+    (dispose = () => clearTimeout(timerId))
+  )
+}
+
 /**
  * Disposable promises are useful for async dependencies that need to be
  * disposed of when the component unmounts. For example, async data should stop
