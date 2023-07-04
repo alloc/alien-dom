@@ -19,7 +19,7 @@ export type AlienForwardedContext = {
 
 export class ContextStore extends Map<AlienContext, Ref<any>> {}
 
-export function createContext<T>(context: ContextStore): AlienForwardedContext
+export function createContext(context: ContextStore): AlienForwardedContext
 export function createContext<T>(initial: T): AlienContext<T>
 export function createContext<T>(): AlienContext<T | undefined>
 export function createContext<T>(initial?: T) {
