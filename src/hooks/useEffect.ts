@@ -2,7 +2,8 @@ import { useMicrotask } from './useMicrotask'
 import { useState } from './useState'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 
-export type EffectCallback = () => (() => void) | void
+export type EffectResult = (() => void) | void
+export type EffectCallback = () => EffectResult
 
 export function useEffect(effect: EffectCallback, deps: readonly any[]) {
   const state = useState(initialState, deps)
