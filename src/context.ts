@@ -6,6 +6,7 @@ import { currentComponent } from './internal/global'
 export type AlienContext<T = any> = {
   (props: { value: T; children: JSX.Children }): JSX.Element
   get(): T
+  with(value: T): [AlienContext<T>, Ref<T>]
 }
 
 export type AlienForwardedContext = {
@@ -39,8 +40,8 @@ export function createContext<T>(initial?: T) {
       if (isForwardedContext) {
         restoreContext = forwardContext(initial)
       } else {
-        oldValue = currentContext.get(Provider)
-        currentContext.set(Provider, ref(value))
+        oldValue = currentContext.get(Provider as any)
+        currentContext.set(Provider as any, ref(value))
       }
 
       try {
@@ -49,9 +50,9 @@ export function createContext<T>(initial?: T) {
         if (isForwardedContext) {
           restoreContext!()
         } else if (oldValue !== undefined) {
-          currentContext.set(Provider, oldValue)
+          currentContext.set(Provider as any, oldValue)
         } else {
-          currentContext.delete(Provider)
+          currentContext.delete(Provider as any)
         }
       }
     }
@@ -64,8 +65,8 @@ export function createContext<T>(initial?: T) {
     }
     const component = currentComponent.get()
     const current = component
-      ? component.context.get(Provider)
-      : currentContext.get(Provider)
+      ? component.context.get(Provider as any)
+      : currentContext.get(Provider as any)
     if (current) {
       return current.value
     }
@@ -91,9 +92,15 @@ export function createContext<T>(initial?: T) {
         })
       }
     }
+  } else {
+    Provider.with = withProvider
   }
 
-  return Provider
+  return Provider as any
+}
+
+function withProvider<T>(this: AlienContext<T>, value: T) {
+  return [this, ref(value)]
 }
 
 /** @internal */
