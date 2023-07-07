@@ -2,6 +2,7 @@ import type { JSX } from './types/jsx'
 import { Fragment } from './jsx-dom/jsx-runtime'
 import { ref, Ref } from './signals'
 import { currentComponent } from './internal/global'
+import { markPureComponent } from './functions/markPureComponent'
 
 export type AlienContext<T = any> = {
   (props: { value: T; children: JSX.Children }): JSX.Element
@@ -58,6 +59,8 @@ export function createContext<T>(initial?: T) {
     }
     return null
   }
+
+  markPureComponent(Provider)
 
   Provider.get = (): T => {
     if (isForwardedContext) {
