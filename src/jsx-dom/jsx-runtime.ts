@@ -73,7 +73,7 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
 
   const component = currentComponent.get()
   if (component) {
-    if (key !== undefined) {
+    if (key != null) {
       oldNode = component.refs?.get(key)
     }
     if (typeof tag !== 'string' && !kAlienPureComponent.in(tag)) {
@@ -132,7 +132,7 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
     throw new TypeError(`Invalid JSX element type: ${tag}`)
   }
 
-  if (node && key !== undefined) {
+  if (node && key != null) {
     if (component) {
       // Check for equivalence as the return value of a custom component
       // might be the cached result of an element thunk.
