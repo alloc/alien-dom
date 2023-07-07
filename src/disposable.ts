@@ -11,3 +11,7 @@ export function attachDisposer<T extends object>(
   })
   return object as any
 }
+
+export function isDisposable<T extends {}>(arg: T): arg is Disposable<T> {
+  return typeof (arg as any).dispose === 'function'
+}
