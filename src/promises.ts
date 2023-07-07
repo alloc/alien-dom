@@ -1,9 +1,12 @@
-import { attachDisposer } from './disposable'
+import { attachDisposer, isDisposable } from './disposable'
 import { noop } from './jsx-dom/util'
 import { ref } from './signals'
 
 export type Promisable<T> = T | PromiseLike<T>
 
+/**
+ * A disposable promise for a one-time event.
+ */
 export function promiseEvent<T extends Event>(
   target: EventTarget,
   type: string
@@ -22,11 +25,31 @@ export function promiseEvent<T extends Event>(
   )
 }
 
+/**
+ * A disposable promise for `setTimeout`.
+ */
 export function promiseTimeout(delay: number) {
   let timerId: any, dispose: () => void
   return attachDisposer(
     new Promise<void>(resolve => (timerId = setTimeout(resolve, delay))),
     (dispose = () => clearTimeout(timerId))
+  )
+}
+
+/**
+ * A disposable `Promise.race` that disposes all promises when settled.
+ */
+export function promiseRace<T>(promises: Iterable<T | PromiseLike<T>>) {
+  let dispose: () => void
+  return attachDisposer(
+    Promise.race(promises).finally(() => dispose()),
+    (dispose = () => {
+      for (const promise of promises) {
+        if (promise instanceof Promise && isDisposable(promise)) {
+          promise.dispose()
+        }
+      }
+    })
   )
 }
 
