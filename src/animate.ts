@@ -660,6 +660,24 @@ function startLoop() {
       }
     }
 
+    // If the loop is about to stop, we need to check if any animations were
+    // scheduled from inside onStart/onChange/onRest callbacks.
+    if (loopDone) {
+      for (const [, state] of animatedElements) {
+        if (state.nodes) {
+          const done = Object.values(state.nodes).every(node => node.done)
+          if (!done) {
+            loopDone = false
+            break
+          }
+        }
+        if (state.frame && !state.frame.done) {
+          loopDone = false
+          break
+        }
+      }
+    }
+
     if (loopDone) {
       loop = undefined
       lastTime = undefined
