@@ -579,6 +579,11 @@ function startLoop() {
           if (node.done) {
             continue
           }
+          // TODO figure out why node.from is sometimes null
+          if (node.from == null) {
+            done = false
+            continue
+          }
           const position = advance(node, node.spring, dt, key)
           if (node.frame) {
             const values = frames.get(node.frame) || []
