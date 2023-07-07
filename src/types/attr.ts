@@ -1,5 +1,4 @@
 import type { AnyElement } from '../internal/types'
-import type { AlienEffects } from '../effects'
 
 export type Booleanish = boolean | 'true' | 'false'
 
@@ -14,5 +13,5 @@ export interface Attributes {
 }
 
 export interface AttrWithRef<Element extends AnyElement> extends Attributes {
-  ref?: AlienEffects<Element> | undefined
+  ref?: { setElement(element: Element): void }
 }

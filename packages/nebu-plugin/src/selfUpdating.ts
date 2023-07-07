@@ -101,7 +101,10 @@ export default function (
           // A key must be defined for elements using a custom component,
           // or else we wouldn't be able to update its props from inside
           // the parent component.
-          if (isHostElement(path.parent as Node.JSXElement)) {
+          if (
+            isHostElement(path.parent as Node.JSXElement) &&
+            !hasRefAttribute(path)
+          ) {
             skipped =
               !path.parent.findParent(parent => {
                 if (parent === componentFn) {
@@ -351,5 +354,11 @@ function isFunctionOrLoop(node: Node) {
     node.isForStatement() ||
     node.isWhileStatement() ||
     node.isDoWhileStatement()
+  )
+}
+
+function hasRefAttribute(path: Node.JSXOpeningElement) {
+  return path.attributes.some(
+    attr => attr.isJSXAttribute() && attr.name.name === 'ref'
   )
 }

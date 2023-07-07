@@ -149,6 +149,11 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
     }
   }
 
+  // TODO: call this when props.ref changes
+  if (props.ref && node && node !== oldNode) {
+    props.ref.setElement(node)
+  }
+
   return node
 }
 
@@ -184,11 +189,6 @@ function applyProp(prop: string, value: any, node: DefaultElement) {
   }
 
   switch (prop) {
-    case 'ref':
-      if (value) {
-        value.setElement(node)
-      }
-      return
     case 'class':
     case 'className':
       setAttribute(node, 'class', className(value))
@@ -236,6 +236,7 @@ function applyProp(prop: string, value: any, node: DefaultElement) {
       }
       return
     case 'key':
+    case 'ref':
     case 'namespaceURI':
       return
     // fallthrough

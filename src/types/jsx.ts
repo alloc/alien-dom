@@ -423,7 +423,7 @@ export declare namespace JSX {
 
   type InstanceType<T extends string> = T extends keyof IntrinsicElements
     ? IntrinsicElements[T]['ref'] extends
-        | AlienEffects<infer Element>
+        | { setElement(e: infer Element): void }
         | undefined
       ? Element
       : never
