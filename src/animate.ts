@@ -30,7 +30,7 @@ export type SpringAnimation<
   Element extends AnyElement = any,
   Props extends object = AnimatedProps<Element>
 > = {
-  to: Props
+  to?: Props | Falsy
   from?: Props | Falsy
   spring?: SpringConfigOption<Props>
   velocity?: number | { [K in keyof Props]?: number }
@@ -393,7 +393,7 @@ function applyAnimation(
       target,
       svgMode,
       key,
-      animation.to[key],
+      animation.to?.[key],
       animation.from != null ? animation.from[key] : null,
       oldNode,
       spring,
