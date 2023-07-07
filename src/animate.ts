@@ -394,7 +394,7 @@ function applyAnimation(
       svgMode,
       key,
       animation.to?.[key],
-      animation.from != null ? animation.from[key] : null,
+      animation.from?.[key],
       oldNode,
       spring,
       !animation.velocity || isNumber(animation.velocity)
