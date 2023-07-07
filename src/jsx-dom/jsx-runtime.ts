@@ -112,7 +112,7 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
     node = props.namespaceURI
       ? document.createElementNS(props.namespaceURI, tag)
       : document.createElement(tag)
-    applyProps(node, props)
+    applyProps(node, props, !oldNode)
 
     // Select `option` elements in `select`
     if (hasTagName(node, 'SELECT') && props.value != null) {
@@ -333,9 +333,23 @@ function setAttributeNS(
   node.setAttributeNS(namespace, key, value as any)
 }
 
-export function applyProps(node: HTMLElement | SVGElement, props: object) {
-  for (const prop of keys(props)) {
-    applyProp(prop, props[prop], node)
+const initialPropPrefix = 'initial:'
+
+export function applyProps(
+  node: HTMLElement | SVGElement,
+  props: Record<string, any>,
+  initial?: boolean
+) {
+  for (let prop of keys(props)) {
+    const value = props[prop]
+    if (prop.startsWith(initialPropPrefix)) {
+      if (initial) {
+        prop = prop.slice(initialPropPrefix.length)
+      } else {
+        continue
+      }
+    }
+    applyProp(prop, value, node)
   }
   return node
 }
