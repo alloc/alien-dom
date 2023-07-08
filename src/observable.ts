@@ -133,36 +133,25 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
     super(emptySymbol)
   }
 
-  protected _isObserved(_observer: Observer, isObserved: boolean) {
-    // Create our own observer once the ref is observed.
+  protected _isObserved(observer: Observer, isObserved: boolean) {
+    super._isObserved(observer, isObserved)
+
     // Destroy our own observer once the ref is no longer observed.
-    if (!isObserved || !this._observer) {
-      if (this._observer) {
-        this._observer.dispose()
-        this._observer = null
-      } else {
-        const observer = (this._observer = new Observer())
-        this._refs = observer.refs
-        observer.onUpdate = valueProperty.set!.bind(this)
-        observer.update(this.compute)
-      }
+    if (!isObserved) {
+      this._observer?.dispose()
+      this._observer = null
+    }
+    // Create our own observer once the ref is observed.
+    else if (!this._observer) {
+      this._setupObserver()
     }
   }
 
-  get value() {
-    if (this._observer) {
-      return super.value
-    }
-    if (this._value === emptySymbol) {
-      return this._update()
-    }
-    // Check if a dependency has changed since last access.
-    for (const ref of this._refs!) {
-      if (ref._version > this._version) {
-        return this._update()
-      }
-    }
-    return this._value
+  protected _setupObserver() {
+    const observer = (this._observer = new Observer())
+    this._refs = observer.refs
+    observer.onUpdate = valueProperty.set!.bind(this)
+    observer.update(this.compute)
   }
 
   protected _update() {
@@ -190,6 +179,26 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
     }
 
     if (error) throw error
+    return this._value
+  }
+
+  get value() {
+    if (this._observer) {
+      return super.value
+    }
+    if (access !== unseenAccess) {
+      this._setupObserver()
+      return super.value
+    }
+    if (this._value === emptySymbol) {
+      return this._update()
+    }
+    // Check if a dependency has changed since last access.
+    for (const ref of this._refs!) {
+      if (ref._version > this._version) {
+        return this._update()
+      }
+    }
     return this._value
   }
 }
