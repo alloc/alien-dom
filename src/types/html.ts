@@ -26,9 +26,7 @@ interface DetailedHTMLFactory<
 }
 
 export type DetailedHTMLProps<E extends HTMLAttributes<T>, T> = E &
-  AttrWithRef<Extract<T, AnyElement>> & {
-    [K in string & keyof E as `initial:${K}`]?: E[K]
-  }
+  AttrWithRef<Extract<T, AnyElement>>
 
 export type HTMLStyleAttribute =
   | readonly StyleAttributes[]
