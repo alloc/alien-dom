@@ -1,5 +1,5 @@
-import { Ref, ref } from '../signals'
 import { currentComponent } from '../internal/global'
+import { Ref, ref } from '../observable'
 
 type Fn = (...args: any[]) => any
 

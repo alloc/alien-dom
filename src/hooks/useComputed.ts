@@ -1,6 +1,5 @@
+import { ReadonlyRef, computed } from '../observable'
 import { useMemo } from './useMemo'
-import { computed } from '@preact/signals-core'
-import type { ReadonlyRef } from '../signals'
 
 /**
  * Like `useMemo` but a `ReadonlyRef` is returned, which is observable.

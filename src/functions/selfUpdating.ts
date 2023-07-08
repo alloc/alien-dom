@@ -1,6 +1,5 @@
 import type { JSX } from '../types/jsx'
 import type { AnyElement, DefaultElement } from '../internal/types'
-import { ref, attachRef } from '../signals'
 import {
   kAlienEffects,
   kAlienElementKey,
@@ -30,6 +29,8 @@ import { fromElementThunk } from '../internal/fromElementThunk'
 import { isConnected } from '../internal/isConnected'
 import { isShadowRoot } from '../jsx-dom/shadow'
 import { Fragment } from '../jsx-dom/jsx-runtime'
+import { attachRef } from './attachRef'
+import { ref } from '../observable'
 
 /**
  * Create a self-updating component whose render function can mutate its

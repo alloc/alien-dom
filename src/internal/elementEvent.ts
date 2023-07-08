@@ -1,4 +1,3 @@
-import { batch } from '@preact/signals-core'
 import { defineEffectType, getCurrentEffect } from '../effects'
 import { isFunction } from '@alloc/is'
 
@@ -29,7 +28,7 @@ export const createEventEffect = defineEffectType(
         if (isOnce) {
           self.context?.remove(self)
         }
-        batch(userHandler.bind(null, event))
+        userHandler(event)
       }
     }
     target.addEventListener(eventName, handler, options)

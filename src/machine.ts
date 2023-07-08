@@ -1,6 +1,6 @@
 import { isString } from '@alloc/is'
 import { noop } from './jsx-dom/util'
-import { ReadonlyRef, Ref, ref } from './signals'
+import { ReadonlyRef, Ref, ref } from './observable'
 
 export type MachineStateSetter<State extends { value: string }> = {
   <S extends State>(newState: S): S

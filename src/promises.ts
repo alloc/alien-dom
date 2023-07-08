@@ -1,6 +1,6 @@
 import { attachDisposer, isDisposable } from './disposable'
 import { noop } from './jsx-dom/util'
-import { ref } from './signals'
+import { ref } from './observable'
 
 export type Promisable<T> = T | PromiseLike<T>
 

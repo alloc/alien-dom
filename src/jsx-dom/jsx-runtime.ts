@@ -14,7 +14,6 @@ import { appendChild } from './appendChild'
 import { svgTags } from './svg-tags'
 import { decamelize, keys, updateStyle } from './util'
 import { createEventEffect } from '../internal/elementEvent'
-import { batch } from '@preact/signals-core'
 import { currentContext } from '../context'
 import { selfUpdating } from '../functions/selfUpdating'
 
@@ -88,14 +87,12 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
     if (tags) {
       const instance = tags.get(tag)
       if (instance) {
-        batch(() => {
-          instance.updateProps(props)
-          currentContext.forEach((ref, key) => {
-            const targetRef = instance.context.get(key)
-            if (targetRef) {
-              targetRef.value = ref.peek()
-            }
-          })
+        instance.updateProps(props)
+        currentContext.forEach((ref, key) => {
+          const targetRef = instance.context.get(key)
+          if (targetRef) {
+            targetRef.value = ref.peek()
+          }
         })
       }
       const updatedNode = instance?.rootNode

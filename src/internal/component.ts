@@ -1,9 +1,7 @@
-import { batch, effect } from '@preact/signals-core'
 import { JSX, ElementKey, FunctionComponent } from '../types'
 import { AnyElement, DefaultElement } from './types'
 import { AlienEffects } from '../effects'
 import { getAlienEffects } from './effects'
-import { Ref } from '../signals'
 import { AlienContext, currentContext } from '../context'
 import { currentComponent } from './global'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
@@ -15,6 +13,7 @@ import {
   kAlienEffects,
   kAlienNewEffects,
 } from './symbols'
+import { Observer, Ref, observe } from '../observable'
 
 export type ElementTags = Map<FunctionComponent, AlienComponent<any>>
 export type ElementRefs = Map<ElementKey, ChildNode | DocumentFragment>
@@ -53,31 +52,31 @@ export class AlienComponent<Props = any> {
    * When non-null, this component will re-render on prop changes and
    * other observables accessed during render.
    */
-  private unwatch: (() => void) | null = null
+  private observer: Observer | null = null
   private render: (() => void) | null = null
 
   /**
    * Note: This doesn't add the root node to a document.
    */
   enable(render?: () => void) {
-    if (this.unwatch) {
+    if (this.observer) {
       if (!render) return
-      this.unwatch()
+      this.observer.dispose()
     }
     this.render = render!
-    this.unwatch = effect(this.render)
+    this.observer = observe(this.render)
   }
 
   /**
    * Note: This doesn't remove the root node from its document.
    */
   disable() {
-    if (this.unwatch) {
+    if (this.observer) {
       this.truncate(0)
       this.effects?.disable()
       this.effects = null
-      this.unwatch()
-      this.unwatch = null
+      this.observer.dispose()
+      this.observer = null
     }
   }
 

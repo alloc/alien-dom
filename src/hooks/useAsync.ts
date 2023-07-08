@@ -1,9 +1,9 @@
 import { isPlainObject } from '@alloc/is'
 import { Exclusive, Falsy } from '@alloc/types'
 import { keys } from '../jsx-dom/util'
-import { batch, ref } from '../signals'
 import { useState } from './useState'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
+import { ref } from '../observable'
 
 export type UseAsyncFn<T> = (state: UseAsync<T>) => PromiseLike<T> | T
 
@@ -87,19 +87,18 @@ export class UseAsync<T> {
     return this.abortCtrl.signal
   }
   get retry() {
-    return (reset?: boolean) =>
-      batch(() => {
-        if (reset) {
-          this.abort()
+    return (reset?: boolean) => {
+      if (reset) {
+        this.abort()
+      }
+      const state = this.state.peek()
+      if (state && !('value' in state)) {
+        this.disabled = true
+        this.state.value = {
+          retries: (state.retries || 0) + 1,
         }
-        const state = this.state.peek()
-        if (state && !('value' in state)) {
-          this.disabled = true
-          this.state.value = {
-            retries: (state.retries || 0) + 1,
-          }
-        }
-      })
+      }
+    }
   }
 
   markAttempt() {

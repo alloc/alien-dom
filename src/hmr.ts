@@ -2,13 +2,14 @@ import { isFunction, isArray } from '@alloc/is'
 import type { JSX } from './types/jsx'
 import type { FunctionComponent } from './types/component'
 import { selfUpdating } from './functions/selfUpdating'
-import { ref, attachRef } from './signals'
 import { jsx } from './jsx-dom/jsx-runtime'
 import { currentComponent } from './internal/global'
 import { kAlienRenderFunc } from './internal/symbols'
 import { createSymbolProperty } from './internal/symbolProperty'
 import { AlienComponent } from './internal/component'
 import { isFragment } from './internal/duck'
+import { ref } from './observable'
+import { attachRef } from './functions/attachRef'
 
 const kAlienComponentKey = createSymbolProperty<string>('componentKey')
 const kAlienHotUpdate = createSymbolProperty<boolean>('hotUpdate')
