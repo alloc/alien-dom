@@ -150,31 +150,6 @@ export class AlienComponent<Props = any> {
 }
 
 /**
- * Update the props of a component instance if possible.
- *
- * Returns the root node of the updated component instance, if one was
- * found.
- */
-export function updateTagProps(element: AnyElement, tag: any, props: any) {
-  const tags = kAlienElementTags(element)
-  const instance = tags?.get(tag)
-  if (instance) {
-    batch(() => {
-      // Update the props of the component instance.
-      instance.reinitProps(props)
-      // Update the parent context of the component instance.
-      currentContext.forEach((ref, key) => {
-        const targetRef = instance.context.get(key)
-        if (targetRef) {
-          targetRef.value = ref.peek()
-        }
-      })
-    })
-    return instance.rootNode
-  }
-}
-
-/**
  * @internal
  * The compiler inserts `registerObject` calls for inline callback props.
  */

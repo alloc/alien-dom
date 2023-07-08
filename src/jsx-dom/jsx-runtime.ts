@@ -1,7 +1,6 @@
 import { isObject, isFunction, isBoolean, isString } from '@alloc/is'
 import type { JSX, ElementKey } from '../types'
 import type { DefaultElement } from '../internal/types'
-import { updateTagProps } from '../internal/component'
 import {
   kAlienElementTags,
   kAlienPureComponent,
@@ -9,13 +8,15 @@ import {
   kAlienSelfUpdating,
 } from '../internal/symbols'
 import { Fragment } from '../components/Fragment'
-import { selfUpdating } from '../functions/selfUpdating'
 import { currentComponent } from '../internal/global'
 import { hasTagName } from '../internal/duck'
 import { appendChild } from './appendChild'
 import { svgTags } from './svg-tags'
 import { decamelize, keys, updateStyle } from './util'
 import { createEventEffect } from '../internal/elementEvent'
+import { batch } from '@preact/signals-core'
+import { currentContext } from '../context'
+import { selfUpdating } from '../functions/selfUpdating'
 
 export type { JSX }
 export { Fragment }
@@ -65,53 +66,55 @@ const selfUpdatingTags = new WeakMap<any, any>()
 export { jsx as jsxs }
 
 export function jsx(tag: any, props: any, key?: ElementKey) {
-  if (!props.namespaceURI && svgTags[tag]) {
-    props.namespaceURI = SVGNamespace
+  const component = currentComponent.get()
+  const hasImpureTag = typeof tag !== 'string' && !kAlienPureComponent.in(tag)
+  if (hasImpureTag && !kAlienSelfUpdating.in(tag)) {
+    let selfUpdatingTag = selfUpdatingTags.get(tag)
+    if (!selfUpdatingTag) {
+      selfUpdatingTag = selfUpdating(tag)
+      selfUpdatingTags.set(tag, selfUpdatingTag)
+    }
+    tag = selfUpdatingTag
   }
 
-  let oldNode: DefaultElement | undefined
+  // Use the element key to discover the original version of this node. We will
+  // return this original node so an API like React's useRef isn't needed.
+  let oldNode = key != null && component?.refs?.get(key)
 
-  const component = currentComponent.get()
-  if (component) {
-    if (key != null) {
-      oldNode = component.refs?.get(key)
-    }
-    if (typeof tag !== 'string' && !kAlienPureComponent.in(tag)) {
-      // To reduce the cost of component updates, plain function
-      // components are wrapped with `selfUpdating` when used by a
-      // self-updating parent component. This prevents the wrapped
-      // component from updating if none of its props changed. Effects
-      // in the wrapped component are also localized, so they'll be
-      // cleaned up when unmounted.
-      if (!kAlienSelfUpdating.in(tag)) {
-        let selfUpdatingTag = selfUpdatingTags.get(tag)
-        if (!selfUpdatingTag) {
-          selfUpdatingTag = selfUpdating(tag)
-          selfUpdatingTags.set(tag, selfUpdatingTag)
-        }
-        tag = selfUpdatingTag
+  // Find the component instance associated with the original node, so we can
+  // rerender it with the latest props and context (if anything changed).
+  if (oldNode && hasImpureTag) {
+    const tags = kAlienElementTags(oldNode)
+    if (tags) {
+      const instance = tags.get(tag)
+      if (instance) {
+        batch(() => {
+          instance.updateProps(props)
+          currentContext.forEach((ref, key) => {
+            const targetRef = instance.context.get(key)
+            if (targetRef) {
+              targetRef.value = ref.peek()
+            }
+          })
+        })
       }
-      // Updating the props of an existing element will only rerender
-      // the component if a new value is defined for a stateless prop.
-      if (oldNode) {
-        const updatedNode = updateTagProps(oldNode, tag, props)
-        if (updatedNode) {
-          component.setRef(key!, updatedNode as DefaultElement)
-          return updatedNode
-        }
-        // Cannot reuse an old node if the tags differ.
-        if (kAlienElementTags.in(oldNode)) {
-          oldNode = undefined
-        }
+      const updatedNode = instance?.rootNode
+      if (updatedNode) {
+        component!.setRef(key!, updatedNode as DefaultElement)
+        return updatedNode
       }
     }
+    // Cannot reuse an old node if the tags differ.
+    oldNode = undefined
   }
 
   let node: HTMLElement | SVGElement | null
   if (isString(tag)) {
-    node = props.namespaceURI
-      ? document.createElementNS(props.namespaceURI, tag)
+    const namespaceURI = props.namespaceURI || (svgTags[tag] && SVGNamespace)
+    node = namespaceURI
+      ? document.createElementNS(namespaceURI, tag)
       : document.createElement(tag)
+
     applyProps(node, props)
 
     // Select `option` elements in `select`
@@ -141,7 +144,7 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
       }
       if (oldNode) {
         kAlienElementKey(node, key)
-        node = oldNode
+        node = oldNode as any
       }
       component.setRef(key, node as JSX.Element)
     } else {
