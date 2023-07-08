@@ -1,8 +1,8 @@
 import type { AlienEffects } from '../effects'
-import type { AlienComponent } from './component'
-import type { DefaultElement, ElementMode } from './types'
 import type { AnimatedElement } from './animate/types'
+import type { AlienComponent } from './component'
 import { createStack } from './stack'
+import type { DefaultElement, ElementMode } from './types'
 
 export const currentEffects = createStack<AlienEffects>()
 export const currentComponent = createStack<AlienComponent>()

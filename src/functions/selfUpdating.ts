@@ -1,36 +1,37 @@
-import type { JSX } from '../types/jsx'
-import type { AnyElement, DefaultElement } from '../internal/types'
-import {
-  kAlienEffects,
-  kAlienElementKey,
-  kAlienSelfUpdating,
-  kAlienRenderFunc,
-} from '../internal/symbols'
+import { isFunction } from '@alloc/is'
+import { ContextStore, currentContext, forwardContext } from '../context'
+import { AlienComponent } from '../internal/component'
+import { kCommentNodeType } from '../internal/constants'
+import { isElement, isFragment, isNode } from '../internal/duck'
+import { toChildNodes } from '../internal/fragment'
+import { fromElementThunk } from '../internal/fromElementThunk'
 import {
   currentComponent,
   currentEffects,
   currentMode,
 } from '../internal/global'
+import { isConnected } from '../internal/isConnected'
+import {
+  kAlienEffects,
+  kAlienElementKey,
+  kAlienFragment,
+  kAlienParentFragment,
+  kAlienRenderFunc,
+  kAlienSelfUpdating,
+} from '../internal/symbols'
+import type { AnyElement } from '../internal/types'
 import { updateElement } from '../internal/updateElement'
 import {
   updateFragment,
   updateParentFragment,
 } from '../internal/updateFragment'
-import { kAlienFragment, kAlienParentFragment } from '../internal/symbols'
-import { AlienComponent } from '../internal/component'
-import { currentContext, ContextStore, forwardContext } from '../context'
 import { prepareFragment } from '../jsx-dom/appendChild'
-import { toChildNodes } from '../internal/fragment'
-import { isFragment, isElement, isNode } from '../internal/duck'
-import { kCommentNodeType } from '../internal/constants'
-import { noop } from '../jsx-dom/util'
-import { isFunction } from '@alloc/is'
-import { fromElementThunk } from '../internal/fromElementThunk'
-import { isConnected } from '../internal/isConnected'
-import { isShadowRoot } from '../jsx-dom/shadow'
 import { Fragment } from '../jsx-dom/jsx-runtime'
-import { attachRef } from './attachRef'
+import { isShadowRoot } from '../jsx-dom/shadow'
+import { noop } from '../jsx-dom/util'
 import { ref } from '../observable'
+import type { JSX } from '../types/jsx'
+import { attachRef } from './attachRef'
 
 /**
  * Create a self-updating component whose render function can mutate its

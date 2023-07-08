@@ -1,9 +1,9 @@
-import type { JSX } from '../types/jsx'
-import type { ElementKey } from '../types/attr'
 import { isElement } from '../internal/duck'
-import { kAlienThunkResult, kAlienElementKey, kAlienEffects } from './symbols'
-import { currentComponent } from './global'
+import type { ElementKey } from '../types/attr'
+import type { JSX } from '../types/jsx'
 import { isNode } from './duck'
+import { currentComponent } from './global'
+import { kAlienEffects, kAlienElementKey, kAlienThunkResult } from './symbols'
 
 export function fromElementThunk(thunk: () => JSX.Children) {
   if (!kAlienThunkResult.in(thunk)) {

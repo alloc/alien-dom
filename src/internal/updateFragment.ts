@@ -1,15 +1,15 @@
-import type { AnyElement } from './types'
-import {
-  kAlienFragment,
-  kAlienEffects,
-  kAlienElementKey,
-  kAlienManualUpdates,
-} from './symbols'
+import { ElementRefs } from './component'
+import { toChildNodes } from './fragment'
 import { moveEffects } from './moveEffects'
 import { recursiveMorph } from './recursiveMorph'
-import { kAlienParentFragment } from './symbols'
-import { toChildNodes } from './fragment'
-import { ElementRefs } from './component'
+import {
+  kAlienEffects,
+  kAlienElementKey,
+  kAlienFragment,
+  kAlienManualUpdates,
+  kAlienParentFragment,
+} from './symbols'
+import type { AnyElement } from './types'
 
 export function updateFragment(
   fragment: DocumentFragment,

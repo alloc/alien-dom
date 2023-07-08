@@ -1,9 +1,9 @@
-import type { JSX } from '../types'
-import type { DefaultElement } from '../internal/types'
-import { kAlienPlaceholder } from '../internal/symbols'
+import { isElement, isFragment } from '../internal/duck'
 import { toChildNodes } from '../internal/fragment'
-import { isFragment, isElement } from '../internal/duck'
+import { kAlienPlaceholder } from '../internal/symbols'
+import type { DefaultElement } from '../internal/types'
 import { isShadowRoot } from '../jsx-dom/shadow'
+import type { JSX } from '../types'
 
 export function toElements(element: JSX.ElementOption): DefaultElement[] {
   if (!element || isShadowRoot(element)) {

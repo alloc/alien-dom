@@ -1,10 +1,9 @@
-import { isNode } from './internal/duck'
-import { AnyElement, DefaultElement } from './internal/types'
+import { isFunction } from '@alloc/is'
 import { Disposable } from './disposable'
 import { AlienBoundEffect, createEffect } from './effects'
-import { isFunction } from '@alloc/is'
-import { noop } from './jsx-dom/util'
+import { isNode } from './internal/duck'
 import { makeIterable } from './internal/iterable'
+import { noop } from './jsx-dom/util'
 
 export interface AlienMessage {
   readonly target?: Node

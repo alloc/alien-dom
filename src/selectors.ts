@@ -5,8 +5,8 @@ import type {
   AlienTag,
 } from './element'
 import { hasForEach, isIterable } from './internal/duck'
-import { AnyElement, DefaultElement } from './internal/types'
 import { createAlienElementList } from './internal/nodeList'
+import { AnyElement, DefaultElement } from './internal/types'
 
 export function $<Element extends AlienTag<DefaultElement>>(
   element: AnyElement

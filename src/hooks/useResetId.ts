@@ -1,6 +1,6 @@
-import { usePrevious } from './usePrevious'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { useGlobalId } from './useGlobalId'
+import { usePrevious } from './usePrevious'
 
 /**
  * This hook is useful for generating a guid that changes on each render

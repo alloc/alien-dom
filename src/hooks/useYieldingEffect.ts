@@ -1,7 +1,7 @@
-import { Falsy } from '@alloc/types'
-import { DisposablePromise, promiseTimeout } from '../promises'
-import { EffectResult, useEffect } from './useEffect'
 import { isFunction } from '@alloc/is'
+import { Falsy } from '@alloc/types'
+import { DisposablePromise } from '../promises'
+import { EffectResult, useEffect } from './useEffect'
 
 type VarArgs<T> = T | readonly T[]
 type Yield = VarArgs<

@@ -1,10 +1,10 @@
-import { isObject, isNumber } from '@alloc/is'
+import { isNumber, isObject } from '@alloc/is'
 import type { JSX } from '../types/jsx'
 import {
-  kTextNodeType,
   kCommentNodeType,
-  kFragmentNodeType,
   kElementNodeType,
+  kFragmentNodeType,
+  kTextNodeType,
 } from './constants'
 
 export function canMatch(node: any): node is { matches: Function } {

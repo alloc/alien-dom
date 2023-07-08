@@ -1,9 +1,9 @@
 import { isPlainObject } from '@alloc/is'
 import { Exclusive, Falsy } from '@alloc/types'
-import { keys } from '../jsx-dom/util'
-import { useState } from './useState'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
+import { keys } from '../jsx-dom/util'
 import { ref } from '../observable'
+import { useState } from './useState'
 
 export type UseAsyncFn<T> = (state: UseAsync<T>) => PromiseLike<T> | T
 

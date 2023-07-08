@@ -1,6 +1,6 @@
+import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { useMicrotask } from './useMicrotask'
 import { useState } from './useState'
-import { depsHaveChanged } from '../functions/depsHaveChanged'
 
 export type EffectResult = (() => void) | void
 export type EffectCallback = () => EffectResult

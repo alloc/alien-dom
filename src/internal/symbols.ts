@@ -1,7 +1,7 @@
-import type { ElementTags } from './component'
 import type { AlienEffects } from '../effects'
 import type { ElementKey } from '../types/attr'
 import type { FunctionComponent } from '../types/component'
+import type { ElementTags } from './component'
 import { createSymbolProperty } from './symbolProperty'
 
 export const kAlienEffects = createSymbolProperty<AlienEffects>('effects')

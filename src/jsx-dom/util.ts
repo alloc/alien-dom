@@ -1,8 +1,8 @@
 import { isNumber } from '@alloc/is'
+import { isAnimatedStyleProp, stopAnimatingKey } from '../internal/animate'
+import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
 import type { DefaultElement } from '../internal/types'
 import { isUnitlessNumber } from './css-props'
-import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
-import { stopAnimatingKey, isAnimatedStyleProp } from '../internal/animate'
 import { isSvgChild } from './svg-tags'
 
 export const keys: <T>(obj: T) => Array<string & keyof T> = Object.keys as any

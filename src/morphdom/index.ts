@@ -1,23 +1,23 @@
-import { compareNodeNames, moveChildren, createElementNS } from './util'
+import {
+  kCommentNodeType,
+  kElementNodeType,
+  kFragmentNodeType,
+  kTextNodeType,
+} from '../internal/constants'
+import {
+  hasTagName,
+  isComment,
+  isElement,
+  isFragment,
+  isTextNode,
+} from '../internal/duck'
+import { noop } from '../jsx-dom/util'
+import { morphAttrs } from './morphAttrs'
+import { morphInputElement } from './morphInput'
 import { morphOptionElement } from './morphOption'
 import { morphSelectElement } from './morphSelect'
 import { morphTextAreaElement } from './morphTextArea'
-import { morphInputElement } from './morphInput'
-import {
-  hasTagName,
-  isTextNode,
-  isComment,
-  isFragment,
-  isElement,
-} from '../internal/duck'
-import { noop } from '../jsx-dom/util'
-import {
-  kCommentNodeType,
-  kFragmentNodeType,
-  kElementNodeType,
-  kTextNodeType,
-} from '../internal/constants'
-import { morphAttrs } from './morphAttrs'
+import { compareNodeNames, createElementNS, moveChildren } from './util'
 
 export interface MorphDomOptions {
   getNodeKey?: (node: Node) => any

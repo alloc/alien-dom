@@ -1,8 +1,8 @@
-import type { AnimatedElement, ParsedTransform } from './types'
-import type { DefaultElement } from '../types'
-import { cssTransformDefaults, cssTransformAliases } from '../transform'
 import { applyAnimatedValue } from '../animate'
+import { cssTransformAliases, cssTransformDefaults } from '../transform'
+import type { DefaultElement } from '../types'
 import { parseValue } from './parseValue'
+import type { AnimatedElement, ParsedTransform } from './types'
 
 export class AnimatedTransform {
   /** Parsed from the target's `style` property. */

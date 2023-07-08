@@ -1,8 +1,8 @@
-import type { AnyElement } from './types'
-import { kAlienEffects } from './symbols'
 import { AlienComponent, ElementRefs } from './component'
 import { moveEffects } from './moveEffects'
 import { recursiveMorph } from './recursiveMorph'
+import { kAlienEffects } from './symbols'
+import type { AnyElement } from './types'
 
 export function updateElement(
   rootElement: AnyElement,

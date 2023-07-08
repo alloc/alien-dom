@@ -1,12 +1,12 @@
-import type { AnyElement } from './types'
-import {
-  kAlienElementTags,
-  kAlienElementKey,
-  kAlienPlaceholder,
-} from './symbols'
 import { morph } from '../morphdom'
 import { copyAnimatedStyle } from './animate'
 import { ElementRefs } from './component'
+import {
+  kAlienElementKey,
+  kAlienElementTags,
+  kAlienPlaceholder,
+} from './symbols'
+import type { AnyElement } from './types'
 
 export function recursiveMorph(
   oldParentElem: AnyElement,

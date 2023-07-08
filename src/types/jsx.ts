@@ -1,16 +1,18 @@
 import type { AnyElement } from '../internal/types'
 import type { ShadowRootContainer } from '../jsx-dom/shadow'
-import type { ReactEventHandler, ChangeEventHandler } from './dom'
-import type { Attributes, AttrWithRef } from './attr'
-import type { SVGProps } from './svg'
-import type { DragEventHandler } from './dom'
+import type { AttrWithRef, Attributes } from './attr'
+import type {
+  ChangeEventHandler,
+  DragEventHandler,
+  ReactEventHandler,
+} from './dom'
 import type {
   DetailedHTMLProps,
-  HTMLAttributes,
   HTMLAttributeAnchorTarget,
   HTMLAttributeReferrerPolicy,
+  HTMLAttributes,
 } from './html'
-import { AlienEffects } from '../effects'
+import type { SVGProps } from './svg'
 
 type HTMLWebViewElement = HTMLElement
 

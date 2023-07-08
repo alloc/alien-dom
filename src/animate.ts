@@ -1,30 +1,30 @@
 import { isFunction, isNumber, isPromise } from '@alloc/is'
 import { Any, Falsy } from '@alloc/types'
 import { Color, mixColor, parseColor } from 'linear-color'
+import { applyAnimatedValue, deleteTimeline } from './internal/animate'
+import { parseValue } from './internal/animate/parseValue'
+import {
+  AnimatedTransform,
+  resolveTransformFn,
+} from './internal/animate/transform'
+import {
+  AnimatedElement,
+  AnimatedNode,
+  ParsedValue,
+  ResolvedSpringConfig,
+  SpringTimeline,
+} from './internal/animate/types'
+import { animatedElements } from './internal/global'
+import { cssTransformDefaults, cssTransformUnits } from './internal/transform'
 import {
   AnyElement,
   DefaultElement,
+  Length,
   TransformAttributes,
 } from './internal/types'
-import { toArray, keys } from './jsx-dom/util'
-import { $$, AlienSelector } from './selectors'
 import { svgTags } from './jsx-dom/svg-tags'
-import { Length } from './internal/types'
-import {
-  ResolvedSpringConfig,
-  AnimatedNode,
-  SpringTimeline,
-  AnimatedElement,
-  ParsedValue,
-} from './internal/animate/types'
-import { cssTransformDefaults, cssTransformUnits } from './internal/transform'
-import { deleteTimeline, applyAnimatedValue } from './internal/animate'
-import { animatedElements } from './internal/global'
-import { parseValue } from './internal/animate/parseValue'
-import {
-  resolveTransformFn,
-  AnimatedTransform,
-} from './internal/animate/transform'
+import { keys, toArray } from './jsx-dom/util'
+import { $$, AlienSelector } from './selectors'
 
 export type SpringAnimation<
   Element extends AnyElement = any,

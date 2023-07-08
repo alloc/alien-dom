@@ -1,16 +1,16 @@
 import { isFunction } from '@alloc/is'
-import type { AnyElement } from './internal/types'
-import { onMount, onUnmount } from './domObserver'
-import { kAlienEffects, kAlienFragment } from './internal/symbols'
-import { currentEffects } from './internal/global'
 import { Disposable, attachDisposer } from './disposable'
+import { onMount, onUnmount } from './domObserver'
 import { isFragment } from './internal/duck'
 import {
-  enableEffect,
-  disableEffect,
   EffectFlags,
+  disableEffect,
+  enableEffect,
   runEffect,
 } from './internal/effects'
+import { currentEffects } from './internal/global'
+import { kAlienEffects, kAlienFragment } from './internal/symbols'
+import type { AnyElement } from './internal/types'
 import { Promisable } from './promises'
 
 export interface AlienEffect<

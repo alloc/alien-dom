@@ -1,5 +1,5 @@
-import type { JSX } from '../types/jsx'
 import { isNode } from '../internal/duck'
+import type { JSX } from '../types/jsx'
 
 /**
  * ⚠️ This returns true for functions due to the possibility of element
@@ -20,9 +20,9 @@ export function isJSXChild(
 }
 
 export {
-  isNode,
+  isComment,
   isElement,
   isFragment,
+  isNode,
   isTextNode,
-  isComment,
 } from '../internal/duck'

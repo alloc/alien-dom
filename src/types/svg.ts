@@ -1,13 +1,13 @@
 import type { AnyElement } from '../internal/types'
 import type { AriaAttributes, AriaRole } from './aria'
 import type { AttrWithRef, Booleanish } from './attr'
-import type { JSX } from './jsx'
 import type {
   CSSProperties,
-  DOMFactory,
   DOMAttributes,
   DOMClassAttribute,
+  DOMFactory,
 } from './dom'
+import type { JSX } from './jsx'
 
 export interface SVGFactory
   extends DOMFactory<SVGAttributes<SVGElement>, SVGElement> {

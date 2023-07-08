@@ -1,5 +1,5 @@
-import type { JSX } from '../types/jsx'
 import { fromElementThunk } from '../internal/fromElementThunk'
+import type { JSX } from '../types/jsx'
 
 type ElementResult = JSX.Element | Comment | false | null | undefined
 

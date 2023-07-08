@@ -1,6 +1,15 @@
 import { isArray, isFunction, isString } from '@alloc/is'
-import type { JSX } from '../types'
-import type { DefaultElement } from '../internal/types'
+import { AlienComponent } from '../internal/component'
+import {
+  hasTagName,
+  isArrayLike,
+  isComment,
+  isFragment,
+  isNode,
+  isTextNode,
+} from '../internal/duck'
+import { fromElementThunk } from '../internal/fromElementThunk'
+import { currentComponent, currentMode } from '../internal/global'
 import {
   kAlienElementKey,
   kAlienElementTags,
@@ -8,18 +17,9 @@ import {
   kAlienParentFragment,
   kAlienPlaceholder,
 } from '../internal/symbols'
-import {
-  hasTagName,
-  isArrayLike,
-  isFragment,
-  isNode,
-  isTextNode,
-} from '../internal/duck'
-import { AlienComponent } from '../internal/component'
-import { fromElementThunk } from '../internal/fromElementThunk'
-import { currentMode, currentComponent } from '../internal/global'
+import type { DefaultElement } from '../internal/types'
+import type { JSX } from '../types'
 import { isShadowRoot } from './shadow'
-import { isComment } from '../internal/duck'
 
 export function appendChild(
   child: JSX.Children,

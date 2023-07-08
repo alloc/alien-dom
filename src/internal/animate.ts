@@ -1,7 +1,7 @@
-import type { DefaultElement } from './types'
+import { decamelize } from '../jsx-dom/util'
 import type { SpringTimeline } from './animate/types'
 import { animatedElements } from './global'
-import { decamelize } from '../jsx-dom/util'
+import type { DefaultElement } from './types'
 
 export function deleteTimeline(
   timelines: Record<string, SpringTimeline>,

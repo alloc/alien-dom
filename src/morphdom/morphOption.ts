@@ -1,5 +1,5 @@
-import { syncBooleanAttrProp } from './util'
 import { hasTagName } from '../internal/duck'
+import { syncBooleanAttrProp } from './util'
 
 export function morphOptionElement(
   fromEl: HTMLOptionElement,

@@ -1,19 +1,18 @@
-import { JSX, ElementKey, FunctionComponent } from '../types'
-import { AnyElement, DefaultElement } from './types'
+import { AlienContext } from '../context'
 import { AlienEffects } from '../effects'
-import { getAlienEffects } from './effects'
-import { AlienContext, currentContext } from '../context'
-import { currentComponent } from './global'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
+import { Observer, Ref, observe } from '../observable'
+import { ElementKey, FunctionComponent, JSX } from '../types'
 import { deepEquals } from './deepEquals'
+import { getAlienEffects } from './effects'
+import { currentComponent } from './global'
 import {
-  kAlienRenderFunc,
+  kAlienEffects,
   kAlienElementKey,
   kAlienElementTags,
-  kAlienEffects,
   kAlienNewEffects,
+  kAlienRenderFunc,
 } from './symbols'
-import { Observer, Ref, observe } from '../observable'
 
 export type ElementTags = Map<FunctionComponent, AlienComponent<any>>
 export type ElementRefs = Map<ElementKey, ChildNode | DocumentFragment>

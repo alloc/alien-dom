@@ -1,9 +1,9 @@
+import { Disposable } from '../disposable'
+import { AlienBoundEffect } from '../effects'
 import { AlienElement, AlienEvent } from '../element'
-import { AnyElement, AnyEvent } from './types'
 import { CSSProperties } from '../types/dom'
 import { createEventEffect } from './elementEvent'
-import { AlienBoundEffect } from '../effects'
-import { Disposable } from '../disposable'
+import { AnyElement, AnyEvent } from './types'
 
 export const AlienElementPrototype = new Proxy(AlienElement.prototype, {
   get(target, key, receiver) {

@@ -1,7 +1,7 @@
-import { useState } from './useState'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { noop } from '../jsx-dom/util'
 import { ReadonlyRef, computed } from '../observable'
+import { useState } from './useState'
 
 export function useMemo<T>(get: () => T, deps: readonly any[]): T {
   const state = useState(initialState, deps)

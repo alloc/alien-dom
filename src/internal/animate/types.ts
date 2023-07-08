@@ -1,12 +1,12 @@
 import type { Color } from 'linear-color'
-import type { AnimatedTransform } from './transform'
 import type {
   FrameCallback,
-  StepAnimation,
-  StepAnimationFn,
   SpringAnimation,
   SpringConfig,
+  StepAnimation,
+  StepAnimationFn,
 } from '../../animate'
+import type { AnimatedTransform } from './transform'
 
 export type ParsedValue = [number, string]
 export type ParsedTransform = [string, ParsedValue[]][]

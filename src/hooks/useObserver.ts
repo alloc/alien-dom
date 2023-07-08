@@ -1,8 +1,8 @@
 import { isFunction } from '@alloc/is'
-import { ReadonlyRef, observe } from '../observable'
-import { EffectCallback, useEffect } from './useEffect'
 import { Falsy } from '@alloc/types'
 import { noop } from '../jsx-dom/util'
+import { ReadonlyRef, observe } from '../observable'
+import { EffectCallback, useEffect } from './useEffect'
 
 /** Observe a single ref. */
 export function useObserver<T>(

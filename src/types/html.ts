@@ -1,14 +1,9 @@
 import type { AnyElement } from '../internal/types'
+import { StyleAttributes } from '../internal/types'
 import type { AriaAttributes, AriaRole } from './aria'
-import type { Booleanish, AttrWithRef } from './attr'
+import type { AttrWithRef, Booleanish } from './attr'
+import type { DOMAttributes, DOMClassAttribute, DOMFactory } from './dom'
 import type { JSX } from './jsx'
-import { StyleAttributes, TransformAttributes } from '../internal/types'
-import type {
-  CSSProperties,
-  DOMAttributes,
-  DOMClassAttribute,
-  DOMFactory,
-} from './dom'
 
 export type HTMLElementTagNames = keyof HTMLElementTagNameMap
 

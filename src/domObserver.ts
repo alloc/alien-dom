@@ -1,6 +1,6 @@
 import { defineEffectType, getCurrentEffect } from './effects'
-import { binaryInsert } from './jsx-dom/util'
 import { isElement } from './internal/duck'
+import { binaryInsert } from './jsx-dom/util'
 
 type ElementListener = (element: Element) => void
 

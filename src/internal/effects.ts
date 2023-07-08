@@ -1,10 +1,10 @@
 import { isFunction } from '@alloc/is'
-import { AlienEffects, AlienEffect } from '../effects'
-import { kAlienNewEffects, kAlienEffects } from './symbols'
-import { AnyElement } from './types'
-import { currentEffects } from './global'
-import { attachDisposer, Disposable } from '../disposable'
+import { Disposable, attachDisposer } from '../disposable'
+import { AlienEffect, AlienEffects } from '../effects'
 import { noop } from '../jsx-dom/util'
+import { currentEffects } from './global'
+import { kAlienEffects, kAlienNewEffects } from './symbols'
+import { AnyElement } from './types'
 
 export function getAlienEffects<T extends AnyElement>(
   element: T

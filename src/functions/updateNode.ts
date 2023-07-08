@@ -1,8 +1,8 @@
-import type { AnyElement } from '../internal/types'
+import { isElement, isFragment } from '../internal/duck'
 import { currentComponent } from '../internal/global'
-import { updateFragment } from '../internal/updateFragment'
+import type { AnyElement } from '../internal/types'
 import { updateElement } from '../internal/updateElement'
-import { isFragment, isElement } from '../internal/duck'
+import { updateFragment } from '../internal/updateFragment'
 
 /**
  * Update the `node` (an element or fragment) to mirror the `newNode`.

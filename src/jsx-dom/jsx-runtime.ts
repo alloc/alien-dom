@@ -1,24 +1,24 @@
-import { isObject, isFunction, isBoolean, isString } from '@alloc/is'
-import type { JSX, ElementKey } from '../types'
-import type { DefaultElement } from '../internal/types'
+import { isBoolean, isFunction, isObject, isString } from '@alloc/is'
+import { Fragment } from '../components/Fragment'
+import { currentContext } from '../context'
+import { selfUpdating } from '../functions/selfUpdating'
+import { hasTagName } from '../internal/duck'
+import { createEventEffect } from '../internal/elementEvent'
+import { currentComponent } from '../internal/global'
 import {
+  kAlienElementKey,
   kAlienElementTags,
   kAlienPureComponent,
-  kAlienElementKey,
   kAlienSelfUpdating,
 } from '../internal/symbols'
-import { Fragment } from '../components/Fragment'
-import { currentComponent } from '../internal/global'
-import { hasTagName } from '../internal/duck'
+import type { DefaultElement } from '../internal/types'
+import type { ElementKey, JSX } from '../types'
 import { appendChild } from './appendChild'
 import { svgTags } from './svg-tags'
 import { decamelize, keys, updateStyle } from './util'
-import { createEventEffect } from '../internal/elementEvent'
-import { currentContext } from '../context'
-import { selfUpdating } from '../functions/selfUpdating'
 
-export type { JSX }
 export { Fragment }
+export type { JSX }
 
 export const SVGNamespace = 'http://www.w3.org/2000/svg'
 const XLinkNamespace = 'http://www.w3.org/1999/xlink'

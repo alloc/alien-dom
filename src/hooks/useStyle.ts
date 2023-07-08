@@ -1,12 +1,12 @@
 import type { Falsy } from '@alloc/types'
-import type { DefaultElement, StyleAttributes } from '../internal/types'
+import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { currentComponent } from '../internal/global'
 import { kAlienElementKey } from '../internal/symbols'
-import { updateStyle, UpdateStyle, toArray } from '../jsx-dom/util'
-import { useState } from './useState'
-import { depsHaveChanged } from '../functions/depsHaveChanged'
-import { usePrevious } from './usePrevious'
+import type { DefaultElement, StyleAttributes } from '../internal/types'
+import { UpdateStyle, toArray, updateStyle } from '../jsx-dom/util'
 import { observe } from '../observable'
+import { usePrevious } from './usePrevious'
+import { useState } from './useState'
 
 /**
  * Update the style of an element during render. This hook is preferred

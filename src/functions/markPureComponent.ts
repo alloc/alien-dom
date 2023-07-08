@@ -1,5 +1,5 @@
-import type { FunctionComponent } from '../types/component'
 import { kAlienPureComponent } from '../internal/symbols'
+import type { FunctionComponent } from '../types/component'
 
 /**
  * Prevent a plain function component from being automatically wrapped

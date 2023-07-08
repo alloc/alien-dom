@@ -1,5 +1,5 @@
-import { defineEffectType, getCurrentEffect } from '../effects'
 import { isFunction } from '@alloc/is'
+import { defineEffectType, getCurrentEffect } from '../effects'
 
 type EventHandler<Event> =
   | ((event: Event) => void)

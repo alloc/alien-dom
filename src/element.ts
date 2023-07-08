@@ -1,28 +1,28 @@
+import { AnimationsParam, animate } from './animate'
+import { Disposable } from './disposable'
+import { AlienBoundEffect, AlienEffect, AlienEffects } from './effects'
+import { observeAs } from './functions/observeAs'
+import { canMatch } from './internal/duck'
+import { EffectFlags, enableEffect, getAlienEffects } from './internal/effects'
 import type {
   AlienEventMethod,
   AlienEventMethods,
   AlienStyleMethods,
 } from './internal/element'
-import type { HTMLAttributes, DetailedHTMLProps } from './types/html'
-import type { SVGAttributes } from './types/svg'
+import { unwrap } from './internal/element'
+import { AlienNodeList } from './internal/nodeList'
+import { kAlienElementKey } from './internal/symbols'
 import type {
   AnyElement,
   AnyEvent,
   DefaultElement,
   StyleAttributes,
 } from './internal/types'
-import { animate, AnimationsParam } from './animate'
-import { AlienBoundEffect, AlienEffect, AlienEffects } from './effects'
-import { canMatch } from './internal/duck'
-import { AlienNodeList } from './internal/nodeList'
-import { kAlienElementKey } from './internal/symbols'
-import { applyProps } from './jsx-dom/jsx-runtime'
-import { observeAs } from './functions/observeAs'
 import { updateElement } from './internal/updateElement'
-import { EffectFlags, getAlienEffects, enableEffect } from './internal/effects'
-import { updateStyle, UpdateStyle } from './jsx-dom/util'
-import { unwrap } from './internal/element'
-import { Disposable } from './disposable'
+import { applyProps } from './jsx-dom/jsx-runtime'
+import { UpdateStyle, updateStyle } from './jsx-dom/util'
+import type { DetailedHTMLProps, HTMLAttributes } from './types/html'
+import type { SVGAttributes } from './types/svg'
 
 export interface AlienElementList<Element extends Node = DefaultElement>
   extends NodeListOf<Element>,

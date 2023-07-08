@@ -1,10 +1,10 @@
-import { currentComponent } from '../internal/global'
 import {
-  currentContext,
-  createContext,
   AlienForwardedContext,
   ContextStore,
+  createContext,
+  currentContext,
 } from '../context'
+import { currentComponent } from '../internal/global'
 
 /**
  * Capture the current context and return a Provider component that can

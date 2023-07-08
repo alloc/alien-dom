@@ -1,6 +1,6 @@
 import { setNonAnimatedStyle } from '../internal/animate'
-import { DefaultElement } from '../internal/types'
 import { isFragment } from '../internal/duck'
+import { DefaultElement } from '../internal/types'
 
 export function morphAttrs(fromNode: Element, toNode: Element) {
   var toNodeAttrs = toNode.attributes

@@ -1,8 +1,8 @@
-import type { JSX } from './types/jsx'
-import { Fragment } from './jsx-dom/jsx-runtime'
-import { currentComponent } from './internal/global'
 import { markPureComponent } from './functions/markPureComponent'
+import { currentComponent } from './internal/global'
+import { Fragment } from './jsx-dom/jsx-runtime'
 import { Ref } from './observable'
+import type { JSX } from './types/jsx'
 
 export type AlienContext<T = any> = {
   (props: { value: T; children: JSX.Children }): JSX.Element
