@@ -41,7 +41,7 @@ import { Fragment } from '../jsx-dom/jsx-runtime'
  * object created within the render function can be mutated freely.
  */
 export function selfUpdating<Props extends object, Result extends JSX.Children>(
-  render: (props: Props, update: (props: Partial<Props>) => void) => Result
+  render: (props: Readonly<Props>) => Result
 ): (props: Props) => Result {
   const componentName = DEV
     ? () =>
@@ -50,64 +50,33 @@ export function selfUpdating<Props extends object, Result extends JSX.Children>(
     : noop
 
   const Component = (initialProps: Props): any => {
-    let oldPropChanged = false
-    let newPropAdded = false
-
-    // The props object passed to the render function.
     const props = {} as Props
     const context = new ContextStore(currentContext)
 
-    // Once a prop is mutated from inside, it's considered stateful.
-    // This means it can't be updated from outside unless the element's
-    // key is changed.
-    const statefulProps = new Set<keyof any>()
-
-    const didSetProp = (key: keyof any, newValue: any, oldValue?: any) => {
-      // When a parent component rebinds an initial prop, do nothing.
-      if (!isPropReinit) {
-        statefulProps.add(key)
-      }
-      if (!props.hasOwnProperty(key)) {
-        attachRef(props, key, ref(newValue))
-        newPropAdded = true
-      } else if (newValue !== oldValue) {
-        oldPropChanged = true
-      }
-    }
-
     for (const key in initialProps) {
-      attachRef(props, key, ref(initialProps[key]), didSetProp)
+      const initialValue = initialProps[key]
+      attachRef(props, key, ref(initialValue))
     }
+
+    let isPropUpdate = false
+    let oldPropChanged = false
+    let newPropAdded = false
 
     const updateProps = (newProps: Partial<Props>) => {
-      if (self.newEffects) {
-        throw Error('Cannot update props during render')
-      }
       for (const key in newProps) {
+        isPropUpdate = true
+        const newValue = newProps[key]
         if (props.hasOwnProperty(key)) {
-          props[key] = newProps[key] as any
+          const oldValue = props[key]
+          props[key] = newValue as any
+          if (newValue !== oldValue) {
+            oldPropChanged = true
+          }
         } else {
-          didSetProp(key, newProps[key])
+          attachRef(props, key, ref(newValue))
+          newPropAdded = true
         }
-      }
-      if (oldPropChanged || newPropAdded) {
-        self.update()
-      }
-    }
-
-    let isPropReinit = false
-    const reinitProps = (newProps: Partial<Props>) => {
-      for (const key in newProps) {
-        if (statefulProps.has(key)) {
-          continue
-        }
-        isPropReinit = true
-        if (props.hasOwnProperty(key)) {
-          props[key] = newProps[key] as any
-        } else {
-          didSetProp(key, newProps[key])
-        }
-        isPropReinit = false
+        isPropUpdate = false
       }
       if (oldPropChanged || newPropAdded) {
         self.update()
@@ -119,7 +88,6 @@ export function selfUpdating<Props extends object, Result extends JSX.Children>(
       Component as any,
       props,
       context,
-      reinitProps,
       updateProps,
       componentName
     )
@@ -158,7 +126,7 @@ export function selfUpdating<Props extends object, Result extends JSX.Children>(
       let threw = true
       let newRootNode: JSX.Children
       try {
-        newRootNode = render(props, updateProps)
+        newRootNode = render(props)
         if (isFunction(newRootNode)) {
           newRootNode = fromElementThunk(newRootNode as any)
         }

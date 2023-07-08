@@ -13,14 +13,12 @@ import { isFragment } from './internal/duck'
 const kAlienComponentKey = createSymbolProperty<string>('componentKey')
 const kAlienHotUpdate = createSymbolProperty<boolean>('hotUpdate')
 
-export function hmrSelfUpdating(
-  render: (props: any, update: (props: any) => void) => JSX.Element
-) {
+export function hmrSelfUpdating(render: (props: any) => JSX.Element) {
   const renderRef = ref(render)
-  const Component = selfUpdating((props, update) => {
+  const Component = selfUpdating(props => {
     const component = currentComponent.get()
     const render = renderRef.value
-    const result = hmrRender(component, render, props, update)
+    const result = hmrRender(component, render, props)
 
     registerComponent(Component)
     return result
