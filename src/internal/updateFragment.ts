@@ -9,11 +9,12 @@ import { moveEffects } from './moveEffects'
 import { recursiveMorph } from './recursiveMorph'
 import { kAlienParentFragment } from './symbols'
 import { toChildNodes } from './fragment'
+import { ElementRefs } from './component'
 
 export function updateFragment(
   fragment: DocumentFragment,
   newFragment: DocumentFragment,
-  newRefs?: Map<any, AnyElement> | null
+  newRefs?: ElementRefs | null
 ) {
   const isManuallyUpdated = kAlienManualUpdates.in(newFragment)
   const newNodes = Array.from(newFragment.childNodes)

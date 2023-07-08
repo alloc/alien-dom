@@ -17,6 +17,7 @@ import {
 } from './symbols'
 
 export type ElementTags = Map<FunctionComponent, AlienComponent<any>>
+export type ElementRefs = Map<ElementKey, ChildNode | DocumentFragment>
 
 /** Internal state for a component instance. */
 export class AlienComponent<Props = any> {
@@ -27,9 +28,9 @@ export class AlienComponent<Props = any> {
   /** Elements created by this component in the current render pass. */
   newElements: Map<ElementKey, JSX.Element> | null = null
   /** Stable references to the elements that are mounted. */
-  refs: Map<ElementKey, DefaultElement> | null = null
+  refs: ElementRefs | null = null
   /** Stable references that were added or reused by the current render pass. */
-  newRefs: Map<ElementKey, DefaultElement> | null = null
+  newRefs: ElementRefs | null = null
   /** Effects tied to the last finished render pass. */
   effects: AlienEffects | null = null
   /** Effects added in the current render pass. */
@@ -93,7 +94,7 @@ export class AlienComponent<Props = any> {
       rootNode: ChildNode | DocumentFragment | null
       newElements: Map<ElementKey, JSX.Element>
       newEffects: AlienEffects
-      newRefs: Map<ElementKey, DefaultElement>
+      newRefs: ElementRefs
     }
   }
 
@@ -128,7 +129,7 @@ export class AlienComponent<Props = any> {
     this.rootKey = kAlienElementKey(rootNode)
   }
 
-  setRef(key: ElementKey, element: DefaultElement) {
+  setRef(key: ElementKey, element: ChildNode | DocumentFragment) {
     kAlienElementKey(element, key)
     this.newRefs!.set(key, element)
 

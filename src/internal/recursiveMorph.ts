@@ -6,11 +6,12 @@ import {
 } from './symbols'
 import { morph } from '../morphdom'
 import { copyAnimatedStyle } from './animate'
+import { ElementRefs } from './component'
 
 export function recursiveMorph(
   oldParentElem: AnyElement,
   newParentElem: AnyElement,
-  newRefs: Map<any, AnyElement> | null | undefined,
+  newRefs: ElementRefs | null | undefined,
   elementMap: Map<AnyElement, AnyElement>,
   isFragment?: boolean,
   childrenOnly?: boolean
