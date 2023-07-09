@@ -19,10 +19,12 @@ export type AlienForwardedContext = {
   ): Result
 }
 
-export class ContextStore extends Map<AlienContext, Ref<any>> {
+export class ContextStore extends Map<AlienContext, Ref> {
   get Provider() {
     return createContext(this)
   }
+  declare get: <T>(key: AlienContext<T>) => Ref<T> | undefined
+  declare set: <T>(key: AlienContext<T>, value: Ref<T>) => this
 }
 
 export function createContext(context: ContextStore): AlienForwardedContext
