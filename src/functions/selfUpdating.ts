@@ -25,7 +25,7 @@ import {
   updateFragment,
   updateParentFragment,
 } from '../internal/updateFragment'
-import { prepareFragment } from '../jsx-dom/appendChild'
+import { ShadowRootContext, prepareFragment } from '../jsx-dom/appendChild'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import { isShadowRoot } from '../jsx-dom/shadow'
 import { noop } from '../jsx-dom/util'
@@ -283,7 +283,8 @@ export function selfUpdating<Props extends object, Result extends JSX.Children>(
         // DOM with native methods.
         queueMicrotask(() => {
           if (!newEffects.enabled && self.effects === newEffects) {
-            newEffects.setElement(rootNode)
+            const shadowRoot = context.get(ShadowRootContext)
+            newEffects.setElement(rootNode, shadowRoot?.value)
             oldEffects?.setElement(null)
           }
         })

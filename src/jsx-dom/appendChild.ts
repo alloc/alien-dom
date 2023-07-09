@@ -1,4 +1,5 @@
 import { isArray, isFunction, isString } from '@alloc/is'
+import { createContext, currentContext } from '../context'
 import { AlienComponent } from '../internal/component'
 import {
   hasTagName,
@@ -18,8 +19,11 @@ import {
   kAlienPlaceholder,
 } from '../internal/symbols'
 import type { DefaultElement } from '../internal/types'
+import { ref } from '../observable'
 import type { JSX } from '../types'
 import { isShadowRoot } from './shadow'
+
+export const ShadowRootContext = createContext<ShadowRoot | undefined>()
 
 export function appendChild(
   child: JSX.Children,
@@ -146,7 +150,22 @@ export function appendChild(
     }
   } else if (isShadowRoot(child)) {
     const shadowRoot = (parent as HTMLElement).attachShadow(child.props)
-    appendChild(child.children, shadowRoot)
+
+    const grandShadowRoot = currentContext.get(ShadowRootContext)
+    currentContext.set(
+      ShadowRootContext,
+      ref<ShadowRoot | undefined>(shadowRoot)
+    )
+
+    try {
+      appendChild(child.children, shadowRoot)
+    } finally {
+      if (grandShadowRoot) {
+        currentContext.set(ShadowRootContext, grandShadowRoot)
+      } else {
+        currentContext.delete(ShadowRootContext)
+      }
+    }
   } else {
     appendChildToNode(document.createTextNode(String(child)), parent)
   }

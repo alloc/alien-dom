@@ -69,7 +69,10 @@ export class AlienEffects<Element extends AnyElement = any> {
     return this.state === AlienEffectState.Enabling
   }
 
-  setElement(element: Element | Comment | DocumentFragment | null) {
+  setElement(
+    element: Element | Comment | DocumentFragment | null,
+    rootNode?: Node
+  ) {
     if (element === null) {
       if (this.element) {
         if (kAlienEffects(this.element) === this) {
@@ -114,7 +117,7 @@ export class AlienEffects<Element extends AnyElement = any> {
         if (element.isConnected) {
           this.enable()
         } else {
-          this._enableOnceMounted()
+          this._enableOnceMounted(rootNode)
         }
       }
     }
@@ -277,14 +280,19 @@ export class AlienEffects<Element extends AnyElement = any> {
     )
   }
 
-  protected _enableOnceMounted() {
+  protected _enableOnceMounted(rootNode?: Node) {
     // This assumes that the element will eventually be mounted. If
     // it's not, a memory leak will occur.
-    this._mountEffect = onMount(this.element!, () => {
-      this._mountEffect = null
-      this.mounted = true
-      this.enable()
-    })
+    this._mountEffect = onMount(
+      this.element!,
+      () => {
+        this._mountEffect = null
+        this.mounted = true
+        this.enable()
+      },
+      // This is needed for within a ShadowRoot.
+      rootNode
+    )
   }
 
   protected _runEffect(effect: AlienEffect) {
