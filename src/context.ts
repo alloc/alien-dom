@@ -112,8 +112,13 @@ function withProvider<T>(this: AlienContext<T>, value: T) {
   return [this, ref(value)]
 }
 
+interface AlienContextMap extends Map<AlienContext, Ref> {
+  get<T>(key: AlienContext<T>): Ref<T> | undefined
+  set<T>(key: AlienContext<T>, value: Ref<T>): this
+}
+
 /** @internal */
-export const currentContext = new Map<AlienContext, Ref<any>>()
+export const currentContext: AlienContextMap = new Map()
 
 /** @internal */
 export function forwardContext(context: ContextStore, isRerender?: boolean) {
