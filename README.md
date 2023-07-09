@@ -1,42 +1,46 @@
 # alien-dom
 
-Choosing a rendering library is all about trade-offs. This library
-started as an exploration of an idea to give `jsx-dom` a reactive
-component engine (powered by `morphdom` and `@preact/signals`). To make
-this happen, it does a few simple AST transformations on your JSX code.
-The result is a library that feels like React, but with a few extra
-features and a few less trade-offs.
+Component engine that feels like React but has…
 
-### Features
+- Transparent observables (implicit reactivity, _components are observers_)
+- Synchronous top-down JSX evaluation (requires a compile step)
+  - …so stack traces aren't useless!
+  - …and you get DOM elements immediately! (no virtual DOM, thanks to `morphdom`)
+- Automatically memoized functions and inline objects
+- Automatic disposal of effects and event listeners (write less manual cleanup in `useEffect` destructors)
+- Strongly typed event channels (see `defineChannel`)
+- Nested components just work ™️
+- Built-in niceties
+  - Flexible `class` prop (supports arrays and objects)
+  - Light-weight spring animations
+  - Light-weight observability engine
+  - jQuery-inspired DOM extensions (optional)
+  - A standard library of component hooks (tree-shakeable)
+  - Easy context forwarding
 
-- **Intuitive JSX**
-  - what if JSX gave you a DOM element? (goodbye refs)
-  - what if the `class` prop could be an array/object and skipped falsy values? (goodbye `classnames` library import)
-  - what if arrays of JSX children did not require an explicit `key` prop? (goodbye missing `key` warnings)
-- **Super-powered Components**
-  - what if components were integrated with Preact signals for transparent reactivity? (goodbye expensive re-renders)
-  - what if reactive components still felt like React components? (goodbye Solid.js paradigm shift)
-  - what if component stack traces weren't useless? (goodbye asynchronous component evaluation)
-  - what if stateless component effects were automatically cleaned up? (goodbye manual cleanup)
-  - what if callback props and inline objects were automatically memoized? (goodbye useCallback/useMemo/React.memo hell)
-  - what if there were more useful (but optional) hooks baked in? (goodbye fragmented ecosystem)
-- **Vanilla JS but better**
-  - what if DOM elements were optionally extended with jQuery-inspired methods? (goodbye awkward DOM manipulation)
-  - what if spring animations were baked in? (goodbye awkward third-party animation libraries)
-  - what if optional micro-libraries for common use cases were baked in? (goodbye fragmented ecosystem)
+**How exactly does it "feel like React?"**
+The look and feel of React is preserved, including:
 
-### Docs
+- Good ol' JSX (i.e. `<div class="foo" key={index} />`) albeit with different evaluation semantics
+- Component hooks with similar names (i.e. `useEffect`, `useMemo`, `useRef`, `useState`) albeit with different behavior (except for useEffect)
+- The rules of React hooks apply to Alien DOM hooks (i.e. hooks must be called at the top level of a component) but event listeners can be attached anywhere
 
-(Very work in progress)
+**As this library is in alpha, there are drawbacks compared to React:**
 
-- [Function components](./docs/function-components.md)
-- [Element extensions](./docs/element-extensions.md)
-- [Spring animations](./docs/spring-animations.md)
+- No error boundaries (yet)
+- No suspense (yet)
+- No server-side rendering (yet)
+- No plugin for Vite (yet)
+- No concurrent mode (probably never)
+
+**I'm ready to learn more!**
+
+- See the [Getting Started](docs/getting-started.md) page for a quick introduction.
+- See the [Quirks](docs/quirks.md) page for things to keep in mind.
 
 ### Credits
 
 These libraries contribute a ton to Alien DOM's functionality:
 
-- we fork the awesome [jsx-dom](https://github.com/alex-kinokon/jsx-dom) package
-- we fork the sublime [morphdom](https://github.com/patrick-steele-idem/morphdom) package
-- we use the magnificent [@preact/signals-core](https://www.npmjs.com/package/@preact/signals-core) package
+- we forked the awesome [jsx-dom](https://github.com/alex-kinokon/jsx-dom) package
+- we forked the sublime [morphdom](https://github.com/patrick-steele-idem/morphdom) package
