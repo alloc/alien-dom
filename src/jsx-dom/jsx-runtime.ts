@@ -1,6 +1,7 @@
 import { isBoolean, isFunction, isObject, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
 import { currentContext } from '../context'
+import { classToString } from '../functions/classToString'
 import { selfUpdating } from '../functions/selfUpdating'
 import { hasTagName } from '../internal/duck'
 import { createEventEffect } from '../internal/elementEvent'
@@ -23,35 +24,6 @@ export type { JSX }
 export const SVGNamespace = 'http://www.w3.org/2000/svg'
 const XLinkNamespace = 'http://www.w3.org/1999/xlink'
 const XMLNamespace = 'http://www.w3.org/XML/1998/namespace'
-
-// https://facebook.github.io/react/docs/jsx-in-depth.html#booleans-null-and-undefined-are-ignored
-// Emulate JSX Expression logic to ignore certain type of children or className.
-function isVisibleChild(value: any): boolean {
-  return !isBoolean(value) && value != null
-}
-
-const DomTokenList =
-  typeof DOMTokenList !== 'undefined' ? DOMTokenList : function () {}
-
-/**
- * Convert a `value` to a className string.
- * `value` can be a string, an array or a `Dictionary<boolean>`.
- */
-export function className(value: any): string {
-  if (Array.isArray(value)) {
-    return value.map(className).filter(Boolean).join(' ')
-  } else if (value instanceof DomTokenList) {
-    return '' + value
-  } else if (isObject(value)) {
-    return keys(value)
-      .filter(k => value[k])
-      .join(' ')
-  } else if (isVisibleChild(value)) {
-    return '' + value
-  } else {
-    return ''
-  }
-}
 
 const nonPresentationSVGAttributes =
   /^(a(ll|t|u)|base[FP]|c(al|lipPathU|on)|di|ed|ex|filter[RU]|g(lyphR|r)|ke|l(en|im)|ma(rker[HUW]|s)|n|pat|pr|point[^e]|re[^n]|s[puy]|st[^or]|ta|textL|vi|xC|y|z)/
@@ -191,7 +163,7 @@ function applyProp(prop: string, value: any, node: DefaultElement) {
   switch (prop) {
     case 'class':
     case 'className':
-      setAttribute(node, 'class', className(value))
+      setAttribute(node, 'class', classToString(value))
       return
     case 'style':
       if (isString(value)) {
@@ -206,7 +178,7 @@ function applyProp(prop: string, value: any, node: DefaultElement) {
     case 'innerHTML':
     case 'innerText':
     case 'textContent':
-      if (isVisibleChild(value)) {
+      if (value != null && !isBoolean(value)) {
         set(node, prop, value)
       }
       return

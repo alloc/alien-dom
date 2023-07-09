@@ -13,6 +13,7 @@ export type DOMClassAttribute =
   | readonly DOMClassAttribute[]
   | string
   | { [key: string]: boolean }
+  | DOMTokenList
   | false
   | null
   | undefined

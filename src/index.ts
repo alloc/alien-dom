@@ -13,6 +13,7 @@ export * from './selectors'
 
 /// Functions
 export * from './functions/attachRef'
+export * from './functions/classToString'
 export * from './functions/depsHaveChanged'
 export * from './functions/fromElementProp'
 export * from './functions/markPureComponent'
