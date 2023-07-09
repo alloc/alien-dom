@@ -18,7 +18,8 @@ Component engine that feels like React but has…
   - A standard library of component hooks (tree-shakeable)
   - Easy context forwarding
 
-**How exactly does it "feel like React?"**  
+### How exactly does it "feel like React?"
+
 The look and feel of React is preserved, including:
 
 - Plain function components (but no component classes)
@@ -26,7 +27,9 @@ The look and feel of React is preserved, including:
 - Component hooks with similar names (i.e. `useEffect`, `useMemo`, `useRef`, `useState`) albeit with different behavior (except for useEffect)
 - The rules of React hooks apply to Alien DOM hooks (i.e. hooks must be called at the top level of a component) but event listeners can be attached anywhere
 
-**As this library is in alpha, there are drawbacks compared to React:**
+### Are there missing features?
+
+As this library is in beta, there are drawbacks compared to React:
 
 - No error boundaries (yet)
 - No suspense (yet)
@@ -34,7 +37,7 @@ The look and feel of React is preserved, including:
 - No plugin for Vite (yet)
 - No concurrent mode (probably never)
 
-**I'm ready to learn more!**
+### I'm ready to learn more!
 
 - See the [Getting Started](docs/getting-started.md) page for a quick introduction.
 - See the [Quirks](docs/quirks.md) page for things to keep in mind.
