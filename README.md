@@ -3,6 +3,9 @@
 Component engine that feels like React but has…
 
 - Transparent observables (implicit reactivity, _components are observers_)
+  - No need to explicitly wrap your components (see MobX)
+  - No need for weird `foo()` access patterns (see Solid.js)
+  - Host elements (i.e. `div`) accept observable refs as props!
 - Synchronous top-down JSX evaluation (requires a compile step)
   - …so stack traces aren't useless!
   - …and you get DOM elements immediately! (no virtual DOM, thanks to `morphdom`)
