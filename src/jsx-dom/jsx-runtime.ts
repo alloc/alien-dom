@@ -185,15 +185,16 @@ function applyProp(prop: string, value: any, node: DefaultElement) {
       }
       return
     case 'value':
+      // Skip nullish values for <select> value after appending
+      // <option> elements.
       if (value == null || hasTagName(node, 'SELECT')) {
-        // skip nullish values
-        // for `<select>` apply value after appending `<option>` elements
         return
-      } else if (hasTagName(node, 'TEXTAREA')) {
+      }
+      if (hasTagName(node, 'TEXTAREA')) {
         node.value = value
         return
       }
-      // use attribute for other elements
+      // Use setAttribute for other tag names.
       break
     case 'spellCheck':
       set(node, 'spellcheck', value)

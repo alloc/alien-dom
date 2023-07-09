@@ -405,8 +405,11 @@ export function observe(
   } else {
     const ref = arg1,
       onChange = arg2!
-    observer.update(() => ref.value)
+    observer.update(() => {
+      access(ref as any)
+    })
     observer.observe = (ref, newValue, oldValue) => {
+      // Capture the old value for the onChange callback.
       observer.onUpdate = onChange.bind(null, newValue, oldValue, ref)
     }
   }
@@ -421,7 +424,7 @@ export function isRef(value: any): value is Ref<any> {
  * Like `ref.peek()` but applies to all access within the given `compute`
  * callback.
  */
-export const peek = <T>(compute: () => T) => {
+export function peek<T>(compute: () => T) {
   const parentAccess = access
   access = unseenAccess
   try {
