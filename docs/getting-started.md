@@ -40,7 +40,7 @@ Runs a given callback whenever the dependency array has a different set of value
 
 ### useRef
 
-Creates a `Ref` object that can be observed when its `value` property changes. You may pass an initial value.
+Creates a `Ref` object that can be observed when its `value` property changes. You may pass an initial value, but a function argument will be called and its result will be used as the initial value instead.
 
 ---
 
