@@ -21,6 +21,7 @@ Component engine that feels like React but has…
 **How exactly does it "feel like React?"**  
 The look and feel of React is preserved, including:
 
+- Plain function components (but no component classes)
 - Good ol' JSX (i.e. `<div class="foo" key={index} />`) albeit with different evaluation semantics
 - Component hooks with similar names (i.e. `useEffect`, `useMemo`, `useRef`, `useState`) albeit with different behavior (except for useEffect)
 - The rules of React hooks apply to Alien DOM hooks (i.e. hooks must be called at the top level of a component) but event listeners can be attached anywhere
