@@ -1,5 +1,6 @@
 import type { AnyElement } from '../internal/types'
 import { StyleAttributes } from '../internal/types'
+import { ReadonlyRef } from '../observable'
 import type { AriaAttributes, AriaRole } from './aria'
 import type { AttrWithRef, Booleanish } from './attr'
 import type { DOMAttributes, DOMClassAttribute, DOMFactory } from './dom'
@@ -20,8 +21,14 @@ interface DetailedHTMLFactory<
   (...children: JSX.Children[]): T
 }
 
-export type DetailedHTMLProps<E extends HTMLAttributes<T>, T> = E &
-  AttrWithRef<Extract<T, AnyElement>>
+type AcceptObservableProps<E extends object> = {
+  [K in keyof E]: E[K] | ReadonlyRef<E[K]>
+}
+
+export type DetailedHTMLProps<
+  E extends HTMLAttributes<T>,
+  T extends AnyElement
+> = AcceptObservableProps<E> & AttrWithRef<T>
 
 export type HTMLStyleAttribute =
   | readonly StyleAttributes[]

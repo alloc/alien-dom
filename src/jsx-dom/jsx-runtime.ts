@@ -4,6 +4,7 @@ import { currentContext } from '../context'
 import { classToString } from '../functions/classToString'
 import { selfUpdating } from '../functions/selfUpdating'
 import { hasTagName } from '../internal/duck'
+import { enableEffect, getAlienEffects } from '../internal/effects'
 import { createEventEffect } from '../internal/elementEvent'
 import { currentComponent } from '../internal/global'
 import {
@@ -13,6 +14,7 @@ import {
   kAlienSelfUpdating,
 } from '../internal/symbols'
 import type { DefaultElement } from '../internal/types'
+import { Ref, isRef, observe } from '../observable'
 import type { ElementKey, JSX } from '../types'
 import { appendChild } from './appendChild'
 import { svgTags } from './svg-tags'
@@ -305,9 +307,35 @@ function setAttributeNS(
   node.setAttributeNS(namespace, key, value as any)
 }
 
-export function applyProps(node: HTMLElement | SVGElement, props: object) {
+export function applyProps(node: DefaultElement, props: object) {
   for (const prop of keys(props)) {
-    applyProp(prop, props[prop], node)
+    const value: any = props[prop]
+    if (value && isRef(value)) {
+      let lastVersion = value.version
+      const effects = getAlienEffects(node)
+      enableEffect(
+        effects,
+        (node: DefaultElement, ref: Ref<any>) => {
+          // Check if the ref changed after the initial applyProp call and
+          // before this effect was enabled.
+          if (ref.version !== lastVersion) {
+            applyProp(prop, ref.peek(), node)
+            lastVersion = ref.version
+          }
+          return observe(ref, newValue => {
+            applyProp(prop, newValue, node)
+            lastVersion = ref.version
+          }).destructor
+        },
+        0,
+        node,
+        [value]
+      )
+      applyProp(prop, value.peek(), node)
+      effects.enable()
+    } else {
+      applyProp(prop, value, node)
+    }
   }
   return node
 }

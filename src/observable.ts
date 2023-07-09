@@ -40,6 +40,8 @@ let currentVersion = 1
 let nextVersion = 1
 let access = unseenAccess
 
+const kRefType = Symbol.for('alien:refType')
+
 export class ReadonlyRef<T = any> {
   protected _version = 0
   protected _observers = new Set<Observer>()
@@ -64,8 +66,16 @@ export class ReadonlyRef<T = any> {
     }
   }
 
+  get [kRefType]() {
+    return 'ReadonlyRef'
+  }
+
   get value() {
     return access(this as any)
+  }
+
+  get version() {
+    return this._version
   }
 
   peek() {
@@ -74,6 +84,10 @@ export class ReadonlyRef<T = any> {
 }
 
 export class Ref<T = any> extends ReadonlyRef<T> {
+  get [kRefType]() {
+    return 'Ref'
+  }
+
   get value() {
     return super.value
   }
@@ -182,6 +196,10 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
 
     if (error) throw error
     return this._value
+  }
+
+  get [kRefType]() {
+    return 'ComputedRef'
   }
 
   get value() {
@@ -393,6 +411,10 @@ export function observe(
     }
   }
   return observer
+}
+
+export function isRef(value: any): value is Ref<any> {
+  return !!value && value[kRefType] !== undefined
 }
 
 /**
