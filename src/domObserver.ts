@@ -130,15 +130,21 @@ export const observeRemovedDescendants = /* @__PURE__ */ defineEffectType(
  * Runs the effect when the given target is mounted, then stops
  * observing the document.
  */
-export const onMount = (target: ChildNode, effect: () => void) =>
-  createElementObserver(target, 'onAdded', effect)
+export const onMount = (
+  target: ChildNode,
+  effect: () => void,
+  rootNode: Node = document
+) => createElementObserver(target, 'onAdded', effect, rootNode)
 
 /**
  * Runs the effect when the given target is unmounted, then stops
  * observing the document.
  */
-export const onUnmount = (target: ChildNode, effect: () => void) =>
-  createElementObserver(target, 'onRemoved', effect)
+export const onUnmount = (
+  target: ChildNode,
+  effect: () => void,
+  rootNode = target.getRootNode()
+) => createElementObserver(target, 'onRemoved', effect, rootNode)
 
 type DepthFirstEffect = [
   effect: () => void,
@@ -150,7 +156,12 @@ type DepthFirstEffect = [
 let depthFirstBatch: DepthFirstEffect[] | null = null
 
 const createElementObserver = defineEffectType(
-  (target: ChildNode, key: 'onAdded' | 'onRemoved', effect: () => void) => {
+  (
+    target: ChildNode,
+    key: 'onAdded' | 'onRemoved',
+    effect: () => void,
+    rootNode: Node
+  ) => {
     const self = getCurrentEffect()
     if ((key == 'onAdded') == target.isConnected) {
       self?.context?.remove(self)
@@ -182,7 +193,7 @@ const createElementObserver = defineEffectType(
       }
     }
 
-    const observer = observe(target.ownerDocument!.body)
+    const observer = observe(rootNode)
     observer[key].add(listener)
 
     function dispose() {
