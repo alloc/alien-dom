@@ -18,7 +18,7 @@ Component engine that feels like React but has…
   - A standard library of component hooks (tree-shakeable)
   - Easy context forwarding
 
-**How exactly does it "feel like React?"**
+**How exactly does it "feel like React?"**  
 The look and feel of React is preserved, including:
 
 - Good ol' JSX (i.e. `<div class="foo" key={index} />`) albeit with different evaluation semantics
