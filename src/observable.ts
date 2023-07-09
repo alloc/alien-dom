@@ -150,7 +150,7 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
   }
 
   protected _setupObserver() {
-    const observer = (this._observer = new Observer())
+    const observer = (this._observer = new Observer(computeQueue))
     this._refs = observer.refs
     observer.onUpdate = valueProperty.set!.bind(this)
     observer.update(this.compute)
@@ -207,12 +207,17 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
 
 const passThrough = (result: any) => result
 
+let nextObserverId = 1
+
 export class Observer {
+  readonly id = nextObserverId++
   refs = new Set<InternalRef<any>>()
   version = 0
   depth = 0
   nextCompute: () => any = noop
   onUpdate = passThrough
+
+  constructor(readonly queue = updateQueue) {}
 
   update<T>(compute: () => T) {
     const oldRefs = new Set(this.refs)
@@ -257,12 +262,12 @@ export class Observer {
     }
     if (this.version !== currentVersion) {
       this.version = currentVersion
-      invalidated.add(this)
+      this.queue.add(this)
     }
   }
 
   dispose() {
-    invalidated.delete(this)
+    this.queue.delete(this)
     this.refs.forEach(ref => {
       ref._isObserved(this, false)
     })
@@ -277,13 +282,19 @@ export class Observer {
 }
 
 function onObservedUpdate() {
-  if (nextVersion === currentVersion && invalidated.size) {
+  if (nextVersion === currentVersion && hasQueuedObservers()) {
     nextVersion++
     Promise.resolve().then(computeNextVersion)
   }
 }
 
-const invalidated = new Set<Observer>()
+// Computed refs always run before plain observers.
+const computeQueue = new Set<Observer>()
+const updateQueue = new Set<Observer>()
+
+function hasQueuedObservers() {
+  return computeQueue.size + updateQueue.size > 0
+}
 
 function computeNextVersion() {
   currentVersion = nextVersion
@@ -291,28 +302,24 @@ function computeNextVersion() {
   // Capture the stack trace before the infinite loop.
   const devError = DEV && Error('Cycle detected')
 
-  const parentAccess = access
+  let currentObserver: Observer
+  let oldRefs: Set<InternalRef<any>>
 
-  for (let loops = 0; invalidated.size; loops++) {
+  const parentAccess = access
+  access = (ref: InternalRef<any>) => {
+    ref._isObserved(currentObserver, true)
+    oldRefs.delete(ref)
+    currentObserver.refs.add(ref)
+    currentObserver.depth = Math.max(currentObserver.depth, ref._depth + 1)
+    return ref._value
+  }
+
+  for (let loops = 0; hasQueuedObservers(); loops++) {
     if (loops > 100) {
       throw (DEV && devError) || Error('Cycle detected')
     }
 
-    const sortedObservers = [...invalidated].sort((a, b) => a.depth - b.depth)
-    invalidated.clear()
-
-    let currentObserver: Observer
-    let oldRefs: Set<InternalRef<any>>
-
-    access = (ref: InternalRef<any>) => {
-      ref._isObserved(currentObserver, true)
-      oldRefs.delete(ref)
-      currentObserver.refs.add(ref)
-      currentObserver.depth = Math.max(currentObserver.depth, ref._depth + 1)
-      return ref._value
-    }
-
-    sortedObservers.forEach(observer => {
+    const update = (observer: Observer) => {
       oldRefs = new Set(observer.refs)
       observer.refs.clear()
       observer.depth = 0
@@ -335,7 +342,19 @@ function computeNextVersion() {
       if (DEV && typeof __OBSERVABLE_HOOKS__ !== 'undefined') {
         __OBSERVABLE_HOOKS__.didUpdate(observer, error, result)
       }
-    })
+    }
+
+    // Computed refs run in order of depth.
+    const computedRefs = [...computeQueue].sort((a, b) => b.depth - a.depth)
+    computeQueue.clear()
+
+    computedRefs.forEach(update)
+
+    // Plain observers run in order of creation.
+    const updatedObservers = [...updateQueue].sort((a, b) => a.id - b.id)
+    updateQueue.clear()
+
+    updatedObservers.forEach(update)
   }
 
   access = parentAccess
