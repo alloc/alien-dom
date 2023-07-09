@@ -42,7 +42,7 @@ export function createContext<T>(initial?: T) {
   }) {
     if (children) {
       let restoreContext: (() => void) | undefined
-      let oldValue: Ref<any> | undefined
+      let oldValue: Ref | undefined
 
       if (isForwardedContext) {
         restoreContext = forwardContext(initial)

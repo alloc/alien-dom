@@ -4,14 +4,14 @@ import { binaryInsert } from './jsx-dom/util'
 
 type ElementListener = (element: Element) => void
 
-type Observer = {
+type RootNodeObserver = {
   rootNode: Node
   onAdded: Set<ElementListener>
   onRemoved: Set<ElementListener>
   dispose: () => void
 }
 
-const observersByRoot = new WeakMap<Node, Observer>()
+const observersByRoot = new WeakMap<Node, RootNodeObserver>()
 
 function observe(rootNode: Node) {
   let result = observersByRoot.get(rootNode)
@@ -214,7 +214,7 @@ function getElementDepth(elem: ChildNode, stopAt?: Element) {
 }
 
 function removeElementListener(
-  observer: Observer,
+  observer: RootNodeObserver,
   key: 'onAdded' | 'onRemoved',
   listener: ElementListener
 ) {
