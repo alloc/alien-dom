@@ -149,19 +149,22 @@ export function createElement(tag: any, props: any, ...children: any[]) {
 function flattenStyleProp(
   node: DefaultElement,
   value: HTMLStyleAttribute | Ref<HTMLStyleAttribute>,
-  style: StyleAttributes = {},
+  style: StyleAttributes,
+  flags: UpdateStyle.AllowRefs | 0,
   rootValue?: HTMLStyleAttribute
 ) {
   if (value != null && value !== false) {
     if (isArray(value)) {
       value.forEach(item => {
-        flattenStyleProp(node, item, style, rootValue ?? value)
+        flattenStyleProp(node, item, style, flags, rootValue ?? value)
       })
     } else if (isRef<HTMLStyleAttribute>(value)) {
-      flattenStyleProp(node, value.peek(), style, rootValue)
-      enablePropObserver(node, 'style', value, () => {
-        applyStyleProp(node, rootValue)
-      })
+      flattenStyleProp(node, value.peek(), style, flags, rootValue)
+      if (flags & UpdateStyle.AllowRefs) {
+        enablePropObserver(node, 'style', value, node => {
+          applyStyleProp(node, rootValue, 0)
+        })
+      }
     } else if (isObject(value)) {
       for (const key of keys(value as { z: 0 })) {
         style[key] = value[key] as any
@@ -176,12 +179,16 @@ function flattenStyleProp(
   return style
 }
 
-function applyStyleProp(node: DefaultElement, value: any) {
-  const style = flattenStyleProp(node, value)
-  const refs = updateStyle(node, style, UpdateStyle.AllowRefs)
-  if (refs.size) {
+function applyStyleProp(
+  node: DefaultElement,
+  value: any,
+  flags: UpdateStyle.AllowRefs | 0
+) {
+  const style = flattenStyleProp(node, value, {}, flags)
+  const refs = updateStyle(node, style, flags)
+  if (refs?.size) {
     for (const [key, ref] of refs) {
-      enablePropObserver(node, 'style.' + key, ref, newValue => {
+      enablePropObserver(node, 'style.' + key, ref, (node, newValue) => {
         updateStyle(node, { [key]: newValue })
       })
     }
@@ -203,7 +210,7 @@ function applyProp(prop: string, value: any, node: DefaultElement) {
       if (isString(value)) {
         setAttribute(node, 'style', value)
       } else {
-        applyStyleProp(node, value)
+        applyStyleProp(node, value, UpdateStyle.AllowRefs)
       }
       return
     case 'children':

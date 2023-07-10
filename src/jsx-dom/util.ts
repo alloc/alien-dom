@@ -39,6 +39,12 @@ export function updateStyle(
 export function updateStyle(
   element: DefaultElement,
   style: any,
+  flags: UpdateStyle.AllowRefs | 0
+): Map<string, Ref> | undefined
+
+export function updateStyle(
+  element: DefaultElement,
+  style: any,
   flags?: UpdateStyle | 0
 ): void
 
