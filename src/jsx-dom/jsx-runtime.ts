@@ -348,7 +348,6 @@ export function applyProps(node: DefaultElement, props: object) {
         applyProp(prop, newValue, node)
       })
       applyProp(prop, value.peek(), node)
-      effects.enable()
     } else {
       applyProp(prop, value, node)
     }
