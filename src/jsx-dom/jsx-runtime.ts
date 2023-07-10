@@ -344,7 +344,7 @@ export function applyProps(node: DefaultElement, props: object) {
   for (const prop of keys(props)) {
     const value: any = props[prop]
     if (value && isRef(value)) {
-      enablePropObserver(node, prop, value, newValue => {
+      enablePropObserver(node, prop, value, (node, newValue) => {
         applyProp(prop, newValue, node)
       })
       applyProp(prop, value.peek(), node)
@@ -359,20 +359,20 @@ export function enablePropObserver(
   node: DefaultElement,
   prop: string,
   ref: Ref,
-  applyProp: (newValue: any) => void
+  applyProp: (node: DefaultElement, newValue: any) => void
 ) {
   let lastVersion = ref.version
   return enableEffect(
     getAlienEffects(node, ShadowRootContext.get()),
-    (_node: DefaultElement, ref: Ref) => {
+    (node: DefaultElement, ref: Ref) => {
       // Check if the ref changed after the initial applyProp call and
       // before this effect was enabled.
       if (ref.version !== lastVersion) {
-        applyProp(ref.peek())
+        applyProp(node, ref.peek())
         lastVersion = ref.version
       }
       return observe(ref, newValue => {
-        applyProp(newValue)
+        applyProp(node, newValue)
         lastVersion = ref.version
       }).destructor
     },
