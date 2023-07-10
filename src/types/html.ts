@@ -1,6 +1,5 @@
-import type { AnyElement } from '../internal/types'
-import { StyleAttributes } from '../internal/types'
-import { ReadonlyRef } from '../observable'
+import type { AnyElement, StyleAttributes } from '../internal/types'
+import type { ReadonlyRef, Ref } from '../observable'
 import type { AriaAttributes, AriaRole } from './aria'
 import type { AttrWithRef, Booleanish } from './attr'
 import type { DOMAttributes, DOMClassAttribute, DOMFactory } from './dom'
@@ -31,7 +30,7 @@ export type DetailedHTMLProps<
 > = AcceptObservableProps<E> & AttrWithRef<T>
 
 export type HTMLStyleAttribute =
-  | readonly HTMLStyleAttribute[]
+  | readonly (HTMLStyleAttribute | Ref<HTMLStyleAttribute>)[]
   | AcceptObservableProps<StyleAttributes>
   | string
   | false

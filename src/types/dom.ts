@@ -1,4 +1,5 @@
 import type * as CSS from 'csstype'
+import type { Ref } from '../observable'
 import type { AttrWithRef } from './attr'
 import type { JSX } from './jsx'
 
@@ -10,9 +11,9 @@ export type DOMFactory<P extends DOMAttributes<T>, T extends Element> = (
 ) => T
 
 export type DOMClassAttribute =
-  | readonly DOMClassAttribute[]
+  | readonly (DOMClassAttribute | Ref<DOMClassAttribute>)[]
   | string
-  | { [key: string]: boolean }
+  | { [key: string]: boolean | Ref<boolean> }
   | DOMTokenList
   | false
   | null
