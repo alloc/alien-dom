@@ -416,7 +416,7 @@ export function observe(
   return observer
 }
 
-export function isRef(value: any): value is Ref<any> {
+export function isRef<T = any>(value: any): value is Ref<T> {
   return !!value && value[kRefType] !== undefined
 }
 

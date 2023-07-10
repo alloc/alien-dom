@@ -1,4 +1,4 @@
-import { isBoolean, isFunction, isObject, isString } from '@alloc/is'
+import { isArray, isBoolean, isFunction, isObject, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
 import { currentContext } from '../context'
 import { classToString } from '../functions/classToString'
@@ -13,12 +13,12 @@ import {
   kAlienPureComponent,
   kAlienSelfUpdating,
 } from '../internal/symbols'
-import type { DefaultElement } from '../internal/types'
+import type { DefaultElement, StyleAttributes } from '../internal/types'
 import { Ref, isRef, observe } from '../observable'
-import type { ElementKey, JSX } from '../types'
+import type { ElementKey, HTMLStyleAttribute, JSX } from '../types'
 import { ShadowRootContext, appendChild } from './appendChild'
 import { svgTags } from './svg-tags'
-import { decamelize, keys, updateStyle } from './util'
+import { UpdateStyle, decamelize, keys, updateStyle } from './util'
 
 export { Fragment }
 export type { JSX }
@@ -146,12 +146,44 @@ export function createElement(tag: any, props: any, ...children: any[]) {
   return jsx(tag, { ...props, children }, props.key)
 }
 
-function applyStyleProp(node: DefaultElement, value: any) {
+function flattenStyleProp(
+  node: DefaultElement,
+  value: HTMLStyleAttribute | Ref<HTMLStyleAttribute>,
+  style: StyleAttributes = {},
+  rootValue?: HTMLStyleAttribute
+) {
   if (value != null && value !== false) {
-    if (Array.isArray(value)) {
-      value.forEach(v => applyStyleProp(node, v))
+    if (isArray(value)) {
+      value.forEach(item => {
+        flattenStyleProp(node, item, style, rootValue ?? value)
+      })
+    } else if (isRef<HTMLStyleAttribute>(value)) {
+      flattenStyleProp(node, value.peek(), style, rootValue)
+      enablePropObserver(node, 'style', value, () => {
+        applyStyleProp(node, rootValue)
+      })
     } else if (isObject(value)) {
-      updateStyle(node, value)
+      for (const key of keys(value as { z: 0 })) {
+        style[key] = value[key] as any
+      }
+    } else {
+      value.split(/\s*;\s*/).forEach(property => {
+        const [key, value] = property.split(/\s*:\s*/) as ['z', any]
+        style[key] = value
+      })
+    }
+  }
+  return style
+}
+
+function applyStyleProp(node: DefaultElement, value: any) {
+  const style = flattenStyleProp(node, value)
+  const refs = updateStyle(node, style, UpdateStyle.AllowRefs)
+  if (refs.size) {
+    for (const [key, ref] of refs) {
+      enablePropObserver(node, 'style.' + key, ref, newValue => {
+        updateStyle(node, { [key]: newValue })
+      })
     }
   }
 }

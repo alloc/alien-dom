@@ -31,9 +31,12 @@ export type DetailedHTMLProps<
 > = AcceptObservableProps<E> & AttrWithRef<T>
 
 export type HTMLStyleAttribute =
-  | readonly StyleAttributes[]
-  | StyleAttributes
+  | readonly HTMLStyleAttribute[]
+  | AcceptObservableProps<StyleAttributes>
   | string
+  | false
+  | null
+  | undefined
 
 export interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
   // Extension

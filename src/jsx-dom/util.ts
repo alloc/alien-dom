@@ -2,6 +2,7 @@ import { isNumber } from '@alloc/is'
 import { isAnimatedStyleProp, stopAnimatingKey } from '../internal/animate'
 import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
 import type { DefaultElement } from '../internal/types'
+import { Ref, isRef } from '../observable'
 import { isUnitlessNumber } from './css-props'
 import { isSvgChild } from './svg-tags'
 
@@ -23,6 +24,8 @@ export const enum UpdateStyle {
   Interrupt = 1 << 0,
   /** Skip animated style properties. */
   NonAnimated = 1 << 1,
+  /** Unwrap any refs and return a `Map` of them by property. */
+  AllowRefs = 1 << 2,
 }
 
 type StyleKey = Omit<keyof CSSStyleDeclaration, 'length' | 'parentRule'>
@@ -30,16 +33,35 @@ type StyleKey = Omit<keyof CSSStyleDeclaration, 'length' | 'parentRule'>
 export function updateStyle(
   element: DefaultElement,
   style: any,
+  flags: UpdateStyle.AllowRefs
+): Map<string, Ref>
+
+export function updateStyle(
+  element: DefaultElement,
+  style: any,
+  flags?: UpdateStyle | 0
+): void
+
+export function updateStyle(
+  element: DefaultElement,
+  style: any,
   flags: UpdateStyle | 0 = 0
-) {
+): any {
   let transform: string[] | undefined
+
   const skipAnimated = flags & UpdateStyle.NonAnimated
   const stopAnimated = flags & UpdateStyle.Interrupt
+  const refs = flags & UpdateStyle.AllowRefs && new Map<string, Ref>()
+
   for (const key of keys<StyleKey>(style)) {
     if (skipAnimated && isAnimatedStyleProp(element, key)) {
       continue
     }
     let value = style[key]
+    if (refs && isRef(value)) {
+      refs.set(key, value)
+      value = value.peek()
+    }
     let transformFn = cssTransformAliases[key]
     if (transformFn !== undefined) {
       const needSvgTransform = isSvgChild(element)
@@ -61,9 +83,12 @@ export function updateStyle(
       stopAnimatingKey(element, key)
     }
   }
+
   if (transform) {
     element.style.transform = transform.join(' ')
   }
+
+  return refs
 }
 
 /**
