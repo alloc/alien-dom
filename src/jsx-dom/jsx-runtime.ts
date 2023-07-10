@@ -90,7 +90,7 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
 
     // Select `option` elements in `select`
     if (hasTagName(node, 'SELECT') && props.value != null) {
-      if (props.multiple === true && Array.isArray(props.value)) {
+      if (props.multiple === true && isArray(props.value)) {
         const values = (props.value as any[]).map(value => String(value))
 
         node
@@ -132,7 +132,7 @@ export function jsx(tag: any, props: any, key?: ElementKey) {
 }
 
 export function createElement(tag: any, props: any, ...children: any[]) {
-  if (isString(props) || Array.isArray(props)) {
+  if (isString(props) || isArray(props)) {
     children.unshift(props)
     props = {}
   }
