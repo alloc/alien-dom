@@ -23,3 +23,8 @@
 - Effects are not guaranteed to run before the component's first paint.
 
 - Effects are not guaranteed to run at all, if the component is re-rendered before the effect is triggered.
+
+### Observable prop values
+
+- Nested refs have limited support. If the prop's value is a ref, it cannot have nested refs. For
+  the `class` and `style` props, nested refs are allowed (unless the prop's value is a ref). For example, if `class` is an array of two refs, you're good. But if `class` is a ref containing an array of two refs, you're not good.
