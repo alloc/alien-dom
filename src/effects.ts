@@ -57,8 +57,8 @@ export class AlienEffects<Element extends AnyElement = any> {
   abortCtrl?: AbortController = undefined
   protected _mountEffect: Disposable | null = null
 
-  constructor(element?: Element | Comment | DocumentFragment) {
-    element && this.setElement(element)
+  constructor(element?: Element | Comment | DocumentFragment, rootNode?: Node) {
+    element && this.setElement(element, rootNode)
   }
 
   get enabled() {

@@ -7,10 +7,13 @@ import { kAlienEffects, kAlienNewEffects } from './symbols'
 import { AnyElement } from './types'
 
 export function getAlienEffects<T extends AnyElement>(
-  element: T
+  element: T,
+  rootNode?: Node
 ): AlienEffects<T> {
   const newEffects = kAlienNewEffects(element)
-  return newEffects || kAlienEffects(element) || new AlienEffects(element)
+  return (
+    newEffects || kAlienEffects(element) || new AlienEffects(element, rootNode)
+  )
 }
 
 export const enum EffectFlags {

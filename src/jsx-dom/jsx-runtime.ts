@@ -16,7 +16,7 @@ import {
 import type { DefaultElement } from '../internal/types'
 import { Ref, isRef, observe } from '../observable'
 import type { ElementKey, JSX } from '../types'
-import { appendChild } from './appendChild'
+import { ShadowRootContext, appendChild } from './appendChild'
 import { svgTags } from './svg-tags'
 import { decamelize, keys, updateStyle } from './util'
 
@@ -312,26 +312,9 @@ export function applyProps(node: DefaultElement, props: object) {
   for (const prop of keys(props)) {
     const value: any = props[prop]
     if (value && isRef(value)) {
-      let lastVersion = value.version
-      const effects = getAlienEffects(node)
-      enableEffect(
-        effects,
-        (node: DefaultElement, ref: Ref<any>) => {
-          // Check if the ref changed after the initial applyProp call and
-          // before this effect was enabled.
-          if (ref.version !== lastVersion) {
-            applyProp(prop, ref.peek(), node)
-            lastVersion = ref.version
-          }
-          return observe(ref, newValue => {
-            applyProp(prop, newValue, node)
-            lastVersion = ref.version
-          }).destructor
-        },
-        0,
-        node,
-        [value]
-      )
+      enablePropObserver(node, prop, value, newValue => {
+        applyProp(prop, newValue, node)
+      })
       applyProp(prop, value.peek(), node)
       effects.enable()
     } else {
@@ -339,4 +322,31 @@ export function applyProps(node: DefaultElement, props: object) {
     }
   }
   return node
+}
+
+export function enablePropObserver(
+  node: DefaultElement,
+  prop: string,
+  ref: Ref,
+  applyProp: (newValue: any) => void
+) {
+  let lastVersion = ref.version
+  return enableEffect(
+    getAlienEffects(node, ShadowRootContext.get()),
+    (_node: DefaultElement, ref: Ref) => {
+      // Check if the ref changed after the initial applyProp call and
+      // before this effect was enabled.
+      if (ref.version !== lastVersion) {
+        applyProp(ref.peek())
+        lastVersion = ref.version
+      }
+      return observe(ref, newValue => {
+        applyProp(newValue)
+        lastVersion = ref.version
+      }).destructor
+    },
+    0,
+    node,
+    [ref, prop]
+  )
 }
