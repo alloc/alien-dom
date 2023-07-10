@@ -165,7 +165,7 @@ function applyProp(prop: string, value: any, node: DefaultElement) {
   switch (prop) {
     case 'class':
     case 'className':
-      setAttribute(node, 'class', classToString(value))
+      setAttribute(node, 'class', classToString(value, node))
       return
     case 'style':
       if (isString(value)) {
