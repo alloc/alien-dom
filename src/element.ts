@@ -147,12 +147,8 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     return this
   }
   empty() {
-    if (this instanceof HTMLElement) {
-      while (this.firstChild) {
-        this.removeChild(this.firstChild)
-      }
-    } else {
-      this
+    while (this.firstChild) {
+      this.removeChild(this.firstChild)
     }
     return this
   }
