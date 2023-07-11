@@ -3,14 +3,14 @@ import { Disposable } from '../disposable'
 import { DefaultElement } from '../internal/types'
 import { enablePropObserver } from '../jsx-dom/jsx-runtime'
 import { keys } from '../jsx-dom/util'
-import { Ref, isRef } from '../observable'
+import { ReadonlyRef, isRef } from '../observable'
 import { DOMClassAttribute } from '../types'
 
 export function classToString(
-  value: DOMClassAttribute | Ref<DOMClassAttribute>,
+  value: DOMClassAttribute | ReadonlyRef<DOMClassAttribute>,
   node?: DefaultElement,
-  refs = new Set<Ref>(),
-  observers = new Map<Ref, Disposable>(),
+  refs = new Set<ReadonlyRef>(),
+  observers = new Map<ReadonlyRef, Disposable>(),
   rootValue?: DOMClassAttribute
 ): string {
   let result: string | undefined
@@ -36,7 +36,7 @@ export function classToString(
       }
     } else if (isObject(value) && value.constructor !== DOMTokenList) {
       for (const name of keys(value)) {
-        let enabled = (value as any)[name] as boolean | Ref<boolean>
+        let enabled = (value as any)[name] as boolean | ReadonlyRef<boolean>
         if (isRef(enabled)) {
           if (node) {
             enableClassObserver(enabled, node, refs, observers, rootValue)
@@ -56,10 +56,10 @@ export function classToString(
 }
 
 function enableClassObserver(
-  ref: Ref,
+  ref: ReadonlyRef,
   node: DefaultElement,
-  refs: Set<Ref>,
-  observers: Map<Ref, Disposable>,
+  refs: Set<ReadonlyRef>,
+  observers: Map<ReadonlyRef, Disposable>,
   rootValue: DOMClassAttribute
 ) {
   refs.add(ref)
@@ -67,7 +67,7 @@ function enableClassObserver(
     observers.set(
       ref,
       enablePropObserver(node, 'class', ref, node => {
-        const refs = new Set<Ref>()
+        const refs = new Set<ReadonlyRef>()
         node.setAttribute(
           'class',
           classToString(rootValue, node, refs, observers)

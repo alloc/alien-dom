@@ -14,7 +14,7 @@ import {
   kAlienSelfUpdating,
 } from '../internal/symbols'
 import type { DefaultElement, StyleAttributes } from '../internal/types'
-import { Ref, isRef, observe } from '../observable'
+import { ReadonlyRef, isRef, observe } from '../observable'
 import type { ElementKey, HTMLStyleAttribute, JSX } from '../types'
 import { ShadowRootContext, appendChild } from './appendChild'
 import { svgTags } from './svg-tags'
@@ -148,7 +148,7 @@ export function createElement(tag: any, props: any, ...children: any[]) {
 
 function flattenStyleProp(
   node: DefaultElement,
-  value: HTMLStyleAttribute | Ref<HTMLStyleAttribute>,
+  value: HTMLStyleAttribute | ReadonlyRef<HTMLStyleAttribute>,
   style: StyleAttributes,
   flags: UpdateStyle.AllowRefs | 0,
   rootValue?: HTMLStyleAttribute
@@ -365,13 +365,13 @@ export function applyProps(node: DefaultElement, props: object) {
 export function enablePropObserver(
   node: DefaultElement,
   prop: string,
-  ref: Ref,
+  ref: ReadonlyRef,
   applyProp: (node: DefaultElement, newValue: any) => void
 ) {
   let lastVersion = ref.version
   return enableEffect(
     getAlienEffects(node, ShadowRootContext.get()),
-    (node: DefaultElement, ref: Ref) => {
+    (node: DefaultElement, ref: ReadonlyRef) => {
       // Check if the ref changed after the initial applyProp call and
       // before this effect was enabled.
       if (ref.version !== lastVersion) {
