@@ -26,6 +26,10 @@ declare const __OBSERVABLE_HOOKS__: {
   didUpdate(observer: Observer | ComputedRef, error: any, result: any): void
 }
 
+const hooks = (DEV &&
+  typeof __OBSERVABLE_HOOKS__ !== 'undefined' &&
+  __OBSERVABLE_HOOKS__) as typeof __OBSERVABLE_HOOKS__
+
 type InternalRef<T> = Ref<T> & {
   _value: T
   _version: number
@@ -56,8 +60,8 @@ export class ReadonlyRef<T = any> {
    * to switch between eager and lazy computation mode.
    */
   protected _isObserved(observer: Observer, isObserved: boolean) {
-    if (DEV && typeof __OBSERVABLE_HOOKS__ !== 'undefined') {
-      __OBSERVABLE_HOOKS__.isObserved(this, observer, isObserved)
+    if (DEV && hooks) {
+      hooks.isObserved(this, observer, isObserved)
     }
     if (isObserved) {
       this._observers.add(observer)
@@ -190,8 +194,8 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
 
     access = parentAccess
 
-    if (DEV && typeof __OBSERVABLE_HOOKS__ !== 'undefined') {
-      __OBSERVABLE_HOOKS__.didUpdate(this, error, this._value)
+    if (DEV && hooks) {
+      hooks.didUpdate(this, error, this._value)
     }
 
     if (error) throw error
@@ -265,8 +269,8 @@ export class Observer {
       ref._isObserved(this, false)
     })
 
-    if (DEV && typeof __OBSERVABLE_HOOKS__ !== 'undefined') {
-      __OBSERVABLE_HOOKS__.didUpdate(this, error, result)
+    if (DEV && hooks) {
+      hooks.didUpdate(this, error, result)
     }
 
     if (error) throw error
@@ -275,8 +279,8 @@ export class Observer {
 
   /** Called when a ref has a new value. */
   observe(ref: ReadonlyRef<any>, newValue: any, oldValue: any) {
-    if (DEV && typeof __OBSERVABLE_HOOKS__ !== 'undefined') {
-      __OBSERVABLE_HOOKS__.observe(this, ref, newValue, oldValue)
+    if (DEV && hooks) {
+      hooks.observe(this, ref, newValue, oldValue)
     }
     if (this.version !== currentVersion) {
       this.version = currentVersion
@@ -357,8 +361,8 @@ function computeNextVersion() {
         ref._isObserved(observer, false)
       })
 
-      if (DEV && typeof __OBSERVABLE_HOOKS__ !== 'undefined') {
-        __OBSERVABLE_HOOKS__.didUpdate(observer, error, result)
+      if (DEV && hooks) {
+        hooks.didUpdate(observer, error, result)
       }
     }
 
