@@ -1,4 +1,4 @@
-import { ElementRefs } from './component'
+import { AlienComponent, ElementRefs } from './component'
 import { toChildNodes } from './fragment'
 import { moveEffects } from './moveEffects'
 import { recursiveMorph } from './recursiveMorph'
@@ -14,7 +14,8 @@ import type { AnyElement } from './types'
 export function updateFragment(
   fragment: DocumentFragment,
   newFragment: DocumentFragment,
-  newRefs?: ElementRefs | null
+  newRefs?: ElementRefs | null,
+  component?: AlienComponent | null
 ) {
   const isManuallyUpdated = kAlienManualUpdates.in(newFragment)
   const newNodes = Array.from(newFragment.childNodes)
@@ -38,6 +39,7 @@ export function updateFragment(
           newNodes[newIndex] as Element,
           newRefs,
           (elementMap ||= new Map()),
+          component,
           true /* isFragment */
         )
       }

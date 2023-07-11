@@ -191,7 +191,7 @@ export function selfUpdating<Props extends object, Result extends JSX.Children>(
           ) {
             if ((updated = isFragment(rootNode))) {
               if (!needsPlaceholder) {
-                updateFragment(rootNode, newRootNode as any, newRefs)
+                updateFragment(rootNode, newRootNode as any, newRefs, self)
               }
             } else if (isElement(rootNode)) {
               if ((updated = rootNode.nodeName === newRootNode.nodeName)) {
