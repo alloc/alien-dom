@@ -351,7 +351,13 @@ export function applyProps(node: DefaultElement, props: object) {
   for (const prop of keys(props)) {
     const value: any = props[prop]
     if (value && isRef(value)) {
+      const isChildren = prop === 'children'
       enablePropObserver(node, prop, value, (node, newValue) => {
+        if (isChildren) {
+          while (node.lastChild) {
+            node.removeChild(node.lastChild)
+          }
+        }
         applyProp(prop, newValue, node)
       })
       applyProp(prop, value.peek(), node)
