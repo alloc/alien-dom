@@ -1,5 +1,5 @@
+import { copyFileSync, mkdirSync } from 'fs'
 import { defineConfig } from 'tsup'
-import { copyFileSync } from 'fs'
 
 export default defineConfig({
   entry: [
@@ -20,7 +20,14 @@ export default defineConfig({
   dts: true,
   noExternal: ['linear-color', '@alloc/types', '@alloc/is'],
   async onSuccess() {
-    copyFileSync('jsx-dom/LICENSE', '../dist/jsx-dom/LICENSE')
-    copyFileSync('morphdom/LICENSE', '../dist/morphdom/LICENSE')
+    copyLicense('jsx-dom')
+    copyLicense('morphdom')
   },
 })
+
+function copyLicense(fromDir: string) {
+  try {
+    mkdirSync('../dist/' + fromDir)
+  } catch {}
+  copyFileSync(fromDir + '/LICENSE', '../dist/' + fromDir + '/LICENSE')
+}
