@@ -1,7 +1,7 @@
 import { AlienComponent, ElementRefs } from './component'
 import { toChildNodes } from './fragment'
+import { morph } from './morph'
 import { moveEffects } from './moveEffects'
-import { recursiveMorph } from './recursiveMorph'
 import {
   kAlienEffects,
   kAlienElementKey,
@@ -34,11 +34,11 @@ export function updateFragment(
       const oldIndex = oldKeys.indexOf(newKey)
       if (oldIndex !== -1) {
         oldNode = oldNodes[oldIndex]
-        recursiveMorph(
+        morph(
           oldNode as Element,
           newNodes[newIndex] as Element,
-          newRefs,
           (elementMap ||= new Map()),
+          newRefs,
           component,
           true /* isFragment */
         )
@@ -80,7 +80,7 @@ export function updateFragment(
       const oldEffects = kAlienEffects(oldElement)
       const newEffects = kAlienEffects(newElement)
       if (newEffects) {
-        moveEffects(newEffects, oldElement, elementMap)
+        moveEffects(newEffects, elementMap)
       }
       oldEffects?.disable()
     }

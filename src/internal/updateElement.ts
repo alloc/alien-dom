@@ -1,6 +1,6 @@
 import { AlienComponent, ElementRefs } from './component'
+import { morph } from './morph'
 import { moveEffects } from './moveEffects'
-import { recursiveMorph } from './recursiveMorph'
 import { kAlienEffects } from './symbols'
 import type { AnyElement } from './types'
 
@@ -12,15 +12,15 @@ export function updateElement(
   const newRefs = arg3 instanceof Map ? arg3 : arg3?.newRefs
   const component = arg3 instanceof AlienComponent ? arg3 : undefined
   const elementMap = new Map<AnyElement, AnyElement>()
-  recursiveMorph(rootElement, newRootElement, newRefs, elementMap, component)
+  morph(rootElement, newRootElement, elementMap, newRefs, component)
   if (component) {
-    moveEffects(component.newEffects!, rootElement, elementMap, true)
+    moveEffects(component.newEffects!, elementMap, rootElement)
   }
   for (const [newElement, oldElement] of elementMap) {
     const oldEffects = kAlienEffects(oldElement)
     const newEffects = kAlienEffects(newElement)
     if (newEffects) {
-      moveEffects(newEffects, oldElement, elementMap)
+      moveEffects(newEffects, elementMap)
     }
     oldEffects?.disable()
   }

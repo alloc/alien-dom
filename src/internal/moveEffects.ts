@@ -7,13 +7,12 @@ import type { AnyElement } from './types'
  */
 export function moveEffects(
   newEffects: AlienEffects,
-  oldElement: AnyElement,
   elementMap: Map<AnyElement, AnyElement>,
-  isComponent?: boolean
+  oldElement?: AnyElement
 ) {
   const { effects } = newEffects
 
-  if (!isComponent) {
+  if (oldElement) {
     // The `setElement` call will run the effects if we don't unset them
     // here, which would be bad since we don't want to run them until
     // they've been retargeted.

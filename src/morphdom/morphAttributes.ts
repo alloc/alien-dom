@@ -1,8 +1,7 @@
-import { setNonAnimatedStyle } from '../internal/animate'
-import { isFragment } from '../internal/duck'
+import { copyAnimatedStyle, setNonAnimatedStyle } from '../internal/animate'
 import { DefaultElement } from '../internal/types'
 
-export function morphAttrs(fromNode: Element, toNode: Element) {
+export function morphAttributes(fromNode: Element, toNode: Element) {
   var toNodeAttrs = toNode.attributes
   var attr
   var attrName
@@ -10,10 +9,7 @@ export function morphAttrs(fromNode: Element, toNode: Element) {
   var attrValue
   var fromValue
 
-  // document-fragments dont have attributes so lets not do anything
-  if (isFragment(toNode) || isFragment(fromNode)) {
-    return
-  }
+  copyAnimatedStyle(fromNode as any, toNode as any)
 
   // update attributes on original DOM element
   for (var i = toNodeAttrs.length - 1; i >= 0; i--) {
