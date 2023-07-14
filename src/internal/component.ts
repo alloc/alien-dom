@@ -4,7 +4,9 @@ import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { Observer, Ref, observe } from '../observable'
 import { ElementKey, FunctionComponent, JSX } from '../types'
 import { deepEquals } from './deepEquals'
+import { isFragment } from './duck'
 import { getAlienEffects } from './effects'
+import { toChildNodes } from './fragment'
 import { currentComponent } from './global'
 import {
   kAlienEffects,
@@ -53,6 +55,17 @@ export class AlienComponent<Props = any> {
    */
   private observer: Observer | null = null
   private render: (() => void) | null = null
+
+  get ownerDocument() {
+    let { rootNode } = this
+    if (!rootNode) {
+      return null
+    }
+    if (isFragment(rootNode)) {
+      rootNode = toChildNodes(rootNode)[0]
+    }
+    return rootNode.ownerDocument
+  }
 
   /**
    * Note: This doesn't add the root node to a document.
