@@ -27,7 +27,7 @@ export function useSpring<Element extends DefaultElement>(
 
   if (shouldRun) {
     const effects = currentEffects.get()!
-    effects.enable(() => {
+    effects.run(() => {
       state.to = to
       state.from = from
 

@@ -22,6 +22,6 @@ export function moveEffects(
 
   effects?.forEach(effect => {
     const oldElement = elementMap.get(effect.target)
-    newEffects.enable(effect as any, oldElement || effect.target)
+    newEffects.run(effect as any, oldElement || effect.target)
   })
 }

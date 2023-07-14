@@ -19,7 +19,7 @@ export function useMicrotask(effect: () => void, shouldRun = true) {
 
     // The effect is enabled in the microtask after the parent element
     // is set, so we don't need to call queueMicrotask() ourselves.
-    effects.enable(nextRun)
+    effects.run(nextRun)
   }
 }
 

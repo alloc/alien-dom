@@ -1,4 +1,4 @@
-import { isFunction } from '@alloc/is'
+import { isArray, isFunction } from '@alloc/is'
 import { Disposable, attachDisposer } from './disposable'
 import { onMount, onUnmount } from './domObserver'
 import { isFragment } from './internal/duck'
@@ -124,34 +124,9 @@ export class AlienEffects<Element extends AnyElement = any> {
   }
 
   /**
-   * Add a callback to run when the scope is enabled. If the scope is
-   * currently enabled, the callback will be run immediately.
+   * Run all current and future effects until disabled.
    */
-  enable(effect: AlienEffect<void, [], false>): Disposable<typeof effect>
-
-  enable<Args extends any[]>(
-    effect: AlienEffect<void, Args, false>,
-    args: Args
-  ): Disposable<typeof effect>
-
-  enable<T extends object | void, Args extends any[] = []>(
-    effect: AlienEffect<T, Args, false>,
-    target: T,
-    args?: Args
-  ): Disposable<typeof effect>
-
-  /**
-   * Enable the scope. If there are any `enable` callbacks, they will be
-   * run.
-   */
-  enable(): void
-
-  /** @internal */
-  enable(effect?: AlienEffect<any, any[], false>, target?: any, args?: any) {
-    if (effect) {
-      return enableEffect(this, effect, 0, target, arguments.length > 2 && args)
-    }
-
+  enable() {
     if (!this.enabled) {
       this.state = AlienEffectState.Enabling
       currentEffects.push(this)
@@ -172,7 +147,7 @@ export class AlienEffects<Element extends AnyElement = any> {
   }
 
   /**
-   * Tear down any subscriptions, including `disable` callbacks.
+   * Disable all current effects and prevent future effects from running.
    */
   disable() {
     if (this.enabled) {
@@ -198,23 +173,53 @@ export class AlienEffects<Element extends AnyElement = any> {
   }
 
   /**
-   * Add a callback to run when the scope is next enabled.
+   * Add an effect to run when `this` is enabled. If `this` is currently
+   * enabled, the effect will run immediately.
+   *
+   * If the given `effect` is already known to `this`, it can still have its
+   * target and arguments changed through this method.
    */
-  enableOnce(effect: AlienEffect<void, [], false>): Disposable<typeof effect>
+  run(effect: AlienEffect<void, [], false>): Disposable<typeof effect>
 
-  enableOnce<Args extends any[]>(
+  run<Args extends any[]>(
     effect: AlienEffect<void, Args, false>,
     args: Args
   ): Disposable<typeof effect>
 
-  enableOnce<T extends object, Args extends any[] = []>(
+  run<T extends object | void, Args extends any[] = []>(
+    effect: AlienEffect<T, Args, false>,
+    target: T,
+    args?: Args
+  ): Disposable<typeof effect>
+
+  run(effect: AlienEffect<any, any[], false>, target?: any, args?: any) {
+    if (isArray(target)) {
+      args = target
+      target = void 0
+    } else if (arguments.length < 3) {
+      args = false
+    }
+    return enableEffect(this, effect, 0, target, args)
+  }
+
+  /**
+   * Add a callback to run when the scope is next enabled.
+   */
+  runOnce(effect: AlienEffect<void, [], false>): Disposable<typeof effect>
+
+  runOnce<Args extends any[]>(
+    effect: AlienEffect<void, Args, false>,
+    args: Args
+  ): Disposable<typeof effect>
+
+  runOnce<T extends object, Args extends any[] = []>(
     effect: AlienEffect<T, Args, false>,
     target: T,
     args?: Args
   ): Disposable<typeof effect>
 
   /** @internal */
-  enableOnce(effect: AlienEffect<any, any[], false>, target?: any, args?: any) {
+  runOnce(effect: AlienEffect<any, any[], false>, target?: any, args?: any) {
     return enableEffect(
       this,
       effect,
@@ -224,21 +229,21 @@ export class AlienEffects<Element extends AnyElement = any> {
     )
   }
 
-  enableAsync(effect: AlienEffect<void, [], true>): Disposable<typeof effect>
+  runAsync(effect: AlienEffect<void, [], true>): Disposable<typeof effect>
 
-  enableAsync<Args extends any[]>(
+  runAsync<Args extends any[]>(
     effect: AlienEffect<void, Args, true>,
     args: Args
   ): Disposable<typeof effect>
 
-  enableAsync<T extends object, Args extends any[] = []>(
+  runAsync<T extends object, Args extends any[] = []>(
     effect: AlienEffect<T, Args, true>,
     target: T,
     args?: Args
   ): Disposable<typeof effect>
 
   /** @internal */
-  enableAsync(
+  runAsync(
     effect: AlienEffect<any, any[], true>,
     target?: any,
     args?: any
@@ -252,21 +257,21 @@ export class AlienEffects<Element extends AnyElement = any> {
     )
   }
 
-  enableOnceAsync(effect: AlienEffect<void, [], true>): typeof effect
+  runOnceAsync(effect: AlienEffect<void, [], true>): typeof effect
 
-  enableOnceAsync<Args extends any[]>(
+  runOnceAsync<Args extends any[]>(
     effect: AlienEffect<void, Args, true>,
     args: Args
   ): typeof effect
 
-  enableOnceAsync<T extends object, Args extends any[] = []>(
+  runOnceAsync<T extends object, Args extends any[] = []>(
     effect: AlienEffect<T, Args, true>,
     target: T,
     args?: Args
   ): typeof effect
 
   /** @internal */
-  enableOnceAsync(
+  runOnceAsync(
     effect: AlienEffect<any, any[], true>,
     target?: any,
     args?: any
