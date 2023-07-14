@@ -10,6 +10,8 @@
 
 ### JSX elements
 
+- If a JSX element is created outside a render pass, you must remove it from the DOM with an `unmount(node)` call. Otherwise, any persistent effects will leak memory. Of course, if you plan to reuse the element, you can safely remove it with `node.remove()` and reinsert it later.
+
 - When a JSX element is created with a component tag, and it's nested within another JSX element also created with a component tag, the inner element will be wrapped with a thunk (to ensure top-down execution order). As a result, the element's props will be evaluated lazily.
 
 - If a JSX element is referenced by a variable declared during render, subsequent renders will always reuse the same DOM element. This avoids issues with closures (i.e. effects and event listeners) ever having stale references to the DOM elements they need.

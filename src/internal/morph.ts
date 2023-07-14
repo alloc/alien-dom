@@ -64,7 +64,6 @@ export function morph(
 
   morphChildren(fromParentNode, toParentNode, {
     onBeforeNodeDiscarded: component ? discardKeyedNodesOnly : undefined,
-    onNodeDiscarded,
     onNodePreserved(fromNode, toNode) {
       if (!isElement(fromNode)) {
         fromNode.nodeValue = toNode.nodeValue
@@ -86,18 +85,4 @@ function discardKeyedNodesOnly(node: Node) {
   // component render will have a position-based key defined automatically if they're missing an
   // explicit key, so this check is sufficient.
   return kAlienElementKey.in(node)
-}
-
-function onNodeDiscarded(node: Node) {
-  // Prevent components from re-rendering and disable their effects
-  // when no parent element exists.
-  if (kAlienElementTags.in(node)) {
-    const tags = kAlienElementTags(node)!
-    queueMicrotask(() => {
-      for (const component of tags.values()) {
-        component.disable()
-      }
-    })
-  }
-  node.childNodes.forEach(onNodeDiscarded)
 }

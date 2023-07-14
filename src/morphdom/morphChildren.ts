@@ -1,3 +1,4 @@
+import { unmount } from '../functions/unmount'
 import { isElement } from '../internal/duck'
 import { kAlienElementKey } from '../internal/symbols'
 import { noop } from '../jsx-dom/util'
@@ -12,8 +13,6 @@ export function morphChildren(
   options: {
     /** The `node` will be discarded unless false is returned. */
     onBeforeNodeDiscarded?: (node: ChildNode) => boolean
-    /** The `node` has no matching `toNode`. */
-    onNodeDiscarded: (node: ChildNode) => void
     /** The `fromNode` has a matching `toNode`, but you're responsible for morphing if desired. */
     onNodePreserved: (fromNode: ChildNode, toNode: ChildNode) => void
   }
@@ -31,11 +30,7 @@ export function morphChildren(
     }
   }
 
-  const {
-    onBeforeNodeDiscarded = noop,
-    onNodeDiscarded,
-    onNodePreserved,
-  } = options
+  const { onBeforeNodeDiscarded = noop, onNodePreserved } = options
 
   let fromChildNode = fromParentNode.firstChild
   let toChildNode = toParentNode.firstChild
@@ -72,8 +67,7 @@ export function morphChildren(
 
       // Remove the incompatible from node.
       if (matchingNode && onBeforeNodeDiscarded(matchingNode) !== false) {
-        matchingNode.remove()
-        onNodeDiscarded(matchingNode)
+        unmount(matchingNode)
       }
     } else {
       while (fromChildNode) {
@@ -93,8 +87,7 @@ export function morphChildren(
         }
         // Unkeyed nodes are removed immediately when no match is found.
         else if (onBeforeNodeDiscarded(fromChildNode) !== false) {
-          fromChildNode.remove()
-          onNodeDiscarded(fromChildNode)
+          unmount(fromChildNode)
         }
 
         fromChildNode = fromNextSibling
@@ -106,23 +99,23 @@ export function morphChildren(
     }
   }
 
+  let removedFromNode: ChildNode | null | undefined
+
   // Remove any from nodes with unmatched keys.
   for (const key of unmatchedFromKeys) {
-    const node = fromElementsByKey.get(key)
-    if (node && onBeforeNodeDiscarded(node) !== false) {
-      node.remove()
-      onNodeDiscarded(node)
+    removedFromNode = fromElementsByKey.get(key)
+
+    if (removedFromNode && onBeforeNodeDiscarded(removedFromNode) !== false) {
+      unmount(removedFromNode)
     }
   }
 
   // Remove any remaining from nodes.
-  let removedFromNode: ChildNode | null
   while ((removedFromNode = fromChildNode)) {
     fromChildNode = fromChildNode.nextSibling
 
     if (onBeforeNodeDiscarded(removedFromNode) !== false) {
-      removedFromNode.remove()
-      onNodeDiscarded(removedFromNode)
+      unmount(removedFromNode)
     }
   }
 }
