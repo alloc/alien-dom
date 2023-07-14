@@ -284,8 +284,7 @@ export function selfUpdating<Props extends object, Result extends JSX.Children>(
         queueMicrotask(() => {
           if (!newEffects.enabled && self.effects === newEffects) {
             const shadowRoot = context.get(ShadowRootContext)
-            newEffects.setElement(rootNode, shadowRoot?.value)
-            oldEffects?.setElement(null)
+            newEffects.enableOnceMounted(rootNode, shadowRoot?.value)
           }
         })
       }
