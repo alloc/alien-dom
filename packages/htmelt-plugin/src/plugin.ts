@@ -26,6 +26,20 @@ export default (): Plugin => (config, flags) => {
     })
   )
 
+  const recentlyServedModules = new Map<
+    string,
+    Promise<Plugin.VirtualFileData>
+  >()
+
+  const serveModule = async (entry: string) => {
+    return {
+      data: await config.loadDevModule(entry),
+      headers: {
+        'content-type': 'application/javascript',
+      },
+    }
+  }
+
   return {
     fullReload() {
       // Reset the globalNextId only on full reload, so hot-reloaded
@@ -36,15 +50,21 @@ export default (): Plugin => (config, flags) => {
       acceptedModules.clear()
     },
     async serve(req) {
+      let result = recentlyServedModules.get(req.pathname)
+      if (result) {
+        return result
+      }
       if (acceptedModules.has(req.pathname)) {
         acceptedModules.delete(req.pathname)
-        const entry = path.resolve(req.pathname.slice(1))
-        return {
-          data: await config.loadDevModule(entry),
-          headers: {
-            'content-type': 'application/javascript',
-          },
-        }
+
+        result = serveModule(path.resolve(req.pathname.slice(1)))
+
+        recentlyServedModules.set(req.pathname, result)
+        setTimeout(() => {
+          recentlyServedModules.delete(req.pathname)
+        }, 1000)
+
+        return result
       }
     },
     hmr: clients => ({
