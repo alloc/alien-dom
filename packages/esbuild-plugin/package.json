@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@alien-dom/nebu": "workspace:^0.3.0",
-    "esbuild-extra": "^0.2.1",
+    "esbuild-extra": "^0.3.0",
     "nebu": "^2.3.8"
   },
   "peerDependencies": {

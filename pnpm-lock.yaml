@@ -34,11 +34,11 @@ importers:
       '@alien-dom/nebu': workspace:^0.3.0
       '@types/node': ^18.15.11
       esbuild: ^0.17.17
-      esbuild-extra: ^0.2.1
+      esbuild-extra: ^0.3.0
       nebu: ^2.3.8
     dependencies:
       '@alien-dom/nebu': link:../nebu-plugin
-      esbuild-extra: 0.2.1_esbuild@0.17.17
+      esbuild-extra: 0.3.0_esbuild@0.17.17
       nebu: 2.3.8
     devDependencies:
       '@types/node': 18.15.11
@@ -770,6 +770,14 @@ packages:
     resolution: {integrity: sha512-L18DaJsXSUk2+42pv8mLs5jJT2hqFkFE4j21wOmgbUqsZ2hL72NsUU785g9RXgo3s0ZNgVl42TiHp3ZtOv/Vyg==}
     dev: true
 
+  /enhanced-resolve/5.15.0:
+    resolution: {integrity: sha512-LXYT42KJ7lpIKECr2mAXIaMldcNCh/7E0KBKOu4KSfkHmP+mZmSs+8V5gBAqisWBy0OO4W5Oyys0GO1Y8KtdKg==}
+    engines: {node: '>=10.13.0'}
+    dependencies:
+      graceful-fs: 4.2.11
+      tapable: 2.2.1
+    dev: false
+
   /esbuild-extra/0.2.1_esbuild@0.17.17:
     resolution: {integrity: sha512-PfuGpOWOKH7VpmelDp64YLsgBr6mvDnNDmWw2BTXeiEssvh31KK8M6axukvlkmf+412GnRw7jPkY/iRlHRDKZg==}
     peerDependencies:
@@ -777,6 +785,20 @@ packages:
     dependencies:
       '@ampproject/remapping': 2.2.1
       convert-source-map: 2.0.0
+      esbuild: 0.17.17
+      tsconfck: 2.1.1
+    transitivePeerDependencies:
+      - typescript
+    dev: false
+
+  /esbuild-extra/0.3.0_esbuild@0.17.17:
+    resolution: {integrity: sha512-MeOfjQA1YRDG1saEsiLC7gCxwNz35jFv34UmqcSsjBNUa4j1nqZ+dxlzYBdR1L0ev4GdmgbPOM9ugkt7xLWxmg==}
+    peerDependencies:
+      esbuild: '>=0.15'
+    dependencies:
+      '@ampproject/remapping': 2.2.1
+      convert-source-map: 2.0.0
+      enhanced-resolve: 5.15.0
       esbuild: 0.17.17
       tsconfck: 2.1.1
     transitivePeerDependencies:
@@ -974,7 +996,6 @@ packages:
 
   /graceful-fs/4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
-    dev: true
 
   /human-signals/2.1.0:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
@@ -1637,6 +1658,11 @@ packages:
       serialize-error: 7.0.1
       strip-ansi: 7.0.1
     dev: true
+
+  /tapable/2.2.1:
+    resolution: {integrity: sha512-GNzQvQTOIP6RyTfE2Qxb8ZVlNmw0n88vp1szwWRimP02mnTsx3Wtn5qRdqY9w2XduFNUgvOwhNnQsjwCp+kqaQ==}
+    engines: {node: '>=6'}
+    dev: false
 
   /temp-dir/3.0.0:
     resolution: {integrity: sha512-nHc6S/bwIilKHNRgK/3jlhDoIHcp45YgyiwcAk46Tr0LfEqGBVpmiAyuiuxeVE44m3mXnEeVhaipLOEWmH+Njw==}
