@@ -54,3 +54,7 @@ export function isTextNode(node: Node): node is Text {
 export function isComment(node: Node): node is Comment {
   return node.nodeType === kCommentNodeType
 }
+
+export function isDocument(node: Node): node is Document {
+  return node.nodeType === 9
+}

@@ -21,6 +21,7 @@ export function isJSXChild(
 
 export {
   isComment,
+  isDocument,
   isElement,
   isFragment,
   isNode,
