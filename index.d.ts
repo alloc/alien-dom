@@ -13,6 +13,7 @@ import type {
   SVGElementTagNames,
   SVGFactory,
 } from './dist/types'
+import './observable'
 
 export * from './dist/index'
 export { SVGNamespace } from './dist/jsx-dom/jsx-runtime'

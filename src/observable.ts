@@ -2,11 +2,6 @@ import { isFunction } from '@alloc/is'
 import { Falsy } from '@alloc/types'
 import { noop } from './jsx-dom/util'
 
-// Debugging hooks are declared globally.
-declare module globalThis {
-  let __OBSERVABLE_HOOKS__: ObservableHooks | Falsy
-}
-
 export type ObservableHooks = {
   /**
    * A ref was changed and the given observer was notified.
@@ -29,6 +24,10 @@ export type ObservableHooks = {
    * An update was completed or threw an error.
    */
   didUpdate(observer: Observer | ComputedRef, error: any, result: any): void
+}
+
+declare module globalThis {
+  var __OBSERVABLE_HOOKS__: ObservableHooks | Falsy
 }
 
 let hooks = DEV && globalThis.__OBSERVABLE_HOOKS__
