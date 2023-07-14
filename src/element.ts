@@ -47,8 +47,9 @@ export interface AlienElementList<Element extends Node = DefaultElement>
 }
 
 export type AlienElementIterator<Element extends AnyElement> =
-  IterableIterator<Element> & {
+  Iterable<Element> & {
     first(): Element | null
+    next(): Element | null
   }
 
 export type AlienEvent<
@@ -87,17 +88,20 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
 
     let cursor = -1
     const iterable: AlienElementIterator<any> = {
-      [Symbol.iterator]() {
-        return iterable
-      },
+      [Symbol.iterator]: () => ({
+        next() {
+          const value = iterable.next()
+          return { value, done: !value }
+        },
+      }),
       next() {
         let sibling: ChildNode | undefined
         while ((sibling = siblings[++cursor]) && sibling != self) {
           if (!selector) {
-            return sibling as any
+            return sibling
           }
           if (canMatch(sibling) && sibling.matches(selector)) {
-            return sibling as any
+            return sibling
           }
         }
       },
