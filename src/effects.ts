@@ -80,12 +80,8 @@ export class AlienEffects<Element extends AnyElement = any> {
         }
         this.element = undefined
       }
-      if (this._mountEffect) {
-        this._mountEffect.dispose()
-        this._mountEffect = null
-      } else {
-        this.disable()
-      }
+
+      this.disable(true)
     } else {
       if (this.element !== undefined) {
         if (element === this.element) {
@@ -149,7 +145,11 @@ export class AlienEffects<Element extends AnyElement = any> {
   /**
    * Disable all current effects and prevent future effects from running.
    */
-  disable() {
+  disable(destroy?: boolean) {
+    if (destroy && this._mountEffect) {
+      this._mountEffect.dispose()
+      this._mountEffect = null
+    }
     if (this.enabled) {
       this.state = AlienEffectState.Disabling
       this.abortCtrl?.abort()
@@ -159,7 +159,7 @@ export class AlienEffects<Element extends AnyElement = any> {
           this.effects?.delete(effect)
         }
       })
-      if (this.element && !this.element.isConnected) {
+      if (!destroy && this.element && !this.element.isConnected) {
         this._enableOnceMounted()
       }
       this.state = AlienEffectState.Disabled
