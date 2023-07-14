@@ -52,6 +52,7 @@ export class AlienEffects<Element extends AnyElement = any> {
   state = AlienEffectState.Disabled
   mounted = false
   element?: Element | Comment = undefined
+  rootNode?: Node = undefined
   effects?: Set<AlienEffect> = undefined
   currentEffect: AlienEffect | null = null
   abortCtrl?: AbortController = undefined
@@ -80,41 +81,41 @@ export class AlienEffects<Element extends AnyElement = any> {
         }
         this.element = undefined
       }
+      return this.disable(true)
+    }
 
-      this.disable(true)
-    } else {
-      if (this.element !== undefined) {
-        if (element === this.element) {
-          return
-        }
-        if (!this._mountEffect) {
-          throw Error('Cannot change element while mounted')
-        }
-        kAlienEffects(this.element, undefined)
-        this._mountEffect.dispose()
-        this._mountEffect = null
+    if (this.element !== undefined) {
+      if (element === this.element) {
+        return
       }
-
-      // If the effects are being attached to a document fragment, use
-      // the first child instead. For component effects, this should be
-      // a comment node created for exactly this purpose.
-      if (isFragment(element)) {
-        element = (kAlienFragment(element) || element.childNodes)[0] as
-          | Element
-          | Comment
+      if (!this._mountEffect) {
+        throw Error('Cannot change element while mounted')
       }
+      kAlienEffects(this.element, undefined)
+      this._mountEffect.dispose()
+      this._mountEffect = null
+    }
 
-      // Assume the element will be mounted soon, if it's not already.
-      this.mounted = true
-      this.element = element
-      kAlienEffects(element, this)
+    // If the effects are being attached to a document fragment, use
+    // the first child instead. For component effects, this should be
+    // a comment node created for exactly this purpose.
+    if (isFragment(element)) {
+      element = (kAlienFragment(element) || element.childNodes)[0] as
+        | Element
+        | Comment
+    }
 
-      if (element) {
-        if (element.isConnected) {
-          this.enable()
-        } else {
-          this._enableOnceMounted(rootNode)
-        }
+    // Assume the element will be mounted soon, if it's not already.
+    this.mounted = true
+    this.element = element
+    this.rootNode = rootNode
+    kAlienEffects(element, this)
+
+    if (element) {
+      if (element.isConnected) {
+        this.enable()
+      } else {
+        this.enableOnceMounted(element, rootNode)
       }
     }
   }
@@ -142,6 +143,22 @@ export class AlienEffects<Element extends AnyElement = any> {
     }
   }
 
+  /** @internal */
+  enableOnceMounted(element: Element | Comment, rootNode?: Node) {
+    // This assumes that the element will eventually be mounted. If
+    // it's not, a memory leak will occur.
+    this._mountEffect = onMount(
+      element,
+      () => {
+        this._mountEffect = null
+        this.mounted = true
+        this.enable()
+      },
+      // This is needed for within a ShadowRoot.
+      rootNode
+    )
+  }
+
   /**
    * Disable all current effects and prevent future effects from running.
    */
@@ -160,7 +177,7 @@ export class AlienEffects<Element extends AnyElement = any> {
         }
       })
       if (!destroy && this.element && !this.element.isConnected) {
-        this._enableOnceMounted()
+        this.enableOnceMounted(this.element, this.rootNode)
       }
       this.state = AlienEffectState.Disabled
     }
@@ -282,21 +299,6 @@ export class AlienEffects<Element extends AnyElement = any> {
       EffectFlags.Once | EffectFlags.Async,
       target,
       arguments.length > 2 && args
-    )
-  }
-
-  protected _enableOnceMounted(rootNode?: Node) {
-    // This assumes that the element will eventually be mounted. If
-    // it's not, a memory leak will occur.
-    this._mountEffect = onMount(
-      this.element!,
-      () => {
-        this._mountEffect = null
-        this.mounted = true
-        this.enable()
-      },
-      // This is needed for within a ShadowRoot.
-      rootNode
     )
   }
 
