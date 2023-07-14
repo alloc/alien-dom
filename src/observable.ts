@@ -172,6 +172,7 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
 
     // Destroy our own observer once the ref is no longer observed.
     if (!isObserved) {
+      if (this._observers.size) return
       this._value = emptySymbol
       this._observer?.dispose()
       this._observer = null
