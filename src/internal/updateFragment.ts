@@ -80,7 +80,7 @@ export function updateFragment(
       const oldEffects = kAlienEffects(oldElement)
       const newEffects = kAlienEffects(newElement)
       if (newEffects) {
-        moveEffects(newEffects, elementMap)
+        moveEffects(oldElement, newEffects, elementMap)
       }
       oldEffects?.disable()
     }
