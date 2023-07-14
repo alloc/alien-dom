@@ -220,6 +220,9 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
 
   get value() {
     if (this._observer) {
+      if (this._observer.version > this._version) {
+        this._update()
+      }
       return super.value
     }
     if (access !== unseenAccess) {
