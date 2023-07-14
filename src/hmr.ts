@@ -96,21 +96,23 @@ function hmrRender(
   if (!component) {
     return render(props, update)
   }
-  if (kAlienHotUpdate.in(render)) {
+  const canTruncate = kAlienHotUpdate.in(render)
+  if (canTruncate) {
     clearMemoized(component)
+    kAlienHotUpdate(render, false)
   }
   try {
     return render(props, update)
   } catch (e: any) {
     // If rendering fails, try resetting the hook state.
-    try {
-      component.truncate(0)
-      return render(props, update)
-    } catch (e: any) {
-      // If rendering still fails, return null.
-      console.error(e)
-      return null
+    if (canTruncate) {
+      try {
+        component.truncate(0)
+        return render(props, update)
+      } catch {}
     }
+    console.error(e)
+    return null
   }
 }
 
