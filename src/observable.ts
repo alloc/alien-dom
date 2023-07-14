@@ -237,6 +237,8 @@ export class Observer {
   version = 0
   depth = 0
   nextCompute: () => any = noop
+  willUpdate: (ref: ReadonlyRef<any>, newValue: any, oldValue: any) => void =
+    noop
   onUpdate = passThrough
 
   constructor(readonly queue = updateQueue) {}
@@ -285,6 +287,7 @@ export class Observer {
     if (this.version !== currentVersion) {
       this.version = currentVersion
       this.queue.add(this)
+      this.willUpdate(ref, newValue, oldValue)
     }
   }
 
@@ -409,12 +412,13 @@ export function observe(
   } else {
     const ref = arg1,
       onChange = arg2!
-    observer.update(() => {
-      access(ref as any)
-    })
-    observer.observe = (ref, newValue, oldValue) => {
-      // Capture the old value for the onChange callback.
-      observer.onUpdate = onChange.bind(null, newValue, oldValue, ref)
+
+    observer.update(() => access(ref as any))
+
+    // Capture the old value for the onChange callback.
+    observer.willUpdate = (ref, _newValue, oldValue) => {
+      observer.onUpdate = newValue =>
+        newValue !== oldValue && onChange(newValue, oldValue, ref)
     }
   }
   return observer
