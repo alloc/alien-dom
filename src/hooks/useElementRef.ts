@@ -23,7 +23,8 @@ const initElementRef = <T extends Element>(): ElementRef<T> => {
     {
       get(target, prop) {
         if (element && prop in element) {
-          return (element as any)[prop]
+          const value = (element as any)[prop]
+          return typeof value === 'function' ? value.bind(element) : value
         }
         return (target as any)[prop]
       },
