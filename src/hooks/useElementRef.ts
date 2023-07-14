@@ -27,6 +27,12 @@ const initElementRef = <T extends Element>(): ElementRef<T> => {
         }
         return (target as any)[prop]
       },
+      set(target, prop, value) {
+        if (element && prop in element) {
+          return Reflect.set(element, prop, value)
+        }
+        return Reflect.set(target, prop, value)
+      },
     }
   )
 }
