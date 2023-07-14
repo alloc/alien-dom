@@ -7,5 +7,6 @@ import { useMemo } from './useMemo'
  */
 export const useComputed = <T>(
   fn: () => T,
-  deps: readonly any[] = []
-): ComputedRef<T> => useMemo(computed.bind(null, fn), deps) as any
+  deps: readonly any[] = [],
+  debugId?: string | number
+): ComputedRef<T> => useMemo(computed.bind(null, fn, debugId), deps) as any

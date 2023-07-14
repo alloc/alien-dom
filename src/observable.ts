@@ -54,18 +54,22 @@ const unseenAccess = (ref: InternalRef<any>) => ref._value
 
 let currentVersion = 1
 let nextVersion = 1
+let nextDebugId = 1
 let access = unseenAccess
 
 const kRefType = Symbol.for('alien:refType')
 
 export class ReadonlyRef<T = any> {
+  readonly debugId: string | number | undefined
   protected _version = 0
   protected _observers = new Set<Observer>()
   protected get _depth() {
     return 0
   }
 
-  constructor(protected _value: T) {}
+  constructor(protected _value: T, debugId?: string | number) {
+    if (DEV) this.debugId = debugId ?? nextDebugId++
+  }
 
   /**
    * In addition to adding/removing an observer, computed refs use this method
@@ -159,8 +163,8 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
     return this._observer?.depth ?? 0
   }
 
-  constructor(protected compute: () => T) {
-    super(emptySymbol)
+  constructor(protected compute: () => T, debugId?: string | number) {
+    super(emptySymbol, debugId)
   }
 
   protected _isObserved(observer: Observer, isObserved: boolean) {
@@ -404,8 +408,11 @@ function computeNextVersion() {
 // Convenience functions
 //
 
-export const ref = <T>(value: T) => new Ref(value)
-export const computed = <T>(compute: () => T) => new ComputedRef(compute)
+export const ref = <T>(value: T, debugId?: string | number) =>
+  new Ref(value, debugId)
+
+export const computed = <T>(compute: () => T, debugId?: string | number) =>
+  new ComputedRef(compute, debugId)
 
 /** Observe any refs accessed in the compute function. */
 export function observe(compute: () => void): Observer
