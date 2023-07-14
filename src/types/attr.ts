@@ -1,4 +1,5 @@
 import type { AnyElement } from '../internal/types'
+import type { JSX } from '../jsx-dom/jsx-runtime'
 
 export type Booleanish = boolean | 'true' | 'false'
 
@@ -13,5 +14,5 @@ export interface Attributes {
 }
 
 export interface AttrWithRef<Element extends AnyElement> extends Attributes {
-  ref?: { setElement(element: Element): void }
+  ref?: JSX.Ref<Element> | false | null
 }
