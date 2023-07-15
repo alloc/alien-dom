@@ -140,12 +140,21 @@ function setKeyBinding(
     activeKeys.delete(event.key.toLowerCase())
     onKeyChange(event)
   }
+  const clear = () => {
+    activeKeys.clear()
+  }
 
   target.addEventListener('keydown', onKeyDown as any)
   target.addEventListener('keyup', onKeyUp as any)
 
+  target.addEventListener('paste', clear)
+  window.addEventListener('blur', clear)
+
   return () => {
     target.removeEventListener('keydown', onKeyDown as any)
     target.removeEventListener('keyup', onKeyUp as any)
+
+    target.removeEventListener('paste', clear)
+    window.removeEventListener('blur', clear)
   }
 }
