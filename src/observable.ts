@@ -1,4 +1,4 @@
-import { isFunction } from '@alloc/is'
+import { isFunction, isString } from '@alloc/is'
 import { Falsy } from '@alloc/types'
 import { createSymbolProperty } from './internal/symbolProperty'
 import { noop } from './jsx-dom/util'
@@ -276,6 +276,11 @@ export class ArrayRef<T> extends ReadonlyRef<readonly T[]> {}
 export interface ArrayRef<T> extends ArrayMutators<T>, ArrayIterators<T> {
   [index: number]: T
   length: number
+  /**
+   * Observe a single index in the array. Any time the array is mutated, this
+   * will check the given `index` to see if a new value exists there.
+   */
+  observe(index: number): ComputedRef<T>
 }
 
 interface ArrayMutators<T> {
@@ -323,6 +328,12 @@ const arrayEnumerator = (name: keyof ArrayIterators<any>) =>
 
 /* @__PURE__ */ assignPrototype(ArrayRef.prototype, {
   [kRefType]: 'ArrayRef',
+  observe(this: InternalRef<any[]>, index: number) {
+    return computed(
+      () => this.value[index],
+      DEV && isString(this.debugId) ? `${this.debugId}[${index}]` : undefined
+    )
+  },
   push: arrayMutator('push'),
   pop: arrayMutator('pop'),
   shift: arrayMutator('shift'),
