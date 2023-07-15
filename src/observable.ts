@@ -641,7 +641,7 @@ export function observe(
     // Capture the old value for the onChange callback.
     observer.willUpdate = (ref, _newValue, oldValue) => {
       observer.onUpdate = newValue =>
-        newValue !== oldValue && onChange(newValue, oldValue, ref)
+        newValue !== oldValue && peek(() => onChange(newValue, oldValue, ref))
     }
   }
   return observer
