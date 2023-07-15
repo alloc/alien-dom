@@ -88,6 +88,8 @@ function setsEqual<T>(a: Set<T>, b: Set<T>) {
   return true
 }
 
+const isWindows = /* @__PURE__ */ navigator.platform.includes('Win')
+
 function parseCommand(command: string) {
   const keys = new Set<string>()
   for (let start = 0; start < command.length; ) {
@@ -95,7 +97,11 @@ function parseCommand(command: string) {
     if (end === -1) {
       end = command.length
     }
-    keys.add(command.slice(start, end))
+    let key = command.slice(start, end).toLowerCase()
+    if (isWindows && key === 'meta') {
+      key = 'control'
+    }
+    keys.add(key)
     start = end + 1
   }
   return keys
@@ -127,11 +133,11 @@ function setKeyBinding(
   }
 
   const onKeyDown = (event: KeyboardEvent) => {
-    activeKeys.add(event.key)
+    activeKeys.add(event.key.toLowerCase())
     onKeyChange(event)
   }
   const onKeyUp = (event: KeyboardEvent) => {
-    activeKeys.delete(event.key)
+    activeKeys.delete(event.key.toLowerCase())
     onKeyChange(event)
   }
 
