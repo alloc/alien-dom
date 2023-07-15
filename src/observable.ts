@@ -132,6 +132,8 @@ export interface Ref<T> {
 }
 
 const valueProperty = Object.getOwnPropertyDescriptor(Ref.prototype, 'value')!
+const setValue = valueProperty.set!
+
 Object.defineProperties(Ref.prototype, {
   0: valueProperty,
   1: {
@@ -185,7 +187,7 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
   protected _setupObserver() {
     const observer = (this._observer = new Observer(computeQueue))
     observer.willUpdate = () => (this._dirty = true)
-    observer.onUpdate = valueProperty.set!.bind(this)
+    observer.onUpdate = setValue.bind(this)
     observer.update(oldRefs => {
       if (this._dirty) {
         return this.compute()
@@ -325,7 +327,7 @@ const arrayMutator = (name: keyof ArrayMutators<any>) =>
     const oldArray = this._value
     const newArray = oldArray.slice()
     const result = newArray[name](...args)
-    valueProperty.set!.call(this, newArray)
+    setValue.call(this, newArray)
     updateLengthRef(kLengthRef(this), oldArray, newArray)
     return result
   }
@@ -380,7 +382,7 @@ const arrayTraps: ProxyHandler<InternalRef<any[]>> = {
       if (isExpanding || newValue !== oldArray[index]) {
         const newArray = oldArray.slice()
         newArray[index] = newValue
-        valueProperty.set!.call(target, newArray)
+        setValue.call(target, newArray)
         if (isExpanding) {
           updateLengthRef(kLengthRef(target), oldArray, newArray)
         }
@@ -394,7 +396,7 @@ const arrayTraps: ProxyHandler<InternalRef<any[]>> = {
         if (newValue > oldArray.length) {
           newArray.length = newValue
         }
-        valueProperty.set!.call(target, newArray)
+        setValue.call(target, newArray)
         updateLengthRef(kLengthRef(target), oldArray, newArray)
       }
       return true
