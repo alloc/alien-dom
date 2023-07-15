@@ -291,6 +291,7 @@ interface ArrayMutators<T> {
   pop(): T | undefined
   shift(): T | undefined
   unshift(...items: T[]): number
+  splice(start: number, deleteCount?: number, ...items: T[]): T[]
 }
 
 interface ArrayIterators<T> {
@@ -341,6 +342,7 @@ const arrayEnumerator = (name: keyof ArrayIterators<any>) =>
   pop: arrayMutator('pop'),
   shift: arrayMutator('shift'),
   unshift: arrayMutator('unshift'),
+  splice: arrayMutator('splice'),
   map: arrayEnumerator('map'),
 })
 
