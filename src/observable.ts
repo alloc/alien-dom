@@ -1,5 +1,6 @@
 import { isFunction } from '@alloc/is'
 import { Falsy } from '@alloc/types'
+import { createSymbolProperty } from './internal/symbolProperty'
 import { noop } from './jsx-dom/util'
 
 export type ObservableHooks = {
@@ -153,6 +154,10 @@ Object.defineProperties(Ref.prototype, {
   },
 })
 
+//
+// Computed refs
+//
+
 const emptySymbol: any = Symbol('empty')
 
 export class ComputedRef<T = any> extends ReadonlyRef<T> {
@@ -250,6 +255,149 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
   }
 }
 
+function assignPrototype(
+  prototype: any,
+  newProperties: Record<string, any>
+): void {
+  for (const key in newProperties) {
+    Object.defineProperty(prototype, key, {
+      value: newProperties[key],
+      writable: true,
+      configurable: true,
+    })
+  }
+}
+
+//
+// Array refs
+//
+
+export class ArrayRef<T> extends ReadonlyRef<readonly T[]> {}
+export interface ArrayRef<T> extends ArrayMutators<T>, ArrayIterators<T> {
+  [index: number]: T
+  length: number
+}
+
+interface ArrayMutators<T> {
+  push(...items: T[]): number
+  pop(): T | undefined
+  shift(): T | undefined
+  unshift(...items: T[]): number
+}
+
+interface ArrayIterators<T> {
+  map<U>(
+    callbackfn: (value: T, index: number, array: T[]) => U,
+    thisArg?: any
+  ): U[]
+}
+
+const numberRE = /^\d+$/
+const kLengthRef =
+  /* @__PURE__ */ createSymbolProperty<Ref<number>>('lengthRef')
+
+const updateLengthRef = (
+  ref: Ref<number> | undefined,
+  oldArray: any[],
+  newArray: any[]
+) => {
+  if (ref && oldArray.length !== newArray.length) {
+    ref.value = newArray.length
+  }
+}
+
+const arrayMutator = (name: keyof ArrayMutators<any>) =>
+  function (this: InternalRef<any>, ...args: any[]) {
+    const oldArray = this._value
+    const newArray = oldArray.slice()
+    const result = newArray[name](...args)
+    valueProperty.set!.call(this, newArray)
+    updateLengthRef(kLengthRef(this), oldArray, newArray)
+    return result
+  }
+
+const arrayEnumerator = (name: keyof ArrayIterators<any>) =>
+  function (this: InternalRef<any>, ...args: any[]) {
+    return this.value[name](...args)
+  }
+
+/* @__PURE__ */ assignPrototype(ArrayRef.prototype, {
+  [kRefType]: 'ArrayRef',
+  push: arrayMutator('push'),
+  pop: arrayMutator('pop'),
+  shift: arrayMutator('shift'),
+  unshift: arrayMutator('unshift'),
+  map: arrayEnumerator('map'),
+})
+
+const arrayTraps: ProxyHandler<InternalRef<any[]>> = {
+  get(target, key) {
+    if (typeof key === 'string' && numberRE.test(key)) {
+      // Indexed access is not observable.
+      return target._value[+key]
+    }
+    if (key === 'length') {
+      let lengthRef = kLengthRef(target)
+      if (!lengthRef) {
+        kLengthRef(target, (lengthRef = new Ref(target._value.length)))
+      }
+      return lengthRef.value
+    }
+    return Reflect.get(target, key)
+  },
+  set(target, key, newValue) {
+    if (typeof key === 'string' && numberRE.test(key)) {
+      const index = +key
+      const oldArray = target._value
+      const isExpanding = index >= oldArray.length
+      if (isExpanding || newValue !== oldArray[index]) {
+        const newArray = oldArray.slice()
+        newArray[index] = newValue
+        valueProperty.set!.call(target, newArray)
+        if (isExpanding) {
+          updateLengthRef(kLengthRef(target), oldArray, newArray)
+        }
+      }
+      return true
+    }
+    if (key === 'length') {
+      const oldArray = target._value
+      if (newValue !== oldArray.length) {
+        const newArray = oldArray.slice(0, newValue)
+        if (newValue > oldArray.length) {
+          newArray.length = newValue
+        }
+        valueProperty.set!.call(target, newArray)
+        updateLengthRef(kLengthRef(target), oldArray, newArray)
+      }
+      return true
+    }
+    return Reflect.set(target, key, newValue)
+  },
+  has(target, key) {
+    if (typeof key === 'string' && numberRE.test(key)) {
+      // Indexed access is not observable.
+      return +key < target._value.length
+    }
+    return Reflect.has(target, key)
+  },
+}
+
+/**
+ * Create an observable array.
+ *
+ * Note: The array is cloned before each mutation.
+ */
+export const arrayRef = <T>(
+  init?: T[],
+  debugId?: string | number
+): ArrayRef<T> =>
+  new Proxy(new ArrayRef(init || [], debugId), arrayTraps as any)
+
+//
+// Plain observers
+//
+
 const passThrough = (result: any) => result
 
 let nextObserverId = 1
@@ -328,6 +476,10 @@ export class Observer {
     return this.dispose.bind(this)
   }
 }
+
+//
+// Update loop
+//
 
 function onObservedUpdate() {
   if (nextVersion === currentVersion && hasQueuedObservers()) {

@@ -1,3 +1,4 @@
+export * from './useArrayRef'
 export * from './useAsync'
 export * from './useBoundingBox'
 export * from './useComputed'
