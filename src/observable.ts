@@ -273,7 +273,10 @@ function assignPrototype(
 //
 
 export class ArrayRef<T> extends ReadonlyRef<readonly T[]> {}
-export interface ArrayRef<T> extends ArrayMutators<T>, ArrayIterators<T> {
+export interface ArrayRef<T>
+  extends ArrayMutators<T>,
+    ArrayIterators<T>,
+    Iterable<T> {
   [index: number]: T
   length: number
   /**
@@ -343,6 +346,9 @@ const arrayEnumerator = (name: keyof ArrayIterators<any>) =>
 
 const arrayTraps: ProxyHandler<InternalRef<any[]>> = {
   get(target, key) {
+    if (key === Symbol.iterator) {
+      return () => target.value[Symbol.iterator]()
+    }
     if (typeof key === 'string' && numberRE.test(key)) {
       // Indexed access is not observable.
       return target._value[+key]
