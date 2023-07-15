@@ -356,6 +356,9 @@ const arrayTraps: ProxyHandler<InternalRef<any[]>> = {
       return target._value[+key]
     }
     if (key === 'length') {
+      if (access === unseenAccess) {
+        return target._value.length
+      }
       let lengthRef = kLengthRef(target)
       if (!lengthRef) {
         kLengthRef(target, (lengthRef = new Ref(target._value.length)))
