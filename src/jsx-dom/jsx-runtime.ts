@@ -107,7 +107,7 @@ export function jsx(tag: any, props: any, key?: JSX.ElementKey) {
     throw new TypeError(`Invalid JSX element type: ${tag}`)
   }
 
-  if (node && key != null) {
+  if (key != null) {
     if (component) {
       // Check for equivalence as the return value of a custom component
       // might be the cached result of an element thunk.
