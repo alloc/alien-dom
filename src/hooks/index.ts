@@ -1,6 +1,7 @@
 export * from './useArrayRef'
 export * from './useAsync'
 export * from './useBoundingBox'
+export * from './useCallbackProp'
 export * from './useComputed'
 export * from './useContext'
 export * from './useDelayedEffect'
