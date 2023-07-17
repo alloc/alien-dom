@@ -6,10 +6,10 @@ export type ElementRef<T extends Element> = T & {
 }
 
 export function useElementRef<T extends Element>() {
-  return useState(initElementRef<T>)
+  return useState(createElementRef<T>)
 }
 
-const initElementRef = <T extends Element>(): ElementRef<T> => {
+export function createElementRef<T extends Element>(): ElementRef<T> {
   let element: T | null = null
   return new Proxy(
     {
