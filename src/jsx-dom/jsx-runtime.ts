@@ -395,19 +395,17 @@ export function enablePropObserver(
   ref: ReadonlyRef,
   applyProp: (node: DefaultElement, newValue: any) => void
 ) {
-  let lastVersion = ref.version
+  let firstAppliedValue = ref.peek()
   return enableEffect(
     getAlienEffects(node, ShadowRootContext.get()),
     (node: DefaultElement, ref: ReadonlyRef) => {
-      // Check if the ref changed after the initial applyProp call and
-      // before this effect was enabled.
-      if (ref.version !== lastVersion) {
-        applyProp(node, ref.peek())
-        lastVersion = ref.version
+      const value = ref.peek()
+      if (value !== firstAppliedValue) {
+        applyProp(node, value)
       }
+      firstAppliedValue = undefined
       return observe(ref, newValue => {
         applyProp(node, newValue)
-        lastVersion = ref.version
       }).destructor
     },
     0,
