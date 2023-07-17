@@ -1,9 +1,9 @@
 import { isFunction } from '@alloc/is'
 import { Falsy } from '@alloc/types'
 import { DisposablePromise } from '../promises'
+import { VarArgs } from '../types'
 import { EffectResult, useEffect } from './useEffect'
 
-type VarArgs<T> = T | readonly T[]
 type Yield = VarArgs<
   DisposablePromise<any> | Promise<any> | (() => void) | Falsy
 >

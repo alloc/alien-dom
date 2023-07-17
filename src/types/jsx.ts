@@ -1,4 +1,3 @@
-import { Falsy } from '@alloc/types'
 import type { AnyElement } from '../internal/types'
 import type { ShadowRootContainer } from '../jsx-dom/shadow'
 import type { AttrWithRef, Attributes } from './attr'
@@ -23,10 +22,15 @@ type Thunkable<T> = T | Thunk<T>
 export declare namespace JSX {
   type Element = HTMLElement
   type ElementKey = string | number
+  type ElementRef<Element extends AnyElement = AnyElement> =
+    import('../hooks/useElementRef').ElementRef<Element>
 
-  type Ref<Element extends AnyElement = AnyElement> = {
-    setElement(element: Element): void
-  }
+  type RefProp<Element extends AnyElement = AnyElement> =
+    | readonly (RefProp<Element> | false | null | undefined)[]
+    | ElementRef<Element>
+    | false
+    | null
+    | undefined
 
   type Child =
     | NodeList
@@ -430,7 +434,7 @@ export declare namespace JSX {
   }
 
   type InstanceType<T extends string> = T extends keyof IntrinsicElements
-    ? IntrinsicElements[T]['ref'] extends Ref<infer Element> | Falsy
+    ? IntrinsicElements[T]['ref'] extends RefProp<infer Element>
       ? Element
       : never
     : never

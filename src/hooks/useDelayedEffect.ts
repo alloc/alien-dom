@@ -1,9 +1,8 @@
 import { isFunction, isNumber } from '@alloc/is'
 import { toArray } from '../jsx-dom/util'
 import { DisposablePromise } from '../promises'
+import { VarArgs } from '../types'
 import { EffectCallback, useEffect } from './useEffect'
-
-type VarArgs<T> = T | readonly T[]
 
 /**
  * Set a timeout to run an effect after a delay, with proper cleanup on unmount.

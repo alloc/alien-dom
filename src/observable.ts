@@ -1,6 +1,7 @@
 import { isFunction, isString } from '@alloc/is'
 import { Falsy } from '@alloc/types'
 import { createSymbolProperty } from './internal/symbolProperty'
+import { kAlienRefType } from './internal/symbols'
 import { noop } from './jsx-dom/util'
 
 export type ObservableHooks = {
@@ -56,8 +57,6 @@ let nextVersion = 1
 let nextDebugId = 1
 let access = unseenAccess
 
-const kRefType = Symbol.for('alien:refType')
-
 export class ReadonlyRef<T = any> {
   readonly debugId: string | number | undefined
   protected _observers = new Set<Observer>()
@@ -84,7 +83,7 @@ export class ReadonlyRef<T = any> {
     }
   }
 
-  get [kRefType]() {
+  get [kAlienRefType]() {
     return 'ReadonlyRef'
   }
 
@@ -98,7 +97,7 @@ export class ReadonlyRef<T = any> {
 }
 
 export class Ref<T = any> extends ReadonlyRef<T> {
-  get [kRefType]() {
+  get [kAlienRefType]() {
     return 'Ref'
   }
 
@@ -236,7 +235,7 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
     }
   }
 
-  get [kRefType]() {
+  get [kAlienRefType]() {
     return 'ComputedRef'
   }
 
@@ -338,7 +337,7 @@ const arrayEnumerator = (name: keyof ArrayIterators<any>) =>
   }
 
 /* @__PURE__ */ assignPrototype(ArrayRef.prototype, {
-  [kRefType]: 'ArrayRef',
+  [kAlienRefType]: 'ArrayRef',
   observe(this: InternalRef<any[]>, index: number) {
     return computed(
       () => this.value[index],
@@ -648,7 +647,7 @@ export function observe(
 }
 
 export function isRef<T = any>(value: any): value is ReadonlyRef<T> {
-  return !!value && value[kRefType] !== undefined
+  return !!value && value[kAlienRefType] !== undefined
 }
 
 /**

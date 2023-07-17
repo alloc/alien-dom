@@ -1,5 +1,9 @@
 import { toChildNodes } from '../internal/fragment'
-import { kAlienEffects, kAlienElementTags } from '../internal/symbols'
+import {
+  kAlienEffects,
+  kAlienElementTags,
+  kAlienRefProp,
+} from '../internal/symbols'
 import { isElement, isFragment, isTextNode } from './typeChecking'
 
 /**
@@ -24,6 +28,11 @@ export function unmount(node: ChildNode, skipRemove?: boolean) {
       ) {
         unmount(childNode, true)
       }
+
+      const oldRefs = kAlienRefProp(node)
+      oldRefs?.forEach(ref => {
+        ref.setElement(null)
+      })
     }
 
     if (!isTextNode(node)) {

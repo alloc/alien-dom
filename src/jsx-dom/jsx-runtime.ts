@@ -11,6 +11,7 @@ import {
   kAlienElementKey,
   kAlienElementTags,
   kAlienPureComponent,
+  kAlienRefProp,
   kAlienSelfUpdating,
 } from '../internal/symbols'
 import type { DefaultElement, StyleAttributes } from '../internal/types'
@@ -123,12 +124,32 @@ export function jsx(tag: any, props: any, key?: JSX.ElementKey) {
     }
   }
 
-  // TODO: call this when props.ref changes
-  if (props.ref && node && node !== oldNode) {
-    props.ref.setElement(node)
+  const oldRefs = oldNode ? kAlienRefProp(oldNode) : undefined
+  if (props.ref || oldRefs) {
+    const newRefs = new Set<JSX.ElementRef>()
+    updateElementRefs(props.ref, node, newRefs, oldRefs)
+    kAlienRefProp(node, newRefs)
+    oldRefs?.forEach(ref => {
+      ref.setElement(null)
+    })
   }
 
   return node
+}
+
+export function updateElementRefs(
+  ref: JSX.RefProp,
+  element: Element | null,
+  newRefs: Set<JSX.ElementRef>,
+  oldRefs: Set<JSX.ElementRef> | undefined
+) {
+  if (isArray(ref)) {
+    ref.forEach(ref => updateElementRefs(ref, element, newRefs, oldRefs))
+  } else if (ref) {
+    ref.setElement(element)
+    newRefs.add(ref)
+    oldRefs?.delete(ref)
+  }
 }
 
 export function createElement(tag: any, props: any, ...children: any[]) {
