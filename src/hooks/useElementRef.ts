@@ -1,3 +1,4 @@
+import { EffectResult } from './useEffect'
 import { useState } from './useState'
 
 export type ElementRef<T extends Element = Element> = T & {
@@ -5,8 +6,10 @@ export type ElementRef<T extends Element = Element> = T & {
   setElement(element: T | null): void
 }
 
-export function useElementRef<T extends Element>() {
-  return useState(createElementRef<T>)
+export function useElementRef<T extends Element>(
+  effect?: (element: T) => EffectResult
+) {
+  return useState(createElementRef<T>, effect)
 }
 
 const kElementType = Symbol.for('ElementRef')
@@ -15,8 +18,12 @@ export const isElementRef = <T extends Element = Element>(
   arg: any
 ): arg is ElementRef<T> => !!(arg && arg[kElementType])
 
-export function createElementRef<T extends Element>(): ElementRef<T> {
+export function createElementRef<T extends Element>(
+  effect?: (element: T) => EffectResult
+): ElementRef<T> {
   let element: T | null = null
+  let effectResult: EffectResult | undefined
+
   return new Proxy(
     {
       toElement() {
@@ -24,6 +31,13 @@ export function createElementRef<T extends Element>(): ElementRef<T> {
       },
       setElement(newElement: T | null) {
         element = newElement
+        if (effectResult) {
+          effectResult()
+          effectResult = undefined
+        }
+        if (element && effect) {
+          effectResult = effect(element)
+        }
       },
     } as ElementRef<T>,
     {
