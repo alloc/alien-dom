@@ -156,6 +156,7 @@ const emptySymbol: any = Symbol('empty')
 
 export class ComputedRef<T = any> extends ReadonlyRef<T> {
   protected _dirty = true
+  protected _refs: Set<InternalRef<any>> | null = null
   protected _observer: Observer | null = null
   protected get _depth() {
     return this._observer?.depth ?? 0
@@ -184,8 +185,18 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
   }
 
   protected _setupObserver() {
-    const observer = (this._observer = new Observer(computeQueue))
+    const observer = (this._observer = new Observer(
+      computeQueue
+    )) as InternalObserver
+
+    if (this._refs) {
+      this._refs.forEach(ref => observer._access(ref))
+      this._refs = null
+    }
+
+    // The dirty flag is updated synchronously when a ref is changed.
     observer.willUpdate = () => (this._dirty = true)
+
     observer.onUpdate = setValue.bind(this)
     observer.update(oldRefs => {
       if (this._dirty) {
@@ -219,6 +230,10 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
       },
       delete: noop,
     }) as InternalObserver
+
+    // If we end up calling `_setupObserver` before a ref is changed, the refs
+    // used by this update will be inherited by the new observer.
+    this._refs = observer.refs
 
     // The temporary observer is removed in the next microtask at the latest.
     queueMicrotask(() => {
@@ -530,7 +545,7 @@ export class Observer {
       ref._isObserved(this, false)
     })
     // Ensure subsequent calls to dispose are no-ops.
-    this.refs.clear()
+    this.refs = new Set()
   }
 
   /**
