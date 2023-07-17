@@ -15,7 +15,7 @@ import {
 } from '../internal/symbols'
 import type { DefaultElement, StyleAttributes } from '../internal/types'
 import { ReadonlyRef, isRef, observe } from '../observable'
-import type { ElementKey, HTMLStyleAttribute, JSX } from '../types'
+import type { HTMLStyleAttribute, JSX } from '../types'
 import { ShadowRootContext, appendChild } from './appendChild'
 import { svgTags } from './svg-tags'
 import { UpdateStyle, decamelize, keys, updateStyle } from './util'
@@ -38,7 +38,7 @@ const selfUpdatingTags = new WeakMap<any, any>()
 
 export { jsx as jsxs }
 
-export function jsx(tag: any, props: any, key?: ElementKey) {
+export function jsx(tag: any, props: any, key?: JSX.ElementKey) {
   const component = currentComponent.get()
   const hasImpureTag = typeof tag !== 'string' && !kAlienPureComponent.in(tag)
   if (hasImpureTag && !kAlienSelfUpdating.in(tag)) {

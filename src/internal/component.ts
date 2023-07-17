@@ -2,7 +2,7 @@ import { AlienContext } from '../context'
 import { AlienEffects } from '../effects'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { Observer, Ref, observe } from '../observable'
-import { ElementKey, FunctionComponent, JSX } from '../types'
+import { FunctionComponent, JSX } from '../types'
 import { deepEquals } from './deepEquals'
 import { isFragment } from './duck'
 import { getAlienEffects } from './effects'
@@ -17,16 +17,16 @@ import {
 } from './symbols'
 
 export type ElementTags = Map<FunctionComponent, AlienComponent<any>>
-export type ElementRefs = Map<ElementKey, ChildNode | DocumentFragment>
+export type ElementRefs = Map<JSX.ElementKey, ChildNode | DocumentFragment>
 
 /** Internal state for a component instance. */
 export class AlienComponent<Props = any> {
   rootNode: ChildNode | DocumentFragment | null = null
-  rootKey: ElementKey | undefined = undefined
+  rootKey: JSX.ElementKey | undefined = undefined
   hooks: any[] = []
   nextHookIndex = 0
   /** Elements created by this component in the current render pass. */
-  newElements: Map<ElementKey, JSX.Element> | null = null
+  newElements: Map<JSX.ElementKey, JSX.Element> | null = null
   /** Stable references to the elements that are mounted. */
   refs: ElementRefs | null = null
   /** Stable references that were added or reused by the current render pass. */
@@ -103,7 +103,7 @@ export class AlienComponent<Props = any> {
     this.nextHookIndex = 0
     return this as {
       rootNode: ChildNode | DocumentFragment | null
-      newElements: Map<ElementKey, JSX.Element>
+      newElements: Map<JSX.ElementKey, JSX.Element>
       newEffects: AlienEffects
       newRefs: ElementRefs
     }
@@ -140,7 +140,7 @@ export class AlienComponent<Props = any> {
     this.rootKey = kAlienElementKey(rootNode)
   }
 
-  setRef(key: ElementKey, element: ChildNode | DocumentFragment) {
+  setRef(key: JSX.ElementKey, element: ChildNode | DocumentFragment) {
     kAlienElementKey(element, key)
     this.newRefs!.set(key, element)
 

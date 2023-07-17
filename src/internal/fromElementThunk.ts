@@ -1,5 +1,4 @@
 import { isElement } from '../internal/duck'
-import type { ElementKey } from '../types/attr'
 import type { JSX } from '../types/jsx'
 import { isNode } from './duck'
 import { currentComponent } from './global'
@@ -17,7 +16,7 @@ export function fromElementThunk(thunk: () => JSX.Children) {
     // a parent component overwrites its element key, which can happen if
     // the current component returns it as the root element.
     let rootNode: Element | null | undefined
-    let key: ElementKey | undefined
+    let key: JSX.ElementKey | undefined
 
     Object.defineProperty(thunk, kAlienThunkResult.symbol, {
       get() {

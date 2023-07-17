@@ -22,6 +22,7 @@ type Thunkable<T> = T | Thunk<T>
 
 export declare namespace JSX {
   type Element = HTMLElement
+  type ElementKey = string | number
 
   type Ref<Element extends AnyElement = AnyElement> = {
     setElement(element: Element): void

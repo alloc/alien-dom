@@ -2,7 +2,7 @@ import { unmount } from '../functions/unmount'
 import { isElement } from '../internal/duck'
 import { kAlienElementKey } from '../internal/symbols'
 import { noop } from '../jsx-dom/util'
-import { ElementKey } from '../types'
+import { JSX } from '../types/jsx'
 
 /**
  * This reorders, inserts, and removes children but doesn't morph attributes.
@@ -17,8 +17,8 @@ export function morphChildren(
     onNodePreserved: (fromNode: ChildNode, toNode: ChildNode) => void
   }
 ): void {
-  const fromElementsByKey = new Map<ElementKey, Element>()
-  const unmatchedFromKeys = new Set<ElementKey>()
+  const fromElementsByKey = new Map<JSX.ElementKey, Element>()
+  const unmatchedFromKeys = new Set<JSX.ElementKey>()
   for (
     let fromChildNode = fromParentNode.firstChild;
     fromChildNode;
