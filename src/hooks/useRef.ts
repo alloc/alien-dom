@@ -1,15 +1,9 @@
 import { currentComponent } from '../internal/global'
 import { Ref, ref } from '../observable'
 
-type Fn = (...args: any[]) => any
-
-export type UseRefSetter<T> = (
-  newValue: Exclude<T, Fn> | ((oldValue: T) => T)
-) => void
-
 export function useRef<T>(
   init: T | (() => T)
-): Ref<T> & [value: T, set: UseRefSetter<T>] {
+): Ref<T> & [value: T, set: Ref<T>[1]] {
   const component = currentComponent.get()!
   const index = component.nextHookIndex++
   return (component.hooks[index] ||= ref(
