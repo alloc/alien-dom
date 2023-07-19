@@ -86,14 +86,13 @@ export function jsx(tag: any, props: any, key?: JSX.ElementKey) {
     // Unlike other props, children are immediately processed every time.
     applyProp(node, 'children', props.children)
 
-    // Select `option` elements in `select`
-    if (hasTagName(node, 'SELECT') && props.value != null) {
+    // Select any matching <option> elements in the first render.
+    if (!oldNode && hasTagName(node, 'SELECT') && props.value != null) {
       if (props.multiple === true && isArray(props.value)) {
         const values = (props.value as any[]).map(value => String(value))
-
-        node
-          .querySelectorAll('option')
-          .forEach(option => (option.selected = values.includes(option.value)))
+        node.querySelectorAll('option').forEach(option => {
+          option.selected = values.includes(option.value)
+        })
       } else {
         node.value = props.value
       }
