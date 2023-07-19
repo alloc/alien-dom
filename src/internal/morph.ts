@@ -85,8 +85,9 @@ export function morph(
 }
 
 function discardKeyedNodesOnly(node: Node) {
-  // Never remove a node that was added by an event listener or effect. Any nodes added by a
-  // component render will have a position-based key defined automatically if they're missing an
-  // explicit key, so this check is sufficient.
+  // Never remove a node that was added by an event listener or effect. Any
+  // nodes added by a component render will have a position-based key defined
+  // automatically if they're missing an explicit key, so this check is
+  // sufficient.
   return kAlienElementKey.in(node)
 }

@@ -41,8 +41,8 @@ export function unmount(node: ChildNode, skipRemove?: boolean) {
 
       const tags = kAlienElementTags(node)
       if (tags) {
-        // If a node is the root node of multiple components, the deepest component
-        // is disabled first.
+        // If a node is the root node of multiple components, the deepest
+        // component is disabled first.
         for (const component of tags.values()) {
           component.disable()
         }
