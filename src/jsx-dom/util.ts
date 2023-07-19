@@ -2,7 +2,7 @@ import { isNumber } from '@alloc/is'
 import { isAnimatedStyleProp, stopAnimatingKey } from '../internal/animate'
 import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
 import type { DefaultElement } from '../internal/types'
-import { Ref, isRef } from '../observable'
+import { ReadonlyRef, isRef } from '../observable'
 import { isUnitlessNumber } from './css-props'
 import { isSvgChild } from './svg-tags'
 
@@ -34,13 +34,13 @@ export function updateStyle(
   element: DefaultElement,
   style: any,
   flags: UpdateStyle.AllowRefs
-): Map<string, Ref>
+): Map<string, ReadonlyRef>
 
 export function updateStyle(
   element: DefaultElement,
   style: any,
   flags: UpdateStyle.AllowRefs | 0
-): Map<string, Ref> | undefined
+): Map<string, ReadonlyRef> | undefined
 
 export function updateStyle(
   element: DefaultElement,
@@ -57,7 +57,7 @@ export function updateStyle(
 
   const skipAnimated = flags & UpdateStyle.NonAnimated
   const stopAnimated = flags & UpdateStyle.Interrupt
-  const refs = flags & UpdateStyle.AllowRefs && new Map<string, Ref>()
+  const refs = flags & UpdateStyle.AllowRefs && new Map<string, ReadonlyRef>()
 
   for (const key of keys<StyleKey>(style)) {
     if (skipAnimated && isAnimatedStyleProp(element, key)) {
