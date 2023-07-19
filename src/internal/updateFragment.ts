@@ -1,15 +1,13 @@
 import { AlienComponent, ElementRefs } from './component'
 import { toChildNodes } from './fragment'
 import { morph } from './morph'
-import { moveEffects } from './moveEffects'
 import {
-  kAlienEffects,
   kAlienElementKey,
   kAlienFragment,
   kAlienManualUpdates,
   kAlienParentFragment,
 } from './symbols'
-import type { AnyElement } from './types'
+import type { DefaultElement } from './types'
 
 export function updateFragment(
   fragment: DocumentFragment,
@@ -24,10 +22,10 @@ export function updateFragment(
   const oldKeys = oldNodes.map(kAlienElementKey.get)
 
   let prevChild: ChildNode | undefined
-  let elementMap: Map<AnyElement, AnyElement> | undefined
 
   newKeys.forEach((newKey, newIndex) => {
     let oldNode: ChildNode | undefined
+
     // When the root fragment is a <ManualUpdates> element, skip reuse
     // of old nodes and prefer the latest nodes instead.
     if (!isManuallyUpdated && newKey !== undefined) {
@@ -35,15 +33,15 @@ export function updateFragment(
       if (oldIndex !== -1) {
         oldNode = oldNodes[oldIndex]
         morph(
-          oldNode as Element,
-          newNodes[newIndex] as Element,
-          (elementMap ||= new Map()),
+          oldNode as DefaultElement,
+          newNodes[newIndex] as DefaultElement,
           newRefs,
           component,
           true /* isFragment */
         )
       }
     }
+
     if (prevChild) {
       const node = oldNode || newNodes[newIndex]
       prevChild.after(node)
@@ -53,6 +51,7 @@ export function updateFragment(
       // component effects are attached.
       prevChild = oldNode = oldNodes[0]
     }
+    
     if (oldNode) {
       newNodes[newIndex] = oldNode
     }
@@ -74,17 +73,6 @@ export function updateFragment(
 
   kAlienFragment(fragment, newNodes)
   updateParentFragment(fragment, oldNodes, newNodes)
-
-  if (elementMap) {
-    for (const [newElement, oldElement] of elementMap) {
-      const oldEffects = kAlienEffects(oldElement)
-      const newEffects = kAlienEffects(newElement)
-      if (newEffects) {
-        moveEffects(oldElement, newEffects, elementMap)
-      }
-      oldEffects?.disable()
-    }
-  }
 
   return fragment
 }

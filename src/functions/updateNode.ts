@@ -15,6 +15,6 @@ export function updateNode(node: AnyElement, newNode: AnyElement) {
   if (isFragment(node)) {
     updateFragment(node as any, newNode as any, component?.newRefs)
   } else if (isElement(node)) {
-    updateElement(node, newNode, component?.newRefs)
+    updateElement(node, newNode as any, component?.newRefs)
   }
 }

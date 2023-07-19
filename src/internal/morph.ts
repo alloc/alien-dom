@@ -11,11 +11,11 @@ import {
   kAlienElementTags,
   kAlienPlaceholder,
 } from './symbols'
-import type { AnyElement } from './types'
+import type { DefaultElement } from './types'
 
 function shouldMorphElement(
-  fromNode: AnyElement,
-  toNode: AnyElement,
+  fromNode: DefaultElement,
+  toNode: DefaultElement,
   refs: ElementRefs | null | undefined
 ) {
   // Placeholders exist to prevent updates. Some use cases include
@@ -41,9 +41,8 @@ function shouldMorphElement(
  * This function assumes the two nodes are compatible.
  */
 export function morph(
-  fromParentNode: AnyElement,
-  toParentNode: AnyElement,
-  elementMap?: Map<AnyElement, AnyElement>,
+  fromParentNode: DefaultElement,
+  toParentNode: DefaultElement,
   refs?: ElementRefs | null,
   component?: AlienComponent | null,
   isFragment?: boolean
@@ -52,7 +51,6 @@ export function morph(
     return
   }
 
-  elementMap?.set(toParentNode, fromParentNode)
   morphAttributes(fromParentNode, toParentNode)
 
   if (hasTagName(fromParentNode, 'TEXTAREA')) {
@@ -68,7 +66,7 @@ export function morph(
       if (!isElement(fromNode)) {
         fromNode.nodeValue = toNode.nodeValue
       } else if (shouldMorphElement(fromNode, toNode as any, refs)) {
-        morph(fromNode, toNode as any, elementMap, refs, component)
+        morph(fromNode, toNode as any, refs, component)
       }
     },
   })

@@ -5,6 +5,7 @@ import { isFragment } from './internal/duck'
 import {
   EffectFlags,
   disableEffect,
+  disableEffects,
   enableEffect,
   runEffect,
 } from './internal/effects'
@@ -169,16 +170,12 @@ export class AlienEffects<Element extends AnyElement = any> {
     }
     if (this.enabled) {
       this.state = AlienEffectState.Disabling
-      this.abortCtrl?.abort()
-      this.effects?.forEach(effect => {
-        disableEffect(effect)
-        if (effect.once) {
-          this.effects?.delete(effect)
-        }
-      })
+
+      disableEffects(this, destroy)
       if (!destroy && this.element && !this.element.isConnected) {
         this.enableOnceMounted(this.element, this.rootNode)
       }
+
       this.state = AlienEffectState.Disabled
     }
   }

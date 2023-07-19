@@ -2,6 +2,7 @@ import { AnimationsParam, animate } from './animate'
 import { Disposable } from './disposable'
 import { AlienBoundEffect, AlienEffect, AlienEffects } from './effects'
 import { observeAs } from './functions/observeAs'
+import { applyProp } from './internal/applyProp'
 import { canMatch } from './internal/duck'
 import { EffectFlags, enableEffect, getAlienEffects } from './internal/effects'
 import type {
@@ -19,8 +20,7 @@ import type {
   StyleAttributes,
 } from './internal/types'
 import { updateElement } from './internal/updateElement'
-import { applyProps } from './jsx-dom/jsx-runtime'
-import { UpdateStyle, updateStyle } from './jsx-dom/util'
+import { UpdateStyle, keys, updateStyle } from './jsx-dom/util'
 import type { DetailedHTMLProps, HTMLAttributes } from './types/html'
 import type { SVGAttributes } from './types/svg'
 
@@ -135,7 +135,7 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
   morph(element: Element) {
     const key = kAlienElementKey(this)
     kAlienElementKey(element, key)
-    updateElement(this, element)
+    updateElement(this as any, element as any)
     return this
   }
   replaceText(value: string): this
@@ -200,8 +200,11 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     updateStyle(this as any, style, UpdateStyle.Interrupt)
     return this
   }
+  // TODO: update `props` type to allow ReadonlyRef values
   set(props: Partial<Attributes<Element>>) {
-    applyProps(this as any, props)
+    for (const prop of keys(props)) {
+      applyProp(this as any, prop, props[prop])
+    }
     return this
   }
   spring(animations: AnimationsParam<Element, any>) {

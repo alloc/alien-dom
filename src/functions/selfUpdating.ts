@@ -200,7 +200,7 @@ export function selfUpdating<Props extends object, Result extends JSX.Children>(
                 kAlienElementKey(rootNode, newKey)
 
                 // Diff the root nodes and retarget any new effects.
-                updateElement(rootNode, newRootNode as AnyElement, self)
+                updateElement(rootNode, newRootNode as any, self)
               }
             }
           }

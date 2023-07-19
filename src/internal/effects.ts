@@ -55,8 +55,8 @@ export function enableEffect<Effect extends AlienEffect<any, any>>(
   }
 
   return attachDisposer(effect, () => {
-    disableEffect(effect)
     context.effects?.delete(effect)
+    disableEffect(effect)
   })
 }
 
@@ -111,5 +111,19 @@ export function disableEffect(effect: AlienEffect) {
   if (disable) {
     effect.disable = undefined
     disable()
+  }
+}
+
+export function disableEffects(context: AlienEffects, destroy?: boolean) {
+  context.abortCtrl?.abort()
+  context.effects?.forEach(effect => {
+    disableEffect(effect)
+    if (effect.once) {
+      context.effects?.delete(effect)
+    }
+  })
+  context.abortCtrl = undefined
+  if (destroy) {
+    context.effects = undefined
   }
 }
