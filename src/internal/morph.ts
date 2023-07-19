@@ -14,7 +14,7 @@ import {
 } from './symbols'
 import type { DefaultElement } from './types'
 
-function shouldMorphElement(
+export function shouldMorphElement(
   fromNode: DefaultElement,
   toNode: DefaultElement,
   refs: ElementRefs | null | undefined
@@ -45,13 +45,8 @@ export function morph(
   fromParentNode: DefaultElement,
   toParentNode: DefaultElement,
   refs?: ElementRefs | null,
-  component?: AlienComponent | null,
-  isFragment?: boolean
+  component?: AlienComponent | null
 ): void {
-  if (isFragment && !shouldMorphElement(fromParentNode, toParentNode, refs)) {
-    return
-  }
-
   morphAttributes(fromParentNode, toParentNode)
 
   if (hasTagName(fromParentNode, 'TEXTAREA')) {

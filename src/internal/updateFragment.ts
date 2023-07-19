@@ -1,13 +1,12 @@
 import { AlienComponent, ElementRefs } from './component'
 import { toChildNodes } from './fragment'
-import { morph } from './morph'
+import { morph, shouldMorphElement } from './morph'
 import {
   kAlienElementKey,
   kAlienFragment,
   kAlienManualUpdates,
   kAlienParentFragment,
 } from './symbols'
-import type { DefaultElement } from './types'
 
 export function updateFragment(
   fragment: DocumentFragment,
@@ -32,13 +31,11 @@ export function updateFragment(
       const oldIndex = oldKeys.indexOf(newKey)
       if (oldIndex !== -1) {
         oldNode = oldNodes[oldIndex]
-        morph(
-          oldNode as DefaultElement,
-          newNodes[newIndex] as DefaultElement,
-          newRefs,
-          component,
-          true /* isFragment */
-        )
+
+        const newNode = newNodes[newIndex]
+        if (shouldMorphElement(oldNode as any, newNode as any, newRefs)) {
+          morph(oldNode as any, newNode as any, newRefs, component)
+        }
       }
     }
 
@@ -51,7 +48,7 @@ export function updateFragment(
       // component effects are attached.
       prevChild = oldNode = oldNodes[0]
     }
-    
+
     if (oldNode) {
       newNodes[newIndex] = oldNode
     }
