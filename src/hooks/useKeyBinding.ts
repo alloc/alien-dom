@@ -9,9 +9,15 @@ import { ref } from '../observable'
 import { useEffect } from './useEffect'
 import { useState } from './useState'
 
+export interface KeyBindingEvent {
+  target: Document | HTMLElement
+  stopPropagation(): void
+  preventDefault(): void
+}
+
 export function useKeyBinding(
   command: string | false,
-  callback?: (event: KeyboardEvent) => void
+  callback?: (event: KeyBindingEvent) => void
 ) {
   const component = currentComponent.get()!
   const binding = useState(initKeyBinding, callback)
@@ -32,7 +38,7 @@ export function useKeyBinding(
 export type KeyBinding = ReturnType<typeof initKeyBinding>
 
 const initKeyBinding = (
-  callback: ((event: KeyboardEvent) => void) | undefined
+  callback: ((event: KeyBindingEvent) => void) | undefined
 ): {
   /**
    * Equals true when the key binding is activated.
@@ -41,7 +47,7 @@ const initKeyBinding = (
   isActive: boolean
   effect: Disposable<AlienEffect> | null
   command: Set<string> | false
-  callback: ((event: KeyboardEvent) => void) | undefined
+  callback: ((event: KeyBindingEvent) => void) | undefined
   setElement: (element: HTMLElement) => void
   enable: (target: Document | HTMLElement) => () => void
 } => {
@@ -132,7 +138,12 @@ class KeyBindingContext {
     }
 
     const activeKeys = new Set<string>()
-    const onKeyChange = (event: KeyboardEvent) => {
+    const onKeyChange = (e?: Event) => {
+      const event: KeyBindingEvent = {
+        target,
+        preventDefault: e?.preventDefault.bind(e) || noop,
+        stopPropagation: e?.stopPropagation.bind(e) || noop,
+      }
       for (const binding of this.bindings) {
         if (binding.command && setsEqual(binding.command, activeKeys)) {
           binding.isActive = true
@@ -152,7 +163,10 @@ class KeyBindingContext {
       onKeyChange(event)
     }
     const clear = () => {
-      activeKeys.clear()
+      if (activeKeys.size > 0) {
+        activeKeys.clear()
+        onKeyChange()
+      }
     }
 
     contexts.set(target, this)
