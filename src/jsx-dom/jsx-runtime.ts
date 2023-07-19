@@ -31,10 +31,6 @@ const XMLNamespace = 'http://www.w3.org/XML/1998/namespace'
 const nonPresentationSVGAttributes =
   /^(a(ll|t|u)|base[FP]|c(al|lipPathU|on)|di|ed|ex|filter[RU]|g(lyphR|r)|ke|l(en|im)|ma(rker[HUW]|s)|n|pat|pr|point[^e]|re[^n]|s[puy]|st[^or]|ta|textL|vi|xC|y|z)/
 
-export function createFactory(tag: string) {
-  return createElement.bind(null, tag)
-}
-
 const selfUpdatingTags = new WeakMap<any, any>()
 
 export { jsx as jsxs }
@@ -150,21 +146,6 @@ export function updateElementRefs(
     newRefs.add(ref)
     oldRefs?.delete(ref)
   }
-}
-
-export function createElement(tag: any, props: any, ...children: any[]) {
-  if (isString(props) || isArray(props)) {
-    children.unshift(props)
-    props = {}
-  }
-
-  props = props || {}
-
-  if (props.children != null && !children.length) {
-    ;({ children, ...props } = props)
-  }
-
-  return jsx(tag, { ...props, children }, props.key)
 }
 
 function flattenStyleProp(

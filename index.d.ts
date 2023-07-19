@@ -5,13 +5,11 @@ import type {
   FunctionComponent,
   HTMLAttributes,
   HTMLElementTagNames,
-  HTMLFactory,
   JSX,
   PropsWithChildren,
   SVGAttributes,
   SVGElementTagName,
   SVGElementTagNames,
-  SVGFactory,
 } from './dist/types'
 import './observable'
 
@@ -30,49 +28,6 @@ export type {
   SVG,
   SVGAttributes,
 } from './dist/types'
-
-// DOM Elements
-export declare function createFactory<K extends HTMLElementTagNames>(
-  type: K
-): HTMLFactory<Extract<HTMLElementTagNameMap[K], HTMLElement>>
-export declare function createFactory(type: SVGElementTagNames): SVGFactory
-export declare function createFactory<T extends Element>(type: string): T
-
-// DOM Elements
-export declare function createElement<
-  K extends HTMLElementTagNames,
-  T extends HTMLElementTagNameMap[K]
->(
-  type: K,
-  props?: (HTMLAttributes<T> & AttrWithRef<T>) | null,
-  ...children: JSX.Children[]
-): T
-export declare function createElement<
-  K extends SVGElementTagName,
-  T extends SVGElementTagNames[K]
->(
-  type: K,
-  props?: (SVGAttributes<T> & AttrWithRef<T>) | null,
-  ...children: JSX.Children[]
-): SVGElement
-export declare function createElement<T extends Element>(
-  type: string,
-  props?: (DOMAttributes<T> & AttrWithRef<T>) | null,
-  ...children: JSX.Children[]
-): T
-
-// Custom components
-export declare function createElement<P extends {}, T extends Element>(
-  type: FunctionComponent<P, T>,
-  props?: (Attributes & P) | null,
-  ...children: JSX.Children[]
-): T
-
-export declare function createElement<T extends Element>(
-  type: string,
-  props?: Attributes | null,
-  ...children: JSX.Children[]
-): T
 
 // DOM Elements
 export declare function jsx<
