@@ -183,3 +183,10 @@ export function enablePropObserver(
     [ref, prop]
   )
 }
+
+/** This is used by JSX SVG elements. */
+export const createElement = (
+  tag: any,
+  { key, ...props }: any,
+  ...children: any[]
+) => jsx(tag, { ...props, children }, key)
