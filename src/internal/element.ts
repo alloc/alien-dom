@@ -1,6 +1,8 @@
+import { isNumber } from '@alloc/is'
 import { Disposable } from '../disposable'
 import { AlienBoundEffect } from '../effects'
 import { AlienElement, AlienEvent } from '../element'
+import { isUnitlessNumber } from '../jsx-dom/css-props'
 import { CSSProperties } from '../types/dom'
 import { createEventEffect } from './elementEvent'
 import { AnyElement, AnyEvent } from './types'
@@ -70,6 +72,9 @@ function getStyleMethod(key: any) {
     return (methodCache[key] = function (this: HTMLElement, value?: any) {
       if (arguments.length == 0) {
         return this.style[styleKey]
+      }
+      if (isNumber(value) && !isUnitlessNumber[key]) {
+        value += 'px' as any
       }
       this.style[styleKey] = value
       return this
