@@ -22,7 +22,7 @@ import {
   Length,
   TransformAttributes,
 } from './internal/types'
-import { svgTags } from './jsx-dom/svg-tags'
+import { isSvgChild } from './jsx-dom/svg-tags'
 import { keys, toArray } from './jsx-dom/util'
 import { $$, AlienSelector } from './selectors'
 
@@ -293,7 +293,7 @@ function ensureAnimatedElement(target: DefaultElement): AnimatedElement {
   let state = animatedElements.get(target)
   if (!state) {
     state = {
-      svgMode: !!svgTags[target.tagName] && target.tagName != 'svg',
+      svgMode: isSvgChild(target),
       nodes: null,
       step: null,
       frame: null,

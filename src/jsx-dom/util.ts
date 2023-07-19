@@ -70,11 +70,11 @@ export function updateStyle(
     }
     let transformFn = cssTransformAliases[key]
     if (transformFn !== undefined) {
-      const needSvgTransform = isSvgChild(element)
-      if (!transformFn || needSvgTransform) {
+      const svgMode = isSvgChild(element)
+      if (!transformFn || svgMode) {
         transformFn = key
       }
-      if (isNumber(value) && !needSvgTransform) {
+      if (isNumber(value) && !svgMode) {
         value += (cssTransformUnits[key] || '') as any
       }
       transform ||= []

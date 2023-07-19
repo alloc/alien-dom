@@ -81,14 +81,7 @@ export class AnimatedTransform {
   }
 
   apply({ anchor, style }: AnimatedElement) {
-    let {
-      target,
-      svgMode,
-      newScale,
-      newCalls,
-      isIdentity: isNoTransform,
-      value,
-    } = this
+    let { target, svgMode, newScale, newCalls, isIdentity, value } = this
 
     if (newScale) {
       this.newScale = null
@@ -115,7 +108,7 @@ export class AnimatedTransform {
       )
     }
 
-    const newTransform = renderTransform(value, newCalls, isNoTransform)
+    const newTransform = renderTransform(value, newCalls, isIdentity)
     applyAnimatedValue(target, style, svgMode, 'transform', newTransform)
   }
 }
@@ -130,7 +123,7 @@ export function resolveTransformFn(key: string, svgMode: boolean) {
     : null
 }
 
-function parseTransform(target: Element, svgMode: boolean) {
+export function parseTransform(target: Element, svgMode: boolean) {
   // Note that we can't use the `computedStyle` here, because it
   // compacts the transform string into a matrix, which obfuscates the
   // individual transform functions.
@@ -160,7 +153,7 @@ type TransformCall =
   | [string, string | number, string]
   | [string, string | number]
 
-function renderTransform(
+export function renderTransform(
   cachedTransform: ParsedTransform,
   newTransform: TransformCall[],
   isIdentity: boolean

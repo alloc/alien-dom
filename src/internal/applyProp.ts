@@ -2,6 +2,7 @@ import {
   isArray,
   isBoolean,
   isFunction,
+  isNumber,
   isObject,
   isPlainObject,
   isString,
@@ -9,9 +10,11 @@ import {
 import { classToString } from '../functions/classToString'
 import { appendChild } from '../jsx-dom/appendChild'
 import { enablePropObserver } from '../jsx-dom/jsx-runtime'
+import { isSvgChild } from '../jsx-dom/svg-tags'
 import { UpdateStyle, decamelize, keys, updateStyle } from '../jsx-dom/util'
 import { ReadonlyRef, isRef } from '../observable'
 import { HTMLStyleAttribute } from '../types'
+import { parseTransform, renderTransform } from './animate/transform'
 import { hasTagName } from './duck'
 import { createEventEffect } from './elementEvent'
 import { currentComponent } from './global'
@@ -20,6 +23,7 @@ import {
   kAlienElementProps,
   kAlienElementTags,
 } from './symbols'
+import { cssTransformAliases, cssTransformUnits } from './transform'
 import { DefaultElement, StyleAttributes } from './types'
 
 const XLinkNamespace = 'http://www.w3.org/1999/xlink'
@@ -241,7 +245,25 @@ function applyStyleProp(
   if (refs?.size) {
     for (const [key, ref] of refs) {
       enablePropObserver(node, 'style.' + key, ref, (node, newValue) => {
-        updateStyle(node, { [key]: newValue })
+        let transformFn = cssTransformAliases[key]
+        if (transformFn != null) {
+          const svgMode = isSvgChild(node)
+          if (!transformFn || svgMode) {
+            transformFn = key
+          }
+          if (isNumber(newValue) && !svgMode) {
+            newValue += (cssTransformUnits[key] || '') as any
+          }
+          const oldTransform = parseTransform(node, svgMode)
+          const newTransform = renderTransform(
+            oldTransform,
+            [[transformFn, newValue]],
+            false
+          )
+          updateStyle(node, { transform: newTransform })
+        } else {
+          updateStyle(node, { [key]: newValue })
+        }
       })
     }
   }
