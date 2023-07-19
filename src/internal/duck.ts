@@ -6,6 +6,7 @@ import {
   kFragmentNodeType,
   kTextNodeType,
 } from './constants'
+import { DefaultElement } from './types'
 
 export function canMatch(node: any): node is { matches: Function } {
   return typeof (node as any).matches == 'function'
@@ -39,7 +40,7 @@ export function isNode(val: any): val is Node {
   return isObject(val) && isNumber((val as any).nodeType)
 }
 
-export function isElement(node: Node): node is Element {
+export function isElement(node: Node): node is DefaultElement {
   return node.nodeType === kElementNodeType
 }
 
