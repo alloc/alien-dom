@@ -15,7 +15,7 @@ export function fromElementThunk(thunk: () => JSX.Children) {
     // By caching the element here, we can reuse a mounted element even if
     // a parent component overwrites its element key, which can happen if
     // the current component returns it as the root element.
-    let rootNode: Element | null | undefined
+    let rootNode: JSX.Element | null | undefined
     let key: JSX.ElementKey | undefined
 
     Object.defineProperty(thunk, kAlienThunkResult.symbol, {
@@ -35,7 +35,7 @@ export function fromElementThunk(thunk: () => JSX.Children) {
             // When no cached node exists, check the component refs in
             // case this thunk was recreated.
             if (rootNode === undefined) {
-              rootNode = component.refs?.get(newKey)
+              rootNode = component.refs?.get(newKey) as any
               if (rootNode) {
                 key = newKey
               }
@@ -58,7 +58,7 @@ export function fromElementThunk(thunk: () => JSX.Children) {
 
             if (rootNode && rootNode === oldRootNode) {
               // Emulate a JSX element being constructed.
-              component.setRef(key, rootNode as any)
+              component.setRef(key, rootNode)
 
               if (rootNode !== newRootNode) {
                 newRootNode = rootNode

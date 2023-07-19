@@ -62,7 +62,7 @@ export function jsx(tag: any, props: any, key?: JSX.ElementKey) {
       }
       const updatedNode = instance?.rootNode
       if (updatedNode) {
-        component!.setRef(key!, updatedNode as DefaultElement)
+        component!.setRef(key!, updatedNode)
         return updatedNode
       }
     }
@@ -114,7 +114,7 @@ export function jsx(tag: any, props: any, key?: JSX.ElementKey) {
         kAlienElementKey(node, key)
         node = oldNode as any
       }
-      component.setRef(key, node as JSX.Element)
+      component.setRef(key, node)
     } else {
       kAlienElementKey(node, key)
     }

@@ -63,7 +63,7 @@ export function appendChild(
           // ensure it's not forgotten by the reference tracker and
           // replace it with a placeholder to skip morphing.
           else if (child.isConnected) {
-            component.setRef(key, child as JSX.Element)
+            component.setRef(key, child)
             child = getPlaceholder(child)
           }
         }
