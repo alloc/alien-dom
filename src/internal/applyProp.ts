@@ -8,7 +8,7 @@ import { HTMLStyleAttribute } from '../types'
 import { hasTagName } from './duck'
 import { createEventEffect } from './elementEvent'
 import { currentComponent } from './global'
-import { kAlienElementProps } from './symbols'
+import { kAlienElementKey, kAlienElementProps } from './symbols'
 import { DefaultElement, StyleAttributes } from './types'
 
 const XLinkNamespace = 'http://www.w3.org/1999/xlink'
@@ -192,6 +192,17 @@ export function applyInitialProps(node: DefaultElement, props: any) {
 
   for (const prop of initialProps) {
     applyProp(node, prop, props[prop])
+  }
+}
+
+export function applyInitialPropsRecursively(node: DefaultElement) {
+  if (!kAlienElementKey.in(node)) {
+    applyInitialProps(node, kAlienElementProps(node))
+  }
+  let child = node.firstElementChild
+  while (child) {
+    applyInitialPropsRecursively(child as DefaultElement)
+    child = child.nextElementSibling
   }
 }
 

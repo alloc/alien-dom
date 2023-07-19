@@ -4,12 +4,11 @@ import { morphInputElement } from '../morphdom/morphInput'
 import { morphOptionElement } from '../morphdom/morphOption'
 import { morphSelectElement } from '../morphdom/morphSelect'
 import { morphTextAreaElement } from '../morphdom/morphTextArea'
-import { applyInitialProps } from './applyProp'
+import { applyInitialPropsRecursively } from './applyProp'
 import { AlienComponent, ElementRefs } from './component'
 import { hasTagName, isElement } from './duck'
 import {
   kAlienElementKey,
-  kAlienElementProps,
   kAlienElementTags,
   kAlienPlaceholder,
 } from './symbols'
@@ -65,13 +64,8 @@ export function morph(
   morphChildren(fromParentNode, toParentNode, {
     onBeforeNodeDiscarded: component ? discardKeyedNodesOnly : undefined,
     onNodeAdded(node) {
-      if (!isElement(node)) {
-        return
-      }
-      const key = kAlienElementKey(node)
-      if (key != null) {
-        const props = kAlienElementProps(node)
-        applyInitialProps(node, props)
+      if (isElement(node)) {
+        applyInitialPropsRecursively(node)
       }
     },
     onNodePreserved(fromNode, toNode) {

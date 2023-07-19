@@ -1,6 +1,6 @@
 import { isFunction } from '@alloc/is'
 import { ContextStore, currentContext, forwardContext } from '../context'
-import { applyInitialProps } from '../internal/applyProp'
+import { applyInitialPropsRecursively } from '../internal/applyProp'
 import { AlienComponent } from '../internal/component'
 import { kCommentNodeType } from '../internal/constants'
 import { isElement, isFragment, isNode } from '../internal/duck'
@@ -15,7 +15,6 @@ import { isConnected } from '../internal/isConnected'
 import {
   kAlienEffects,
   kAlienElementKey,
-  kAlienElementProps,
   kAlienFragment,
   kAlienParentFragment,
   kAlienRenderFunc,
@@ -210,19 +209,11 @@ export function selfUpdating<Props extends object, Result extends JSX.Children>(
           // If the root node could not be updated, replace it instead.
           if (!updated && !needsPlaceholder) {
             if (isElement(newRootNode)) {
-              const key = kAlienElementKey(newRootNode)
-              if (key != null) {
-                const props = kAlienElementProps(newRootNode)
-                applyInitialProps(newRootNode, props)
-              }
+              applyInitialPropsRecursively(newRootNode)
             } else if (isFragment(newRootNode)) {
               newRootNode.childNodes.forEach(childNode => {
                 if (isElement(childNode)) {
-                  const key = kAlienElementKey(childNode)
-                  if (key != null) {
-                    const props = kAlienElementProps(childNode)
-                    applyInitialProps(childNode, props)
-                  }
+                  applyInitialPropsRecursively(childNode)
                 }
               })
             }
