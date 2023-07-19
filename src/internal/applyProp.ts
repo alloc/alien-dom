@@ -1,4 +1,11 @@
-import { isArray, isBoolean, isFunction, isObject, isString } from '@alloc/is'
+import {
+  isArray,
+  isBoolean,
+  isFunction,
+  isObject,
+  isPlainObject,
+  isString,
+} from '@alloc/is'
 import { classToString } from '../functions/classToString'
 import { appendChild } from '../jsx-dom/appendChild'
 import { enablePropObserver } from '../jsx-dom/jsx-runtime'
@@ -8,7 +15,11 @@ import { HTMLStyleAttribute } from '../types'
 import { hasTagName } from './duck'
 import { createEventEffect } from './elementEvent'
 import { currentComponent } from './global'
-import { kAlienElementKey, kAlienElementProps } from './symbols'
+import {
+  kAlienElementKey,
+  kAlienElementProps,
+  kAlienElementTags,
+} from './symbols'
 import { DefaultElement, StyleAttributes } from './types'
 
 const XLinkNamespace = 'http://www.w3.org/1999/xlink'
@@ -196,8 +207,22 @@ export function applyInitialProps(node: DefaultElement, props: any) {
 }
 
 export function applyInitialPropsRecursively(node: DefaultElement) {
-  if (!kAlienElementKey.in(node)) {
-    applyInitialProps(node, kAlienElementProps(node))
+  if (kAlienElementTags.in(node)) {
+    return // Skip over self-updating nodes.
+  }
+  // Skip over explicitly keyed nodes, which had their props applied at
+  // the time of creation.
+  const key = kAlienElementKey(node)
+  if (key == null || (key as string)[0] === '*') {
+    const props = kAlienElementProps(node)
+    // If no props are set, this node probably wasn't created with JSX. But
+    // let's check its descendants in case those are.
+    if (props) {
+      if (!isPlainObject(props)) {
+        return // Already processed by fromElementThunk.
+      }
+      applyInitialProps(node, props)
+    }
   }
   let child = node.firstElementChild
   while (child) {

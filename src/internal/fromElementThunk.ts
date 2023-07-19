@@ -1,5 +1,6 @@
 import { isElement } from '../internal/duck'
 import type { JSX } from '../types/jsx'
+import { applyInitialPropsRecursively } from './applyProp'
 import { isNode } from './duck'
 import { currentComponent } from './global'
 import { kAlienEffects, kAlienElementKey, kAlienThunkResult } from './symbols'
@@ -46,6 +47,10 @@ export function fromElementThunk(thunk: () => JSX.Children) {
               if (!rootNode || key !== newKey) {
                 rootNode = newRootNode
                 key = newKey
+
+                // Apply initial props early, so that the caller can use query
+                // selectors for slotting purposes.
+                applyInitialPropsRecursively(newRootNode)
               }
             } else {
               key ??= newKey
