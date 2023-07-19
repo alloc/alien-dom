@@ -1,11 +1,13 @@
+import { isString } from '@alloc/is'
+import type { Key } from 'ts-key-enum'
 import { Disposable } from '../disposable'
 import { AlienEffect } from '../effects'
 import { isDocument } from '../internal/duck'
 import { enableEffect, getAlienEffects } from '../internal/effects'
 import { currentComponent } from '../internal/global'
 import { ShadowRootContext } from '../jsx-dom/appendChild'
-import { noop } from '../jsx-dom/util'
-import { ref } from '../observable'
+import { noop, toArray } from '../jsx-dom/util'
+import { Ref, observe, ref } from '../observable'
 import { useEffect } from './useEffect'
 import { useState } from './useState'
 
@@ -15,14 +17,32 @@ export interface KeyBindingEvent {
   preventDefault(): void
 }
 
+type Split<T extends string> = T extends `${infer First}${infer Rest}`
+  ? First | Split<Rest>
+  : never
+
+type Letter = Split<'ABCDEFGHIJKLMNOPQRSTUVWXYZ'>
+type Digit = Split<'0123456789'>
+type Symbol = Split<'!@#$%^&*()_+-=[]{}|\\;:,.?<>/\'"'>
+
+export type KeyCombo =
+  | readonly KeyCombo[]
+  | `${Key}`
+  | Letter
+  | Digit
+  | Symbol
+  | false
+  | null
+  | undefined
+
 export function useKeyBinding(
-  command: string | false,
+  combo: KeyCombo,
   callback?: (event: KeyBindingEvent) => void
 ) {
   const component = currentComponent.get()!
   const binding = useState(initKeyBinding, callback)
 
-  binding.command = !!command && parseCommand(command)
+  binding.combo = prepareCombo(combo)
   binding.callback = callback
 
   // If no element is attached, use the document.
@@ -46,13 +66,13 @@ const initKeyBinding = (
    */
   isActive: boolean
   effect: Disposable<AlienEffect> | null
-  command: Set<string> | false
+  combo: Set<string>
   callback: ((event: KeyBindingEvent) => void) | undefined
   setElement: (element: HTMLElement) => void
   enable: (target: Document | HTMLElement) => () => void
 } => {
   const isActiveRef = ref(false)
-  let command: Set<string> | false
+  const comboRef = ref<Set<string>>()
 
   return {
     get isActive() {
@@ -62,16 +82,18 @@ const initKeyBinding = (
       isActiveRef.value = value
     },
     effect: null,
-    get command() {
-      return command
+    get combo() {
+      return comboRef.value!
     },
-    set command(newCommand) {
-      command = newCommand
-      isActiveRef.value = false
+    set combo(newCombo) {
+      const oldCombo = comboRef.peek()
+      if (!oldCombo || !setsEqual(newCombo, oldCombo)) {
+        comboRef.value = newCombo
+      }
     },
     callback,
     enable(target) {
-      return enableKeyBinding(target, this)
+      return enableKeyBinding(target, this, comboRef)
     },
     setElement(element) {
       return (this.effect = enableEffect(
@@ -79,17 +101,25 @@ const initKeyBinding = (
         enableKeyBinding,
         0,
         element,
-        [this]
+        [this, comboRef]
       ))
     },
   }
 }
 
-function enableKeyBinding(target: Document | HTMLElement, binding: KeyBinding) {
+function enableKeyBinding(
+  target: Document | HTMLElement,
+  binding: KeyBinding,
+  comboRef: Ref<Set<string> | undefined>
+) {
   const context = contexts.get(target) || new KeyBindingContext(target)
   context.addBinding(binding)
+  const observer = observe(comboRef, () => {
+    context.checkBinding(binding)
+  })
   return () => {
     context.removeBinding(binding)
+    observer.dispose()
   }
 }
 
@@ -107,19 +137,17 @@ function setsEqual<T>(a: Set<T>, b: Set<T>) {
 
 const isWindows = /* @__PURE__ */ navigator.platform.includes('Win')
 
-function parseCommand(command: string) {
-  const keys = new Set<string>()
-  for (let start = 0; start < command.length; ) {
-    let end = command.indexOf('+', start)
-    if (end === -1) {
-      end = command.length
+function prepareCombo(combo: KeyCombo, keys = new Set<string>()) {
+  for (let key of toArray(combo)) {
+    if (!key) continue
+    if (isString(key)) {
+      if (isWindows && key === 'Meta') {
+        key = 'Control'
+      }
+      keys.add(key)
+    } else {
+      prepareCombo(key, keys)
     }
-    let key = command.slice(start, end).toLowerCase()
-    if (isWindows && key === 'meta') {
-      key = 'control'
-    }
-    keys.add(key)
-    start = end + 1
   }
   return keys
 }
@@ -129,6 +157,7 @@ const contexts = new Map<Document | HTMLElement, KeyBindingContext>()
 class KeyBindingContext {
   dispose: () => void
   bindings = new Set<KeyBinding>()
+  activeKeys = new Set<string>()
 
   constructor(readonly target: Document | HTMLElement) {
     if (!isDocument(target) && !supportsKeyDown(target)) {
@@ -137,7 +166,6 @@ class KeyBindingContext {
       )
     }
 
-    const activeKeys = new Set<string>()
     const onKeyChange = (e?: Event) => {
       const event: KeyBindingEvent = {
         target,
@@ -145,26 +173,21 @@ class KeyBindingContext {
         stopPropagation: e?.stopPropagation.bind(e) || noop,
       }
       for (const binding of this.bindings) {
-        if (binding.command && setsEqual(binding.command, activeKeys)) {
-          binding.isActive = true
-          binding.callback?.(event)
-        } else {
-          binding.isActive = false
-        }
+        this.checkBinding(binding, event)
       }
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
-      activeKeys.add(event.key.toLowerCase())
+      this.activeKeys.add(event.key.toLowerCase())
       onKeyChange(event)
     }
     const onKeyUp = (event: KeyboardEvent) => {
-      activeKeys.delete(event.key.toLowerCase())
+      this.activeKeys.delete(event.key.toLowerCase())
       onKeyChange(event)
     }
     const clear = () => {
-      if (activeKeys.size > 0) {
-        activeKeys.clear()
+      if (this.activeKeys.size > 0) {
+        this.activeKeys.clear()
         onKeyChange()
       }
     }
@@ -185,6 +208,21 @@ class KeyBindingContext {
 
       target.removeEventListener('paste', clear)
       window.removeEventListener('blur', clear)
+    }
+  }
+
+  checkBinding(binding: KeyBinding, event?: KeyBindingEvent) {
+    if (binding.combo.size > 0 && setsEqual(binding.combo, this.activeKeys)) {
+      binding.isActive = true
+      binding.callback?.(
+        event || {
+          target: this.target,
+          preventDefault: noop,
+          stopPropagation: noop,
+        }
+      )
+    } else {
+      binding.isActive = false
     }
   }
 
