@@ -11,10 +11,11 @@ export function morphChildren(
   fromParentNode: Element,
   toParentNode: Element,
   options: {
-    /** The `node` will be discarded unless false is returned. */
-    onBeforeNodeDiscarded?: (node: ChildNode) => boolean
+    onNodeAdded: (node: ChildNode) => void
     /** The `fromNode` has a matching `toNode`, but you're responsible for morphing if desired. */
     onNodePreserved: (fromNode: ChildNode, toNode: ChildNode) => void
+    /** The `node` will be discarded unless false is returned. */
+    onBeforeNodeDiscarded?: (node: ChildNode) => boolean
   }
 ): void {
   const fromElementsByKey = new Map<JSX.ElementKey, Element>()
@@ -63,6 +64,7 @@ export function morphChildren(
 
       // This node has no compatible from node.
       fromParentNode.insertBefore(toChildNode, fromChildNode)
+      options.onNodeAdded(toChildNode)
       toChildNode = toNextSibling
 
       // Remove the incompatible from node.
@@ -95,6 +97,7 @@ export function morphChildren(
 
       // This node has no compatible from node.
       fromParentNode.appendChild(toChildNode)
+      options.onNodeAdded(toChildNode)
       toChildNode = toNextSibling
     }
   }

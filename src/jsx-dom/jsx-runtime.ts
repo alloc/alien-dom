@@ -2,7 +2,7 @@ import { isArray, isFunction, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
 import { currentContext } from '../context'
 import { selfUpdating } from '../functions/selfUpdating'
-import { applyProp } from '../internal/applyProp'
+import { applyInitialProps, applyProp } from '../internal/applyProp'
 import { hasTagName } from '../internal/duck'
 import { enableEffect, getAlienEffects } from '../internal/effects'
 import { currentComponent } from '../internal/global'
@@ -19,7 +19,6 @@ import { ReadonlyRef, observe } from '../observable'
 import type { JSX } from '../types'
 import { ShadowRootContext } from './appendChild'
 import { svgTags } from './svg-tags'
-import { keys } from './util'
 
 export { Fragment }
 export type { JSX }
@@ -78,19 +77,10 @@ export function jsx(tag: any, props: any, key?: JSX.ElementKey) {
       ? document.createElementNS(namespaceURI, tag)
       : document.createElement(tag)
 
-    if (oldNode) {
-      // Cache the props for morphing.
+    if (oldNode || key == null) {
       kAlienElementProps(node, props)
     } else {
-      const initialProps = new Set(keys(props))
-      initialProps.delete('children')
-
-      // Save these keys to nullify them if omitted in a future render.
-      kAlienElementProps(node, initialProps)
-
-      for (const prop of initialProps) {
-        applyProp(node, prop, props[prop])
-      }
+      applyInitialProps(node, props)
     }
 
     // Unlike other props, children are immediately processed every time.

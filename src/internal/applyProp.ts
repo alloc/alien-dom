@@ -8,6 +8,7 @@ import { HTMLStyleAttribute } from '../types'
 import { hasTagName } from './duck'
 import { createEventEffect } from './elementEvent'
 import { currentComponent } from './global'
+import { kAlienElementProps } from './symbols'
 import { DefaultElement, StyleAttributes } from './types'
 
 const XLinkNamespace = 'http://www.w3.org/1999/xlink'
@@ -179,6 +180,18 @@ export function applyProp(node: DefaultElement, prop: string, value: any) {
     } else {
       setAttribute(node, prop, value)
     }
+  }
+}
+
+export function applyInitialProps(node: DefaultElement, props: any) {
+  const initialProps = new Set(keys(props))
+  initialProps.delete('children')
+
+  // Save these keys to nullify them if omitted in a future render.
+  kAlienElementProps(node, initialProps)
+
+  for (const prop of initialProps) {
+    applyProp(node, prop, props[prop])
   }
 }
 
