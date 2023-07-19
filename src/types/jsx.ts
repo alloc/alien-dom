@@ -22,8 +22,9 @@ type Thunkable<T> = T | Thunk<T>
 export declare namespace JSX {
   type Element = HTMLElement
   type ElementKey = string | number
-  type ElementRef<Element extends AnyElement = AnyElement> =
-    import('../hooks/useElementRef').ElementRef<Element>
+  type ElementRef<Element extends AnyElement = AnyElement> = {
+    setElement(element: Element | null): void
+  }
 
   type RefProp<Element extends AnyElement = AnyElement> =
     | readonly (RefProp<Element> | false | null | undefined)[]
