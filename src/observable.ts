@@ -623,8 +623,10 @@ function computeNextVersion() {
 // Convenience functions
 //
 
-export const ref = <T>(value: T, debugId?: string | number) =>
-  new Ref(value, debugId)
+export const ref: {
+  <T>(value: T, debugId?: string | number): Ref<T>
+  <T>(value?: T, debugId?: string | number): Ref<T | undefined>
+} = (value, debugId) => new Ref(value, debugId)
 
 export const computed = <T>(compute: () => T, debugId?: string | number) =>
   new ComputedRef(compute, debugId)
