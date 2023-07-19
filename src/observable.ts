@@ -432,7 +432,7 @@ const arrayTraps: ProxyHandler<InternalRef<any[]>> = {
  * Note: The array is cloned before each mutation.
  */
 export const arrayRef = <T>(
-  init?: T[],
+  init?: readonly T[],
   debugId?: string | number
 ): ArrayRef<T> =>
   new Proxy(new ArrayRef(init || [], debugId), arrayTraps as any)
