@@ -51,39 +51,6 @@ export function isAnimatedStyleProp(element: DefaultElement, key: string) {
   return state?.nodes?.[key] != null
 }
 
-export function setNonAnimatedStyle(
-  element: DefaultElement,
-  inlineStyle: string,
-  remove?: boolean
-) {
-  const state = animatedElements.get(element)
-  if (state?.nodes) {
-    inlineStyle.split(/\s*;\s*/).forEach(property => {
-      const [key, value] = property.split(/\s*:\s*/)
-      if (state.nodes![key] == null) {
-        element.style.setProperty(key, remove ? null : value)
-      }
-    })
-  } else if (remove) {
-    element.removeAttribute('style')
-  } else {
-    element.setAttribute('style', inlineStyle)
-  }
-}
-
-export function copyAnimatedStyle(
-  oldElement: DefaultElement,
-  newElement: DefaultElement
-) {
-  const state = animatedElements.get(oldElement)
-  if (state) {
-    const { svgMode, style } = state
-    for (const key in style) {
-      applyAnimatedValue(newElement, null, svgMode, key, style[key])
-    }
-  }
-}
-
 export function applyAnimatedValue(
   target: DefaultElement,
   style: Record<string, any> | null,
