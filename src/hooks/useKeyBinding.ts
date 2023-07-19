@@ -4,7 +4,8 @@ import { isDocument } from '../internal/duck'
 import { enableEffect, getAlienEffects } from '../internal/effects'
 import { currentComponent } from '../internal/global'
 import { ShadowRootContext } from '../jsx-dom/appendChild'
-import { Ref, ref } from '../observable'
+import { noop } from '../jsx-dom/util'
+import { ref } from '../observable'
 import { useEffect } from './useEffect'
 import { useState } from './useState'
 
@@ -37,7 +38,7 @@ const initKeyBinding = (
    * Equals true when the key binding is activated.
    * @observable
    */
-  get isActive(): boolean
+  isActive: boolean
   effect: Disposable<AlienEffect> | null
   command: Set<string> | false
   callback: ((event: KeyboardEvent) => void) | undefined
@@ -51,6 +52,9 @@ const initKeyBinding = (
     get isActive() {
       return isActiveRef.value
     },
+    set isActive(value) {
+      isActiveRef.value = value
+    },
     effect: null,
     get command() {
       return command
@@ -61,18 +65,25 @@ const initKeyBinding = (
     },
     callback,
     enable(target) {
-      return setKeyBinding(target, this, isActiveRef)
+      return enableKeyBinding(target, this)
     },
     setElement(element) {
       return (this.effect = enableEffect(
         getAlienEffects(element, ShadowRootContext.get()),
-        (target: Document | HTMLElement) =>
-          setKeyBinding(target, this, isActiveRef),
+        enableKeyBinding,
         0,
         element,
-        false
+        [this]
       ))
     },
+  }
+}
+
+function enableKeyBinding(target: Document | HTMLElement, binding: KeyBinding) {
+  const context = contexts.get(target) || new KeyBindingContext(target)
+  context.addBinding(binding)
+  return () => {
+    context.removeBinding(binding)
   }
 }
 
@@ -107,54 +118,77 @@ function parseCommand(command: string) {
   return keys
 }
 
+const contexts = new Map<Document | HTMLElement, KeyBindingContext>()
+
+class KeyBindingContext {
+  dispose: () => void
+  bindings = new Set<KeyBinding>()
+
+  constructor(readonly target: Document | HTMLElement) {
+    if (!isDocument(target) && !supportsKeyDown(target)) {
+      throw Error(
+        'The target element must be a document or a focusable element.'
+      )
+    }
+
+    const activeKeys = new Set<string>()
+    const onKeyChange = (event: KeyboardEvent) => {
+      for (const binding of this.bindings) {
+        if (binding.command && setsEqual(binding.command, activeKeys)) {
+          binding.isActive = true
+          binding.callback?.(event)
+        } else {
+          binding.isActive = false
+        }
+      }
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      activeKeys.add(event.key.toLowerCase())
+      onKeyChange(event)
+    }
+    const onKeyUp = (event: KeyboardEvent) => {
+      activeKeys.delete(event.key.toLowerCase())
+      onKeyChange(event)
+    }
+    const clear = () => {
+      activeKeys.clear()
+    }
+
+    contexts.set(target, this)
+
+    target.addEventListener('keydown', onKeyDown as any)
+    target.addEventListener('keyup', onKeyUp as any)
+
+    target.addEventListener('paste', clear)
+    window.addEventListener('blur', clear)
+
+    this.dispose = () => {
+      contexts.delete(target)
+
+      target.removeEventListener('keydown', onKeyDown as any)
+      target.removeEventListener('keyup', onKeyUp as any)
+
+      target.removeEventListener('paste', clear)
+      window.removeEventListener('blur', clear)
+    }
+  }
+
+  addBinding(binding: KeyBinding) {
+    this.bindings.add(binding)
+  }
+
+  removeBinding(binding: KeyBinding) {
+    this.bindings.delete(binding)
+    if (this.bindings.size === 0) {
+      this.dispose()
+      this.dispose = noop
+    }
+  }
+}
+
 function supportsKeyDown(element: HTMLElement) {
   return element.matches(
     'input, textarea, summary, [contenteditable], [tabindex]'
   )
-}
-
-function setKeyBinding(
-  target: Document | HTMLElement,
-  binding: KeyBinding,
-  isActiveRef: Ref<boolean>
-) {
-  if (!isDocument(target) && !supportsKeyDown(target)) {
-    throw Error('The target element must be a document or a focusable element.')
-  }
-
-  const activeKeys = new Set<string>()
-  const onKeyChange = (event: KeyboardEvent) => {
-    if (binding.command && setsEqual(binding.command, activeKeys)) {
-      isActiveRef.value = true
-      binding.callback?.(event)
-    } else {
-      isActiveRef.value = false
-    }
-  }
-
-  const onKeyDown = (event: KeyboardEvent) => {
-    activeKeys.add(event.key.toLowerCase())
-    onKeyChange(event)
-  }
-  const onKeyUp = (event: KeyboardEvent) => {
-    activeKeys.delete(event.key.toLowerCase())
-    onKeyChange(event)
-  }
-  const clear = () => {
-    activeKeys.clear()
-  }
-
-  target.addEventListener('keydown', onKeyDown as any)
-  target.addEventListener('keyup', onKeyUp as any)
-
-  target.addEventListener('paste', clear)
-  window.addEventListener('blur', clear)
-
-  return () => {
-    target.removeEventListener('keydown', onKeyDown as any)
-    target.removeEventListener('keyup', onKeyUp as any)
-
-    target.removeEventListener('paste', clear)
-    window.removeEventListener('blur', clear)
-  }
 }
