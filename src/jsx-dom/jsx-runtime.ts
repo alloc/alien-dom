@@ -77,7 +77,7 @@ export function jsx(tag: any, props: any, key?: JSX.ElementKey) {
       ? document.createElementNS(namespaceURI, tag)
       : document.createElement(tag)
 
-    if (oldNode || key == null) {
+    if (component && (oldNode || key == null)) {
       kAlienElementProps(node, props)
     } else {
       applyInitialProps(node, props)
