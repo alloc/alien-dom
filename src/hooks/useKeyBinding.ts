@@ -142,8 +142,10 @@ const modifierKeys = ['shift', 'control', 'alt', 'meta', 'fn', 'hyper', 'super']
 const contexts = new Map<Document | HTMLElement, KeyBindingContext>()
 
 class KeyBindingContext {
-  dispose: () => void
-  bindings = new Set<KeyBinding>()
+  readonly bindings = new Set<KeyBinding>()
+  readonly newBindings = new Set<KeyBinding>()
+  readonly activeKeys = new Set<string>()
+  readonly dispose: () => void
 
   constructor(readonly target: Document | HTMLElement) {
     if (!isDocument(target) && !supportsKeyDown(target)) {
@@ -152,7 +154,7 @@ class KeyBindingContext {
       )
     }
 
-    const activeKeys = new Set<string>()
+    const { activeKeys } = this
 
     const onKeyChange = (e?: KeyboardEvent) => {
       let match: KeyBinding | undefined
@@ -178,6 +180,15 @@ class KeyBindingContext {
             binding.onKeyUp = undefined
           }
         }
+      }
+
+      // Newly added bindings aren't activated until all keys are released, so
+      // as to avoid an accidental trigger.
+      if (activeKeys.size === 0 && this.newBindings.size > 0) {
+        for (const binding of this.newBindings) {
+          this.bindings.add(binding)
+        }
+        this.newBindings.clear()
       }
     }
 
@@ -222,14 +233,20 @@ class KeyBindingContext {
   }
 
   addBinding(binding: KeyBinding) {
-    this.bindings.add(binding)
+    if (this.activeKeys.size === 0) {
+      this.bindings.add(binding)
+    } else {
+      this.newBindings.add(binding)
+    }
   }
 
   removeBinding(binding: KeyBinding) {
+    this.newBindings.delete(binding)
     this.bindings.delete(binding)
-    if (this.bindings.size === 0) {
+
+    const bindingCount = this.bindings.size + this.newBindings.size
+    if (bindingCount === 0) {
       this.dispose()
-      this.dispose = noop
     }
   }
 }
