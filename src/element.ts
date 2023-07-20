@@ -12,14 +12,12 @@ import type {
 } from './internal/element'
 import { unwrap } from './internal/element'
 import { AlienNodeList } from './internal/nodeList'
-import { kAlienElementKey } from './internal/symbols'
 import type {
   AnyElement,
   AnyEvent,
   DefaultElement,
   StyleAttributes,
 } from './internal/types'
-import { updateElement } from './internal/updateElement'
 import { UpdateStyle, keys, updateStyle } from './jsx-dom/util'
 import type { DetailedHTMLProps, HTMLAttributes } from './types/html'
 import type { SVGAttributes } from './types/svg'
@@ -126,17 +124,6 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     selector: string
   ): AlienSelect<SelectedElement, this> | null {
     return this.matches(selector) ? (this as any) : null
-  }
-  /**
-   * Morph this element into another element. If the given `element` had
-   * its `effects` method called, all of its effects will be moved to
-   * this element.
-   */
-  morph(element: Element) {
-    const key = kAlienElementKey(this)
-    kAlienElementKey(element, key)
-    updateElement(this as any, element as any)
-    return this
   }
   replaceText(value: string): this
   replaceText(value: () => string): Disposable<AlienBoundEffect<this>>
