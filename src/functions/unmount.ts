@@ -12,7 +12,13 @@ import { isElement, isFragment, isTextNode } from './typeChecking'
  * some or all of its descendants, be sure to remove those descendants (with
  * `node.remove()` not this method) before calling this.
  */
-export function unmount(node: ChildNode, skipRemove?: boolean) {
+export function unmount(
+  node: ChildNode | null | undefined,
+  skipRemove?: boolean
+): void {
+  if (!node) {
+    return
+  }
   // Recurse through the last descendants first, so effects are disabled
   // bottom-up in reverse order.
   if (isFragment(node)) {
