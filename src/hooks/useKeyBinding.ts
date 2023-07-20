@@ -99,13 +99,17 @@ const initKeyBinding = (
       return enableKeyBinding(target, this)
     },
     setElement(element) {
-      return (this.effect = enableEffect(
+      if (!element) {
+        this.effect?.dispose()
+        return
+      }
+      this.effect = enableEffect(
         getAlienEffects(element, ShadowRootContext.get()),
         enableKeyBinding,
         0,
         element,
         [this]
-      ))
+      )
     },
   }
 }
