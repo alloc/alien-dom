@@ -161,11 +161,11 @@ class KeyBindingContext {
     const { activeKeys } = this
 
     const onKeyChange = (e?: KeyboardEvent) => {
-      let match: KeyBinding | undefined
+      let stopPropagation = false
 
       for (const binding of this.bindings) {
-        if (!match && comboMatches(binding.combo, activeKeys)) {
-          match = binding
+        if (comboMatches(binding.combo, activeKeys)) {
+          if (stopPropagation) continue
           if (e?.type === 'keydown') {
             binding.isActive = true
             if (binding.onKeyDown) {
@@ -173,7 +173,9 @@ class KeyBindingContext {
                 target,
                 repeat: e?.repeat ?? false,
                 preventDefault: e?.preventDefault.bind(e) ?? noop,
-                stopPropagation: e?.stopPropagation.bind(e) ?? noop,
+                stopPropagation() {
+                  stopPropagation = true
+                },
               })
             }
           }
@@ -184,6 +186,10 @@ class KeyBindingContext {
             binding.onKeyUp = undefined
           }
         }
+      }
+
+      if (stopPropagation) {
+        e?.stopPropagation()
       }
 
       // Newly added bindings aren't activated until all keys are released, so
