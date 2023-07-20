@@ -7,12 +7,13 @@ import { enableEffect, getAlienEffects } from '../internal/effects'
 import { currentComponent } from '../internal/global'
 import { ShadowRootContext } from '../jsx-dom/appendChild'
 import { noop, toArray } from '../jsx-dom/util'
-import { Ref, observe, ref } from '../observable'
-import { useEffect } from './useEffect'
+import { ref } from '../observable'
+import { EffectResult, useEffect } from './useEffect'
 import { useState } from './useState'
 
 export interface KeyBindingEvent {
   target: Document | HTMLElement
+  repeat: boolean
   stopPropagation(): void
   preventDefault(): void
 }
@@ -23,7 +24,7 @@ type Split<T extends string> = T extends `${infer First}${infer Rest}`
 
 type Letter = Split<'ABCDEFGHIJKLMNOPQRSTUVWXYZ'>
 type Digit = Split<'0123456789'>
-type Symbol = Split<'!@#$%^&*()_+-=[]{}|\\;:,.?<>/\'"'>
+type Symbol = Split<'!@#$%^&*()_+-=[]{}|\\;:,.?<>/\'" '>
 
 export type KeyCombo =
   | readonly KeyCombo[]
@@ -37,13 +38,13 @@ export type KeyCombo =
 
 export function useKeyBinding(
   combo: KeyCombo,
-  callback?: (event: KeyBindingEvent) => void
+  onKeyDown?: (event: KeyBindingEvent) => EffectResult
 ) {
   const component = currentComponent.get()!
-  const binding = useState(initKeyBinding, callback)
+  const binding = useState(initKeyBinding, onKeyDown)
 
   binding.combo = prepareCombo(combo)
-  binding.callback = callback
+  binding.onKeyDown = onKeyDown
 
   // If no element is attached, use the document.
   useEffect(() => {
@@ -67,7 +68,8 @@ const initKeyBinding = (
   isActive: boolean
   effect: Disposable<AlienEffect> | null
   combo: Set<string>
-  callback: ((event: KeyBindingEvent) => void) | undefined
+  onKeyDown: ((event: KeyBindingEvent) => EffectResult) | undefined
+  onKeyUp: EffectResult | undefined
   setElement: (element: HTMLElement) => void
   enable: (target: Document | HTMLElement) => () => void
 } => {
@@ -91,9 +93,10 @@ const initKeyBinding = (
         comboRef.value = newCombo
       }
     },
-    callback,
+    onKeyDown: callback,
+    onKeyUp: undefined,
     enable(target) {
-      return enableKeyBinding(target, this, comboRef)
+      return enableKeyBinding(target, this)
     },
     setElement(element) {
       return (this.effect = enableEffect(
@@ -101,38 +104,18 @@ const initKeyBinding = (
         enableKeyBinding,
         0,
         element,
-        [this, comboRef]
+        [this]
       ))
     },
   }
 }
 
-function enableKeyBinding(
-  target: Document | HTMLElement,
-  binding: KeyBinding,
-  comboRef: Ref<Set<string> | undefined>
-) {
+function enableKeyBinding(target: Document | HTMLElement, binding: KeyBinding) {
   const context = contexts.get(target) || new KeyBindingContext(target)
   context.addBinding(binding)
-  const observer = observe(comboRef, () => {
-    context.checkBinding(binding)
-  })
   return () => {
     context.removeBinding(binding)
-    observer.dispose()
   }
-}
-
-function setsEqual<T>(a: Set<T>, b: Set<T>) {
-  if (a.size !== b.size) {
-    return false
-  }
-  for (const item of a) {
-    if (!b.has(item)) {
-      return false
-    }
-  }
-  return true
 }
 
 const isWindows = /* @__PURE__ */ navigator.platform.includes('Win')
@@ -144,7 +127,7 @@ function prepareCombo(combo: KeyCombo, keys = new Set<string>()) {
       if (isWindows && key === 'Meta') {
         key = 'Control'
       }
-      keys.add(key)
+      keys.add(key.toLowerCase())
     } else {
       prepareCombo(key, keys)
     }
@@ -152,12 +135,15 @@ function prepareCombo(combo: KeyCombo, keys = new Set<string>()) {
   return keys
 }
 
+const shiftedKeys = '~!@#$%^&*()_+{}|:"<>?'
+const unshiftedKeys = "`1234567890-=[]\\;',./"
+const modifierKeys = ['shift', 'control', 'alt', 'meta', 'fn', 'hyper', 'super']
+
 const contexts = new Map<Document | HTMLElement, KeyBindingContext>()
 
 class KeyBindingContext {
   dispose: () => void
   bindings = new Set<KeyBinding>()
-  activeKeys = new Set<string>()
 
   constructor(readonly target: Document | HTMLElement) {
     if (!isDocument(target) && !supportsKeyDown(target)) {
@@ -166,28 +152,52 @@ class KeyBindingContext {
       )
     }
 
-    const onKeyChange = (e?: Event) => {
-      const event: KeyBindingEvent = {
-        target,
-        preventDefault: e?.preventDefault.bind(e) || noop,
-        stopPropagation: e?.stopPropagation.bind(e) || noop,
-      }
+    const activeKeys = new Set<string>()
+
+    const onKeyChange = (e?: KeyboardEvent) => {
+      let match: KeyBinding | undefined
+
       for (const binding of this.bindings) {
-        this.checkBinding(binding, event)
+        if (!match && comboMatches(binding.combo, activeKeys)) {
+          match = binding
+          if (e?.type === 'keydown') {
+            binding.isActive = true
+            if (binding.onKeyDown) {
+              binding.onKeyUp = binding.onKeyDown({
+                target,
+                repeat: e?.repeat ?? false,
+                preventDefault: e?.preventDefault.bind(e) ?? noop,
+                stopPropagation: e?.stopPropagation.bind(e) ?? noop,
+              })
+            }
+          }
+        } else if (binding.isActive) {
+          binding.isActive = false
+          if (binding.onKeyUp) {
+            binding.onKeyUp()
+            binding.onKeyUp = undefined
+          }
+        }
       }
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
-      this.activeKeys.add(event.key.toLowerCase())
+      const key = event.key.toLowerCase()
+      activeKeys.add(key)
       onKeyChange(event)
     }
     const onKeyUp = (event: KeyboardEvent) => {
-      this.activeKeys.delete(event.key.toLowerCase())
+      const key = event.key.toLowerCase()
+      if (modifierKeys.includes(key)) {
+        activeKeys.clear()
+      } else {
+        activeKeys.delete(key)
+      }
       onKeyChange(event)
     }
     const clear = () => {
-      if (this.activeKeys.size > 0) {
-        this.activeKeys.clear()
+      if (activeKeys.size > 0) {
+        activeKeys.clear()
         onKeyChange()
       }
     }
@@ -211,21 +221,6 @@ class KeyBindingContext {
     }
   }
 
-  checkBinding(binding: KeyBinding, event?: KeyBindingEvent) {
-    if (binding.combo.size > 0 && setsEqual(binding.combo, this.activeKeys)) {
-      binding.isActive = true
-      binding.callback?.(
-        event || {
-          target: this.target,
-          preventDefault: noop,
-          stopPropagation: noop,
-        }
-      )
-    } else {
-      binding.isActive = false
-    }
-  }
-
   addBinding(binding: KeyBinding) {
     this.bindings.add(binding)
   }
@@ -243,4 +238,46 @@ function supportsKeyDown(element: HTMLElement) {
   return element.matches(
     'input, textarea, summary, [contenteditable], [tabindex]'
   )
+}
+
+function comboMatches(combo: Set<string>, activeKeys: Set<string>) {
+  if (combo.size === 0) {
+    return false
+  }
+
+  let shiftExpected = combo.has('shift')
+  let shiftImplied = false
+
+  for (let key of combo) {
+    if (key.length === 1) {
+      if (shiftExpected) {
+        const index = unshiftedKeys.indexOf(key)
+        if (index >= 0) {
+          key = shiftedKeys[index]
+        }
+      } else if (shiftedKeys.includes(key)) {
+        shiftImplied = true
+      }
+    }
+    if (!activeKeys.has(key)) {
+      return false
+    }
+  }
+
+  if (shiftImplied && activeKeys.has('shift')) {
+    return combo.size === activeKeys.size - 1
+  }
+  return combo.size === activeKeys.size
+}
+
+function setsEqual<T>(a: Set<T>, b: Set<T>) {
+  if (a.size !== b.size) {
+    return false
+  }
+  for (const item of a) {
+    if (!b.has(item)) {
+      return false
+    }
+  }
+  return true
 }
