@@ -11,8 +11,8 @@ import { ref } from '../observable'
 import { EffectResult, useEffect } from './useEffect'
 import { useState } from './useState'
 
-export interface KeyBindingEvent {
-  target: Document | HTMLElement
+export interface KeyBindingEvent<Target extends Document | HTMLElement = any> {
+  target: Target
   repeat: boolean
   stopPropagation(): void
   preventDefault(): void
@@ -36,9 +36,9 @@ export type KeyCombo =
   | null
   | undefined
 
-export function useKeyBinding(
+export function useKeyBinding<Target extends Document | HTMLElement>(
   combo: KeyCombo,
-  onKeyDown?: (event: KeyBindingEvent) => EffectResult
+  onKeyDown?: (event: KeyBindingEvent<Target>) => EffectResult
 ) {
   const component = currentComponent.get()!
   const binding = useState(initKeyBinding, onKeyDown)
