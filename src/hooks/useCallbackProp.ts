@@ -8,11 +8,21 @@ import { useMemo } from './useMemo'
  */
 export function useCallbackProp<T extends (...args: any[]) => any>(
   callback: T
+): T
+
+export function useCallbackProp<T extends (...args: any[]) => void>(
+  callback: T | false | null | undefined
+): T
+
+export function useCallbackProp<T extends (...args: any[]) => any>(
+  callback: T | false | null | undefined
 ) {
   const state = useMemo(() => ({ callback }), [])
   state.callback = callback
 
   return function (this: any, ...args: any[]) {
-    return state.callback.apply(this, args)
+    if (state.callback) {
+      return state.callback.apply(this, args)
+    }
   } as T
 }
