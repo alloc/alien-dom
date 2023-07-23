@@ -83,6 +83,20 @@ export type MachineUpdater<T extends MachineType> = {
   ): State
 }
 
+export type MachineProxy<
+  T extends MachineType,
+  State extends MachineValue<T> = any
+> = Readonly<MachineState<T, State>> & ProxiedMachine<T, State>
+
+interface ProxiedMachine<
+  T extends MachineType,
+  State extends MachineValue<T> = any
+> extends Machine<T, State> {
+  is<Value extends Extract<MachineValue<T>, State>>(
+    value: Value
+  ): this is MachineProxy<T, Value>
+}
+
 export class Machine<
   T extends MachineType,
   State extends MachineValue<T> = any
@@ -98,6 +112,17 @@ export class Machine<
 
   get value(): Extract<MachineValue<T>, State> {
     return this.state.value
+  }
+
+  get proxy(): MachineProxy<T, State> {
+    return new Proxy(this as any, {
+      get(target, prop) {
+        if (prop in target) {
+          return target[prop]
+        }
+        return target.state[prop]
+      },
+    })
   }
 
   is<Value extends Extract<MachineValue<T>, State>>(
