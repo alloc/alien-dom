@@ -71,7 +71,7 @@ const initKeyBinding = (
   onKeyDown: ((event: KeyBindingEvent) => EffectResult) | undefined
   onKeyUp: EffectResult | undefined
   setElement: (element: HTMLElement) => void
-  enable: (target: Document | HTMLElement) => () => void
+  enable: (target: Document | HTMLElement) => EffectResult
 } => {
   const isActiveRef = ref(false)
   const comboRef = ref<Set<string>>()
@@ -105,10 +105,10 @@ const initKeyBinding = (
       }
       this.effect = enableEffect(
         getAlienEffects(element, ShadowRootContext.get()),
-        enableKeyBinding,
+        element => enableKeyBinding(element, this),
         0,
         element,
-        [this]
+        false
       )
     },
   }
