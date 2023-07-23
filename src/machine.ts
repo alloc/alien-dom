@@ -1,42 +1,27 @@
 import { isString } from '@alloc/is'
 import { noop } from './jsx-dom/util'
-import { ReadonlyRef, Ref, ref } from './observable'
+import { ReadonlyRef, ref } from './observable'
 
-export type MachineStateSetter<State extends { value: string }> = {
-  <S extends State>(newState: S): S
-  <Value extends string, S extends Extract<State, { value: Value }>>(
-    value: Value,
-    newState: Omit<S, 'value'>
-  ): S
-}
-
-export function createMachine<
-  State extends { value: string },
-  Params extends object | void
->(
+export function defineMachine<T extends MachineType>(
   setup: (
-    params: Params,
-    setState: MachineStateSetter<State>,
-    machine: Machine<State, Params>
-  ) => State
-): MachineType<State, Params> {
-  return class extends Machine<State, Params> {
+    params: Readonly<MachineParams<T>>,
+    update: MachineUpdater<T>,
+    machine: Machine<T>
+  ) => MachineState<T>
+): MachineClass<T> {
+  return class extends Machine<T> {
     constructor(
-      params: Readonly<Params>,
-      onChange: (state: State) => void = noop
+      params: Readonly<MachineParams<T>>,
+      onChange: MachineCallback<T> = noop
     ) {
       const stateRef = ref<any>(undefined)
       super(params, stateRef)
       stateRef.value = setup(
         params,
-        (arg1: State | State['value'], arg2?: Omit<State, 'value'>) => {
-          const newState = isString(arg1)
-            ? { ...(arg2 as State), value: arg1 }
-            : arg1
-
+        (arg1: any, arg2?: any) => {
+          const newState = isString(arg1) ? { ...arg2, value: arg1 } : arg1
           stateRef.value = newState
           onChange(newState)
-
           return newState
         },
         this
@@ -45,38 +30,85 @@ export function createMachine<
   }
 }
 
+export interface MachineClass<T extends MachineType = any> {
+  new (
+    params: Readonly<MachineParams<T>>,
+    onChange?: (state: Readonly<MachineState<T>>) => void
+  ): Machine<T>
+}
+
 export type MachineType<
-  State extends { value: string } = any,
-  Params extends object | void = any
-> = {
-  new (params: Params, onChange?: (state: State) => void): Machine<
-    State,
-    Params
+  Params extends object | void = any,
+  State extends { value: string } = any
+> = (params: Params) => State
+
+export type MachineState<
+  T extends MachineType,
+  S extends MachineValue<T> = any
+> = T extends MachineType<any, infer State> //
+  ? Extract<State, { value: S }>
+  : never
+
+export type MachineValue<T extends MachineType> = //
+  T extends MachineType<any, infer State> ? State['value'] : never
+
+export type MachineParams<T extends MachineType> = //
+  T extends MachineType<infer Params> ? Params : never
+
+export type MachineCallback<T extends MachineType> = (
+  state: Readonly<MachineState<T>>
+) => void
+
+type VoidMachineValue<T extends MachineType> =
+  MachineState<T> extends infer State
+    ? State extends { value: MachineValue<T> }
+      ? { value: any } extends State
+        ? State['value']
+        : never
+      : never
+    : never
+
+export type MachineUpdater<T extends MachineType> = {
+  <State extends MachineState<T>>(newState: State): State
+  <Value extends VoidMachineValue<T>>(value: Value): Extract<
+    MachineState<T>,
+    { value: Value }
   >
+  <
+    Value extends MachineValue<T>,
+    State extends Extract<MachineState<T>, { value: Value }>
+  >(
+    value: Value,
+    newState: Omit<State, 'value'>
+  ): State
 }
 
 export class Machine<
-  State extends { value: string } = any,
-  Params extends object | void = any
+  T extends MachineType,
+  State extends MachineValue<T> = any
 > {
-  stateRef: ReadonlyRef<State>
-  get state(): State {
+  constructor(
+    readonly params: Readonly<MachineParams<T>>,
+    readonly stateRef: ReadonlyRef<MachineState<T, State>>
+  ) {}
+
+  get state(): Readonly<MachineState<T, State>> {
     return this.stateRef.value
   }
-  get value(): State['value'] {
+
+  get value(): Extract<MachineValue<T>, State> {
     return this.state.value
   }
-  constructor(readonly params: Readonly<Params>, stateRef: Ref<State>) {
-    this.stateRef = stateRef
-  }
-  is<Value extends State['value']>(
+
+  is<Value extends Extract<MachineValue<T>, State>>(
     value: Value
-  ): this is Machine<Extract<State, { value: Value }>> {
+  ): this is Machine<T, Value> {
     return this.value === value
   }
+
   as<Value extends State['value'], Result>(
     value: Value,
-    callback: (state: Extract<State, { value: Value }>) => Result
+    callback: (state: Readonly<MachineState<T, Value>>) => Result
   ): Result | undefined {
     if (this.is(value)) {
       return callback(this.state)
