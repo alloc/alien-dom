@@ -25,13 +25,21 @@ export function shouldMorphElement(
     return false
   }
 
-  // If the element is self-updating, no update is needed unless
-  // it was created in a loop or callback without a dynamic key.
+  // If a node was created & returned by another component and has a
+  // non-positional element key, it won't be morphed.
   if (kAlienElementTags.in(fromNode)) {
     const key = kAlienElementKey(toNode)!
+
+    // Positional element keys are identified by a leading asterisk.
+    if ((key as string)[0] === '*') {
+      return true
+    }
+
+    // FIXME: explain the need for this special case
     if (refs && !refs.has(key)) {
       fromNode.replaceWith(toNode)
     }
+
     return false
   }
 
