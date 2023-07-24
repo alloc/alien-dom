@@ -1,6 +1,10 @@
+import { unmount } from '../functions/unmount'
+import { DeferredNode, isDeferredNode } from '../jsx-dom/node'
+import { ResolvedChild } from '../jsx-dom/resolveChildren'
+import { morph } from '../morphdom/morph'
 import { AlienComponent, ElementRefs } from './component'
+import { isElement, isNode } from './duck'
 import { toChildNodes } from './fragment'
-import { morph, shouldMorphElement } from './morph'
 import {
   kAlienElementKey,
   kAlienFragment,
@@ -10,12 +14,12 @@ import {
 
 export function updateFragment(
   fragment: DocumentFragment,
-  newFragment: DocumentFragment,
+  newFragment: DeferredNode,
   newRefs?: ElementRefs | null,
   component?: AlienComponent | null
 ) {
   const isManuallyUpdated = kAlienManualUpdates.in(newFragment)
-  const newNodes = Array.from(newFragment.childNodes)
+  const newNodes = newFragment.children as ResolvedChild[]
   const newKeys = newNodes.map(kAlienElementKey.get)
   const oldNodes = toChildNodes(fragment)
   const oldKeys = oldNodes.map(kAlienElementKey.get)
@@ -33,14 +37,17 @@ export function updateFragment(
         oldNode = oldNodes[oldIndex]
 
         const newNode = newNodes[newIndex]
-        if (shouldMorphElement(oldNode as any, newNode as any, newRefs)) {
-          morph(oldNode as any, newNode as any, newRefs, component)
+        if (isElement(oldNode) && isDeferredNode(newNode)) {
+          morph(oldNode, newNode, newRefs, component)
         }
       }
     }
 
     if (prevChild) {
       const node = oldNode || newNodes[newIndex]
+      if (!isNode(node)) {
+        throw Error('not yet supported')
+      }
       prevChild.after(node)
       prevChild = node
     } else {
@@ -62,14 +69,16 @@ export function updateFragment(
     // unwrapping purposes).
     if (
       oldNode.isConnected &&
-      newNodes.every(newNode => !newNode.contains(oldNode))
+      // TODO: update this check
+      newNodes.every(newNode => !isNode(newNode) || !newNode.contains(oldNode))
     ) {
-      oldNode.remove()
+      unmount(oldNode)
     }
   }
 
-  kAlienFragment(fragment, newNodes)
-  updateParentFragment(fragment, oldNodes, newNodes)
+  // TODO: stop casting to any
+  kAlienFragment(fragment, newNodes as any)
+  updateParentFragment(fragment, oldNodes, newNodes as any)
 
   return fragment
 }

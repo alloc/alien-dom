@@ -1,7 +1,5 @@
 import type { Falsy } from '@alloc/types'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
-import { currentComponent } from '../internal/global'
-import { kAlienElementKey } from '../internal/symbols'
 import type { DefaultElement, StyleAttributes } from '../internal/types'
 import { UpdateStyle, toArray, updateStyle } from '../jsx-dom/util'
 import { observe } from '../observable'
@@ -39,18 +37,14 @@ export function useStyle(
   deps?: readonly any[]
 ) {
   const elements = toArray(element)
-  const component = currentComponent.get()!
+
   if (typeof style !== 'function') {
     deps = deps ? [...elements, ...deps] : elements
     const prevDeps = usePrevious(deps)
     if (!style || !depsHaveChanged(deps, prevDeps)) return
 
     for (const element of elements) {
-      // If the element has no key, it won't be found in the newElements
-      // cache. In that case, we just update the element directly.
-      const key = kAlienElementKey(element)
-      const newElement = component.newElements!.get(key!)
-      updateStyle(newElement || element, style)
+      updateStyle(element, style)
     }
   } else if (deps) {
     const state = useState(initialState, style, deps)
@@ -65,9 +59,7 @@ export function useStyle(
       if (!style) return
 
       for (const element of elements) {
-        const key = kAlienElementKey(element)
-        const newElement = component.newElements?.get(key!)
-        updateStyle(newElement || element, style, UpdateStyle.NonAnimated)
+        updateStyle(element, style, UpdateStyle.NonAnimated)
       }
     }).destructor
   }

@@ -2,7 +2,7 @@ import { isElement, isFragment } from '../internal/duck'
 import { toChildNodes } from '../internal/fragment'
 import { kAlienPlaceholder } from '../internal/symbols'
 import type { DefaultElement } from '../internal/types'
-import { isShadowRoot } from '../jsx-dom/shadow'
+import { isShadowRoot } from '../jsx-dom/node'
 import type { JSX } from '../types'
 
 export function toElements<Element extends DefaultElement>(

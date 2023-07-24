@@ -158,3 +158,27 @@ export function binaryInsert<T>(
   array.splice(right, 0, insertValue)
   return array
 }
+
+export function compareNodeNames(
+  fromNodeName: string,
+  toNodeName: string
+): boolean {
+  if (fromNodeName !== toNodeName) {
+    const fromCodeStart = fromNodeName.charCodeAt(0)
+    const toCodeStart = toNodeName.charCodeAt(0)
+
+    // If the target element is a virtual DOM node or SVG node then we may need
+    // to normalize the tag name before comparing. Normal HTML elements that are
+    // in the "http://www.w3.org/1999/xhtml" are converted to upper case.
+    if (fromCodeStart <= 90 && toCodeStart >= 97) {
+      // from is upper and to is lower
+      return fromNodeName === toNodeName.toUpperCase()
+    }
+    if (toCodeStart <= 90 && fromCodeStart >= 97) {
+      // to is upper and from is lower
+      return toNodeName === fromNodeName.toUpperCase()
+    }
+    return false
+  }
+  return true
+}

@@ -2,10 +2,10 @@ import { isString } from '@alloc/is'
 import type { Key } from 'ts-key-enum'
 import { Disposable } from '../disposable'
 import { AlienEffect } from '../effects'
-import { isDocument } from '../internal/duck'
+import { isComment, isDocument } from '../internal/duck'
 import { enableEffect, getAlienEffects } from '../internal/effects'
 import { currentComponent } from '../internal/global'
-import { ShadowRootContext } from '../jsx-dom/appendChild'
+import { ShadowRootContext } from '../jsx-dom/shadow'
 import { noop, toArray } from '../jsx-dom/util'
 import { ref } from '../observable'
 import { EffectResult, useEffect } from './useEffect'
@@ -115,6 +115,9 @@ const initKeyBinding = (
 }
 
 function enableKeyBinding(target: Document | HTMLElement, binding: KeyBinding) {
+  if (isComment(target)) {
+    return
+  }
   const context = contexts.get(target) || new KeyBindingContext(target)
   context.addBinding(binding)
   return () => {

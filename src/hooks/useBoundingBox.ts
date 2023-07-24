@@ -1,6 +1,6 @@
 import { enableEffect, getAlienEffects } from '../internal/effects'
 import { AnyElement } from '../internal/types'
-import { ShadowRootContext } from '../jsx-dom/appendChild'
+import { ShadowRootContext } from '../jsx-dom/shadow'
 import { ComputedRef, computed, ref } from '../observable'
 import { useState } from './useState'
 

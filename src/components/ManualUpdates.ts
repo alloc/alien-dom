@@ -1,14 +1,14 @@
-import type { JSX } from '../types/jsx'
 import { markPureComponent } from '../functions/markPureComponent'
+import { currentMode } from '../internal/global'
 import { kAlienManualUpdates } from '../internal/symbols'
 import { appendChild } from '../jsx-dom/appendChild'
-import { currentMode } from '../internal/global'
+import type { JSX } from '../types/jsx'
 
 export function ManualUpdates(props: { children: JSX.Children }): JSX.Element {
   const fragment = document.createDocumentFragment()
   currentMode.push('deref')
   try {
-    appendChild(props.children, fragment)
+    appendChild(props.children as any, fragment)
   } finally {
     currentMode.pop('deref')
   }

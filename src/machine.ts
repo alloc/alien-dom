@@ -131,12 +131,13 @@ export class Machine<
     return this.value === value
   }
 
-  as<Value extends State['value'], Result>(
+  assert<Value extends Extract<MachineValue<T>, State>, Result>(
     value: Value,
     callback: (state: Readonly<MachineState<T, Value>>) => Result
   ): Result | undefined {
-    if (this.is(value)) {
-      return callback(this.state)
+    if (this.value === value) {
+      return callback(this.state as any)
     }
+    throw Error(`Expected "${value}", got "${this.value}"`)
   }
 }

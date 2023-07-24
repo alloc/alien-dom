@@ -1,9 +1,5 @@
-import {
-  AlienForwardedContext,
-  ContextStore,
-  createContext,
-  currentContext,
-} from '../context'
+import { AlienForwardedContext, ContextStore, createContext } from '../context'
+import { getContext } from '../internal/context'
 import { currentComponent } from '../internal/global'
 
 /**
@@ -16,5 +12,5 @@ export function useContext(): AlienForwardedContext {
     const index = component.nextHookIndex++
     return (component.hooks[index] ||= createContext(component.context))
   }
-  return createContext(new ContextStore(currentContext))
+  return createContext(new ContextStore(getContext()))
 }

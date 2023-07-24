@@ -1,4 +1,5 @@
 import { markPureComponent } from './functions/markPureComponent'
+import { forwardContext, getContext, setContext } from './internal/context'
 import { currentComponent } from './internal/global'
 import { Fragment } from './jsx-dom/jsx-runtime'
 import { Ref, ref } from './observable'
@@ -47,8 +48,7 @@ export function createContext<T>(initial?: T) {
       if (isForwardedContext) {
         restoreContext = forwardContext(initial)
       } else {
-        oldValue = currentContext.get(Provider as any)
-        currentContext.set(Provider as any, ref(value))
+        oldValue = setContext(Provider as any, ref(value))
       }
 
       try {
@@ -56,10 +56,8 @@ export function createContext<T>(initial?: T) {
       } finally {
         if (isForwardedContext) {
           restoreContext!()
-        } else if (oldValue !== undefined) {
-          currentContext.set(Provider as any, oldValue)
         } else {
-          currentContext.delete(Provider as any)
+          setContext(Provider as any, oldValue)
         }
       }
     }
@@ -72,10 +70,12 @@ export function createContext<T>(initial?: T) {
     if (isForwardedContext) {
       return initial!
     }
+
     const component = currentComponent.get()
     const current = component
       ? component.context.get(Provider as any)
-      : currentContext.get(Provider as any)
+      : getContext(Provider as any)
+
     if (current) {
       return current.value
     }
@@ -84,20 +84,15 @@ export function createContext<T>(initial?: T) {
 
   if (isForwardedContext) {
     Provider.forward = (fn: any, ...args: any[]) => {
-      const oldValues = new Map(currentContext)
+      const oldValues = new Map(getContext())
       initial.forEach((value, key) => {
-        currentContext.set(key, value)
+        setContext(key, value)
       })
       try {
         return fn(...args)
       } finally {
         initial.forEach((_, key) => {
-          const oldValue = oldValues.get(key)
-          if (oldValue) {
-            currentContext.set(key, oldValue)
-          } else {
-            currentContext.delete(key)
-          }
+          setContext(key, oldValues.get(key))
         })
       }
     }
@@ -110,38 +105,4 @@ export function createContext<T>(initial?: T) {
 
 function withProvider<T>(this: AlienContext<T>, value: T) {
   return [this, ref(value)]
-}
-
-interface AlienContextMap extends Map<AlienContext, Ref> {
-  get<T>(key: AlienContext<T>): Ref<T> | undefined
-  set<T>(key: AlienContext<T>, value: Ref<T>): this
-}
-
-/** @internal */
-export const currentContext: AlienContextMap = new Map()
-
-/** @internal */
-export function forwardContext(context: ContextStore, isRerender?: boolean) {
-  const oldValues = new Map(currentContext)
-  context.forEach((value, key) => {
-    const ref = currentContext.get(key)
-    if (isRerender && ref) {
-      // If context exists, then we are being re-rendered by a parent,
-      // so we want to allow the parent's context to take precedence
-      // over the initial context.
-      context.set(key, ref)
-    } else {
-      currentContext.set(key, value)
-    }
-  })
-  return () => {
-    context.forEach((_, key) => {
-      const oldValue = oldValues.get(key)
-      if (oldValue) {
-        currentContext.set(key, oldValue)
-      } else {
-        currentContext.delete(key)
-      }
-    })
-  }
 }

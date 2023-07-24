@@ -1,10 +1,11 @@
+import { DeferredNode } from '../jsx-dom/node'
+import { morph } from '../morphdom/morph'
 import { AlienComponent, ElementRefs } from './component'
-import { morph } from './morph'
 import type { DefaultElement } from './types'
 
 export function updateElement(
   rootElement: DefaultElement,
-  newRootElement: DefaultElement,
+  newRootElement: DeferredNode,
   arg3?: AlienComponent<any> | ElementRefs | null
 ) {
   const newRefs = arg3 instanceof Map ? arg3 : arg3?.newRefs

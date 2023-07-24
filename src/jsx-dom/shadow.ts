@@ -1,33 +1,26 @@
+import { createContext } from '../context'
 import { markPureComponent } from '../functions/markPureComponent'
 import type { JSX } from '../types/jsx'
+import {
+  kAlienNodeType,
+  kShadowRootNodeType,
+  type ShadowRootNode,
+} from './node'
+import { resolveChildren } from './resolveChildren'
 
-const jsxDomType = Symbol.for('jsx-dom:type')
-
-const enum JsxDomType {
-  ShadowRoot = 'ShadowRoot',
-}
-
-export type ShadowRootContainer = {
-  [jsxDomType]: JsxDomType.ShadowRoot
-  props: ShadowRootInit
-  children: JSX.Children
-}
+export const ShadowRootContext = createContext<ShadowRoot | undefined>()
 
 export function ShadowRoot({
   children,
   ...props
 }: ShadowRootInit & {
   children: JSX.Children
-}): ShadowRootContainer {
+}): ShadowRootNode {
   return {
-    [jsxDomType]: JsxDomType.ShadowRoot,
+    [kAlienNodeType]: kShadowRootNodeType,
     props,
-    children,
+    children: resolveChildren(children),
   }
 }
 
 markPureComponent(ShadowRoot)
-
-export function isShadowRoot(el: any): el is ShadowRootContainer {
-  return el != null && el[jsxDomType] === JsxDomType.ShadowRoot
-}

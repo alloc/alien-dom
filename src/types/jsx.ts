@@ -1,5 +1,5 @@
 import type { AnyElement } from '../internal/types'
-import type { ShadowRootContainer } from '../jsx-dom/shadow'
+import type { AlienNode, ShadowRootNode } from '../jsx-dom/node'
 import type { AttrWithRef, Attributes } from './attr'
 import type {
   ChangeEventHandler,
@@ -36,25 +36,26 @@ export declare namespace JSX {
   type Child =
     | NodeList
     | HTMLCollection
-    | ShadowRootContainer
+    | ChildNode
     | DocumentFragment
-    | AnyElement
-    | Text
-    | Comment
+    | AlienNode
     | string
     | number
     | boolean
     | null
     | undefined
 
-  type Children = Thunkable<Child | Children[]>
+  type Children = Thunkable<ThunkResult>
+
+  /** The result of a `JSX.Children` thunk. */
+  type ThunkResult = Child | ThunkResult[]
 
   type ElementsOption = ElementOption | ElementOption[]
   type ElementOption =
     | HTMLElement
     | SVGElement
     | DocumentFragment
-    | ShadowRootContainer
+    | ShadowRootNode
     | false
     | null
     | undefined

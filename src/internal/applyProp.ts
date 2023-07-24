@@ -4,25 +4,23 @@ import {
   isFunction,
   isNumber,
   isObject,
-  isPlainObject,
   isString,
 } from '@alloc/is'
 import { classToString } from '../functions/classToString'
 import { appendChild } from '../jsx-dom/appendChild'
 import { enablePropObserver } from '../jsx-dom/jsx-runtime'
+import { DeferredNode } from '../jsx-dom/node'
+import { resolveChildren } from '../jsx-dom/resolveChildren'
 import { isSvgChild } from '../jsx-dom/svg-tags'
 import { UpdateStyle, decamelize, keys, updateStyle } from '../jsx-dom/util'
 import { ReadonlyRef, isRef } from '../observable'
-import { HTMLStyleAttribute } from '../types'
+import { HTMLStyleAttribute, JSX } from '../types'
 import { parseTransform, renderTransform } from './animate/transform'
-import { hasTagName } from './duck'
+import { AlienComponent } from './component'
+import { hasTagName, isElement, isNode } from './duck'
 import { createEventEffect } from './elementEvent'
 import { currentComponent } from './global'
-import {
-  kAlienElementKey,
-  kAlienElementProps,
-  kAlienElementTags,
-} from './symbols'
+import { kAlienElementKey, kAlienElementProps, kAlienRefProp } from './symbols'
 import { cssTransformAliases, cssTransformUnits } from './transform'
 import { DefaultElement, StyleAttributes } from './types'
 
@@ -56,10 +54,14 @@ export function applyProp(node: DefaultElement, prop: string, value: any) {
         while (node.lastChild) {
           node.removeChild(node.lastChild)
         }
+        newValue = resolveChildren(newValue)
       }
       applyProp(node, prop, newValue)
     })
     value = value.peek()
+    if (isChildren) {
+      value = resolveChildren(value)
+    }
   }
 
   if (value === null) {
@@ -80,7 +82,9 @@ export function applyProp(node: DefaultElement, prop: string, value: any) {
       }
       return
     case 'children':
-      appendChild(value, node)
+      for (const child of value) {
+        appendChild(child, node)
+      }
       return
     case 'innerHTML':
     case 'innerText':
@@ -120,6 +124,35 @@ export function applyProp(node: DefaultElement, prop: string, value: any) {
     case 'namespaceURI':
       return
     // fallthrough
+  }
+
+  // For certain HTML tags, the node property must be set rather than the
+  // attribute or the node won't be updated reliably.
+  if (hasTagName(node, 'INPUT')) {
+    // TODO: check which of these are still relevant (inherited from morphdom)
+    if (prop === 'value' || prop === 'checked' || prop === 'disabled') {
+      set(node, prop, value)
+      return
+    }
+  } else if (hasTagName(node, 'OPTION')) {
+    // See morphdom #117
+    if (prop === 'selected') {
+      let parentNode = node.parentNode as
+        | HTMLSelectElement
+        | HTMLOptGroupElement
+
+      if (parentNode) {
+        if (hasTagName(parentNode, 'OPTGROUP')) {
+          parentNode = parentNode.parentNode as HTMLSelectElement
+        }
+        if (
+          hasTagName(parentNode, 'SELECT') &&
+          !parentNode.hasAttribute('multiple')
+        ) {
+          parentNode.selectedIndex = -1
+        }
+      }
+    }
   }
 
   if (prop[0] === 'x') {
@@ -210,31 +243,6 @@ export function applyInitialProps(node: DefaultElement, props: any) {
   }
 }
 
-export function applyInitialPropsRecursively(node: DefaultElement) {
-  if (kAlienElementTags.in(node)) {
-    return // Skip over self-updating nodes.
-  }
-  // Skip over explicitly keyed nodes, which had their props applied at
-  // the time of creation.
-  const key = kAlienElementKey(node)
-  if (key == null || (key as string)[0] === '*') {
-    const props = kAlienElementProps(node)
-    // If no props are set, this node probably wasn't created with JSX. But
-    // let's check its descendants in case those are.
-    if (props) {
-      if (!isPlainObject(props)) {
-        return // Already processed by fromElementThunk.
-      }
-      applyInitialProps(node, props)
-    }
-  }
-  let child = node.firstElementChild
-  while (child) {
-    applyInitialPropsRecursively(child as DefaultElement)
-    child = child.nextElementSibling
-  }
-}
-
 function applyStyleProp(
   node: DefaultElement,
   value: any,
@@ -300,4 +308,62 @@ function flattenStyleProp(
     }
   }
   return style
+}
+
+export function applyRefProp(
+  ref: JSX.ElementRef | undefined,
+  node: Element,
+  oldNode?: ChildNode | DocumentFragment
+): void {
+  const oldRefs = oldNode ? kAlienRefProp(oldNode) : undefined
+  if (ref || oldRefs) {
+    const newRefs = new Set<JSX.ElementRef>()
+    updateElementRefs(ref, node, newRefs, oldRefs)
+    kAlienRefProp(node, newRefs)
+    oldRefs?.forEach(ref => {
+      ref.setElement(null)
+    })
+  }
+}
+
+function updateElementRefs(
+  ref: JSX.RefProp,
+  element: Element,
+  newRefs: Set<JSX.ElementRef>,
+  oldRefs: Set<JSX.ElementRef> | undefined
+) {
+  if (isArray(ref)) {
+    ref.forEach(ref => updateElementRefs(ref, element, newRefs, oldRefs))
+  } else if (ref) {
+    ref.setElement(element)
+    newRefs.add(ref)
+    oldRefs?.delete(ref)
+  }
+}
+
+export function applyKeyProp(
+  node: ChildNode | DocumentFragment | DeferredNode,
+  key: JSX.ElementKey,
+  oldNode: ChildNode | DocumentFragment | undefined,
+  component: AlienComponent | null
+) {
+  if (component) {
+    const cachedNode = oldNode || (isNode(node) && node)
+    if (cachedNode) {
+      component.setRef(key, cachedNode)
+    }
+
+    // Check for equivalence as the return value of a custom component
+    // might be the cached result of an element thunk.
+    if (node !== oldNode) {
+      if (!isNode(node) || isElement(node)) {
+        component.newElements!.set(key, node)
+      }
+      if (oldNode) {
+        kAlienElementKey(node, key)
+      }
+    }
+  } else {
+    kAlienElementKey(node, key)
+  }
 }

@@ -5,7 +5,7 @@ import { createStack } from './stack'
 import type { DefaultElement, ElementMode } from './types'
 
 export const currentEffects = createStack<AlienEffects>()
-export const currentComponent = createStack<AlienComponent>()
+export const currentComponent = createStack<AlienComponent | null>()
 export const currentMode = createStack<ElementMode>('noop')
 
 export const animatedElements = new Map<DefaultElement, AnimatedElement>()

@@ -1,24 +1,22 @@
 import { isArray, isFunction, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
-import { currentContext } from '../context'
 import { selfUpdating } from '../functions/selfUpdating'
-import { applyInitialProps, applyProp } from '../internal/applyProp'
-import { hasTagName } from '../internal/duck'
+import { applyKeyProp, applyRefProp } from '../internal/applyProp'
+import { isNode } from '../internal/duck'
 import { enableEffect, getAlienEffects } from '../internal/effects'
 import { currentComponent } from '../internal/global'
-import {
-  kAlienElementKey,
-  kAlienElementProps,
-  kAlienElementTags,
-  kAlienPureComponent,
-  kAlienRefProp,
-  kAlienSelfUpdating,
-} from '../internal/symbols'
+import { kAlienPureComponent, kAlienSelfUpdating } from '../internal/symbols'
 import type { DefaultElement } from '../internal/types'
-import { ReadonlyRef, observe } from '../observable'
+import { ReadonlyRef, isRef, observe } from '../observable'
 import type { JSX } from '../types'
-import { ShadowRootContext } from './appendChild'
-import { svgTags } from './svg-tags'
+import {
+  DeferredNode,
+  createDeferredNode,
+  createHostNode,
+  isDeferredNode,
+} from './node'
+import { resolveChildren } from './resolveChildren'
+import { ShadowRootContext } from './shadow'
 
 export { Fragment }
 export type { JSX }
@@ -29,8 +27,14 @@ const selfUpdatingTags = new WeakMap<any, any>()
 
 export { jsx as jsxs }
 
-export function jsx(tag: any, props: any, key?: JSX.ElementKey) {
+type Props = {
+  ref?: JSX.ElementRef
+  children?: JSX.Children | ReadonlyRef<JSX.Children>
+}
+
+export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
   const component = currentComponent.get()
+
   const hasImpureTag = typeof tag !== 'string' && !kAlienPureComponent.in(tag)
   if (hasImpureTag && !kAlienSelfUpdating.in(tag)) {
     let selfUpdatingTag = selfUpdatingTags.get(tag)
@@ -41,111 +45,50 @@ export function jsx(tag: any, props: any, key?: JSX.ElementKey) {
     tag = selfUpdatingTag
   }
 
+  let oldNode: ChildNode | DocumentFragment | undefined
+  let node: ChildNode | DocumentFragment | DeferredNode | undefined
+
   // Use the element key to discover the original version of this node. We will
   // return this original node so an API like React's useRef isn't needed.
-  let oldNode = key != null && component?.refs?.get(key)
-
-  // Find the component instance associated with the original node, so we can
-  // rerender it with the latest props and context (if anything changed).
-  if (oldNode && hasImpureTag) {
-    const tags = kAlienElementTags(oldNode)
-    if (tags) {
-      const instance = tags.get(tag)
-      if (instance) {
-        instance.updateProps(props)
-        currentContext.forEach((ref, key) => {
-          const targetRef = instance.context.get(key)
-          if (targetRef) {
-            targetRef.value = ref.peek()
-          }
-        })
-      }
-      const updatedNode = instance?.rootNode
-      if (updatedNode) {
-        component!.setRef(key!, updatedNode)
-        return updatedNode
-      }
-    }
-    // Cannot reuse an old node if the tags differ.
-    oldNode = undefined
+  if (key != null && component?.refs) {
+    oldNode = component.refs.get(key)
   }
 
-  let node: DefaultElement
-  if (isString(tag)) {
-    const namespaceURI = props.namespaceURI || (svgTags[tag] && SVGNamespace)
-    node = namespaceURI
-      ? document.createElementNS(namespaceURI, tag)
-      : document.createElement(tag)
+  // Defer DOM updates until the morphing phase. If a JSX element has a key but
+  // no previous node, the DOM node is created immediately. If a JSX element
+  // doesn't have a key, the DOM node won't be created until required.
+  const isDeferred = component != null && (oldNode != null || key == null)
 
-    if (component && (oldNode || key == null)) {
-      kAlienElementProps(node, props)
+  if (isFunction(tag)) {
+    // Pure components are never deferred.
+    if (isDeferred && hasImpureTag) {
+      node = createDeferredNode(tag, props)
     } else {
-      applyInitialProps(node, props)
+      node = tag(props) as ChildNode | DocumentFragment
     }
+  } else if (isString(tag)) {
+    const children = isRef(props.children)
+      ? props.children
+      : resolveChildren(props.children)
 
-    // Unlike other props, children are immediately processed every time.
-    applyProp(node, 'children', props.children)
-
-    // Select any matching <option> elements in the first render.
-    if (!oldNode && hasTagName(node, 'SELECT') && props.value != null) {
-      if (props.multiple === true && isArray(props.value)) {
-        const values = (props.value as any[]).map(value => String(value))
-        node.querySelectorAll('option').forEach(option => {
-          option.selected = values.includes(option.value)
-        })
-      } else {
-        node.value = props.value
-      }
+    // Host elements are deferred if any of their children are.
+    if (isDeferred || (isArray(children) && children.some(isDeferredNode))) {
+      node = createDeferredNode(tag, props, children)
+    } else {
+      node = createHostNode(tag, props, children)
     }
-  } else if (isFunction(tag)) {
-    node = tag(props)
   } else {
-    throw new TypeError(`Invalid JSX element type: ${tag}`)
+    throw Error(`Invalid JSX element type: ${tag}`)
   }
 
   if (key != null) {
-    if (component) {
-      // Check for equivalence as the return value of a custom component
-      // might be the cached result of an element thunk.
-      if (oldNode !== node) {
-        component.newElements!.set(key, node as JSX.Element)
-      }
-      if (oldNode) {
-        kAlienElementKey(node, key)
-        node = oldNode as any
-      }
-      component.setRef(key, node)
-    } else {
-      kAlienElementKey(node, key)
+    applyKeyProp(node, key, oldNode, component)
+    if (isString(tag) && isNode(node)) {
+      applyRefProp(props.ref, node as Element, oldNode)
     }
   }
 
-  const oldRefs = oldNode ? kAlienRefProp(oldNode) : undefined
-  if (props.ref || oldRefs) {
-    const newRefs = new Set<JSX.ElementRef>()
-    updateElementRefs(props.ref, node, newRefs, oldRefs)
-    kAlienRefProp(node, newRefs)
-    oldRefs?.forEach(ref => {
-      ref.setElement(null)
-    })
-  }
-
-  return node
-}
-
-export function updateElementRefs(
-  ref: JSX.RefProp,
-  element: Element | null,
-  newRefs: Set<JSX.ElementRef>,
-  oldRefs: Set<JSX.ElementRef> | undefined
-) {
-  if (isArray(ref)) {
-    ref.forEach(ref => updateElementRefs(ref, element, newRefs, oldRefs))
-  } else if (ref) {
-    ref.setElement(element)
-    newRefs.add(ref)
-    oldRefs?.delete(ref)
-  }
+  return oldNode || node
 }
 
 export function enablePropObserver(

@@ -36,7 +36,7 @@ export function hasTagName<Tag extends string>(
   return node && node.tagName === tagName
 }
 
-export function isNode(val: any): val is Node {
+export function isNode(val: any): val is Node | ChildNode | ParentNode {
   return isObject(val) && isNumber((val as any).nodeType)
 }
 

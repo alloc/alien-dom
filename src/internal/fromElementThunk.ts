@@ -1,11 +1,9 @@
-import { isElement } from '../internal/duck'
+import { evaluateDeferredNode, isDeferredNode } from '../jsx-dom/node'
 import type { JSX } from '../types/jsx'
-import { applyInitialPropsRecursively } from './applyProp'
-import { isNode } from './duck'
 import { currentComponent } from './global'
-import { kAlienEffects, kAlienElementKey, kAlienThunkResult } from './symbols'
+import { kAlienThunkResult } from './symbols'
 
-export function fromElementThunk(thunk: () => JSX.Children) {
+export function fromElementThunk(thunk: () => JSX.ThunkResult) {
   if (!kAlienThunkResult.in(thunk)) {
     // The first component to call the thunk owns it.
     const component = currentComponent.get()
@@ -13,68 +11,22 @@ export function fromElementThunk(thunk: () => JSX.Children) {
       return thunk()
     }
 
-    // By caching the element here, we can reuse a mounted element even if
-    // a parent component overwrites its element key, which can happen if
-    // the current component returns it as the root element.
-    let rootNode: JSX.Element | null | undefined
-    let key: JSX.ElementKey | undefined
-
     Object.defineProperty(thunk, kAlienThunkResult.symbol, {
       get() {
         // Avoid evaluating an element thunk more than once per render.
-        let newRootNode: JSX.Children = component.memos?.get(thunk)
-        if (newRootNode === undefined) {
-          newRootNode = thunk()
-          component.memos ||= new Map()
-          component.memos.set(thunk, newRootNode)
-        }
+        let result: JSX.ThunkResult = component.newMemos
+          ? component.newMemos.get(thunk)
+          : undefined
 
-        // TODO: support more than single element nodes
-        if (isNode(newRootNode) && isElement(newRootNode)) {
-          const newKey = kAlienElementKey(newRootNode)
-          if (newKey !== undefined) {
-            // When no cached node exists, check the component refs in
-            // case this thunk was recreated.
-            if (rootNode === undefined) {
-              rootNode = component.refs?.get(newKey) as any
-              if (rootNode) {
-                key = newKey
-              }
-            }
-
-            const oldRootNode = rootNode
-            if (rootNode !== newRootNode) {
-              if (!rootNode || key !== newKey) {
-                rootNode = newRootNode
-                key = newKey
-
-                // Apply initial props early, so that the caller can use query
-                // selectors for slotting purposes.
-                applyInitialPropsRecursively(newRootNode)
-              }
-            } else {
-              key ??= newKey
-
-              // If the element is unchanged, we need to disable the old
-              // effects before new effects are added.
-              const effects = kAlienEffects(rootNode)
-              effects?.setElement(null)
-            }
-
-            if (rootNode && rootNode === oldRootNode) {
-              // Emulate a JSX element being constructed.
-              component.setRef(key, rootNode)
-
-              if (rootNode !== newRootNode) {
-                newRootNode = rootNode
-              }
-            }
+        if (result === undefined) {
+          result = thunk()
+          if (isDeferredNode(result)) {
+            result = evaluateDeferredNode(result)
           }
-        } else {
-          rootNode = null
+          component.newMemos ||= new Map()
+          component.newMemos.set(thunk, result)
         }
-
-        return newRootNode
+        return result
       },
     })
   }

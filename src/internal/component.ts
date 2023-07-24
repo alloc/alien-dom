@@ -1,20 +1,19 @@
 import { AlienContext } from '../context'
 import { AlienEffects } from '../effects'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
+import { DeferredNode } from '../jsx-dom/node'
 import { Observer, Ref, observe } from '../observable'
 import { FunctionComponent, JSX } from '../types'
 import { deepEquals } from './deepEquals'
 import { isFragment } from './duck'
-import { getAlienEffects } from './effects'
 import { toChildNodes } from './fragment'
 import { currentComponent } from './global'
 import {
-  kAlienEffects,
   kAlienElementKey,
   kAlienElementTags,
-  kAlienNewEffects,
   kAlienRenderFunc,
 } from './symbols'
+import { DefaultElement } from './types'
 
 export type ElementTags = Map<FunctionComponent, AlienComponent<any>>
 export type ElementRefs = Map<JSX.ElementKey, ChildNode | DocumentFragment>
@@ -26,7 +25,7 @@ export class AlienComponent<Props = any> {
   hooks: any[] = []
   nextHookIndex = 0
   /** Elements created by this component in the current render pass. */
-  newElements: Map<JSX.ElementKey, JSX.Element> | null = null
+  newElements: Map<JSX.ElementKey, DefaultElement | DeferredNode> | null = null
   /** Stable references to the elements that are mounted. */
   refs: ElementRefs | null = null
   /** Stable references that were added or reused by the current render pass. */
@@ -103,7 +102,7 @@ export class AlienComponent<Props = any> {
     this.nextHookIndex = 0
     return this as {
       rootNode: ChildNode | DocumentFragment | null
-      newElements: Map<JSX.ElementKey, JSX.Element>
+      newElements: Map<JSX.ElementKey, DefaultElement>
       newEffects: AlienEffects
       newRefs: ElementRefs
     }
@@ -130,34 +129,27 @@ export class AlienComponent<Props = any> {
   }
 
   setRootNode(rootNode: ChildNode | DocumentFragment) {
+    this.rootNode = rootNode
+
+    // Register this component instance with the root node, so the node can be
+    // morphed by future renders.
     let tags = kAlienElementTags(rootNode)
     if (!tags) {
       tags = new Map()
       kAlienElementTags(rootNode, tags)
     }
     tags.set(this.tag, this)
-    this.rootNode = rootNode
+
+    // Move the element key from the node to the component. If the node is
+    // mounted outside a render (e.g. from an event handler), an undefined key
+    // signals that the node cannot be unmounted through morphing.
     this.rootKey = kAlienElementKey(rootNode)
+    kAlienElementKey(rootNode, undefined)
   }
 
   setRef(key: JSX.ElementKey, element: ChildNode | DocumentFragment) {
     kAlienElementKey(element, key)
     this.newRefs!.set(key, element)
-
-    // If a component accesses the effects of an old element during
-    // render, return the effects of a new element instead.
-    const oldEffects = kAlienEffects(element)
-    if (oldEffects?.enabled) {
-      Object.defineProperty(element, kAlienNewEffects.symbol, {
-        configurable: true,
-        get: () => {
-          if (this.newElements) {
-            const newElement = this.newElements.get(key)
-            return newElement && getAlienEffects(newElement)
-          }
-        },
-      })
-    }
   }
 }
 

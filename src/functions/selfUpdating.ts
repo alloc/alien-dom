@@ -1,10 +1,10 @@
-import { isFunction } from '@alloc/is'
-import { ContextStore, currentContext, forwardContext } from '../context'
-import { applyInitialPropsRecursively } from '../internal/applyProp'
+import { isFunction, isString } from '@alloc/is'
+import { Fragment } from '../components/Fragment'
+import { ContextStore } from '../context'
 import { AlienComponent } from '../internal/component'
-import { kCommentNodeType } from '../internal/constants'
-import { isElement, isFragment, isNode } from '../internal/duck'
-import { toChildNodes } from '../internal/fragment'
+import { forwardContext, getContext } from '../internal/context'
+import { isComment, isElement, isFragment, isNode } from '../internal/duck'
+import { prepareFragment, toChildNodes } from '../internal/fragment'
 import { fromElementThunk } from '../internal/fromElementThunk'
 import {
   currentComponent,
@@ -13,8 +13,8 @@ import {
 } from '../internal/global'
 import { isConnected } from '../internal/isConnected'
 import {
-  kAlienEffects,
   kAlienElementKey,
+  kAlienElementTags,
   kAlienFragment,
   kAlienParentFragment,
   kAlienRenderFunc,
@@ -26,13 +26,20 @@ import {
   updateFragment,
   updateParentFragment,
 } from '../internal/updateFragment'
-import { ShadowRootContext, prepareFragment } from '../jsx-dom/appendChild'
-import { Fragment } from '../jsx-dom/jsx-runtime'
-import { isShadowRoot } from '../jsx-dom/shadow'
-import { noop } from '../jsx-dom/util'
+import {
+  createDeferredNode,
+  createFragmentNode,
+  evaluateDeferredNode,
+  isDeferredNode,
+  isShadowRoot,
+} from '../jsx-dom/node'
+import { resolveChildren } from '../jsx-dom/resolveChildren'
+import { ShadowRootContext } from '../jsx-dom/shadow'
+import { compareNodeNames, noop } from '../jsx-dom/util'
 import { ref } from '../observable'
 import type { JSX } from '../types/jsx'
 import { attachRef } from './attachRef'
+import { unmount } from './unmount'
 
 /**
  * Create a self-updating component whose render function can mutate its
@@ -54,20 +61,18 @@ export function selfUpdating<Props extends object, Result extends JSX.Children>(
 
   const Component = (initialProps: Props): any => {
     const props = {} as Props
-    const context = new ContextStore(currentContext)
+    const context = new ContextStore(getContext())
 
     for (const key in initialProps) {
       const initialValue = initialProps[key]
       attachRef(props, key, ref(initialValue))
     }
 
-    let isPropUpdate = false
     let oldPropChanged = false
     let newPropAdded = false
 
     const updateProps = (newProps: Partial<Props>) => {
       for (const key in newProps) {
-        isPropUpdate = true
         const newValue = newProps[key]
         if (props.hasOwnProperty(key)) {
           const oldValue = props[key]
@@ -79,7 +84,6 @@ export function selfUpdating<Props extends object, Result extends JSX.Children>(
           attachRef(props, key, ref(newValue))
           newPropAdded = true
         }
-        isPropUpdate = false
       }
       if (oldPropChanged || newPropAdded) {
         self.update()
@@ -126,162 +130,184 @@ export function selfUpdating<Props extends object, Result extends JSX.Children>(
       // Apply cached parent context if re-rendering.
       const restoreContext = oldEffects ? forwardContext(context, true) : noop
 
-      let threw = true
-      let newRootNode: JSX.Children
-      try {
-        newRootNode = render(props)
-        if (isFunction(newRootNode)) {
-          newRootNode = fromElementThunk(newRootNode as any)
-        }
-        if (isShadowRoot(newRootNode)) {
-          // TODO: support ShadowRoot morphing
-          throw Error('ShadowRoot cannot be returned by component')
-        }
-        if (newRootNode != null && !isNode(newRootNode)) {
-          newRootNode = Fragment({ children: newRootNode })
-        }
-        threw = false
-      } finally {
-        restoreContext()
-        currentEffects.pop(newEffects)
-        currentComponent.pop(self)
-        currentMode.pop('ref')
-
-        if (threw) {
-          self.endRender(true)
-        }
-      }
-
       // If there are enabled component effects, we are mounted.
       const isMounted = !!oldEffects && oldEffects.enabled
 
-      // The render function might return an element reference.
-      if (rootNode && rootNode === newRootNode) {
-        const key = kAlienElementKey(rootNode)!
-        const newElement = newElements.get(key)
-        if (newElement) {
-          newRootNode = newElement
+      let threw = true
+      try {
+        let newRootNode: JSX.Children = render(props)
+
+        if (isFunction(newRootNode)) {
+          newRootNode = fromElementThunk(newRootNode)
         }
-      }
 
-      if (!rootNode || rootNode !== newRootNode) {
-        // When this is true, a comment node will be used as a
-        // placeholder, so the component can insert a node later.
-        let needsPlaceholder: boolean | undefined
+        // TODO: support ShadowRoot component roots
+        if (isShadowRoot(newRootNode)) {
+          throw Error('ShadowRoot cannot be returned by component')
+        }
 
-        if (newRootNode) {
-          if (isFragment(newRootNode)) {
-            if (newRootNode.childNodes.length) {
-              // Document fragments need a placeholder comment node for
-              // the component effects to be attached to.
+        // When this is true, a comment node will be used as a placeholder, so
+        // the component can insert a node later.
+        let placeholder: Comment | false
+
+        if (rootNode) {
+          placeholder = isComment(rootNode) && rootNode
+
+          // The render function might return an element reference.
+          if (rootNode === newRootNode) {
+            const key = kAlienElementKey(rootNode)!
+            const newElement = newElements.get(key)
+            if (newElement) {
+              newRootNode = newElement
+            }
+          }
+        }
+
+        // When this is true, the root node has been updated in place.
+        let updated: boolean | undefined
+
+        if (rootNode !== newRootNode) {
+          if (newRootNode != null) {
+            // When a non-node is returned, wrap it in a fragment.
+            if (!isNode(newRootNode) && !isDeferredNode(newRootNode)) {
+              const children = resolveChildren(
+                newRootNode,
+                undefined,
+                self.context
+              )
+              if (rootNode) {
+                // Apply the children as a fragment update.
+                newRootNode = createDeferredNode(Fragment, null, children)
+              } else {
+                newRootNode = createFragmentNode(children)
+              }
+            }
+
+            // Update the root node if possible.
+            if (rootNode && isDeferredNode(newRootNode)) {
+              // Patch the old node if the new node is compatible.
+              let compatible: boolean | undefined
+
+              const key = kAlienElementKey(newRootNode)
+              if (key === self.rootKey) {
+                if (newRootNode.tag === Fragment) {
+                  compatible = isFragment(rootNode)
+                } else if (isString(newRootNode.tag)) {
+                  compatible = compareNodeNames(
+                    rootNode.nodeName,
+                    newRootNode.tag
+                  )
+                } else {
+                  const tags = kAlienElementTags(rootNode)
+                  if (tags) {
+                    compatible = tags.has(newRootNode.tag)
+                  }
+                }
+              }
+
+              if (compatible) {
+                if (isFragment(rootNode)) {
+                  updateFragment(rootNode, newRootNode, newRefs, self)
+                  updated = true
+                } else if (isElement(rootNode)) {
+                  updateElement(rootNode, newRootNode, self)
+                  updated = true
+                }
+              }
+            }
+          }
+
+          // Initialize or replace the root node.
+          if (!updated) {
+            if (isDeferredNode(newRootNode)) {
+              // The next root node must be a DOM node.
+              newRootNode = evaluateDeferredNode(newRootNode)
+            }
+
+            if (
+              newRootNode &&
+              isFragment(newRootNode) &&
+              !newRootNode.childNodes.length
+            ) {
+              // Empty fragments disappear.
+              newRootNode = null
+            }
+
+            // Use a comment node as a placeholder if nothing was produced.
+            if (!newRootNode) {
+              placeholder ||= document.createComment(DEV ? componentName() : '')
+              newRootNode = placeholder
+            }
+            // Fragments always have a component-specific comment node as
+            // their first child, which is how a fragment can be replaced.
+            else if (rootNode !== newRootNode && isFragment(newRootNode)) {
               newRootNode.prepend(
                 document.createComment(DEV ? componentName() : '')
               )
-            } else {
-              // When the root node is an empty fragment, we have to
-              // create a placeholder comment node.
-              needsPlaceholder = true
             }
-          }
 
-          let updated: boolean | undefined
-          if (
-            rootNode &&
-            rootNode.nodeType === newRootNode.nodeType &&
-            self.rootKey === kAlienElementKey(newRootNode)
-          ) {
-            if ((updated = isFragment(rootNode))) {
-              if (!needsPlaceholder) {
-                updateFragment(rootNode, newRootNode as any, newRefs, self)
-              }
-            } else if (isElement(rootNode)) {
-              if ((updated = rootNode.nodeName === newRootNode.nodeName)) {
-                // Root nodes must have same key for morphing to work.
-                const newKey = kAlienElementKey(newRootNode)
-                kAlienElementKey(rootNode, newKey)
-
-                // Diff the root nodes and retarget any new effects.
-                updateElement(rootNode, newRootNode as any, self)
-              }
-            }
-          }
-
-          // If the root node could not be updated, replace it instead.
-          if (!updated && !needsPlaceholder) {
-            if (isElement(newRootNode)) {
-              applyInitialPropsRecursively(newRootNode)
-            } else if (isFragment(newRootNode)) {
-              newRootNode.childNodes.forEach(childNode => {
-                if (isElement(childNode)) {
-                  applyInitialPropsRecursively(childNode)
-                }
-              })
-            }
-            if (rootNode) {
+            // Replace the old root node if one exists and wasn't replaced by a
+            // deeper component already.
+            if (rootNode && !fromSameDeeperComponent(rootNode, newRootNode)) {
               if (isFragment(rootNode)) {
-                // Replace the comment placeholder with the new root
-                // node. But first, remove any other nodes added by the
-                // old fragment.
+                // Remove any nodes owned by the old fragment.
                 const oldNodes = toChildNodes(rootNode)
                 if (oldNodes[0].parentElement) {
-                  oldNodes.slice(1).forEach(node => node.remove())
+                  oldNodes.slice(1).forEach(node => unmount(node))
                 }
+                // Replace the fragment's header (which is always a comment).
                 rootNode = oldNodes[0] as Comment
               }
+
+              // We can't logically replace a node with no parent.
               if (rootNode.parentElement) {
                 if (isFragment(newRootNode)) {
                   newRootNode = prepareFragment(newRootNode, self)
                 }
-                const parentFragment = kAlienParentFragment(rootNode)
-                if (parentFragment) {
-                  kAlienParentFragment(newRootNode, parentFragment)
-                  updateParentFragment(
-                    parentFragment,
-                    [rootNode],
-                    kAlienFragment(newRootNode) || [newRootNode as AnyElement]
-                  )
-                }
-                // If the rootNode and newRootNode have different
-                // nodeType or nodeName properties, then we can do a
-                // simple replacement.
+
                 rootNode.replaceWith(newRootNode)
+                unmount(rootNode, true, self)
+              } else if (DEV) {
+                console.error(
+                  'Component was updated before its initial node could be added to the DOM, resulting in a failed update!'
+                )
               }
             }
+
+            if (rootNode) {
+              const parentFragment = kAlienParentFragment(rootNode)
+              if (parentFragment) {
+                kAlienParentFragment(newRootNode, parentFragment)
+                updateParentFragment(
+                  parentFragment,
+                  kAlienFragment(rootNode) || [rootNode as AnyElement],
+                  kAlienFragment(newRootNode) || [newRootNode as AnyElement]
+                )
+              }
+            }
+
             self.setRootNode((rootNode = newRootNode))
           }
-        } else {
-          // Use a placeholder if the new root node is falsy.
-          needsPlaceholder = true
-        }
-
-        // If nothing is returned (e.g. null, undefined, empty fragment),
-        // use a comment node to hold the position of the element.
-        if (needsPlaceholder && rootNode?.nodeType !== kCommentNodeType) {
-          const placeholder = document.createComment(DEV ? componentName() : '')
-
-          if (rootNode) {
-            if (isFragment(rootNode)) {
-              const oldNodes = kAlienFragment(rootNode)!
-              oldNodes[0].before(placeholder)
-              oldNodes.forEach(node => node.remove())
-              kAlienFragment(rootNode, [placeholder])
-            } else if (isElement(rootNode)) {
-              const oldEffects = kAlienEffects(rootNode)
-              oldEffects?.disable()
-              rootNode.replaceWith(placeholder)
-            }
-          }
-
+        } else if (!rootNode) {
+          placeholder = document.createComment(DEV ? componentName() : '')
           self.setRootNode((rootNode = placeholder))
         }
-      }
 
-      self.endRender()
-      oldPropChanged = false
-      newPropAdded = false
+        if (!rootNode) {
+          throw Error('Component failed to render a node')
+        }
 
-      if (!rootNode) {
-        throw Error('expected root node to exist')
+        threw = false
+      } finally {
+        restoreContext()
+
+        currentEffects.pop(newEffects)
+        currentComponent.pop(self)
+        currentMode.pop('ref')
+
+        self.endRender(threw)
+        oldPropChanged = false
+        newPropAdded = false
       }
 
       if (isMounted && isConnected(rootNode)) {
@@ -306,4 +332,29 @@ export function selfUpdating<Props extends object, Result extends JSX.Children>(
 
   kAlienSelfUpdating(Component, render)
   return Component
+}
+
+/**
+ * If the current node and the new node are both returned by the
+ * same component instance, we should avoid any mutation, since
+ * that's been handled by the deeper component.
+ *
+ * This function assumes `newRootNode` hasn't had the caller added
+ * to its `kAlienElementTags` map yet.
+ */
+function fromSameDeeperComponent(
+  rootNode: ChildNode | DocumentFragment,
+  newRootNode: ChildNode | DocumentFragment
+) {
+  if (rootNode === newRootNode) {
+    return true
+  }
+  const newInstances = kAlienElementTags(newRootNode)
+  if (newInstances) {
+    const instances = kAlienElementTags(rootNode)!
+    for (const [tag, instance] of instances) {
+      return newInstances.get(tag) === instance
+    }
+  }
+  return false
 }

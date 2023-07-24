@@ -1,17 +1,18 @@
 import type { Falsy } from '@alloc/types'
-import type { JSX } from '../types/jsx'
-import type { AnyElement, StyleAttributes } from '../internal/types'
-import { selfUpdating } from '../functions/selfUpdating'
 import { SpringAnimation, animate } from '../animate'
+import { selfUpdating } from '../functions/selfUpdating'
+import { toElements } from '../functions/toElements'
+import { updateNode } from '../functions/updateNode'
+import { useEffect } from '../hooks/useEffect'
 import { useState } from '../hooks/useState'
 import { isElement } from '../internal/duck'
-import { useEffect } from '../hooks/useEffect'
-import { updateNode } from '../functions/updateNode'
-import { ManualUpdates } from './ManualUpdates'
-import { Fragment } from '../jsx-dom/jsx-runtime'
-import { toElements } from '../functions/toElements'
 import { unwrap } from '../internal/element'
 import { toChildNodes } from '../internal/fragment'
+import type { AnyElement, StyleAttributes } from '../internal/types'
+import { Fragment } from '../jsx-dom/jsx-runtime'
+import { isDeferredNode } from '../jsx-dom/node'
+import type { JSX } from '../types/jsx'
+import { ManualUpdates } from './ManualUpdates'
 
 /** The style applied to the container that wraps leaving elements. */
 const leaveStyle: StyleAttributes = {
@@ -53,17 +54,20 @@ export function Transition<T>(props: {
   // We must wrap props.children in a fragment so that jsx-dom can
   // replace any element references with their latest versions (or a
   // placeholder if nothing changed).
-  let children = Fragment(props)
+  let children = Fragment(props) as any
 
   const reusedChildren = state.children.get(props.id)
   if (reusedChildren) {
-    updateNode(reusedChildren, children)
-    children = reusedChildren
+    updateNode(reusedChildren, children as any)
+    children = reusedChildren as any
   }
 
   if (previousId !== undefined || state.children.size === 0) {
     state.currentId = props.id
 
+    if (isDeferredNode(children)) {
+      throw Error('not yet supported')
+    }
     if (children.childNodes.length) {
       if (reusedChildren) {
         const reusedElements = state.elements.get(props.id)!

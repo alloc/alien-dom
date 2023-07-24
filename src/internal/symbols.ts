@@ -7,7 +7,8 @@ import { createSymbolProperty } from './symbolProperty'
 export const kAlienEffects = createSymbolProperty<AlienEffects>('effects')
 export const kAlienElementKey =
   createSymbolProperty<JSX.ElementKey>('elementKey')
-export const kAlienElementProps = createSymbolProperty<any>('elementProps')
+export const kAlienElementProps =
+  createSymbolProperty<Set<string>>('elementProps')
 export const kAlienElementTags =
   createSymbolProperty<ElementTags>('elementTags')
 export const kAlienFragment = createSymbolProperty<ChildNode[]>('fragment')
@@ -28,4 +29,5 @@ export const kAlienRefType = Symbol.for('alien:refType')
 export const kAlienRenderFunc =
   createSymbolProperty<FunctionComponent>('renderFunc')
 export const kAlienSelfUpdating = createSymbolProperty<any>('selfUpdating')
-export const kAlienThunkResult = createSymbolProperty<any>('thunkResult')
+export const kAlienThunkResult =
+  createSymbolProperty<JSX.ThunkResult>('thunkResult')

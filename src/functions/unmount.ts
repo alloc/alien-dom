@@ -1,3 +1,4 @@
+import { AlienComponent } from '../internal/component'
 import { toChildNodes } from '../internal/fragment'
 import {
   kAlienEffects,
@@ -14,7 +15,8 @@ import { isElement, isFragment, isTextNode } from './typeChecking'
  */
 export function unmount(
   node: ChildNode | null | undefined,
-  skipRemove?: boolean
+  skipRemove?: boolean,
+  keepComponent?: AlienComponent
 ): void {
   if (!node) {
     return
@@ -50,6 +52,7 @@ export function unmount(
         // If a node is the root node of multiple components, the deepest
         // component is disabled first.
         for (const component of tags.values()) {
+          if (component === keepComponent) break
           component.disable()
         }
       }
