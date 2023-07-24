@@ -8,7 +8,7 @@ import {
 import { resolveChildren } from '../jsx-dom/resolveChildren'
 import type { JSX } from '../types'
 
-export function Fragment(props: { children: JSX.Children }) {
+export function Fragment(props: { children: JSX.ChildrenProp }) {
   if (isDeferredNode(props.children)) {
     if (props.children.tag === Fragment) {
       return props.children

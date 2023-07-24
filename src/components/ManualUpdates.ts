@@ -4,7 +4,9 @@ import { kAlienManualUpdates } from '../internal/symbols'
 import { appendChild } from '../jsx-dom/appendChild'
 import type { JSX } from '../types/jsx'
 
-export function ManualUpdates(props: { children: JSX.Children }): JSX.Element {
+export function ManualUpdates(props: {
+  children: JSX.ChildrenProp
+}): JSX.Element {
   const fragment = document.createDocumentFragment()
   currentMode.push('deref')
   try {

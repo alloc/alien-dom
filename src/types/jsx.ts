@@ -45,12 +45,10 @@ export declare namespace JSX {
     | null
     | undefined
 
-  type Children = Thunkable<ThunkResult>
+  type Children = Child | Children[]
+  type ChildrenProp = Thunkable<Children>
 
-  /** The result of a `JSX.Children` thunk. */
-  type ThunkResult = Child | ThunkResult[]
-
-  type ElementsOption = ElementOption | ElementOption[]
+  /** The result of a `JSX.ElementProp` being passed into `fromElementProp` */
   type ElementOption =
     | HTMLElement
     | SVGElement
@@ -61,13 +59,26 @@ export declare namespace JSX {
     | undefined
 
   /**
-   * If defining the type of a component prop that can be a JSX element,
-   * you have to use this type instead of `JSX.Element` or else you'll
-   * be surprised when trying to use the element without passing it into
-   * `fromElementProp` first.
+   * If defining the type of a component prop that can be a JSX element, you
+   * should use this type instead of `JSX.Element` or `JSX.ElementOption` or
+   * else you'll be surprised when trying to use the element without passing it
+   * into `fromElementProp` first.
    */
   type ElementProp = Thunkable<ElementOption>
-  type ElementsProp = Thunkable<ElementOption | ElementOption[]>
+
+  /**
+   * The result of a `JSX.ElementsProp` (note the plurality) being passed into
+   * the `fromElementProp` function.
+   */
+  type ElementsOption = ElementOption | ElementOption[]
+
+  /**
+   * If defining the type of a component prop that can be one or many JSX
+   * elements, you should use this type instead of `JSX.ElementsOption` or
+   * you'll be surprised when trying to use the element without passing it into
+   * `fromElementProp` first.
+   */
+  type ElementsProp = Thunkable<ElementsOption>
 
   type ElementType = keyof IntrinsicElements | ((props: any) => ElementOption)
 

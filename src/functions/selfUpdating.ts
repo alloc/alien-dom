@@ -50,9 +50,10 @@ import { unmount } from './unmount'
  * event listeners can have side effects. Another exception is that any
  * object created within the render function can be mutated freely.
  */
-export function selfUpdating<Props extends object, Result extends JSX.Children>(
-  render: (props: Readonly<Props>) => Result
-): (props: Props) => Result {
+export function selfUpdating<
+  Props extends object,
+  Result extends JSX.ChildrenProp
+>(render: (props: Readonly<Props>) => Result): (props: Props) => Result {
   const componentName = DEV
     ? () =>
         (kAlienRenderFunc(render) || kAlienRenderFunc(Component) || render)
@@ -135,7 +136,7 @@ export function selfUpdating<Props extends object, Result extends JSX.Children>(
 
       let threw = true
       try {
-        let newRootNode: JSX.Children = render(props)
+        let newRootNode: JSX.ChildrenProp = render(props)
 
         if (isFunction(newRootNode)) {
           newRootNode = fromElementThunk(newRootNode)

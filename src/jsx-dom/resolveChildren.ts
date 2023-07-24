@@ -22,12 +22,12 @@ export type ResolvedChild = ChildNode | AlienNode
  * Positional keys are assigned to elements and deferred nodes.
  */
 export function resolveChildren(
-  child: JSX.Children | ReadonlyRef<JSX.Children>,
+  child: JSX.ChildrenProp | ReadonlyRef<JSX.ChildrenProp>,
   key?: string,
   context = new Map(getContext()) as AlienContextMap,
   nodes: ResolvedChild[] = []
 ): ResolvedChild[] {
-  let children: ArrayLike<JSX.Children | Node> | undefined
+  let children: ArrayLike<JSX.ChildrenProp | Node> | undefined
 
   if (child) {
     if (isNode(child)) {
@@ -70,7 +70,7 @@ export function resolveChildren(
   if (children) {
     const childrenKey = key || ''
     for (let i = 0; i < children.length; i++) {
-      const child = children[i] as JSX.Children
+      const child = children[i] as JSX.ChildrenProp
       resolveChildren(child, childrenKey + '*' + i, context, nodes)
     }
   }

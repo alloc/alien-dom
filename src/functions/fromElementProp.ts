@@ -1,8 +1,6 @@
 import { fromElementThunk } from '../internal/fromElementThunk'
 import type { JSX } from '../types/jsx'
 
-type ElementResult = JSX.Element | Comment | false | null | undefined
-
 /**
  * Coerce a possible element thunk into an element (or a falsy value),
  * while ensuring the thunk isn't executed more than once in its
@@ -13,17 +11,17 @@ type ElementResult = JSX.Element | Comment | false | null | undefined
  * comment node) or a composite element (but only if its component
  * returns null or it threw an error during a hot update).
  */
-export function fromElementProp(element: JSX.ElementProp): ElementResult
+export function fromElementProp<Result extends JSX.ElementOption>(
+  element: JSX.ElementProp
+): Result
 
-export function fromElementProp(
+export function fromElementProp<Result extends JSX.ElementOption>(
   element: JSX.ElementsProp
-): ElementResult | ElementResult[]
+): Result | Result[]
 
-export function fromElementProp(
-  element: JSX.Children
-): Exclude<JSX.Children, () => JSX.Children>
+export function fromElementProp(element: JSX.ChildrenProp): JSX.Children
 
-export function fromElementProp(element: JSX.Children) {
+export function fromElementProp(element: JSX.ChildrenProp) {
   if (typeof element === 'function') {
     return fromElementThunk(element)
   }

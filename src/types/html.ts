@@ -16,8 +16,8 @@ interface DetailedHTMLFactory<
   P extends HTMLAttributes<T>,
   T extends HTMLElement
 > extends DOMFactory<P, T> {
-  (props?: (P & AttrWithRef<T>) | null, ...children: JSX.Children[]): T
-  (...children: JSX.Children[]): T
+  (props?: (P & AttrWithRef<T>) | null, ...children: JSX.ChildrenProp[]): T
+  (...children: JSX.ChildrenProp[]): T
 }
 
 type AcceptObservableProps<E extends object> = {

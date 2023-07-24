@@ -40,7 +40,7 @@ export const isShadowRoot = (node: any): node is ShadowRootNode =>
 export function createHostNode(
   tag: string,
   props: any,
-  children: ResolvedChild[] | ReadonlyRef<JSX.Children>
+  children: ResolvedChild[] | ReadonlyRef<JSX.ChildrenProp>
 ) {
   const namespaceURI = props.namespaceURI || (svgTags[tag] && SVGNamespace)
   const node = namespaceURI
@@ -79,9 +79,9 @@ export function createFragmentNode(children: ResolvedChild[]) {
 /** A deferred node is one whose component has not executed yet. */
 export interface DeferredNode {
   [kAlienNodeType]: typeof kDeferredNodeType
-  tag: string | ((props: any) => JSX.Children)
+  tag: string | ((props: any) => JSX.ChildrenProp)
   props: any
-  children?: ResolvedChild[] | ReadonlyRef<JSX.Children>
+  children?: ResolvedChild[] | ReadonlyRef<JSX.ChildrenProp>
   context?: AlienContextMap
 }
 
@@ -89,9 +89,9 @@ export const isDeferredNode = (node: any): node is DeferredNode =>
   !!node && node[kAlienNodeType] === kDeferredNodeType
 
 export const createDeferredNode = (
-  tag: string | ((props: any) => JSX.Children),
+  tag: string | ((props: any) => JSX.ChildrenProp),
   props: any,
-  children?: ResolvedChild[] | ReadonlyRef<JSX.Children> | undefined
+  children?: ResolvedChild[] | ReadonlyRef<JSX.ChildrenProp> | undefined
 ): DeferredNode => ({
   [kAlienNodeType]: kDeferredNodeType,
   tag,

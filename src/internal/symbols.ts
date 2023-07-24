@@ -30,4 +30,4 @@ export const kAlienRenderFunc =
   createSymbolProperty<FunctionComponent>('renderFunc')
 export const kAlienSelfUpdating = createSymbolProperty<any>('selfUpdating')
 export const kAlienThunkResult =
-  createSymbolProperty<JSX.ThunkResult>('thunkResult')
+  createSymbolProperty<JSX.Children>('thunkResult')

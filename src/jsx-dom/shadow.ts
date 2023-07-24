@@ -14,7 +14,7 @@ export function ShadowRoot({
   children,
   ...props
 }: ShadowRootInit & {
-  children: JSX.Children
+  children: JSX.ChildrenProp
 }): ShadowRootNode {
   return {
     [kAlienNodeType]: kShadowRootNodeType,

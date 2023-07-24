@@ -29,7 +29,7 @@ export { jsx as jsxs }
 
 type Props = {
   ref?: JSX.ElementRef
-  children?: JSX.Children | ReadonlyRef<JSX.Children>
+  children?: JSX.ChildrenProp | ReadonlyRef<JSX.ChildrenProp>
 }
 
 export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {

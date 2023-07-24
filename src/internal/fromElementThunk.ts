@@ -3,7 +3,7 @@ import type { JSX } from '../types/jsx'
 import { currentComponent } from './global'
 import { kAlienThunkResult } from './symbols'
 
-export function fromElementThunk(thunk: () => JSX.ThunkResult) {
+export function fromElementThunk(thunk: () => JSX.Children) {
   if (!kAlienThunkResult.in(thunk)) {
     // The first component to call the thunk owns it.
     const component = currentComponent.get()
@@ -14,7 +14,7 @@ export function fromElementThunk(thunk: () => JSX.ThunkResult) {
     Object.defineProperty(thunk, kAlienThunkResult.symbol, {
       get() {
         // Avoid evaluating an element thunk more than once per render.
-        let result: JSX.ThunkResult = component.newMemos
+        let result: JSX.Children = component.newMemos
           ? component.newMemos.get(thunk)
           : undefined
 

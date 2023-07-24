@@ -6,13 +6,13 @@ import { Ref, ref } from './observable'
 import type { JSX } from './types/jsx'
 
 export type AlienContext<T = any> = {
-  (props: { value: T; children: JSX.Children }): JSX.Element
+  (props: { value: T; children: JSX.ChildrenProp }): JSX.Element
   get(): T
   with(value: T): [AlienContext<T>, Ref<T>]
 }
 
 export type AlienForwardedContext = {
-  (props: { children: JSX.Children }): JSX.Element
+  (props: { children: JSX.ChildrenProp }): JSX.Element
   get(): ContextStore
   forward<Args extends any[], Result>(
     fn: (...args: Args) => Result,
@@ -39,7 +39,7 @@ export function createContext<T>(initial?: T) {
     children,
   }: {
     value?: T
-    children: JSX.Children
+    children: JSX.ChildrenProp
   }) {
     if (children) {
       let restoreContext: (() => void) | undefined

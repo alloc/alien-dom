@@ -13,9 +13,9 @@ export interface SVGFactory
   extends DOMFactory<SVGAttributes<SVGElement>, SVGElement> {
   (
     props?: (AttrWithRef<SVGElement> & SVGAttributes<SVGElement>) | null,
-    ...children: JSX.Children[]
+    ...children: JSX.ChildrenProp[]
   ): SVGElement
-  (...children: JSX.Children[]): SVGElement
+  (...children: JSX.ChildrenProp[]): SVGElement
 }
 
 export type SVGElementTagName = keyof SVGElementTagNames

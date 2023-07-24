@@ -7,7 +7,7 @@ export interface CSSProperties extends CSS.Properties<string | number> {}
 
 export type DOMFactory<P extends DOMAttributes<T>, T extends Element> = (
   props?: (P & AttrWithRef<T>) | null,
-  ...children: JSX.Children[]
+  ...children: JSX.ChildrenProp[]
 ) => T
 
 export type DOMClassAttribute =
@@ -20,7 +20,7 @@ export type DOMClassAttribute =
   | undefined
 
 export interface DOMAttributes<T> {
-  children?: JSX.Children | undefined
+  children?: JSX.ChildrenProp | undefined
   dangerouslySetInnerHTML?: { __html: string } | undefined
 
   // Clipboard Events
