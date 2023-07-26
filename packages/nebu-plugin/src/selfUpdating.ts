@@ -122,7 +122,9 @@ export default function (
                 // It's a reference if the element is assigned to a variable
                 // or a function parameter.
                 return (
-                  parent.isVariableDeclarator() || parent.isCallExpression()
+                  parent.isVariableDeclarator() ||
+                  parent.isAssignmentExpression() ||
+                  parent.isCallExpression()
                 )
               }) || skipped
           }
@@ -195,6 +197,26 @@ export default function (
           })
         })
 
+        const memoizeVariable = (
+          node: Node.VariableDeclarator | Node.AssignmentExpression
+        ) => {
+          const id = node.isVariableDeclarator() ? node.id : node.left
+          if (id.isIdentifier() && /^[A-Z]/.test(id.name)) {
+            return // Inline components are wrapped with registerNestedTag instead.
+          }
+
+          const nearestFnOrLoop = node.parent.findParent(isFunctionOrLoop)
+          if (nearestFnOrLoop !== componentFn) {
+            return
+          }
+
+          const memoize = createMemoizer(node)
+          node.process({
+            FunctionExpression: memoize,
+            ArrowFunctionExpression: memoize,
+          })
+        }
+
         componentFn.process({
           JSXOpeningElement(openingElem) {
             // Inline object props (e.g. the "style" prop) are not
@@ -219,24 +241,8 @@ export default function (
           },
           // Auto-memoize any variables declared during render with
           // function/object/array expressions as values.
-          VariableDeclarator(varDeclarator) {
-            if (
-              varDeclarator.id.isIdentifier() &&
-              /^[A-Z]/.test(varDeclarator.id.name)
-            ) {
-              return // Inline components are wrapped with registerNestedTag instead.
-            }
-            const nearestFnOrLoop =
-              varDeclarator.parent.findParent(isFunctionOrLoop)
-            if (nearestFnOrLoop !== componentFn) {
-              return
-            }
-            const memoize = createMemoizer(varDeclarator)
-            varDeclarator.process({
-              FunctionExpression: memoize,
-              ArrowFunctionExpression: memoize,
-            })
-          },
+          VariableDeclarator: memoizeVariable,
+          AssignmentExpression: memoizeVariable,
         })
 
         const nearestBlock = path.findParent(p => p.isBlockStatement())
