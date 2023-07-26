@@ -25,7 +25,6 @@ export const kAlienPureComponent =
   createSymbolProperty<boolean>('pureComponent')
 export const kAlienRefProp =
   createSymbolProperty<Set<JSX.ElementRef>>('refProp')
-export const kAlienRefType = Symbol.for('alien:refType')
 export const kAlienRenderFunc =
   createSymbolProperty<FunctionComponent>('renderFunc')
 export const kAlienSelfUpdating = createSymbolProperty<any>('selfUpdating')

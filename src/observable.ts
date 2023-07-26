@@ -1,8 +1,9 @@
 import { isFunction, isString } from '@alloc/is'
 import { Falsy } from '@alloc/types'
 import { createSymbolProperty } from './internal/symbolProperty'
-import { kAlienRefType } from './internal/symbols'
 import { noop } from './jsx-dom/util'
+
+const kRefType = Symbol.for('refType')
 
 export type ObservableHooks = {
   /**
@@ -83,7 +84,7 @@ export class ReadonlyRef<T = any> {
     }
   }
 
-  get [kAlienRefType]() {
+  get [kRefType]() {
     return 'ReadonlyRef'
   }
 
@@ -97,7 +98,7 @@ export class ReadonlyRef<T = any> {
 }
 
 export class Ref<T = any> extends ReadonlyRef<T> {
-  get [kAlienRefType]() {
+  get [kRefType]() {
     return 'Ref'
   }
 
@@ -250,7 +251,7 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
     }
   }
 
-  get [kAlienRefType]() {
+  get [kRefType]() {
     return 'ComputedRef'
   }
 
@@ -352,7 +353,7 @@ const arrayEnumerator = (name: keyof ArrayIterators<any>) =>
   }
 
 /* @__PURE__ */ assignPrototype(ArrayRef.prototype, {
-  [kAlienRefType]: 'ArrayRef',
+  [kRefType]: 'ArrayRef',
   observe(this: InternalRef<any[]>, index: number) {
     return computed(
       () => this.value[index],
@@ -664,7 +665,7 @@ export function observe(
 }
 
 export function isRef<T = any>(value: any): value is ReadonlyRef<T> {
-  return !!value && value[kAlienRefType] !== undefined
+  return !!value && value[kRefType] !== undefined
 }
 
 /**
