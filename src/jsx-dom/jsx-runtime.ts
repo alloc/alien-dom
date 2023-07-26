@@ -1,22 +1,14 @@
-import { isArray, isFunction, isString } from '@alloc/is'
+import { isFunction, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
 import { selfUpdating } from '../functions/selfUpdating'
 import { applyKeyProp, applyRefProp } from '../internal/applyProp'
 import { isNode } from '../internal/duck'
-import { enableEffect, getAlienEffects } from '../internal/effects'
 import { currentComponent } from '../internal/global'
 import { kAlienPureComponent, kAlienSelfUpdating } from '../internal/symbols'
-import type { DefaultElement } from '../internal/types'
-import { ReadonlyRef, isRef, observe } from '../observable'
+import { ReadonlyRef, isRef } from '../observable'
 import type { JSX } from '../types'
-import {
-  DeferredNode,
-  createDeferredNode,
-  createHostNode,
-  isDeferredNode,
-} from './node'
+import { DeferredNode, createDeferredNode, createHostNode } from './node'
 import { resolveChildren } from './resolveChildren'
-import { ShadowRootContext } from './shadow'
 
 export { Fragment }
 export type { JSX }
@@ -71,8 +63,7 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
       ? props.children
       : resolveChildren(props.children)
 
-    // Host elements are deferred if any of their children are.
-    if (isDeferred || (isArray(children) && children.some(isDeferredNode))) {
+    if (isDeferred) {
       node = createDeferredNode(tag, props, children)
     } else {
       node = createHostNode(tag, props, children)
@@ -89,31 +80,6 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
   }
 
   return oldNode || node
-}
-
-export function enablePropObserver(
-  node: DefaultElement,
-  prop: string,
-  ref: ReadonlyRef,
-  applyProp: (node: DefaultElement, newValue: any) => void
-) {
-  let firstAppliedValue = ref.peek()
-  return enableEffect(
-    getAlienEffects(node, ShadowRootContext.get()),
-    (node: DefaultElement, ref: ReadonlyRef) => {
-      const value = ref.peek()
-      if (value !== firstAppliedValue) {
-        applyProp(node, value)
-      }
-      firstAppliedValue = undefined
-      return observe(ref, newValue => {
-        applyProp(node, newValue)
-      }).destructor
-    },
-    0,
-    node,
-    [ref, prop]
-  )
 }
 
 /** This is used by JSX SVG elements. */

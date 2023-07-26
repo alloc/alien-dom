@@ -1,21 +1,20 @@
 import { unmount } from '../functions/unmount'
-import { DeferredNode, isDeferredNode } from '../jsx-dom/node'
-import { ResolvedChild } from '../jsx-dom/resolveChildren'
-import { morph } from '../morphdom/morph'
-import { AlienComponent, ElementRefs } from './component'
-import { isElement, isNode } from './duck'
-import { toChildNodes } from './fragment'
+import { AlienComponent } from '../internal/component'
+import { isElement, isNode } from '../internal/duck'
+import { toChildNodes } from '../internal/fragment'
+import { updateParentFragment } from '../internal/parentFragment'
 import {
   kAlienElementKey,
   kAlienFragment,
   kAlienManualUpdates,
-  kAlienParentFragment,
-} from './symbols'
+} from '../internal/symbols'
+import { DeferredNode, isDeferredNode } from '../jsx-dom/node'
+import { ResolvedChild } from '../jsx-dom/resolveChildren'
+import { morph } from './morph'
 
-export function updateFragment(
+export function morphFragment(
   fragment: DocumentFragment,
   newFragment: DeferredNode,
-  newRefs?: ElementRefs | null,
   component?: AlienComponent | null
 ) {
   const isManuallyUpdated = kAlienManualUpdates.in(newFragment)
@@ -38,7 +37,7 @@ export function updateFragment(
 
         const newNode = newNodes[newIndex]
         if (isElement(oldNode) && isDeferredNode(newNode)) {
-          morph(oldNode, newNode, newRefs, component)
+          morph(oldNode, newNode, component)
         }
       }
     }
@@ -81,40 +80,4 @@ export function updateFragment(
   updateParentFragment(fragment, oldNodes, newNodes as any)
 
   return fragment
-}
-
-export function updateParentFragment(
-  fragment: DocumentFragment,
-  oldNodes: ChildNode[],
-  newNodes: ChildNode[]
-) {
-  const parentFragment = kAlienParentFragment(fragment)
-  if (parentFragment) {
-    spliceFragment(parentFragment, oldNodes, newNodes)
-  }
-}
-
-function spliceFragment(
-  fragment: DocumentFragment,
-  oldSlice: ChildNode[],
-  newSlice: ChildNode[]
-) {
-  const oldNodes = fragment.childNodes.length
-    ? Array.from(fragment.childNodes)
-    : kAlienFragment(fragment)!
-
-  const offset = oldNodes.indexOf(oldSlice[0])
-  if (offset < 0) {
-    return
-  }
-
-  const newNodes = [...oldNodes]
-  newNodes.splice(offset, oldSlice.length, ...newSlice)
-
-  if (fragment.childNodes.length) {
-    fragment.replaceChildren(...newNodes)
-  } else {
-    kAlienFragment(fragment, newNodes)
-    updateParentFragment(fragment, oldNodes, newNodes)
-  }
 }

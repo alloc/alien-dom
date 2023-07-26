@@ -96,15 +96,14 @@ export class AlienComponent<Props = any> {
   }
 
   startRender() {
-    this.newRefs = new Map()
-    this.newElements = new Map()
     this.newEffects = new AlienEffects()
+    this.newElements = new Map()
+    this.newRefs = new Map()
     this.nextHookIndex = 0
     return this as {
       rootNode: ChildNode | DocumentFragment | null
       newElements: Map<JSX.ElementKey, DefaultElement>
       newEffects: AlienEffects
-      newRefs: ElementRefs
     }
   }
 

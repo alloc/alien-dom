@@ -1,3 +1,4 @@
+import { isArray } from '@alloc/is'
 import { applyAnimatedValue } from '../animate'
 import { cssTransformAliases, cssTransformDefaults } from '../transform'
 import type { DefaultElement } from '../types'
@@ -24,7 +25,9 @@ export class AnimatedTransform {
    * cached until the transform is next applied.
    */
   read() {
-    return (this.value ||= parseTransform(this.target, this.svgMode))
+    return (this.value ||= parseTransform(
+      readTransform(this.target, this.svgMode)
+    ))
   }
 
   addCall(
@@ -93,7 +96,7 @@ export class AnimatedTransform {
       return
     }
 
-    value ||= parseTransform(target, svgMode)
+    value ||= parseTransform(readTransform(target, svgMode))
 
     this.value = this.width = this.height = null
     this.isIdentity = !svgMode
@@ -108,7 +111,7 @@ export class AnimatedTransform {
       )
     }
 
-    const newTransform = renderTransform(value, newCalls, isIdentity)
+    const newTransform = renderTransform(value, newCalls, isIdentity, svgMode)
     applyAnimatedValue(target, style, svgMode, 'transform', newTransform)
   }
 }
@@ -123,14 +126,16 @@ export function resolveTransformFn(key: string, svgMode: boolean) {
     : null
 }
 
-export function parseTransform(target: Element, svgMode: boolean) {
-  // Note that we can't use the `computedStyle` here, because it
-  // compacts the transform string into a matrix, which obfuscates the
-  // individual transform functions.
-  const transform = svgMode
+export function readTransform(target: Element, svgMode: boolean) {
+  // Note that we can't use the `computedStyle` here, because it compacts the
+  // transform string into a matrix, which obfuscates the individual transform
+  // functions.
+  return svgMode
     ? target.getAttribute('transform') || ''
     : (target as HTMLElement).style.transform
+}
 
+export function parseTransform(transform: string) {
   const result: ParsedTransform = []
   const regex = /([a-z]+)\(([^)]+)\)/gi
   let match: RegExpMatchArray | null
@@ -152,28 +157,26 @@ export function parseTransform(target: Element, svgMode: boolean) {
 type TransformCall =
   | [string, string | number, string]
   | [string, string | number]
+  | ParsedTransform[number]
 
 export function renderTransform(
   cachedTransform: ParsedTransform,
   newTransform: TransformCall[],
-  isIdentity: boolean
+  isIdentity: boolean,
+  svgMode: boolean
 ) {
   const transform: TransformCall[] = []
 
   let index = 0
   let call = newTransform[0]
 
-  cachedTransform.forEach(([fn, args]) => {
-    if (call && fn == call[0]) {
+  cachedTransform.forEach(cachedCall => {
+    if (call && cachedCall[0] == call[0]) {
       transform.push(call)
       call = newTransform[++index]
     } else {
       isIdentity = false
-      if (args.length == 1) {
-        transform.push([fn, ...args[0]])
-      } else {
-        transform.push([fn, args.map(arg => arg.join('')).join(', ')])
-      }
+      transform.push(cachedCall)
     }
   })
 
@@ -186,6 +189,10 @@ export function renderTransform(
   }
   return transform
     .map(([fn, value, unit = '']) => {
+      if (isArray(value)) {
+        value = value.map(arg => arg.join('')).join(svgMode ? ' ' : ', ')
+        return fn + '(' + value + ')'
+      }
       return fn + `(${value}${unit})`
     })
     .join(' ')

@@ -1,14 +1,9 @@
 import { isArray, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
-import {
-  applyInitialProps,
-  applyKeyProp,
-  applyProp,
-  applyRefProp,
-} from '../internal/applyProp'
+import { applyProp, applyRefProp } from '../internal/applyProp'
 import { AlienContextMap, setContext } from '../internal/context'
 import { hasTagName } from '../internal/duck'
-import { currentComponent } from '../internal/global'
+import { HostProps } from '../internal/hostProps'
 import { kAlienElementKey } from '../internal/symbols'
 import { SVGNamespace } from '../jsx-dom/jsx-runtime'
 import { ReadonlyRef } from '../observable'
@@ -17,16 +12,13 @@ import { appendChild } from './appendChild'
 import type { ResolvedChild } from './resolveChildren'
 import { svgTags } from './svg-tags'
 
+export type AlienNode = ShadowRootNode | DeferredNode
+
 /** Special nodes are distinguished by a numeric property of this symbol. */
 export const kAlienNodeType = Symbol.for('alien:nodeType')
 
 export const kShadowRootNodeType = 99
 export const kDeferredNodeType = 98
-
-export type AlienNode = ShadowRootNode | DeferredNode
-
-export const isAlienNode = (node: any): node is AlienNode =>
-  !!(node && node[kAlienNodeType])
 
 export interface ShadowRootNode {
   [kAlienNodeType]: typeof kShadowRootNodeType
@@ -41,14 +33,17 @@ export function createHostNode(
   tag: string,
   props: any,
   children: ResolvedChild[] | ReadonlyRef<JSX.ChildrenProp>
-) {
+): Element {
   const namespaceURI = props.namespaceURI || (svgTags[tag] && SVGNamespace)
   const node = namespaceURI
     ? document.createElementNS(namespaceURI, tag)
     : document.createElement(tag)
 
-  applyInitialProps(node, props)
-  applyProp(node, 'children', children)
+  const hostProps = new HostProps(node)
+  for (const prop in props) {
+    const value = prop === 'children' ? children : props[prop]
+    applyProp(node, prop, value, hostProps)
+  }
 
   // Select any matching <option> elements.
   if (hasTagName(node, 'SELECT') && props.value != null) {
@@ -101,12 +96,13 @@ export const createDeferredNode = (
 })
 
 export function evaluateDeferredNode(deferredNode: DeferredNode) {
-  let node: ChildNode | DocumentFragment
-
   const { tag, props, context, children } = deferredNode
+  const key = kAlienElementKey(deferredNode)
 
+  let node: Element | Comment | DocumentFragment
   if (isString(tag)) {
     node = createHostNode(tag, props, children!)
+    applyRefProp(props.ref, node)
   } else if (tag === Fragment) {
     node = createFragmentNode(children as ResolvedChild[])
   } else {
@@ -122,14 +118,6 @@ export function evaluateDeferredNode(deferredNode: DeferredNode) {
     }
   }
 
-  const key = kAlienElementKey(deferredNode)
-  if (key != null) {
-    const component = currentComponent.get()
-    applyKeyProp(node, key, undefined, component)
-    if (isString(tag)) {
-      applyRefProp(props.ref, node as Element)
-    }
-  }
-
+  kAlienElementKey(node, key)
   return node
 }

@@ -1,11 +1,18 @@
 import { isArray, isString } from '@alloc/is'
 import { unmount } from '../functions/unmount'
-import { isElement } from '../internal/duck'
+import { AlienComponent } from '../internal/component'
+import { hasTagName, isElement } from '../internal/duck'
 import { kAlienElementKey } from '../internal/symbols'
-import { DeferredNode, isDeferredNode, isShadowRoot } from '../jsx-dom/node'
+import {
+  DeferredNode,
+  evaluateDeferredNode,
+  isDeferredNode,
+  isShadowRoot,
+} from '../jsx-dom/node'
 import { ResolvedChild } from '../jsx-dom/resolveChildren'
 import { compareNodeNames, noop } from '../jsx-dom/util'
 import { JSX } from '../types/jsx'
+import { morph } from './morph'
 
 /**
  * Find direct children that can be morphed/added and allow for discarded nodes
@@ -13,31 +20,28 @@ import { JSX } from '../types/jsx'
  */
 export function morphChildren(
   fromParentNode: Element,
-  toParentNode: Element | DeferredNode,
-  options: {
-    onNodeAdded: (
-      node: ChildNode | DeferredNode,
-      nextSibling?: ChildNode | null
-    ) => void
-    /** The `fromNode` has a matching `toNode`, but you're responsible for morphing if desired. */
-    onNodePreserved: (
-      fromNode: ChildNode,
-      toNode: ChildNode | DeferredNode,
-      nextSibling?: ChildNode | null
-    ) => void
-    /** The `node` will be discarded unless false is returned. */
-    onBeforeNodeDiscarded?: (node: ChildNode) => boolean
-  }
+  toChildNodes: HTMLCollection | ResolvedChild[],
+  component?: AlienComponent | null
 ): void {
-  let toChildren = toParentNode.children as HTMLCollection | ResolvedChild[]
-  if (!fromParentNode.childNodes.length && !toChildren.length) {
+  if (!fromParentNode.childNodes.length && !toChildNodes.length) {
     return
   }
 
-  if (!isArray(toChildren)) {
-    toChildren = Array.from(toChildren)
-  } else if (isShadowRoot(toChildren[0])) {
-    if (toChildren.length !== 1) {
+  /** The `node` will be discarded unless false is returned. */
+  const onBeforeNodeDiscarded = component
+    ? // Never remove a node that was added by an event listener or effect. Any
+      // nodes added by a component render will have a position-based key defined
+      // automatically if they're missing an explicit key, so this check is
+      // sufficient.
+      isKeyedNode
+    : noop
+
+  if (!isArray(toChildNodes)) {
+    toChildNodes = Array.from(toChildNodes)
+  }
+  // Shadow root must be the only child.
+  else if (isShadowRoot(toChildNodes[0])) {
+    if (toChildNodes.length !== 1) {
       throw Error('ShadowRoot must be the only child')
     }
     // Shadow roots handle their own morphing.
@@ -57,14 +61,12 @@ export function morphChildren(
     }
   }
 
-  const { onBeforeNodeDiscarded = noop, onNodeAdded, onNodePreserved } = options
-
   let fromChildNode = fromParentNode.firstChild
   let toChildIndex = 0
 
   // Find matching nodes.
-  outer: while (toChildIndex < toChildren.length) {
-    const toChildNode = toChildren[toChildIndex]
+  outer: while (toChildIndex < toChildNodes.length) {
+    const toChildNode = toChildNodes[toChildIndex]
 
     if (isShadowRoot(toChildNode)) {
       throw Error('ShadowRoot must be the only child')
@@ -87,14 +89,21 @@ export function morphChildren(
             fromChildNode = fromChildNode.nextSibling
           }
 
-          onNodePreserved(matchingNode, toChildNode, nextSibling)
+          updateChild(
+            fromParentNode,
+            matchingNode,
+            toChildNode,
+            component,
+            nextSibling
+          )
+
           toChildIndex++
           continue
         }
       }
 
       // This node has no compatible from node.
-      onNodeAdded(toChildNode, fromChildNode)
+      insertChild(fromParentNode, toChildNode, fromChildNode)
       toChildIndex++
 
       // Remove the incompatible from node.
@@ -109,9 +118,9 @@ export function morphChildren(
         if (fromChildKey != null) {
           unmatchedFromKeys.add(fromChildKey)
         }
-        //let nextSibling = matchingNode Unkeyed nodes are matched by nodeType and nodeName.
+        // Unkeyed nodes are matched by nodeType and nodeName.
         else if (isCompatibleNode(fromChildNode, toChildNode)) {
-          onNodePreserved(fromChildNode, toChildNode)
+          updateChild(fromParentNode, fromChildNode, toChildNode, component)
 
           fromChildNode = fromNextSibling
           toChildIndex++
@@ -126,7 +135,7 @@ export function morphChildren(
       }
 
       // This node has no compatible from node.
-      onNodeAdded(toChildNode)
+      insertChild(fromParentNode, toChildNode)
       toChildIndex++
     }
   }
@@ -150,6 +159,10 @@ export function morphChildren(
       unmount(removedFromNode)
     }
   }
+
+  if (hasTagName(fromParentNode, 'SELECT')) {
+    updateSelected(fromParentNode)
+  }
 }
 
 function isCompatibleNode(fromNode: Node, toNode: ChildNode | DeferredNode) {
@@ -169,4 +182,85 @@ function isCompatibleNode(fromNode: Node, toNode: ChildNode | DeferredNode) {
     return true
   }
   return fromNode.nodeName === toNode.nodeName
+}
+
+function isKeyedNode(node: Node) {
+  return kAlienElementKey.in(node)
+}
+
+function insertChild(
+  parentNode: ParentNode,
+  node: ChildNode | DeferredNode,
+  nextSibling?: ChildNode | null
+) {
+  const newChild = isDeferredNode(node) ? evaluateDeferredNode(node) : node
+  if (nextSibling) {
+    parentNode.insertBefore(newChild, nextSibling)
+  } else {
+    parentNode.appendChild(newChild)
+  }
+}
+
+function updateChild(
+  parentNode: Node,
+  fromNode: ChildNode,
+  toNode: ChildNode | DeferredNode,
+  component?: AlienComponent | null,
+  nextSibling?: ChildNode | null
+) {
+  // Convert an element reference to its deferred node.
+  if (component && fromNode === toNode) {
+    const key = kAlienElementKey(toNode)!
+    const newElement = component.newElements?.get(key)
+    if (newElement) {
+      toNode = newElement
+    }
+  }
+
+  if (isDeferredNode(toNode)) {
+    morph(fromNode as any, toNode, component)
+  } else if (fromNode !== toNode && !isElement(fromNode)) {
+    fromNode.nodeValue = toNode.nodeValue
+  }
+
+  // Reorder the node if necessary.
+  if (nextSibling) {
+    parentNode.insertBefore(fromNode, nextSibling)
+  }
+}
+
+// TODO: check if this is necessary (inherited from morphdom)
+function updateSelected(node: HTMLSelectElement) {
+  if (!node.hasAttribute('multiple')) {
+    var selectedIndex = -1
+    var i = 0
+    // We have to loop through children of fromEl, not toEl since nodes
+    // can be moved from toEl to fromEl directly when morphing. At the
+    // time this special handler is invoked, all children have already
+    // been morphed and appended to / removed from fromEl, so using
+    // fromEl here is safe and correct.
+    var curChild = node.firstChild
+    var optgroup
+    while (curChild) {
+      if (hasTagName(curChild, 'OPTGROUP')) {
+        optgroup = curChild
+        curChild = optgroup.firstChild
+      } else {
+        if (hasTagName(curChild, 'OPTION')) {
+          if (curChild.hasAttribute('selected')) {
+            selectedIndex = i
+            break
+          }
+          i++
+        }
+        curChild = curChild.nextSibling
+        if (!curChild && optgroup) {
+          curChild = optgroup.nextSibling
+          optgroup = null
+        }
+      }
+    }
+
+    node.selectedIndex = selectedIndex
+  }
 }

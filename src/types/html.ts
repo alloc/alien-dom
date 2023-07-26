@@ -32,7 +32,6 @@ export type DetailedHTMLProps<
 export type HTMLStyleAttribute =
   | readonly (HTMLStyleAttribute | ReadonlyRef<HTMLStyleAttribute>)[]
   | AcceptObservableProps<StyleAttributes>
-  | string
   | false
   | null
   | undefined

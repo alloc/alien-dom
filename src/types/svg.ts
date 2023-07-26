@@ -104,7 +104,7 @@ export interface SVGAttributes<T> extends AriaAttributes, DOMAttributes<T> {
   method?: string
   min?: number | string
   name?: string
-  style?: string | CSSProperties
+  style?: CSSProperties
   target?: string
   type?: string
   width?: number | string

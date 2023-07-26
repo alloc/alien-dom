@@ -2,16 +2,16 @@ import type { AlienEffects } from '../effects'
 import type { FunctionComponent } from '../types/component'
 import type { JSX } from '../types/jsx'
 import type { ElementTags } from './component'
+import type { HostProps } from './hostProps'
 import { createSymbolProperty } from './symbolProperty'
 
 export const kAlienEffects = createSymbolProperty<AlienEffects>('effects')
 export const kAlienElementKey =
   createSymbolProperty<JSX.ElementKey>('elementKey')
-export const kAlienElementProps =
-  createSymbolProperty<Set<string>>('elementProps')
 export const kAlienElementTags =
   createSymbolProperty<ElementTags>('elementTags')
 export const kAlienFragment = createSymbolProperty<ChildNode[]>('fragment')
+export const kAlienHostProps = createSymbolProperty<HostProps>('hostProps')
 export const kAlienManualUpdates =
   createSymbolProperty<boolean>('manualUpdates')
 export const kAlienNewEffects = createSymbolProperty<AlienEffects>('newEffects')

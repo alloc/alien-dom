@@ -1,16 +1,29 @@
-import { isNumber } from '@alloc/is'
+import { isArray, isNumber } from '@alloc/is'
 import { isAnimatedStyleProp, stopAnimatingKey } from '../internal/animate'
 import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
 import type { DefaultElement } from '../internal/types'
-import { ReadonlyRef, isRef } from '../observable'
 import { isUnitlessNumber } from './css-props'
 import { isSvgChild } from './svg-tags'
 
 export const keys: <T>(obj: T) => Array<string & keyof T> = Object.keys as any
 
 export function toArray<T>(a: T): T extends readonly any[] ? T : T[] {
-  // @ts-ignore
-  return Array.isArray(a) ? a : [a]
+  return isArray(a) ? (a as any) : [a]
+}
+
+export function forEach<T>(
+  arg: T,
+  callback: (value: T extends readonly (infer U)[] ? U : T) => void
+) {
+  if (isArray(arg)) {
+    arg.forEach(callback)
+  } else if (arg !== undefined) {
+    callback(arg as any)
+  }
+}
+
+export function includes<T>(arg: T | readonly T[], value: T): boolean {
+  return isArray(arg) ? arg.includes(value) : arg === value
 }
 
 export function decamelize(s: string, separator: string) {
@@ -24,23 +37,9 @@ export const enum UpdateStyle {
   Interrupt = 1 << 0,
   /** Skip animated style properties. */
   NonAnimated = 1 << 1,
-  /** Unwrap any refs and return a `Map` of them by property. */
-  AllowRefs = 1 << 2,
 }
 
-type StyleKey = Omit<keyof CSSStyleDeclaration, 'length' | 'parentRule'>
-
-export function updateStyle(
-  element: DefaultElement,
-  style: any,
-  flags: UpdateStyle.AllowRefs
-): Map<string, ReadonlyRef>
-
-export function updateStyle(
-  element: DefaultElement,
-  style: any,
-  flags: UpdateStyle.AllowRefs | 0
-): Map<string, ReadonlyRef> | undefined
+const { set } = Reflect
 
 export function updateStyle(
   element: DefaultElement,
@@ -57,44 +56,50 @@ export function updateStyle(
 
   const skipAnimated = flags & UpdateStyle.NonAnimated
   const stopAnimated = flags & UpdateStyle.Interrupt
-  const refs = flags & UpdateStyle.AllowRefs && new Map<string, ReadonlyRef>()
 
-  for (const key of keys<StyleKey>(style)) {
+  for (const key in style) {
     if (skipAnimated && isAnimatedStyleProp(element, key)) {
       continue
     }
     let value = style[key]
-    if (refs && isRef(value)) {
-      refs.set(key, value)
-      value = value.peek()
-    }
-    let transformFn = cssTransformAliases[key]
-    if (transformFn !== undefined) {
-      const svgMode = isSvgChild(element)
-      if (!transformFn || svgMode) {
-        transformFn = key
+    if (value !== undefined) {
+      let transformFn = cssTransformAliases[key]
+      if (transformFn !== undefined) {
+        transform ||= []
+        if (value !== null) {
+          const svgMode = isSvgChild(element)
+          if (!transformFn || svgMode) {
+            transformFn = key
+          }
+          if (isNumber(value) && !svgMode) {
+            value += (cssTransformUnits[key] || '') as any
+          }
+          transform.push(transformFn + '(' + value + ')')
+        }
+      } else if (key === 'transform') {
+        transform ||= []
+        if (value !== null) {
+          transform.push(value as string)
+        }
+      } else {
+        if (isNumber(value) && !isUnitlessNumber[key]) {
+          value += 'px' as any
+        }
+        set(element.style, key, value)
       }
-      if (isNumber(value) && !svgMode) {
-        value += (cssTransformUnits[key] || '') as any
+      if (stopAnimated) {
+        stopAnimatingKey(element, key)
       }
-      transform ||= []
-      transform.push(transformFn + '(' + value + ')')
-    } else {
-      if (isNumber(value) && !isUnitlessNumber[key]) {
-        value += 'px' as any
-      }
-      element.style[key] = value
-    }
-    if (stopAnimated) {
-      stopAnimatingKey(element, key)
     }
   }
 
   if (transform) {
-    element.style.transform = transform.join(' ')
+    set(
+      element.style,
+      'transform',
+      transform.length ? transform.join(' ') : null
+    )
   }
-
-  return refs
 }
 
 /**

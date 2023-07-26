@@ -12,6 +12,7 @@ import {
   currentMode,
 } from '../internal/global'
 import { isConnected } from '../internal/isConnected'
+import { updateParentFragment } from '../internal/parentFragment'
 import {
   kAlienElementKey,
   kAlienElementTags,
@@ -21,11 +22,6 @@ import {
   kAlienSelfUpdating,
 } from '../internal/symbols'
 import type { AnyElement } from '../internal/types'
-import { updateElement } from '../internal/updateElement'
-import {
-  updateFragment,
-  updateParentFragment,
-} from '../internal/updateFragment'
 import {
   createDeferredNode,
   createFragmentNode,
@@ -36,6 +32,8 @@ import {
 import { resolveChildren } from '../jsx-dom/resolveChildren'
 import { ShadowRootContext } from '../jsx-dom/shadow'
 import { compareNodeNames, noop } from '../jsx-dom/util'
+import { morph } from '../morphdom/morph'
+import { morphFragment } from '../morphdom/morphFragment'
 import { ref } from '../observable'
 import type { JSX } from '../types/jsx'
 import { attachRef } from './attachRef'
@@ -122,7 +120,7 @@ export function selfUpdating<
         })
       }
 
-      let { rootNode, newElements, newEffects, newRefs } = self.startRender()
+      let { rootNode, newElements, newEffects } = self.startRender()
 
       currentMode.push('ref')
       currentComponent.push(self)
@@ -208,10 +206,10 @@ export function selfUpdating<
 
               if (compatible) {
                 if (isFragment(rootNode)) {
-                  updateFragment(rootNode, newRootNode, newRefs, self)
+                  morphFragment(rootNode, newRootNode, self)
                   updated = true
                 } else if (isElement(rootNode)) {
-                  updateElement(rootNode, newRootNode, self)
+                  morph(rootNode, newRootNode, self)
                   updated = true
                 }
               }
