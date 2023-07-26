@@ -1,19 +1,17 @@
 import { isFunction } from '@alloc/is'
 import { Disposable, attachDisposer } from '../disposable'
 import { AlienEffect, AlienEffects } from '../effects'
+import { ShadowRootContext } from '../jsx-dom/shadow'
 import { noop } from '../jsx-dom/util'
 import { currentEffects } from './global'
-import { kAlienEffects, kAlienNewEffects } from './symbols'
+import { kAlienEffects } from './symbols'
 import { AnyElement } from './types'
 
-export function getAlienEffects<T extends AnyElement>(
+export function getEffects<T extends AnyElement>(
   element: T,
-  rootNode?: Node
+  rootNode: Node | undefined = ShadowRootContext.get()
 ): AlienEffects<T> {
-  const newEffects = kAlienNewEffects(element)
-  return (
-    newEffects || kAlienEffects(element) || new AlienEffects(element, rootNode)
-  )
+  return kAlienEffects(element) || new AlienEffects(element, rootNode)
 }
 
 export const enum EffectFlags {

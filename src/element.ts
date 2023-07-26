@@ -4,7 +4,7 @@ import { AlienBoundEffect, AlienEffect, AlienEffects } from './effects'
 import { observeAs } from './functions/observeAs'
 import { applyProp } from './internal/applyProp'
 import { canMatch } from './internal/duck'
-import { EffectFlags, enableEffect, getAlienEffects } from './internal/effects'
+import { EffectFlags, enableEffect, getEffects } from './internal/effects'
 import type {
   AlienEventMethod,
   AlienEventMethods,
@@ -190,6 +190,7 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
   // TODO: update `props` type to allow ReadonlyRef values
   set(props: Partial<Attributes<Element>>) {
     for (const prop of keys(props)) {
+      // Note: Refs are unwrapped and not observed.
       applyProp(this as any, prop, props[prop])
     }
     return this
@@ -278,7 +279,7 @@ const setMethodImpl = <ThisArg extends AnyElement, Rest extends any[], Result>(
   })
 
 setMethodImpl(AlienElement, 'unwrap', unwrap)
-setMethodImpl(AlienElement, 'effects', getAlienEffects)
+setMethodImpl(AlienElement, 'effects', getEffects)
 
 for (const [suffix, flags] of [
   ['', 0],
@@ -291,7 +292,7 @@ for (const [suffix, flags] of [
     'effect' + suffix,
     function (node, effect: AlienEffect, target?: any, args?: any) {
       return enableEffect(
-        getAlienEffects(node),
+        getEffects(node),
         effect,
         flags,
         target,

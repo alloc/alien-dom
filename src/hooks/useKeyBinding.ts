@@ -3,9 +3,8 @@ import type { Key } from 'ts-key-enum'
 import { Disposable } from '../disposable'
 import { AlienEffect } from '../effects'
 import { isComment, isDocument } from '../internal/duck'
-import { enableEffect, getAlienEffects } from '../internal/effects'
+import { enableEffect, getEffects } from '../internal/effects'
 import { currentComponent } from '../internal/global'
-import { ShadowRootContext } from '../jsx-dom/shadow'
 import { noop, toArray } from '../jsx-dom/util'
 import { ref } from '../observable'
 import { EffectResult, useEffect } from './useEffect'
@@ -104,7 +103,7 @@ const initKeyBinding = (
         return
       }
       this.effect = enableEffect(
-        getAlienEffects(element, ShadowRootContext.get()),
+        getEffects(element),
         element => enableKeyBinding(element, this),
         0,
         element,

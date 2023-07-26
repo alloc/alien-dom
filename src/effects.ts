@@ -1,7 +1,6 @@
 import { isArray, isFunction } from '@alloc/is'
 import { Disposable, attachDisposer } from './disposable'
 import { onMount, onUnmount } from './domObserver'
-import { isFragment } from './internal/duck'
 import {
   EffectFlags,
   disableEffect,
@@ -10,7 +9,7 @@ import {
   runEffect,
 } from './internal/effects'
 import { currentEffects } from './internal/global'
-import { kAlienEffects, kAlienFragment } from './internal/symbols'
+import { kAlienEffects } from './internal/symbols'
 import type { AnyElement } from './internal/types'
 import { Promisable } from './promises'
 
@@ -52,15 +51,30 @@ const enum AlienEffectState {
 export class AlienEffects<Element extends AnyElement = any> {
   state = AlienEffectState.Disabled
   mounted = false
-  element?: Element | Comment = undefined
   rootNode?: Node = undefined
+
   effects?: Set<AlienEffect> = undefined
   currentEffect: AlienEffect | null = null
   abortCtrl?: AbortController = undefined
+
   protected _mountEffect: Disposable | null = null
 
-  constructor(element?: Element | Comment | DocumentFragment, rootNode?: Node) {
-    element && this.setElement(element, rootNode)
+  constructor(readonly element?: Element | Comment, rootNode?: Node) {
+    if (element) {
+      kAlienEffects(element, this)
+
+      // Assume the element will be mounted soon, if it's not already.
+      this.mounted = true
+      this.rootNode = rootNode || element.getRootNode()
+
+      if (element) {
+        if (element.isConnected) {
+          this.enable()
+        } else {
+          this.enableOnceMounted(element, rootNode)
+        }
+      }
+    }
   }
 
   get enabled() {
@@ -69,56 +83,6 @@ export class AlienEffects<Element extends AnyElement = any> {
 
   get partiallyEnabled() {
     return this.state === AlienEffectState.Enabling
-  }
-
-  setElement(
-    element: Element | Comment | DocumentFragment | null,
-    rootNode?: Node
-  ) {
-    if (element === null) {
-      if (this.element) {
-        if (kAlienEffects(this.element) === this) {
-          kAlienEffects(this.element, undefined)
-        }
-        this.element = undefined
-      }
-      return this.disable(true)
-    }
-
-    if (this.element !== undefined) {
-      if (element === this.element) {
-        return
-      }
-      if (!this._mountEffect) {
-        throw Error('Cannot change element while mounted')
-      }
-      kAlienEffects(this.element, undefined)
-      this._mountEffect.dispose()
-      this._mountEffect = null
-    }
-
-    // If the effects are being attached to a document fragment, use
-    // the first child instead. For component effects, this should be
-    // a comment node created for exactly this purpose.
-    if (isFragment(element)) {
-      element = (kAlienFragment(element) || element.childNodes)[0] as
-        | Element
-        | Comment
-    }
-
-    // Assume the element will be mounted soon, if it's not already.
-    this.mounted = true
-    this.element = element
-    this.rootNode = rootNode
-    kAlienEffects(element, this)
-
-    if (element) {
-      if (element.isConnected) {
-        this.enable()
-      } else {
-        this.enableOnceMounted(element, rootNode)
-      }
-    }
   }
 
   /**
@@ -130,16 +94,16 @@ export class AlienEffects<Element extends AnyElement = any> {
       currentEffects.push(this)
       try {
         this.effects?.forEach(this._runEffect, this)
-        if (this.element) {
-          onUnmount(this.element, () => {
-            this.mounted = false
-            this.disable()
-          })
-        }
         this.state = AlienEffectState.Enabled
       } finally {
         this.currentEffect = null
         currentEffects.pop(this)
+      }
+      if (this.element) {
+        this._mountEffect = onUnmount(this.element, () => {
+          this.mounted = false
+          this.disable()
+        })
       }
     }
   }
