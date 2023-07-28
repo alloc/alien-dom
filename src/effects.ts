@@ -68,11 +68,7 @@ export class AlienEffects<Element extends AnyElement = any> {
       this.rootNode = rootNode || element.getRootNode()
 
       if (element) {
-        if (element.isConnected) {
-          this.enable()
-        } else {
-          this.enableOnceMounted(element, rootNode)
-        }
+        this.enableOnceMounted(element, rootNode)
       }
     }
   }
@@ -110,6 +106,9 @@ export class AlienEffects<Element extends AnyElement = any> {
 
   /** @internal */
   enableOnceMounted(element: Element | Comment, rootNode?: Node) {
+    if (element.isConnected) {
+      return this.enable()
+    }
     // This assumes that the element will eventually be mounted. If
     // it's not, a memory leak will occur.
     this._mountEffect = onMount(
