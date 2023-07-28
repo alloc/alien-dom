@@ -74,6 +74,9 @@ export class ReadonlyRef<T = any> {
    * to switch between eager and lazy computation mode.
    */
   protected _isObserved(observer: Observer, isObserved: boolean) {
+    if (isObserved === this._observers.has(observer)) {
+      return
+    }
     if (DEV && hooks) {
       hooks.isObserved(this, observer, isObserved)
     }
@@ -102,21 +105,6 @@ export class Ref<T = any> extends ReadonlyRef<T> {
     return 'Ref'
   }
 
-  get value() {
-    return super.value
-  }
-
-  set value(newValue: T) {
-    const oldValue = this._value
-    if (newValue !== oldValue) {
-      this._value = newValue
-      this._observers.forEach(observer => {
-        observer.observe(this, newValue, oldValue)
-      })
-      onObservedUpdate()
-    }
-  }
-
   set(arg: T | ((value: T) => T)) {
     if (isFunction(arg)) {
       arg = arg(this._value)
@@ -127,15 +115,28 @@ export class Ref<T = any> extends ReadonlyRef<T> {
 }
 
 export interface Ref<T> {
-  0: T
-  1: (arg: T | ((value: T) => T)) => T
+  readonly 0: T
+  readonly 1: (arg: T | ((value: T) => T)) => T
+  set value(newValue: T)
 }
 
-const valueProperty = Object.getOwnPropertyDescriptor(Ref.prototype, 'value')!
-const setValue = valueProperty.set!
+function getValue<T>(this: ReadonlyRef<T>) {
+  return access(this as any)
+}
+
+function setValue<T>(this: ReadonlyRef<T>, newValue: T) {
+  const oldValue = this._value
+  if (newValue !== oldValue) {
+    this._value = newValue
+    this._observers.forEach(observer => {
+      observer.observe(this, newValue, oldValue)
+    })
+    onObservedUpdate()
+  }
+}
 
 Object.defineProperties(Ref.prototype, {
-  0: valueProperty,
+  0: { get: getValue },
   1: {
     get(this: Ref) {
       return this.set.bind(this)
@@ -147,135 +148,11 @@ Object.defineProperties(Ref.prototype, {
       yield this[1]
     },
   },
+  value: {
+    get: getValue,
+    set: setValue,
+  },
 })
-
-//
-// Computed refs
-//
-
-const emptySymbol: any = Symbol('empty')
-
-export class ComputedRef<T = any> extends ReadonlyRef<T> {
-  protected _dirty = true
-  protected _refs: Set<InternalRef<any>> | null = null
-  protected _observer: Observer | null = null
-  protected get _depth() {
-    return this._observer?.depth ?? 0
-  }
-
-  constructor(protected compute: () => T, debugId?: string | number) {
-    super(emptySymbol, debugId)
-  }
-
-  protected _isObserved(observer: Observer, isObserved: boolean) {
-    super._isObserved(observer, isObserved)
-
-    // Destroy our own observer once the ref is no longer observed.
-    if (!isObserved) {
-      if (this._observers.size) return
-      this._observer?.dispose()
-      this._observer = null
-      // Don't waste memory on a value that may not be needed.
-      this._value = emptySymbol
-      this._dirty = true
-    }
-    // Create our own observer once the ref is observed.
-    else if (!this._observer) {
-      this._setupObserver()
-    }
-  }
-
-  protected _setupObserver() {
-    const observer = (this._observer = new Observer(
-      computeQueue
-    )) as InternalObserver
-
-    if (this._refs) {
-      this._refs.forEach(ref => observer._access(ref))
-      this._refs = null
-    }
-
-    // The dirty flag is updated synchronously when a ref is changed.
-    observer.willUpdate = () => (this._dirty = true)
-
-    observer.onUpdate = setValue.bind(this)
-    observer.update(oldRefs => {
-      if (this._dirty) {
-        return this.compute()
-      }
-
-      // Preserve the current refs.
-      observer.refs = new Set(oldRefs)
-      oldRefs?.clear()
-
-      return this._value
-    })
-  }
-
-  protected _update() {
-    this._dirty = false
-
-    if (this._observer) {
-      return this._observer.update(this.compute)
-    }
-
-    // When a computed ref is in lazy mode (i.e. it has no persistent observer),
-    // a temporary observer is created in case a ref is changed after this
-    // update but before the `currentVersion` counter is incremented again.
-    const observer = new Observer({
-      add: () => {
-        this._dirty = true
-        // If this computed ref is accessed, another synchronous observer will
-        // be created, so let's dispose this one now.
-        observer.dispose()
-      },
-      delete: noop,
-    }) as InternalObserver
-
-    // If we end up calling `_setupObserver` before a ref is changed, the refs
-    // used by this update will be inherited by the new observer.
-    this._refs = observer.refs
-
-    // The temporary observer is removed in the next microtask at the latest.
-    queueMicrotask(() => {
-      observer.dispose()
-    })
-
-    const parentAccess = access
-    access = ref => observer._access(ref)
-    try {
-      observer.nextCompute = this.compute
-      return (this._value = observer._update(true))
-    } finally {
-      access = parentAccess
-    }
-  }
-
-  get [kRefType]() {
-    return 'ComputedRef'
-  }
-
-  get value() {
-    if (this._observer) {
-      if (this._dirty) {
-        this._update()
-      }
-      return super.value
-    }
-    if (access !== unseenAccess) {
-      this._setupObserver()
-      return super.value
-    }
-    return this.peek()
-  }
-
-  peek() {
-    if (this._dirty) {
-      return this._update()
-    }
-    return this._value
-  }
-}
 
 function assignPrototype(
   prototype: any,
@@ -464,11 +341,12 @@ export class Observer {
   refs = new Set<InternalRef<any>>()
   version = 0
   depth = 0
-  nextCompute: (oldRefs?: Set<InternalRef<any>>) => any = noop
-  willUpdate: Observer.WillUpdateFn = noop
-  onUpdate: Observer.OnUpdateFn = passThrough
 
-  constructor(readonly queue: Observer.Queue = updateQueue) {}
+  constructor(readonly queue: Observer.Queue = updateQueue) {
+    this.nextCompute ||= noop
+    this.willUpdate ||= noop
+    this.onUpdate ||= passThrough
+  }
 
   protected _access(ref: InternalRef<any>, oldRefs?: Set<InternalRef<any>>) {
     ref._isObserved(this, true)
@@ -515,7 +393,9 @@ export class Observer {
    * When those refs change, the `compute` function will run again in the next
    * microtask (unless you call this method before then).
    */
-  update<T>(compute: (oldRefs?: Set<InternalRef<any>>) => T) {
+  update<T>(
+    compute: (oldRefs?: Set<InternalRef<any>>) => T = this.nextCompute
+  ) {
     const oldRefs = new Set(this.refs)
     this.nextCompute = compute
 
@@ -554,6 +434,149 @@ export class Observer {
    */
   get destructor() {
     return this.dispose.bind(this)
+  }
+}
+
+// These methods can be implemented by a subclass or set directly.
+export interface Observer {
+  nextCompute(oldRefs?: Set<InternalRef<any>>): any
+  willUpdate(ref: ReadonlyRef<any>, newValue: any, oldValue: any): void
+  onUpdate(result: any): any
+}
+
+//
+// Computed refs
+//
+
+const emptySymbol: any = Symbol('empty')
+
+export class ComputedRef<T = any> extends ReadonlyRef<T> {
+  protected _dirty = true
+  protected _refs: Set<InternalRef<any>> | null = null
+  protected _observer: Observer | null = null
+  protected get _depth() {
+    return this._observer?.depth ?? 0
+  }
+
+  constructor(protected compute: () => T, debugId?: string | number) {
+    super(emptySymbol, debugId)
+  }
+
+  protected _isObserved(observer: Observer, isObserved: boolean) {
+    super._isObserved(observer, isObserved)
+
+    // Destroy our own observer once the ref is no longer observed.
+    if (!isObserved) {
+      if (this._observers.size) return
+      this._observer?.dispose()
+      this._observer = null
+      // Don't waste memory on a value that may not be needed.
+      this._value = emptySymbol
+      this._dirty = true
+    }
+    // Create our own observer once the ref is observed.
+    else if (!this._observer) {
+      this._setupObserver()
+    }
+  }
+
+  protected _setupObserver() {
+    this._observer = new ComputedRef.Observer(this)
+    this._observer.update()
+  }
+
+  protected _update() {
+    this._dirty = false
+
+    if (this._observer) {
+      return this._observer.update(this.compute)
+    }
+
+    // When a computed ref is in lazy mode (i.e. it has no persistent observer),
+    // a temporary observer is created in case a ref is changed after this
+    // update but before the `currentVersion` counter is incremented again.
+    const observer = new Observer({
+      add: () => {
+        this._dirty = true
+        // If this computed ref is accessed, another synchronous observer will
+        // be created, so let's dispose this one now.
+        observer.dispose()
+      },
+      delete: noop,
+    }) as InternalObserver
+
+    // If we end up calling `_setupObserver` before a ref is changed, the refs
+    // used by this update will be inherited by the new observer.
+    this._refs = observer.refs
+
+    // The temporary observer is removed in the next microtask at the latest.
+    queueMicrotask(() => {
+      observer.dispose()
+    })
+
+    const parentAccess = access
+    access = ref => observer._access(ref)
+    try {
+      observer.nextCompute = this.compute
+      return (this._value = observer._update(true))
+    } finally {
+      access = parentAccess
+    }
+  }
+
+  get [kRefType]() {
+    return 'ComputedRef'
+  }
+
+  get value() {
+    if (this._observer) {
+      if (this._dirty) {
+        this._update()
+      }
+      return super.value
+    }
+    if (access !== unseenAccess) {
+      this._setupObserver()
+      return super.value
+    }
+    return this.peek()
+  }
+
+  peek() {
+    if (this._dirty) {
+      return this._update()
+    }
+    return this._value
+  }
+
+  private static Observer = class extends Observer {
+    constructor(readonly ref: ComputedRef) {
+      super(computeQueue)
+      if (ref._refs) {
+        ref._refs.forEach(ref => this._access(ref))
+        ref._refs = null
+      }
+    }
+    willUpdate() {
+      // The dirty flag is updated immediately when a dependency is changed.
+      this.ref._dirty = true
+    }
+    nextCompute(oldRefs?: Set<InternalRef<any>>) {
+      if (this.ref._dirty) {
+        return this.ref.compute()
+      }
+
+      // Preserve the current refs.
+      this.refs = new Set(oldRefs)
+      oldRefs?.clear()
+
+      return this.ref._value
+    }
+    onUpdate(result: any) {
+      setValue.call(this.ref, result)
+      this.ref._dirty = false
+      return result
+    }
   }
 }
 
