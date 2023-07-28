@@ -1,6 +1,6 @@
 import { isArray, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
-import { applyProp, applyRefProp } from '../internal/applyProp'
+import { applyProp } from '../internal/applyProp'
 import { AlienContextMap, setContext } from '../internal/context'
 import { hasTagName } from '../internal/duck'
 import { HostProps } from '../internal/hostProps'
@@ -102,7 +102,6 @@ export function evaluateDeferredNode(deferredNode: DeferredNode) {
   let node: Element | Comment | DocumentFragment
   if (isString(tag)) {
     node = createHostNode(tag, props, children!)
-    applyRefProp(props.ref, node)
   } else if (tag === Fragment) {
     node = createFragmentNode(children as ResolvedChild[])
   } else {

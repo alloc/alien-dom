@@ -45,6 +45,7 @@ const applyFunctions: Record<string, ApplyFunction> = {
   children: applyChildrenProp,
   class: applyClassProp,
   dataset: applyDatasetProp,
+  ref: applyRefProp,
   style: applyStyleProp,
 }
 
@@ -291,33 +292,28 @@ function generateApplyFunction(prop: string): ApplyFunction {
 }
 
 export function applyRefProp(
-  ref: JSX.ElementRef | undefined,
-  node: Element,
-  oldNode?: ChildNode | DocumentFragment
+  node: DefaultElement,
+  ref: JSX.RefProp,
+  hostProps?: HostProps
 ): void {
-  const oldRefs = oldNode ? kAlienRefProp(oldNode) : undefined
+  // Updating the `ref` prop from an event listener is not supported.
+  if (!hostProps) return
+
+  const oldRefs = hostProps.refs
   if (ref || oldRefs) {
-    const newRefs = new Set<JSX.ElementRef>()
-    updateElementRefs(ref, node, newRefs, oldRefs)
-    kAlienRefProp(node, newRefs)
+    const newRefs = (hostProps.refs = new Set())
+    forEach(ref, function setElement(ref) {
+      if (isArray(ref)) {
+        forEach(ref, setElement)
+      } else if (ref) {
+        ref.setElement(node)
+        newRefs.add(ref)
+        oldRefs?.delete(ref)
+      }
+    })
     oldRefs?.forEach(ref => {
       ref.setElement(null)
     })
-  }
-}
-
-function updateElementRefs(
-  ref: JSX.RefProp,
-  element: Element,
-  newRefs: Set<JSX.ElementRef>,
-  oldRefs: Set<JSX.ElementRef> | undefined
-) {
-  if (isArray(ref)) {
-    ref.forEach(ref => updateElementRefs(ref, element, newRefs, oldRefs))
-  } else if (ref) {
-    ref.setElement(element)
-    newRefs.add(ref)
-    oldRefs?.delete(ref)
   }
 }
 

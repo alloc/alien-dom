@@ -1,8 +1,7 @@
 import { isFunction, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
 import { selfUpdating } from '../functions/selfUpdating'
-import { applyKeyProp, applyRefProp } from '../internal/applyProp'
-import { isNode } from '../internal/duck'
+import { applyKeyProp } from '../internal/applyProp'
 import { currentComponent } from '../internal/global'
 import { kAlienPureComponent, kAlienSelfUpdating } from '../internal/symbols'
 import { ReadonlyRef, isRef } from '../observable'
@@ -74,9 +73,6 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
 
   if (key != null) {
     applyKeyProp(node, key, oldNode, component)
-    if (isString(tag) && isNode(node)) {
-      applyRefProp(props.ref, node as Element, oldNode)
-    }
   }
 
   return oldNode || node

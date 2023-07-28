@@ -1,8 +1,10 @@
 import { isArray } from '@alloc/is'
 import { Disposable } from '../disposable'
 import { AlienEffect } from '../effects'
+import { forEach } from '../jsx-dom/util'
 import { ReadonlyRef, observe } from '../observable'
 import { enableEffect, getEffects } from './effects'
+import { JSX } from '../types/jsx'
 import { kAlienHostProps } from './symbols'
 import { DefaultElement } from './types'
 
@@ -14,6 +16,7 @@ export interface HostPropObserver extends Disposable, AlienEffect {
 type HostProp = HostPropObserver | HostPropObserver[] | null
 
 export class HostProps extends Map<string, HostProp> {
+  refs?: Set<JSX.ElementRef>
   constructor(readonly node: DefaultElement) {
     super()
     kAlienHostProps(node, this)
@@ -58,6 +61,14 @@ export class HostProps extends Map<string, HostProp> {
       otherEffect.push(effect)
     } else {
       this.set(prop, [otherEffect, effect])
+    }
+  }
+
+  unmount() {
+    forEach(this.refs, ref => ref.setElement(null))
+
+    for (const effects of this.values()) {
+      forEach(effects, effect => effect.dispose())
     }
   }
 }

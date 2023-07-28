@@ -3,7 +3,7 @@ import { toChildNodes } from '../internal/fragment'
 import {
   kAlienEffects,
   kAlienElementTags,
-  kAlienRefProp,
+  kAlienHostProps,
 } from '../internal/symbols'
 import { isElement, isFragment, isTextNode } from './typeChecking'
 
@@ -37,10 +37,9 @@ export function unmount(
         unmount(childNode, true)
       }
 
-      const oldRefs = kAlienRefProp(node)
-      oldRefs?.forEach(ref => {
-        ref.setElement(null)
-      })
+      // Disconnect any persistent effects or element refs.
+      const hostProps = kAlienHostProps(node)
+      hostProps?.unmount()
     }
 
     if (!isTextNode(node)) {
