@@ -1,39 +1,30 @@
 import { isArray, isBoolean, isObject } from '@alloc/is'
+import { createDisposable } from '../disposable'
 import { appendChild } from '../jsx-dom/appendChild'
 import { DeferredNode } from '../jsx-dom/node'
 import { ResolvedChild, resolveChildren } from '../jsx-dom/resolveChildren'
-import { decamelize, noop, updateStyle } from '../jsx-dom/util'
+import {
+  UpdateStyle,
+  decamelize,
+  forEach,
+  noop,
+  updateStyle,
+} from '../jsx-dom/util'
 import { morphChildren } from '../morphdom/morphChildren'
 import { ReadonlyRef, isRef } from '../observable'
-import { DOMClassAttribute, JSX } from '../types'
+import { DOMClassAttribute, HTMLStyleAttribute, JSX } from '../types'
 import { AlienComponent } from './component'
 import { hasTagName, isElement, isNode } from './duck'
-import { enableEffect, getEffects } from './effects'
-import { onElementEvent } from './elementEvent'
 import { flattenClassProp } from './flattenClassProp'
-import { flattenStyleProp } from './flattenStyleProp'
+import { MergeStylesFn, flattenStyleProp } from './flattenStyleProp'
 import { HostProps } from './hostProps'
-import { kAlienElementKey, kAlienRefProp } from './symbols'
+import { kAlienElementKey } from './symbols'
 import { DefaultElement } from './types'
 
 const nonPresentationSVGAttributes =
   /^(a(ll|t|u)|base[FP]|c(al|lipPathU|on)|di|ed|ex|filter[RU]|g(lyphR|r)|ke|l(en|im)|ma(rker[HUW]|s)|n|pat|pr|point[^e]|re[^n]|s[puy]|st[^or]|ta|textL|vi|xC|y|z)/
 
 const { set } = Reflect
-const { call } = Function
-
-const setAttribute = call.bind(Element.prototype.setAttribute) as (
-  node: Element,
-  key: string,
-  value: string | number
-) => void
-
-const setAttributeNS = call.bind(Element.prototype.setAttributeNS) as (
-  node: Element,
-  namespace: string,
-  key: string,
-  value: string | number
-) => void
 
 type ApplyFunction = (
   node: DefaultElement,
@@ -49,6 +40,39 @@ const applyFunctions: Record<string, ApplyFunction> = {
   style: applyStyleProp,
 }
 
+export function applyProp(
+  node: DefaultElement,
+  prop: string,
+  value: any,
+  hostProps?: HostProps
+): void {
+  const attr = prop === 'htmlFor' ? 'for' : prop
+  const apply = (applyFunctions[attr] ||= generateApplyFunction(attr))
+  if (apply !== noop) {
+    if (prop !== 'children') {
+      value = addHostProp(hostProps, prop, value)
+    }
+    apply(node, value, hostProps)
+  }
+}
+
+export function addHostProp(
+  hostProps: HostProps | undefined,
+  prop: string,
+  value: any,
+  onUpdate = applyProp
+) {
+  if (isRef(value)) {
+    hostProps?.addObserver(prop, value, value => {
+      onUpdate(hostProps.node, prop, value)
+    })
+    value = value.peek()
+  } else if (value != null) {
+    hostProps?.add(prop)
+  }
+  return value
+}
+
 export function applyChildrenProp(
   node: DefaultElement,
   children: ResolvedChild[] | ReadonlyRef<any>,
@@ -56,7 +80,7 @@ export function applyChildrenProp(
 ): void {
   // Note: If children is a ref, it must be the only child.
   if (isRef(children)) {
-    hostProps?.addObserver('children', children, (node, newChildren) => {
+    hostProps?.addObserver('children', children, newChildren => {
       const children = resolveChildren(newChildren)
       morphChildren(node, children)
     })
@@ -74,7 +98,7 @@ export function applyClassProp(
 ): void {
   const result = flattenClassProp(value, hostProps)
   if (result) {
-    setAttribute(node, 'class', result)
+    node.setAttribute('class', result)
   } else {
     node.removeAttribute('class')
   }
@@ -90,41 +114,13 @@ export function applyDatasetProp(
 
 export function applyStyleProp(
   node: DefaultElement,
-  value: any,
+  value: HTMLStyleAttribute,
   hostProps?: HostProps
 ): void {
-  const style = flattenStyleProp(node, value, {}, hostProps)
-  updateStyle(node, style)
-}
-
-export function applyProp(
-  node: DefaultElement,
-  prop: string,
-  value: any,
-  hostProps?: HostProps
-): void {
-  if (prop === 'htmlFor') {
-    prop = 'for'
-  }
-  const apply = (applyFunctions[prop] ||= generateApplyFunction(prop))
-  apply(node, value, hostProps)
-}
-
-export function addHostProp(
-  hostProps: HostProps | undefined,
-  prop: string,
-  value: any,
-  onUpdate = applyProp
-) {
-  if (isRef(value)) {
-    hostProps?.addObserver(prop, value, (node, value) => {
-      onUpdate(node, prop, value)
-    })
-    value = value.peek()
-  } else if (value != null) {
-    hostProps?.add(prop)
-  }
-  return value
+  const merge: MergeStylesFn = (style, value) =>
+    applyObjectProp(node, 'style', value, hostProps, style)
+  const style = flattenStyleProp(node, value, {}, merge, hostProps)
+  updateStyle(node, style, UpdateStyle.NonAnimated)
 }
 
 /**
@@ -168,20 +164,17 @@ function generateApplyFunction(prop: string): ApplyFunction {
     case 'innerHTML':
     case 'innerText':
     case 'textContent':
-      return (node, value, hostProps) => {
-        value = addHostProp(hostProps, prop, value)
+      return (node, value) => {
         set(node, prop, value == null || isBoolean(value) ? '' : value)
       }
     case 'checked':
     case 'disabled':
     case 'spellCheck':
       prop = prop.toLowerCase()
-      return (node, value, hostProps) => {
-        value = addHostProp(hostProps, prop, value)
+      return (node, value) => {
         set(node, prop, value)
       }
     case 'key':
-    case 'ref':
     case 'namespaceURI':
       return noop
   }
@@ -210,53 +203,54 @@ function generateApplyFunction(prop: string): ApplyFunction {
     }
 
     return (node, value, hostProps) => {
-      value = addHostProp(hostProps, prop, value)
       if (value != null) {
-        enableEffect(getEffects(node), onElementEvent.bind(null), 0, node, [
-          key,
-          value,
-          useCapture,
-        ])
+        // Create a new reference in case the event handler is memoized.
+        value = value.bind(null)
+
+        node.addEventListener(key, value, useCapture)
+        hostProps?.addEffect(
+          prop,
+          createDisposable(
+            [key, value, useCapture],
+            node.removeEventListener,
+            node
+          )
+        )
       }
     }
   }
+
+  let namespace: string | null | undefined
+  let getAttributeName: (node: DefaultElement) => string
 
   if (prop[0] === 'x') {
     if (prop === 'xmlnsXlink') {
-      return (node, value, hostProps) => {
-        value = addHostProp(hostProps, prop, value)
-        setAttribute(node, 'xmlns:xlink', value ?? null)
-      }
-    }
+      getAttributeName = () => 'xmlns:xlink'
+    } else {
+      namespace = /^xlink[A-Z]/.test(prop)
+        ? 'http://www.w3.org/1999/xlink'
+        : /^xml[A-Z]/.test(prop)
+        ? 'http://www.w3.org/XML/1998/namespace'
+        : null
 
-    const namespace = /^xlink[A-Z]/.test(prop)
-      ? 'http://www.w3.org/1999/xlink'
-      : /^xml[A-Z]/.test(prop)
-      ? 'http://www.w3.org/XML/1998/namespace'
-      : null
-
-    if (namespace) {
-      const attr = decamelize(prop, ':')
-      return (node, value, hostProps) => {
-        value = addHostProp(hostProps, prop, value)
-        setAttributeNS(node, namespace, attr, value ?? null)
+      if (namespace) {
+        const attr = decamelize(prop, ':')
+        getAttributeName = () => attr
       }
     }
   }
 
-  let setAttribute: (node: Element, key: string, value: any) => void
-  if (nonPresentationSVGAttributes.test(prop)) {
+  if (!nonPresentationSVGAttributes.test(prop)) {
     const dashedProp = decamelize(prop, '-')
-    setAttribute = (node, prop, value) => {
-      node.setAttribute(node instanceof SVGElement ? dashedProp : prop, value)
+    if (prop !== dashedProp) {
+      getAttributeName = node =>
+        node instanceof SVGElement ? dashedProp : prop
     }
-  } else {
-    setAttribute = call.bind(Element.prototype.setAttribute)
   }
 
-  return (node, value, hostProps) => {
-    value = addHostProp(hostProps, prop, value)
+  getAttributeName ||= () => prop
 
+  return (node, value) => {
     if (isObject(value)) {
       // Custom elements might have object properties, which are set
       // directly instead of as attributes.
@@ -264,10 +258,20 @@ function generateApplyFunction(prop: string): ApplyFunction {
       return
     }
 
+    const attr = getAttributeName(node)
     if (value === null || value === false) {
-      node.removeAttribute(prop)
+      if (namespace) {
+        node.removeAttributeNS(namespace, attr)
+      } else {
+        node.removeAttribute(attr)
+      }
     } else if (value !== undefined) {
-      setAttribute(node, prop, value === true ? '' : value)
+      value = value === true ? '' : value
+      if (namespace) {
+        node.setAttributeNS(namespace, attr, value)
+      } else {
+        node.setAttribute(attr, value)
+      }
     }
 
     // See morphdom #117

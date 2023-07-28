@@ -1,4 +1,5 @@
-import { enableEffect, getEffects } from '../internal/effects'
+import { Disposable, createDisposable } from '../disposable'
+import { kAlienHostProps } from '../internal/symbols'
 import { AnyElement } from '../internal/types'
 import { ComputedRef, computed, ref } from '../observable'
 import { useState } from './useState'
@@ -23,6 +24,7 @@ const initBoundingBox = (): BoundingBox => {
   let leftRef: ComputedRef<number> | undefined
   let widthRef: ComputedRef<number> | undefined
   let heightRef: ComputedRef<number> | undefined
+  let resizeEffect: Disposable
 
   return {
     get x() {
@@ -54,21 +56,21 @@ const initBoundingBox = (): BoundingBox => {
     },
     observer: null,
     setElement(element) {
-      enableEffect(
-        getEffects(element),
-        (element: AnyElement) => {
-          rectRef.value = element.getBoundingClientRect()
-          const observer = new ResizeObserver(() => {
-            rectRef.value = element.getBoundingClientRect()
-          })
-          observer.observe(element)
-          return () => {
-            observer.disconnect()
-          }
-        },
-        0,
-        element,
-        false
+      if (!element) {
+        resizeEffect?.dispose()
+        return
+      }
+
+      rectRef.value = element.getBoundingClientRect()
+      const observer = new ResizeObserver(() => {
+        rectRef.value = element.getBoundingClientRect()
+      })
+
+      observer.observe(element)
+
+      const hostProps = kAlienHostProps(element)!
+      resizeEffect = hostProps.addEffect(
+        createDisposable([], observer.disconnect, observer)
       )
     },
   }

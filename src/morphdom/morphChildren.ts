@@ -1,8 +1,8 @@
-import { isArray, isString } from '@alloc/is'
+import { isArray, isFunction } from '@alloc/is'
 import { unmount } from '../functions/unmount'
 import { AlienComponent } from '../internal/component'
 import { hasTagName, isElement } from '../internal/duck'
-import { kAlienElementKey } from '../internal/symbols'
+import { kAlienElementKey, kAlienElementTags } from '../internal/symbols'
 import {
   DeferredNode,
   evaluateDeferredNode,
@@ -167,21 +167,22 @@ export function morphChildren(
 
 function isCompatibleNode(fromNode: Node, toNode: ChildNode | DeferredNode) {
   if (isDeferredNode(toNode)) {
-    if (!isElement(fromNode)) {
-      return false
+    if (isFunction(toNode.tag)) {
+      const tags = kAlienElementTags(fromNode)
+      return tags != null && tags.has(toNode.tag)
     }
-    if (!isString(toNode.tag)) {
-      return false
+    if (isElement(fromNode)) {
+      return compareNodeNames(fromNode.nodeName, toNode.tag)
     }
-    return compareNodeNames(fromNode.nodeName, toNode.tag)
+    return false
   }
   if (fromNode.nodeType !== toNode.nodeType) {
     return false
   }
-  if (!isElement(fromNode)) {
-    return true
+  if (isElement(fromNode)) {
+    return fromNode.nodeName === toNode.nodeName
   }
-  return fromNode.nodeName === toNode.nodeName
+  return true
 }
 
 function isKeyedNode(node: Node) {

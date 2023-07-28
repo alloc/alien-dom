@@ -15,3 +15,22 @@ export function attachDisposer<T extends object>(
 export function isDisposable<T extends {}>(arg: T): arg is Disposable<T> {
   return typeof (arg as any).dispose === 'function'
 }
+
+/**
+ * Create a `Disposable` object from a function and arguments array.
+ *
+ * The arguments array is included in the returned object for introspection
+ * purposes.
+ */
+export function createDisposable<Args extends readonly any[]>(
+  args: Args,
+  dispose: (...args: Args) => void,
+  thisArg?: any
+): Disposable<{ args: Args; thisArg?: any }> {
+  type Bind = (thisArg: any, ...args: Args) => () => void
+  return {
+    dispose: (dispose.bind as Bind)(thisArg, ...args),
+    args,
+    thisArg,
+  }
+}

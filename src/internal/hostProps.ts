@@ -1,22 +1,17 @@
 import { isArray } from '@alloc/is'
-import { Disposable } from '../disposable'
-import { AlienEffect } from '../effects'
+import { Disposable, createDisposable } from '../disposable'
 import { forEach } from '../jsx-dom/util'
 import { ReadonlyRef, observe } from '../observable'
-import { enableEffect, getEffects } from './effects'
 import { JSX } from '../types/jsx'
 import { kAlienHostProps } from './symbols'
 import { DefaultElement } from './types'
 
-/** This observes a `Ref` whose value is applied to a host prop. */
-export interface HostPropObserver extends Disposable, AlienEffect {
-  args: [ReadonlyRef<any>, string]
-}
-
-type HostProp = HostPropObserver | HostPropObserver[] | null
+type HostProp = Disposable | Disposable[] | null
 
 export class HostProps extends Map<string, HostProp> {
   refs?: Set<JSX.ElementRef>
+  unmappedEffects?: Set<Disposable>
+
   constructor(readonly node: DefaultElement) {
     super()
     kAlienHostProps(node, this)
@@ -33,39 +28,41 @@ export class HostProps extends Map<string, HostProp> {
   addObserver(
     prop: string,
     ref: ReadonlyRef<any>,
-    applyProp: (node: DefaultElement, newValue: any) => void
+    applyProp: (newValue: any) => void
   ): void {
-    let firstAppliedValue = ref.peek()
+    const observer = observe(ref, applyProp)
+    this.addEffect(prop, observer)
+  }
 
-    const effect: any = enableEffect(
-      getEffects(this.node),
-      (node: DefaultElement, ref: ReadonlyRef) => {
-        const value = ref.peek()
-        if (value !== firstAppliedValue) {
-          applyProp(node, value)
-        }
-        firstAppliedValue = undefined
-        return observe(ref, newValue => {
-          applyProp(node, newValue)
-        }).destructor
-      },
-      0,
-      this.node,
-      [ref, prop]
-    )
-
-    const otherEffect = this.get(prop)
-    if (!otherEffect) {
-      this.set(prop, effect)
-    } else if (isArray(otherEffect)) {
-      otherEffect.push(effect)
+  addEffect(effect: Disposable): Disposable
+  addEffect(prop: string, effect: Disposable): void
+  addEffect(arg1: string | Disposable, effect?: Disposable): any {
+    if (effect) {
+      const prop = arg1 as string
+      const otherEffect = this.get(prop)
+      if (!otherEffect) {
+        this.set(prop, effect)
+      } else if (isArray(otherEffect)) {
+        otherEffect.push(effect)
+      } else {
+        this.set(prop, [otherEffect, effect])
+      }
     } else {
-      this.set(prop, [otherEffect, effect])
+      effect = arg1 as Disposable
+      this.unmappedEffects ||= new Set()
+      this.unmappedEffects.add(effect)
+      return createDisposable([effect], this.destroyEffect, this)
     }
+  }
+
+  destroyEffect(effect: Disposable) {
+    this.unmappedEffects?.delete(effect)
+    effect.dispose()
   }
 
   unmount() {
     forEach(this.refs, ref => ref.setElement(null))
+    forEach(this.unmappedEffects, effect => effect.dispose())
 
     for (const effects of this.values()) {
       forEach(effects, effect => effect.dispose())

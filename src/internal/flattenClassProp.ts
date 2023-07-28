@@ -65,8 +65,8 @@ function addClassObserver(
   if (!refs.has(ref)) {
     refs.add(ref)
 
-    hostProps.addObserver('class', ref, node => {
-      morphAttributes(node, { class: rootValue }, 'class')
+    hostProps.addObserver('class', ref, () => {
+      morphAttributes(hostProps.node, { class: rootValue }, 'class')
     })
   }
 }

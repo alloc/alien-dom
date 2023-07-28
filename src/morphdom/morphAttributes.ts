@@ -1,16 +1,22 @@
-import { isArray, isNumber } from '@alloc/is'
+import { isNumber } from '@alloc/is'
 import { Disposable } from '../disposable'
 import {
   parseTransform,
   readTransform,
   renderTransform,
 } from '../internal/animate/transform'
-import { addHostProp, applyDatasetProp, applyProp } from '../internal/applyProp'
+import {
+  addHostProp,
+  applyDatasetProp,
+  applyNestedProp,
+  applyProp,
+} from '../internal/applyProp'
+import { flattenStyleProp } from '../internal/flattenStyleProp'
 import { kAlienHostProps } from '../internal/symbols'
 import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
 import { DefaultElement } from '../internal/types'
 import { isSvgChild } from '../jsx-dom/svg-tags'
-import { forEach, keys, noop, updateStyle } from '../jsx-dom/util'
+import { UpdateStyle, forEach, keys, noop, updateStyle } from '../jsx-dom/util'
 
 export function morphAttributes(
   fromNode: DefaultElement,
@@ -33,9 +39,7 @@ export function morphAttributes(
       morphProp(fromNode, prop, newValue, fromProps)
       fromKeyPaths.delete(keyPath)
 
-      if (oldEffects) {
-        forEach(oldEffects, disposeFirstArg)
-      }
+      forEach(oldEffects, disposeFirstArg)
     }
   }
 
@@ -51,45 +55,78 @@ export function morphAttributes(
     let newValue = toProps[prop]
 
     if (newValue && prop in fineGrainedMorphs) {
-      if (prop === 'style') {
-        const transformKeys = keys(newValue).filter(
-          key => key in cssTransformAliases
-        )
-        if (transformKeys.length) {
-          const newStyle = (newValue = { ...newValue })
-          const svgMode = isSvgChild(fromNode)
-
-          toTransformExists = true
-          newStyle.transform = transformKeys.map(key => {
-            let value = newStyle[key]
-            delete newStyle[key]
-
-            const keyPath = 'style.' + key
-            const oldEffects = fromProps.get(keyPath)
-            fromProps.delete(keyPath)
-
-            // Add an observer if necessary.
-            value = addHostProp(fromProps, keyPath, value)
-
-            if (oldEffects) {
-              forEach(oldEffects, disposeFirstArg)
-            }
-
-            let transformFn = cssTransformAliases[key]
-            if (!transformFn || svgMode) {
-              transformFn = key
-            }
-
-            if (isNumber(value) && !svgMode) {
-              value += (cssTransformUnits[key] || '') as any
-            }
-
-            return [transformFn, value]
-          })
-        }
-      }
       morphProp = (_, prop, newValue) => {
         morphProp = fineGrainedMorphs[prop]
+
+        if (prop === 'style') {
+          // Flatten the style prop while preserving any Ref objects.
+          newValue = flattenStyleProp(
+            fromNode,
+            newValue,
+            {},
+            Object.assign,
+            fromProps
+          )
+
+          const newStyle = newValue
+          const newTransform = newStyle.transform
+          const transformKeys = keys(newStyle).filter(
+            key => key in cssTransformAliases
+          )
+          if (transformKeys.length) {
+            const svgMode = isSvgChild(fromNode)
+
+            toTransformExists = true
+            newStyle.transform = transformKeys.map(key => {
+              let value = newStyle[key]
+              delete newStyle[key]
+
+              const keyPath = 'style.' + key
+              const oldEffects = fromProps.get(keyPath)
+              fromProps.delete(keyPath)
+
+              // Add an observer if necessary.
+              value = addHostProp(fromProps, keyPath, value, applyNestedProp)
+
+              forEach(oldEffects, disposeFirstArg)
+
+              let transformFn = cssTransformAliases[key]
+              if (!transformFn || svgMode) {
+                transformFn = key
+              }
+
+              if (isNumber(value) && !svgMode) {
+                value += (cssTransformUnits[key] || '') as any
+              }
+
+              return [transformFn, value]
+            })
+          }
+          if (newTransform !== undefined) {
+            toTransformExists = true
+
+            morphProp = (fromNode, prop, newValue) => {
+              if (prop === 'transform') {
+                const value = parseTransform(
+                  addHostProp(
+                    fromProps,
+                    'style.transform',
+                    newTransform,
+                    applyNestedProp
+                  )
+                )
+                if (transformKeys.length) {
+                  newValue.push(...value)
+                } else {
+                  newValue = value
+                }
+              }
+
+              fineGrainedMorphs.style(fromNode, prop, newValue, fromProps)
+            }
+          }
+        }
+
         for (const key in newValue) {
           updateProp(key, newValue[key], `${prop}.${key}`)
         }
@@ -119,7 +156,10 @@ export function morphAttributes(
       if (dotIndex !== -1) {
         prop = keyPath.slice(dotIndex + 1)
         parentProp = keyPath.slice(0, dotIndex)
-        if (parentProp === 'style' && prop in cssTransformAliases) {
+        if (
+          parentProp === 'style' &&
+          (prop === 'transform' || prop in cssTransformAliases)
+        ) {
           fromTransformExists = true
           // Do nothing, as transform props are removed together.
           morphProp = noop
@@ -138,9 +178,7 @@ export function morphAttributes(
     }
 
     const oldEffects = fromProps.get(keyPath)
-    if (oldEffects) {
-      forEach(oldEffects, disposeFirstArg)
-    }
+    forEach(oldEffects, disposeFirstArg)
 
     morphProp(fromNode, prop, null)
     fromProps.delete(keyPath)
@@ -151,21 +189,20 @@ export function morphAttributes(
   }
 }
 
-const morphStyleProperty: typeof applyProp = (fromNode, key, newValue) => {
+const morphStyleProperty: typeof applyProp = (
+  fromNode,
+  key,
+  newValue,
+  fromProps
+) => {
   if (key === 'transform') {
     const svgMode = isSvgChild(fromNode)
     const oldTransform = parseTransform(readTransform(fromNode, svgMode))
-    const newTransform = renderTransform(
-      oldTransform,
-      isArray(newValue)
-        ? (newValue as [string, string][])
-        : parseTransform(newValue),
-      false,
-      svgMode
-    )
+    const newTransform = renderTransform(oldTransform, newValue, false, svgMode)
     updateStyle(fromNode, { transform: newTransform })
   } else {
-    updateStyle(fromNode, { [key]: newValue })
+    newValue = addHostProp(fromProps, 'style.' + key, newValue, applyNestedProp)
+    updateStyle(fromNode, { [key]: newValue }, UpdateStyle.NonAnimated)
   }
 }
 

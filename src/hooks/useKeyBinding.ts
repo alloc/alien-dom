@@ -1,10 +1,9 @@
 import { isString } from '@alloc/is'
 import type { Key } from 'ts-key-enum'
-import { Disposable } from '../disposable'
-import { AlienEffect } from '../effects'
-import { isComment, isDocument } from '../internal/duck'
-import { enableEffect, getEffects } from '../internal/effects'
+import { Disposable, createDisposable } from '../disposable'
+import { isDocument } from '../internal/duck'
 import { currentComponent } from '../internal/global'
+import { kAlienHostProps } from '../internal/symbols'
 import { noop, toArray } from '../jsx-dom/util'
 import { ref } from '../observable'
 import { EffectResult, useEffect } from './useEffect'
@@ -65,7 +64,7 @@ const initKeyBinding = (
    * @observable
    */
   isActive: boolean
-  effect: Disposable<AlienEffect> | null
+  effect: Disposable | null
   combo: Set<string>
   onKeyDown: ((event: KeyBindingEvent) => EffectResult) | undefined
   onKeyUp: EffectResult | undefined
@@ -95,33 +94,39 @@ const initKeyBinding = (
     onKeyDown: callback,
     onKeyUp: undefined,
     enable(target) {
-      return enableKeyBinding(target, this)
+      enableKeyBinding(target, this)
+      return () => {
+        disableKeyBinding(target, this)
+      }
     },
     setElement(element) {
       if (!element) {
         this.effect?.dispose()
         return
       }
-      this.effect = enableEffect(
-        getEffects(element),
-        element => enableKeyBinding(element, this),
-        0,
-        element,
-        false
+      const hostProps = kAlienHostProps(element)!
+      enableKeyBinding(element, this)
+      this.effect = hostProps.addEffect(
+        createDisposable([element, this], disableKeyBinding)
       )
     },
   }
 }
 
-function enableKeyBinding(target: Document | HTMLElement, binding: KeyBinding) {
-  if (isComment(target)) {
-    return
-  }
+function enableKeyBinding(
+  target: Document | HTMLElement,
+  binding: KeyBinding
+): void {
   const context = contexts.get(target) || new KeyBindingContext(target)
   context.addBinding(binding)
-  return () => {
-    context.removeBinding(binding)
-  }
+}
+
+function disableKeyBinding(
+  target: Document | HTMLElement,
+  binding: KeyBinding
+): void {
+  const context = contexts.get(target)
+  context?.removeBinding(binding)
 }
 
 const isWindows = /* @__PURE__ */ navigator.platform.includes('Win')
@@ -148,16 +153,14 @@ const modifierKeys = ['shift', 'control', 'alt', 'meta', 'fn', 'hyper', 'super']
 const contexts = new Map<Document | HTMLElement, KeyBindingContext>()
 
 class KeyBindingContext {
-  readonly bindings = new Set<KeyBinding>()
-  readonly newBindings = new Set<KeyBinding>()
+  readonly bindings: KeyBinding[] = []
+  readonly newBindings: KeyBinding[] = []
   readonly activeKeys = new Set<string>()
   readonly dispose: () => void
 
   constructor(readonly target: Document | HTMLElement) {
     if (!isDocument(target) && !supportsKeyDown(target)) {
-      throw Error(
-        'The target element must be a document or a focusable element.'
-      )
+      target.setAttribute('tabindex', '0')
     }
 
     const { activeKeys } = this
@@ -196,11 +199,11 @@ class KeyBindingContext {
 
       // Newly added bindings aren't activated until all keys are released, so
       // as to avoid an accidental trigger.
-      if (activeKeys.size === 0 && this.newBindings.size > 0) {
+      if (activeKeys.size === 0 && this.newBindings.length > 0) {
         for (const binding of this.newBindings) {
-          this.bindings.add(binding)
+          this.bindings.push(binding)
         }
-        this.newBindings.clear()
+        this.newBindings.length = 0
       }
     }
 
@@ -246,17 +249,24 @@ class KeyBindingContext {
 
   addBinding(binding: KeyBinding) {
     if (this.activeKeys.size === 0) {
-      this.bindings.add(binding)
+      this.bindings.push(binding)
     } else {
-      this.newBindings.add(binding)
+      this.newBindings.push(binding)
     }
   }
 
   removeBinding(binding: KeyBinding) {
-    this.newBindings.delete(binding)
-    this.bindings.delete(binding)
+    let index = this.newBindings.indexOf(binding)
+    if (index != -1) {
+      this.newBindings.splice(index, 1)
+    } else {
+      index = this.bindings.indexOf(binding)
+      if (index != -1) {
+        this.bindings.splice(index, 1)
+      }
+    }
 
-    const bindingCount = this.bindings.size + this.newBindings.size
+    const bindingCount = this.bindings.length + this.newBindings.length
     if (bindingCount === 0) {
       this.dispose()
     }

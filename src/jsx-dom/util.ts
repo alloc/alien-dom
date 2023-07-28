@@ -1,5 +1,6 @@
 import { isArray, isNumber } from '@alloc/is'
 import { isAnimatedStyleProp, stopAnimatingKey } from '../internal/animate'
+import { hasForEach } from '../internal/duck'
 import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
 import type { DefaultElement } from '../internal/types'
 import { isUnitlessNumber } from './css-props'
@@ -13,11 +14,18 @@ export function toArray<T>(a: T): T extends readonly any[] ? T : T[] {
 
 export function forEach<T>(
   arg: T,
-  callback: (value: T extends readonly (infer U)[] ? U : T) => void
-) {
-  if (isArray(arg)) {
+  callback: (
+    value: T extends any
+      ? T extends { forEach(cb: (value: infer U) => any): any }
+        ? U
+        : Exclude<T, null | undefined>
+      : never
+  ) => void
+): void {
+  if (arg == null) return
+  if (hasForEach(arg)) {
     arg.forEach(callback)
-  } else if (arg !== undefined) {
+  } else {
     callback(arg as any)
   }
 }
