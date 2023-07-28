@@ -63,9 +63,13 @@ export class AlienEffects<Element extends AnyElement = any> {
     if (element) {
       kAlienEffects(element, this)
 
+      if (!rootNode && element.isConnected) {
+        rootNode = element.getRootNode()
+      }
+
       // Assume the element will be mounted soon, if it's not already.
       this.mounted = true
-      this.rootNode = rootNode || element.getRootNode()
+      this.rootNode = rootNode
 
       if (element) {
         this.enableOnceMounted(element, rootNode)
