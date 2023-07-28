@@ -4,7 +4,7 @@ import { AlienBoundEffect } from '../effects'
 import { AlienElement, AlienEvent } from '../element'
 import { isUnitlessNumber } from '../jsx-dom/css-props'
 import { CSSProperties } from '../types/dom'
-import { createEventEffect } from './elementEvent'
+import { createEventEffect } from './eventEffect'
 import { AnyElement, AnyEvent } from './types'
 
 export const AlienElementPrototype = new Proxy(AlienElement.prototype, {
