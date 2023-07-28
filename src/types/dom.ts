@@ -1,4 +1,5 @@
 import type * as CSS from 'csstype'
+import type { AlienEvent } from '../element'
 import type { ReadonlyRef } from '../observable'
 import type { AttrWithRef } from './attr'
 import type { JSX } from './jsx'
@@ -225,7 +226,9 @@ type ChangeEvent = Event
 // Event Handler Types
 // ----------------------------------------------------------------------
 
-type EventHandler<E extends Event, T> = (event: E & CurrentTarget<T>) => void
+type EventHandler<E extends Event, T> = (
+  event: AlienEvent<E, Extract<T, Element>>
+) => void
 
 export type ReactEventHandler<T = Element> = EventHandler<Event, T>
 
