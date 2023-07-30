@@ -48,10 +48,6 @@ export function morphAttributes(
   let toTransformExists: boolean | undefined
 
   for (const prop in toProps) {
-    if (prop === 'children') {
-      continue // Children are morphed separately.
-    }
-
     let newValue = toProps[prop]
 
     if (newValue && prop in fineGrainedMorphs) {

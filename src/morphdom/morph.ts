@@ -1,10 +1,12 @@
-import { isFunction } from '@alloc/is'
+import { addChildrenRef, applyRefProp } from '../internal/applyProp'
 import { AlienComponent } from '../internal/component'
-import { kAlienElementTags } from '../internal/symbols'
+import { kAlienElementTags, kAlienHostProps } from '../internal/symbols'
 import type { DefaultElement } from '../internal/types'
-import { DeferredNode } from '../jsx-dom/node'
-import { ResolvedChild, resolveChildren } from '../jsx-dom/resolveChildren'
-import { compareNodeNames } from '../jsx-dom/util'
+import {
+  AnyDeferredNode,
+  DeferredChildren,
+  isDeferredHostNode,
+} from '../jsx-dom/node'
 import { isRef } from '../observable'
 import { morphAttributes } from './morphAttributes'
 import { morphChildren } from './morphChildren'
@@ -14,42 +16,38 @@ import { morphChildren } from './morphChildren'
  */
 export function morph(
   fromParentNode: DefaultElement,
-  toParentNode: DeferredNode,
+  toParentNode: AnyDeferredNode,
   component?: AlienComponent | null
 ): void {
   // Check for a deferred component update.
-  if (isFunction(toParentNode.tag)) {
-    const tags = kAlienElementTags(fromParentNode)
-    const childComponent = tags?.get(toParentNode.tag)
+  if (isDeferredHostNode(toParentNode)) {
+    const fromProps = kAlienHostProps(fromParentNode)
 
-    // If this happens, there is an internal bug.
-    if (!childComponent) {
-      throw Error('invalid morph')
+    let toChildNodes: DeferredChildren
+    if (isRef(toParentNode.children)) {
+      toChildNodes = addChildrenRef(toParentNode.children, fromProps)
+    } else {
+      toChildNodes = toParentNode.children
     }
 
+    morphAttributes(fromParentNode, toParentNode.props)
+    if (toChildNodes) {
+      morphChildren(fromParentNode, toChildNodes, component)
+    }
+
+    if (toParentNode.ref) {
+      applyRefProp(fromParentNode, toParentNode.ref, fromProps)
+    }
+  } else {
+    const tags = kAlienElementTags(fromParentNode)!
+    const childComponent = tags.get(toParentNode.tag)!
+
     childComponent.updateProps(toParentNode.props)
-    return toParentNode.context?.forEach((ref, key) => {
+    toParentNode.context?.forEach((ref, key) => {
       const targetRef = childComponent.context.get(key)
       if (targetRef) {
         targetRef.value = ref.peek()
       }
     })
   }
-
-  // If this happens, there is an internal bug.
-  if (!compareNodeNames(fromParentNode.nodeName, toParentNode.tag)) {
-    throw Error('invalid morph')
-  }
-
-  morphAttributes(fromParentNode, toParentNode.props)
-
-  let toChildNodes: HTMLCollection | ResolvedChild[]
-  if (isRef(toParentNode.children)) {
-    const children = toParentNode.children.peek()
-    toChildNodes = resolveChildren(children)
-  } else {
-    toChildNodes = toParentNode.children!
-  }
-
-  morphChildren(fromParentNode, toChildNodes, component)
 }

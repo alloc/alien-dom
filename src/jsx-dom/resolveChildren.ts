@@ -1,10 +1,11 @@
 import { isFunction } from '@alloc/is'
 import { AlienContextMap, getContext } from '../internal/context'
 import { isArrayLike, isElement, isFragment, isNode } from '../internal/duck'
+import { getFragmentNodes, prepareFragment } from '../internal/fragment'
 import { fromElementThunk } from '../internal/fromElementThunk'
 import { kAlienElementKey } from '../internal/symbols'
 import { Fragment } from '../jsx-dom/jsx-runtime'
-import { ReadonlyRef, isRef } from '../observable'
+import { isRef } from '../observable'
 import type { JSX } from '../types/jsx'
 import {
   AlienNode,
@@ -22,7 +23,7 @@ export type ResolvedChild = ChildNode | AlienNode
  * Positional keys are assigned to elements and deferred nodes.
  */
 export function resolveChildren(
-  child: JSX.ChildrenProp | ReadonlyRef<JSX.ChildrenProp>,
+  child: JSX.ChildrenProp,
   key?: string,
   context = new Map(getContext()) as AlienContextMap,
   nodes: ResolvedChild[] = []
@@ -32,7 +33,8 @@ export function resolveChildren(
   if (child) {
     if (isNode(child)) {
       if (isFragment(child)) {
-        children = child.childNodes
+        child = prepareFragment(child)
+        children = getFragmentNodes(child)
       } else {
         nodes.push(child)
 

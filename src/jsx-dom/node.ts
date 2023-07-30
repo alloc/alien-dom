@@ -1,18 +1,25 @@
-import { isArray, isString } from '@alloc/is'
+import { isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
-import { applyProp } from '../internal/applyProp'
+import {
+  applyChildrenProp,
+  applyProp,
+  applyRefProp,
+} from '../internal/applyProp'
 import { AlienContextMap, setContext } from '../internal/context'
-import { hasTagName } from '../internal/duck'
 import { HostProps } from '../internal/hostProps'
 import { kAlienElementKey } from '../internal/symbols'
+import { DefaultElement } from '../internal/types'
 import { SVGNamespace } from '../jsx-dom/jsx-runtime'
-import { ReadonlyRef } from '../observable'
+import { ReadonlyRef, isRef } from '../observable'
 import type { JSX } from '../types/jsx'
 import { appendChild } from './appendChild'
-import type { ResolvedChild } from './resolveChildren'
+import { resolveChildren, type ResolvedChild } from './resolveChildren'
 import { svgTags } from './svg-tags'
 
-export type AlienNode = ShadowRootNode | DeferredNode
+export type AlienNode =
+  | ShadowRootNode
+  | DeferredHostNode
+  | DeferredComponentNode
 
 /** Special nodes are distinguished by a numeric property of this symbol. */
 export const kAlienNodeType = Symbol.for('alien:nodeType')
@@ -29,35 +36,126 @@ export interface ShadowRootNode {
 export const isShadowRoot = (node: any): node is ShadowRootNode =>
   !!node && node[kAlienNodeType] === kShadowRootNodeType
 
-export function createHostNode(
+/** A deferred node is one whose component has not executed yet. */
+export interface DeferredNode {
+  [kAlienNodeType]: typeof kDeferredNodeType
+  tag: string | ((props: any) => JSX.ChildrenProp)
+  props: any
+  context: AlienContextMap | undefined
+}
+
+export interface DeferredHostNode extends DeferredNode {
+  tag: string
+  ref: JSX.RefProp<any>
+  children: DeferredChildren
+  namespaceURI: string | undefined
+}
+
+export type DeferredChildren =
+  | ResolvedChild[]
+  | ReadonlyRef<JSX.Children>
+  | false
+  | undefined
+
+export interface DeferredComponentNode extends DeferredNode {
+  tag: (props: any) => JSX.ChildrenProp
+  children?: ResolvedChild[]
+}
+
+export type AnyDeferredNode = DeferredHostNode | DeferredComponentNode
+
+export const isDeferredNode = (node: any): node is AnyDeferredNode =>
+  !!node && (node as any)[kAlienNodeType] === kDeferredNodeType
+
+export const isDeferredHostNode = (
+  node: DeferredNode
+): node is DeferredHostNode => isString(node.tag)
+
+export const deferHostNode = (
   tag: string,
+  { ref, children, namespaceURI, ...props }: any
+): DeferredHostNode => ({
+  [kAlienNodeType]: kDeferredNodeType,
+  tag,
+  ref,
+  props,
+  children:
+    children && (isRef(children) ? children : resolveChildren(children)),
+  namespaceURI,
+  context: undefined,
+})
+
+export const deferComponentNode = (
+  tag: (props: any) => JSX.ChildrenProp,
   props: any,
-  children: ResolvedChild[] | ReadonlyRef<JSX.ChildrenProp>
-): Element {
-  const namespaceURI = props.namespaceURI || (svgTags[tag] && SVGNamespace)
-  const node = namespaceURI
-    ? document.createElementNS(namespaceURI, tag)
-    : document.createElement(tag)
+  children?: ResolvedChild[]
+): DeferredComponentNode => ({
+  [kAlienNodeType]: kDeferredNodeType,
+  tag,
+  props,
+  children,
+  context: undefined,
+})
 
-  const hostProps = new HostProps(node)
-  for (const prop in props) {
-    const value = prop === 'children' ? children : props[prop]
-    applyProp(node, prop, value, hostProps)
-  }
+export function evaluateDeferredNode(node: AnyDeferredNode) {
+  const key = kAlienElementKey(node)
 
-  // Select any matching <option> elements.
-  if (hasTagName(node, 'SELECT') && props.value != null) {
-    if (props.multiple === true && isArray(props.value)) {
-      const values = (props.value as any[]).map(value => String(value))
-      node.querySelectorAll('option').forEach(option => {
-        option.selected = values.includes(option.value)
-      })
-    } else {
-      node.value = props.value
+  let hostNode: Element | Comment | DocumentFragment
+  if (isDeferredHostNode(node)) {
+    hostNode = createHostNode(node)
+  } else if (node.tag === Fragment) {
+    hostNode = createFragmentNode(node.children as ResolvedChild[])
+  } else {
+    // For consistency, the context used by a deferred component node must match
+    // the context that existed when the JSX element was declared.
+    const oldContext = node.context && setContext(node.context)
+
+    // Self-updating components always return a single DOM node.
+    hostNode = node.tag(node.props) as any
+
+    if (oldContext) {
+      setContext(oldContext)
     }
   }
 
-  return node
+  kAlienElementKey(hostNode, key)
+  return hostNode
+}
+
+export function createHostNode(
+  tag: string | DeferredHostNode,
+  props?: any,
+  ref?: JSX.RefProp<any>,
+  children?: DeferredChildren,
+  namespaceURI?: string
+): Element {
+  // If a deferred host node is passed, we can skip the restructuring of the
+  // props object and the resolveChildren call, as those tasks were done by the
+  // deferHostNode constructor.
+  isString(tag)
+    ? (({ ref, children, namespaceURI, ...props } = props),
+      (children = children && !isRef(children) && resolveChildren(children)))
+    : ({ tag, props, ref, children, namespaceURI } = tag)
+
+  const hostNode = (
+    (namespaceURI ||= svgTags[tag] && SVGNamespace)
+      ? document.createElementNS(namespaceURI, tag)
+      : document.createElement(tag)
+  ) as DefaultElement
+
+  const hostProps = new HostProps(hostNode)
+
+  for (const prop in props) {
+    applyProp(hostNode, prop, props[prop], hostProps)
+  }
+  if (children) {
+    applyChildrenProp(hostNode, children, hostProps)
+  }
+  if (ref) {
+    applyRefProp(hostNode, ref, hostProps)
+  }
+
+  return hostNode
 }
 
 export const createTextNode = (text: any) =>
@@ -69,54 +167,4 @@ export function createFragmentNode(children: ResolvedChild[]) {
     appendChild(child, fragment)
   }
   return fragment
-}
-
-/** A deferred node is one whose component has not executed yet. */
-export interface DeferredNode {
-  [kAlienNodeType]: typeof kDeferredNodeType
-  tag: string | ((props: any) => JSX.ChildrenProp)
-  props: any
-  children?: ResolvedChild[] | ReadonlyRef<JSX.ChildrenProp>
-  context?: AlienContextMap
-}
-
-export const isDeferredNode = (node: any): node is DeferredNode =>
-  !!node && node[kAlienNodeType] === kDeferredNodeType
-
-export const createDeferredNode = (
-  tag: string | ((props: any) => JSX.ChildrenProp),
-  props: any,
-  children?: ResolvedChild[] | ReadonlyRef<JSX.ChildrenProp> | undefined
-): DeferredNode => ({
-  [kAlienNodeType]: kDeferredNodeType,
-  tag,
-  props,
-  children,
-  context: undefined,
-})
-
-export function evaluateDeferredNode(deferredNode: DeferredNode) {
-  const { tag, props, context, children } = deferredNode
-  const key = kAlienElementKey(deferredNode)
-
-  let node: Element | Comment | DocumentFragment
-  if (isString(tag)) {
-    node = createHostNode(tag, props, children!)
-  } else if (tag === Fragment) {
-    node = createFragmentNode(children as ResolvedChild[])
-  } else {
-    // For consistency, the context used by a deferred component node must match
-    // the context that existed when the JSX element was declared.
-    const oldContext = context && setContext(context)
-
-    // Self-updating components always return a single DOM node.
-    node = tag(props) as any
-
-    if (oldContext) {
-      setContext(oldContext)
-    }
-  }
-
-  kAlienElementKey(node, key)
-  return node
 }

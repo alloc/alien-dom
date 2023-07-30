@@ -1,8 +1,8 @@
 import { markPureComponent } from '../functions/markPureComponent'
 import { isFragment, isNode } from '../internal/duck'
 import {
-  createDeferredNode,
   createFragmentNode,
+  deferComponentNode,
   isDeferredNode,
 } from '../jsx-dom/node'
 import { resolveChildren } from '../jsx-dom/resolveChildren'
@@ -18,7 +18,7 @@ export function Fragment(props: { children: JSX.ChildrenProp }) {
   }
   const children = resolveChildren(props.children)
   if (children.some(isDeferredNode)) {
-    return createDeferredNode(Fragment, null, children)
+    return deferComponentNode(Fragment, null, children)
   }
   return createFragmentNode(children)
 }

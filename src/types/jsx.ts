@@ -1,5 +1,6 @@
 import type { AnyElement } from '../internal/types'
 import type { AlienNode, ShadowRootNode } from '../jsx-dom/node'
+import { ReadonlyRef } from '../observable'
 import type { AttrWithRef, Attributes } from './attr'
 import type {
   ChangeEventHandler,
@@ -46,7 +47,7 @@ export declare namespace JSX {
     | undefined
 
   type Children = Child | Children[]
-  type ChildrenProp = Thunkable<Children>
+  type ChildrenProp = Thunkable<Children | ReadonlyRef<Children>>
 
   /** The result of a `JSX.ElementProp` being passed into `fromElementProp` */
   type ElementOption =

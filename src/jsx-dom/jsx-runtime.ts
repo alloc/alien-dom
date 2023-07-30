@@ -4,10 +4,13 @@ import { selfUpdating } from '../functions/selfUpdating'
 import { applyKeyProp } from '../internal/applyProp'
 import { currentComponent } from '../internal/global'
 import { kAlienPureComponent, kAlienSelfUpdating } from '../internal/symbols'
-import { ReadonlyRef, isRef } from '../observable'
 import type { JSX } from '../types'
-import { DeferredNode, createDeferredNode, createHostNode } from './node'
-import { resolveChildren } from './resolveChildren'
+import {
+  AnyDeferredNode,
+  createHostNode,
+  deferComponentNode,
+  deferHostNode,
+} from './node'
 
 export { Fragment }
 export type { JSX }
@@ -20,7 +23,7 @@ export { jsx as jsxs }
 
 type Props = {
   ref?: JSX.ElementRef
-  children?: JSX.ChildrenProp | ReadonlyRef<JSX.ChildrenProp>
+  children?: JSX.ChildrenProp
 }
 
 export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
@@ -37,7 +40,7 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
   }
 
   let oldNode: ChildNode | DocumentFragment | undefined
-  let node: ChildNode | DocumentFragment | DeferredNode | undefined
+  let node: ChildNode | DocumentFragment | AnyDeferredNode | undefined
 
   // Use the element key to discover the original version of this node. We will
   // return this original node so an API like React's useRef isn't needed.
@@ -53,19 +56,15 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
   if (isFunction(tag)) {
     // Pure components are never deferred.
     if (isDeferred && hasImpureTag) {
-      node = createDeferredNode(tag, props)
+      node = deferComponentNode(tag, props)
     } else {
       node = tag(props) as ChildNode | DocumentFragment
     }
   } else if (isString(tag)) {
-    const children = isRef(props.children)
-      ? props.children
-      : resolveChildren(props.children)
-
     if (isDeferred) {
-      node = createDeferredNode(tag, props, children)
+      node = deferHostNode(tag, props)
     } else {
-      node = createHostNode(tag, props, children)
+      node = createHostNode(tag, props)
     }
   } else {
     throw Error(`Invalid JSX element type: ${tag}`)

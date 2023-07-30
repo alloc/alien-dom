@@ -2,12 +2,11 @@ import type { Falsy } from '@alloc/types'
 import { SpringAnimation, animate } from '../animate'
 import { selfUpdating } from '../functions/selfUpdating'
 import { toElements } from '../functions/toElements'
-import { updateNode } from '../functions/updateNode'
 import { useEffect } from '../hooks/useEffect'
 import { useState } from '../hooks/useState'
 import { isElement } from '../internal/duck'
 import { unwrap } from '../internal/element'
-import { toChildNodes } from '../internal/fragment'
+import { getFragmentNodes } from '../internal/fragment'
 import type { AnyElement, StyleAttributes } from '../internal/types'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import { isDeferredNode } from '../jsx-dom/node'
@@ -58,7 +57,7 @@ export function Transition<T>(props: {
 
   const reusedChildren = state.children.get(props.id)
   if (reusedChildren) {
-    updateNode(reusedChildren, children as any)
+    // updateNode(reusedChildren, children as any)
     children = reusedChildren as any
   }
 
@@ -105,7 +104,7 @@ export function Transition<T>(props: {
         // containers" together.
         const leaveKey = Math.random()
         const leaveContainer = <div key={leaveKey} style={leaveStyle} />
-        leaveContainer.append(...toChildNodes(previousChildren as any))
+        leaveContainer.append(...getFragmentNodes(previousChildren as any))
 
         const previousElements = state.elements.get(previousId)!
         const previousIndex = leavingElements.indexOf(previousElements)

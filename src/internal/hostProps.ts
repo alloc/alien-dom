@@ -51,11 +51,19 @@ export class HostProps extends Map<string, HostProp> {
       effect = arg1 as Disposable
       this.unmappedEffects ||= new Set()
       this.unmappedEffects.add(effect)
-      return createDisposable([effect], this.destroyEffect, this)
+      return createDisposable([effect], this.clearEffect, this)
     }
   }
 
-  destroyEffect(effect: Disposable) {
+  clearProp(prop: string) {
+    const effects = this.get(prop)
+    if (effects) {
+      forEach(effects, effect => effect.dispose())
+      this.delete(prop)
+    }
+  }
+
+  clearEffect(effect: Disposable) {
     this.unmappedEffects?.delete(effect)
     effect.dispose()
   }

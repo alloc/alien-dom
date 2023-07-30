@@ -4,27 +4,30 @@ import { ContextStore } from '../context'
 import { AlienComponent } from '../internal/component'
 import { forwardContext, getContext } from '../internal/context'
 import { isComment, isElement, isFragment, isNode } from '../internal/duck'
-import { prepareFragment, toChildNodes } from '../internal/fragment'
+import {
+  getFragmentHeader,
+  getFragmentNodes,
+  prepareFragment,
+  updateParentFragment,
+} from '../internal/fragment'
 import { fromElementThunk } from '../internal/fromElementThunk'
 import {
   currentComponent,
   currentEffects,
   currentMode,
 } from '../internal/global'
-import { isConnected } from '../internal/isConnected'
-import { updateParentFragment } from '../internal/parentFragment'
 import {
   kAlienElementKey,
   kAlienElementTags,
-  kAlienFragment,
+  kAlienFragmentNodes,
   kAlienParentFragment,
   kAlienRenderFunc,
   kAlienSelfUpdating,
 } from '../internal/symbols'
 import type { AnyElement } from '../internal/types'
 import {
-  createDeferredNode,
   createFragmentNode,
+  deferComponentNode,
   evaluateDeferredNode,
   isDeferredNode,
   isShadowRoot,
@@ -120,7 +123,7 @@ export function selfUpdating<
         })
       }
 
-      let { rootNode, newElements, newEffects } = self.startRender()
+      let { rootNode, updates, newEffects } = self.startRender()
 
       currentMode.push('ref')
       currentComponent.push(self)
@@ -155,9 +158,9 @@ export function selfUpdating<
           // The render function might return an element reference.
           if (rootNode === newRootNode) {
             const key = kAlienElementKey(rootNode)!
-            const newElement = newElements.get(key)
-            if (newElement) {
-              newRootNode = newElement
+            const update = updates.get(key)
+            if (update) {
+              newRootNode = update
             }
           }
         }
@@ -176,7 +179,7 @@ export function selfUpdating<
               )
               if (rootNode) {
                 // Apply the children as a fragment update.
-                newRootNode = createDeferredNode(Fragment, null, children)
+                newRootNode = deferComponentNode(Fragment, null, children)
               } else {
                 newRootNode = createFragmentNode(children)
               }
@@ -250,7 +253,7 @@ export function selfUpdating<
             if (rootNode && !fromSameDeeperComponent(rootNode, newRootNode)) {
               if (isFragment(rootNode)) {
                 // Remove any nodes owned by the old fragment.
-                const oldNodes = toChildNodes(rootNode)
+                const oldNodes = getFragmentNodes(rootNode)
                 if (oldNodes[0].parentElement) {
                   oldNodes.slice(1).forEach(node => unmount(node))
                 }
@@ -261,7 +264,7 @@ export function selfUpdating<
               // We can't logically replace a node with no parent.
               if (rootNode.parentElement) {
                 if (isFragment(newRootNode)) {
-                  newRootNode = prepareFragment(newRootNode, self)
+                  newRootNode = prepareFragment(newRootNode)
                 }
 
                 rootNode.replaceWith(newRootNode)
@@ -279,8 +282,10 @@ export function selfUpdating<
                 kAlienParentFragment(newRootNode, parentFragment)
                 updateParentFragment(
                   parentFragment,
-                  kAlienFragment(rootNode) || [rootNode as AnyElement],
-                  kAlienFragment(newRootNode) || [newRootNode as AnyElement]
+                  kAlienFragmentNodes(rootNode) || [rootNode as AnyElement],
+                  kAlienFragmentNodes(newRootNode) || [
+                    newRootNode as AnyElement,
+                  ]
                 )
               }
             }
@@ -309,16 +314,21 @@ export function selfUpdating<
         newPropAdded = false
       }
 
-      if (isMounted && isConnected(rootNode)) {
+      // When the root node is a fragment, use its first child to determine if
+      // the fragment has been connected to the DOM.
+      if (isFragment(rootNode)) {
+        rootNode = getFragmentHeader(rootNode)
+      }
+
+      if (isMounted && rootNode.isConnected) {
         newEffects.enable()
         oldEffects.disable()
       } else {
-        // If the root node isn't added to a JSX parent node by the next
-        // microtask, assume the node has been or will be added to the
-        // DOM with native methods.
+        // If the root node isn't connected to the DOM in the next microtask,
+        // use a mutation observer. Once connected, run any component effects.
+        const shadowRoot = context.get(ShadowRootContext)
         queueMicrotask(() => {
-          if (!newEffects.enabled && self.effects === newEffects) {
-            const shadowRoot = context.get(ShadowRootContext)
+          if (self.effects === newEffects) {
             newEffects.enableOnceMounted(rootNode, shadowRoot?.value)
           }
         })

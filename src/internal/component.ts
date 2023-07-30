@@ -1,19 +1,18 @@
 import { AlienContext } from '../context'
 import { AlienEffects } from '../effects'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
-import { DeferredNode } from '../jsx-dom/node'
+import { AnyDeferredNode } from '../jsx-dom/node'
 import { Observer, Ref, observe } from '../observable'
 import { FunctionComponent, JSX } from '../types'
 import { deepEquals } from './deepEquals'
 import { isFragment } from './duck'
-import { toChildNodes } from './fragment'
+import { getFragmentHeader } from './fragment'
 import { currentComponent } from './global'
 import {
   kAlienElementKey,
   kAlienElementTags,
   kAlienRenderFunc,
 } from './symbols'
-import { DefaultElement } from './types'
 
 export type ElementTags = Map<FunctionComponent, AlienComponent<any>>
 export type ElementRefs = Map<JSX.ElementKey, ChildNode | DocumentFragment>
@@ -24,8 +23,8 @@ export class AlienComponent<Props = any> {
   rootKey: JSX.ElementKey | undefined = undefined
   hooks: any[] = []
   nextHookIndex = 0
-  /** Elements created by this component in the current render pass. */
-  newElements: Map<JSX.ElementKey, DefaultElement | DeferredNode> | null = null
+  /** Deferred nodes (by key) created in the current render pass. */
+  updates: Map<JSX.ElementKey, AnyDeferredNode> | null = null
   /** Stable references to the elements that are mounted. */
   refs: ElementRefs | null = null
   /** Stable references that were added or reused by the current render pass. */
@@ -61,7 +60,7 @@ export class AlienComponent<Props = any> {
       return null
     }
     if (isFragment(rootNode)) {
-      rootNode = toChildNodes(rootNode)[0]
+      rootNode = getFragmentHeader(rootNode)
     }
     return rootNode.ownerDocument
   }
@@ -97,12 +96,12 @@ export class AlienComponent<Props = any> {
 
   startRender() {
     this.newEffects = new AlienEffects()
-    this.newElements = new Map()
+    this.updates = new Map()
     this.newRefs = new Map()
     this.nextHookIndex = 0
     return this as {
       rootNode: ChildNode | DocumentFragment | null
-      newElements: Map<JSX.ElementKey, DefaultElement>
+      updates: Map<JSX.ElementKey, AnyDeferredNode>
       newEffects: AlienEffects
     }
   }
@@ -114,7 +113,7 @@ export class AlienComponent<Props = any> {
       this.effects = this.newEffects
       this.memos = this.newMemos
     }
-    this.newElements = null
+    this.updates = null
     this.newRefs = null
     this.newEffects = null
     this.newMemos = null

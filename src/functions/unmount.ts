@@ -1,5 +1,5 @@
 import { AlienComponent } from '../internal/component'
-import { toChildNodes } from '../internal/fragment'
+import { getFragmentNodes } from '../internal/fragment'
 import {
   kAlienEffects,
   kAlienElementTags,
@@ -24,8 +24,9 @@ export function unmount(
   // Recurse through the last descendants first, so effects are disabled
   // bottom-up in reverse order.
   if (isFragment(node)) {
-    for (const childNode of toChildNodes(node).reverse()) {
-      unmount(childNode, true)
+    const childNodes = getFragmentNodes(node)
+    for (let i = childNodes.length - 1; i >= 0; i--) {
+      unmount(childNodes[i], true)
     }
   } else {
     if (isElement(node)) {

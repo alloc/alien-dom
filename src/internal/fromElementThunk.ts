@@ -1,9 +1,12 @@
 import { evaluateDeferredNode, isDeferredNode } from '../jsx-dom/node'
+import { ReadonlyRef } from '../observable'
 import type { JSX } from '../types/jsx'
 import { currentComponent } from './global'
 import { kAlienThunkResult } from './symbols'
 
-export function fromElementThunk(thunk: () => JSX.Children) {
+export function fromElementThunk(
+  thunk: () => JSX.Children | ReadonlyRef<JSX.Children>
+) {
   if (!kAlienThunkResult.in(thunk)) {
     // The first component to call the thunk owns it.
     const component = currentComponent.get()

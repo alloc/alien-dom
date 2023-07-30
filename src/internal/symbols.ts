@@ -10,7 +10,10 @@ export const kAlienElementKey =
   createSymbolProperty<JSX.ElementKey>('elementKey')
 export const kAlienElementTags =
   createSymbolProperty<ElementTags>('elementTags')
-export const kAlienFragment = createSymbolProperty<ChildNode[]>('fragment')
+export const kAlienFragmentKeys =
+  createSymbolProperty<(JSX.ElementKey | undefined)[]>('fragmentKeys')
+export const kAlienFragmentNodes =
+  createSymbolProperty<ChildNode[]>('fragmentNodes')
 export const kAlienHostProps = createSymbolProperty<HostProps>('hostProps')
 export const kAlienManualUpdates =
   createSymbolProperty<boolean>('manualUpdates')

@@ -1,27 +1,42 @@
 import { isArray, isFunction } from '@alloc/is'
 import { unmount } from '../functions/unmount'
 import { AlienComponent } from '../internal/component'
-import { hasTagName, isElement } from '../internal/duck'
+import { hasTagName, isElement, isFragment } from '../internal/duck'
 import { kAlienElementKey, kAlienElementTags } from '../internal/symbols'
 import {
-  DeferredNode,
+  DeferredComponentNode,
+  DeferredHostNode,
   evaluateDeferredNode,
   isDeferredNode,
   isShadowRoot,
 } from '../jsx-dom/node'
 import { ResolvedChild } from '../jsx-dom/resolveChildren'
+import { resolveSelected } from '../jsx-dom/resolveSelected'
 import { compareNodeNames, noop } from '../jsx-dom/util'
 import { JSX } from '../types/jsx'
 import { morph } from './morph'
+
+const defaultNextSibling = (node: ChildNode) => node.nextSibling
+
+export interface FromParentNode {
+  childNodes: ChildNode[]
+  firstChild: ChildNode | null
+  insertBefore: (node: ChildNode, nextNode: ChildNode) => void
+  appendChild: (node: ChildNode) => void
+}
 
 /**
  * Find direct children that can be morphed/added and allow for discarded nodes
  * to be preserved.
  */
 export function morphChildren(
-  fromParentNode: Element,
-  toChildNodes: HTMLCollection | ResolvedChild[],
-  component?: AlienComponent | null
+  fromParentNode: FromParentNode,
+  toChildNodes: ResolvedChild[],
+  component?: AlienComponent | null,
+  getFromKey: (
+    fromNode: ChildNode
+  ) => JSX.ElementKey | undefined = kAlienElementKey.get,
+  getNextSibling: (fromNode: ChildNode) => ChildNode | null = defaultNextSibling
 ): void {
   if (!fromParentNode.childNodes.length && !toChildNodes.length) {
     return
@@ -53,9 +68,9 @@ export function morphChildren(
   for (
     let fromChildNode = fromParentNode.firstChild;
     fromChildNode;
-    fromChildNode = fromChildNode.nextSibling
+    fromChildNode = getNextSibling(fromChildNode)
   ) {
-    const key = kAlienElementKey(fromChildNode)
+    const key = getFromKey(fromChildNode)
     if (key != null && isElement(fromChildNode)) {
       fromElementsByKey.set(key, fromChildNode)
     }
@@ -86,7 +101,7 @@ export function morphChildren(
             nextSibling = fromChildNode
           } else {
             // Continue to the next from node.
-            fromChildNode = fromChildNode.nextSibling
+            fromChildNode = getNextSibling(fromChildNode)
           }
 
           updateChild(
@@ -112,9 +127,9 @@ export function morphChildren(
       }
     } else {
       while (fromChildNode) {
-        const fromNextSibling = fromChildNode.nextSibling
+        const fromNextSibling = getNextSibling(fromChildNode)
+        const fromChildKey = getFromKey(fromChildNode)
 
-        const fromChildKey = kAlienElementKey(fromChildNode)
         if (fromChildKey != null) {
           unmatchedFromKeys.add(fromChildKey)
         }
@@ -153,7 +168,7 @@ export function morphChildren(
 
   // Remove any remaining from nodes.
   while ((removedFromNode = fromChildNode)) {
-    fromChildNode = fromChildNode.nextSibling
+    fromChildNode = getNextSibling(fromChildNode)
 
     if (onBeforeNodeDiscarded(removedFromNode) !== false) {
       unmount(removedFromNode)
@@ -161,11 +176,13 @@ export function morphChildren(
   }
 
   if (hasTagName(fromParentNode, 'SELECT')) {
-    updateSelected(fromParentNode)
+    resolveSelected(fromParentNode)
   }
 }
 
-function isCompatibleNode(fromNode: Node, toNode: ChildNode | DeferredNode) {
+type ToNode = ChildNode | DeferredHostNode | DeferredComponentNode
+
+function isCompatibleNode(fromNode: Node, toNode: ToNode) {
   if (isDeferredNode(toNode)) {
     if (isFunction(toNode.tag)) {
       const tags = kAlienElementTags(fromNode)
@@ -190,11 +207,23 @@ function isKeyedNode(node: Node) {
 }
 
 function insertChild(
-  parentNode: ParentNode,
-  node: ChildNode | DeferredNode,
+  parentNode: FromParentNode,
+  node: ToNode,
   nextSibling?: ChildNode | null
 ) {
-  const newChild = isDeferredNode(node) ? evaluateDeferredNode(node) : node
+  let newChild: ChildNode
+  if (isDeferredNode(node)) {
+    const evaluatedNode = evaluateDeferredNode(node)
+    if (isFragment(evaluatedNode)) {
+      // FIXME: should this update positional keys?
+      return evaluatedNode.childNodes.forEach(childNode => {
+        insertChild(parentNode, childNode, nextSibling)
+      })
+    }
+    newChild = evaluatedNode
+  } else {
+    newChild = node
+  }
   if (nextSibling) {
     parentNode.insertBefore(newChild, nextSibling)
   } else {
@@ -203,18 +232,18 @@ function insertChild(
 }
 
 function updateChild(
-  parentNode: Node,
+  parentNode: FromParentNode,
   fromNode: ChildNode,
-  toNode: ChildNode | DeferredNode,
+  toNode: ToNode,
   component?: AlienComponent | null,
   nextSibling?: ChildNode | null
 ) {
   // Convert an element reference to its deferred node.
   if (component && fromNode === toNode) {
     const key = kAlienElementKey(toNode)!
-    const newElement = component.newElements?.get(key)
-    if (newElement) {
-      toNode = newElement
+    const update = component.updates?.get(key)
+    if (update) {
+      toNode = update
     }
   }
 
@@ -227,41 +256,5 @@ function updateChild(
   // Reorder the node if necessary.
   if (nextSibling) {
     parentNode.insertBefore(fromNode, nextSibling)
-  }
-}
-
-// TODO: check if this is necessary (inherited from morphdom)
-function updateSelected(node: HTMLSelectElement) {
-  if (!node.hasAttribute('multiple')) {
-    var selectedIndex = -1
-    var i = 0
-    // We have to loop through children of fromEl, not toEl since nodes
-    // can be moved from toEl to fromEl directly when morphing. At the
-    // time this special handler is invoked, all children have already
-    // been morphed and appended to / removed from fromEl, so using
-    // fromEl here is safe and correct.
-    var curChild = node.firstChild
-    var optgroup
-    while (curChild) {
-      if (hasTagName(curChild, 'OPTGROUP')) {
-        optgroup = curChild
-        curChild = optgroup.firstChild
-      } else {
-        if (hasTagName(curChild, 'OPTION')) {
-          if (curChild.hasAttribute('selected')) {
-            selectedIndex = i
-            break
-          }
-          i++
-        }
-        curChild = curChild.nextSibling
-        if (!curChild && optgroup) {
-          curChild = optgroup.nextSibling
-          optgroup = null
-        }
-      }
-    }
-
-    node.selectedIndex = selectedIndex
   }
 }

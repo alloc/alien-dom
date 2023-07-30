@@ -1,8 +1,9 @@
 import { isArray, isBoolean, isObject } from '@alloc/is'
 import { createDisposable } from '../disposable'
 import { appendChild } from '../jsx-dom/appendChild'
-import { DeferredNode } from '../jsx-dom/node'
+import { AnyDeferredNode, isDeferredNode } from '../jsx-dom/node'
 import { ResolvedChild, resolveChildren } from '../jsx-dom/resolveChildren'
+import { resolveSelected } from '../jsx-dom/resolveSelected'
 import {
   UpdateStyle,
   decamelize,
@@ -14,7 +15,7 @@ import { morphChildren } from '../morphdom/morphChildren'
 import { ReadonlyRef, isRef } from '../observable'
 import { DOMClassAttribute, HTMLStyleAttribute, JSX } from '../types'
 import { AlienComponent } from './component'
-import { hasTagName, isElement, isNode } from './duck'
+import { hasTagName, isNode } from './duck'
 import { flattenClassProp } from './flattenClassProp'
 import { MergeStylesFn, flattenStyleProp } from './flattenStyleProp'
 import { HostProps } from './hostProps'
@@ -73,6 +74,20 @@ export function addHostProp(
   return value
 }
 
+export function addChildrenRef(
+  ref: ReadonlyRef<JSX.Children>,
+  hostProps?: HostProps
+) {
+  if (hostProps) {
+    hostProps.clearProp('children')
+    hostProps.addObserver('children', ref, newChildren => {
+      const children = resolveChildren(newChildren)
+      morphChildren(hostProps.node, children)
+    })
+  }
+  return resolveChildren(ref.peek())
+}
+
 export function applyChildrenProp(
   node: DefaultElement,
   children: ResolvedChild[] | ReadonlyRef<any>,
@@ -80,14 +95,13 @@ export function applyChildrenProp(
 ): void {
   // Note: If children is a ref, it must be the only child.
   if (isRef(children)) {
-    hostProps?.addObserver('children', children, newChildren => {
-      const children = resolveChildren(newChildren)
-      morphChildren(node, children)
-    })
-    children = resolveChildren(children.peek())
+    children = addChildrenRef(children, hostProps)
   }
   for (const child of children) {
     appendChild(child, node)
+  }
+  if (hasTagName(node, 'SELECT')) {
+    resolveSelected(node)
   }
 }
 
@@ -322,7 +336,7 @@ export function applyRefProp(
 }
 
 export function applyKeyProp(
-  node: ChildNode | DocumentFragment | DeferredNode,
+  node: ChildNode | DocumentFragment | AnyDeferredNode,
   key: JSX.ElementKey,
   oldNode: ChildNode | DocumentFragment | undefined,
   component: AlienComponent | null
@@ -336,8 +350,8 @@ export function applyKeyProp(
     // Check for equivalence as the return value of a custom component
     // might be the cached result of an element thunk.
     if (node !== oldNode) {
-      if (!isNode(node) || isElement(node)) {
-        component.newElements!.set(key, node)
+      if (isDeferredNode(node)) {
+        component.updates!.set(key, node)
       }
       if (oldNode) {
         kAlienElementKey(node, key)

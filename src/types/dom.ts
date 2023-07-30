@@ -215,10 +215,6 @@ export interface DOMAttributes<T> {
   onTransitionEndCapture?: TransitionEventHandler<T> | undefined
 }
 
-interface CurrentTarget<T> {
-  currentTarget: EventTarget & T
-}
-
 type FormEvent = Event
 type ChangeEvent = Event
 
