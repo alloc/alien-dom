@@ -48,7 +48,7 @@ export function morphChildren(
       // nodes added by a component render will have a position-based key defined
       // automatically if they're missing an explicit key, so this check is
       // sufficient.
-      isKeyedNode
+      isDiscardableNode
     : noop
 
   if (!isArray(toChildNodes)) {
@@ -202,8 +202,8 @@ function isCompatibleNode(fromNode: Node, toNode: ToNode) {
   return true
 }
 
-function isKeyedNode(node: Node) {
-  return kAlienElementKey.in(node)
+function isDiscardableNode(node: Node) {
+  return !isElement(node) || kAlienElementKey.in(node)
 }
 
 function insertChild(
