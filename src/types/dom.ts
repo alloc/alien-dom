@@ -11,6 +11,11 @@ export type DOMFactory<P extends DOMAttributes<T>, T extends Element> = (
   ...children: JSX.ChildrenProp[]
 ) => T
 
+export type DOMClassArray = (
+  | DOMClassAttribute
+  | ReadonlyRef<DOMClassAttribute>
+)[]
+
 export type DOMClassAttribute =
   | readonly (DOMClassAttribute | ReadonlyRef<DOMClassAttribute>)[]
   | string

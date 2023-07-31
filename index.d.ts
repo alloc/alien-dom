@@ -18,10 +18,12 @@ export { SVGNamespace } from './dist/jsx-dom/jsx-runtime'
 
 export type {
   CSSProperties,
+  DOMClassArray,
   DOMClassAttribute,
   FunctionComponent,
   HTML,
   HTMLAttributes,
+  HTMLStyleArray,
   HTMLStyleAttribute,
   JSX,
   PropsWithChildren,

@@ -29,6 +29,11 @@ export type DetailedHTMLProps<
   T extends AnyElement
 > = AcceptObservableProps<E> & AttrWithRef<T>
 
+export type HTMLStyleArray = (
+  | HTMLStyleAttribute
+  | ReadonlyRef<HTMLStyleAttribute>
+)[]
+
 export type HTMLStyleAttribute =
   | readonly (HTMLStyleAttribute | ReadonlyRef<HTMLStyleAttribute>)[]
   | AcceptObservableProps<StyleAttributes>
