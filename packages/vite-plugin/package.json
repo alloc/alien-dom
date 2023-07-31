@@ -1,0 +1,24 @@
+{
+  "name": "@alien-dom/vite",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/plugin.js",
+  "types": "dist/plugin.d.ts",
+  "scripts": {
+    "build": "rimraf dist && tsup src/plugin.ts src/client.ts --format esm --dts",
+    "dev": "tsup src/plugin.ts src/client.ts --format esm --dts --watch --sourcemap",
+    "prepublishOnly": "rimraf dist && tsup src/plugin.ts src/client.ts --format esm --dts"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@alien-dom/nebu": "workspace:^0.3.0",
+    "nebu": "^2.3.8",
+    "tsconfck": "^2.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^18.15.11",
+    "vite": "^4.4.7"
+  }
+}
