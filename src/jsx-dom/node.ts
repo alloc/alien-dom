@@ -134,7 +134,7 @@ export function createHostNode(
   // deferHostNode constructor.
   isString(tag)
     ? (({ ref, children, namespaceURI, ...props } = props),
-      (children = children && !isRef(children) && resolveChildren(children)))
+      children && !isRef(children) && (children = resolveChildren(children)))
     : ({ tag, props, ref, children, namespaceURI } = tag)
 
   const hostNode = (
