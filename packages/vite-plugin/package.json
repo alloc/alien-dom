@@ -2,12 +2,13 @@
   "name": "@alien-dom/vite",
   "version": "0.1.0",
   "type": "module",
-  "main": "dist/plugin.js",
+  "main": "dist/plugin.cjs",
+  "module": "dist/plugin.js",
   "types": "dist/plugin.d.ts",
   "scripts": {
-    "build": "rimraf dist && tsup src/plugin.ts src/client.ts --format esm --dts",
-    "dev": "tsup src/plugin.ts src/client.ts --format esm --dts --watch --sourcemap",
-    "prepublishOnly": "rimraf dist && tsup src/plugin.ts src/client.ts --format esm --dts"
+    "build": "rimraf dist && tsup src/plugin.ts src/client.ts --format esm,cjs --dts",
+    "dev": "tsup src/plugin.ts src/client.ts --format esm,cjs --dts --watch --sourcemap",
+    "prepublishOnly": "rimraf dist && tsup src/plugin.ts src/client.ts --format esm,cjs --dts"
   },
   "files": [
     "dist"
