@@ -1,4 +1,5 @@
 import { isString } from '@alloc/is'
+import { Intersect, Remap } from '@alloc/types'
 import { noop } from './jsx-dom/util'
 import { ReadonlyRef, ref } from './observable'
 
@@ -83,19 +84,25 @@ export type MachineUpdater<T extends MachineType> = {
   ): State
 }
 
+// Machine proxies let you access any state at any time.
 export type MachineProxy<
   T extends MachineType,
   State extends MachineValue<T> = any
-> = Readonly<MachineState<T, State>> & ProxiedMachine<T, State>
+> = ProxiedMachine<T, State> & Readonly<AssumedState<MachineState<T>>>
 
-interface ProxiedMachine<
-  T extends MachineType,
-  State extends MachineValue<T> = any
-> extends Machine<T, State> {
-  is<Value extends Extract<MachineValue<T>, State>>(
+interface ProxiedMachine<T extends MachineType, State extends MachineValue<T>>
+  extends Machine<T, State> {
+  is<Value extends MachineValue<T>>(
     value: Value
   ): this is MachineProxy<T, Value>
 }
+
+type OmitValue<T> = T extends any ? Remap<Omit<T, 'value'>> : never
+type AssumedState<T> = Remap<
+  Intersect<
+    [T] extends [{ value: infer V }] ? { value: V } & OmitValue<T> : never
+  >
+>
 
 export class Machine<
   T extends MachineType,
@@ -120,23 +127,32 @@ export class Machine<
         if (prop in target) {
           return target[prop]
         }
-        return target.state[prop]
+        if (prop in target.state) {
+          return target.state[prop]
+        }
+        if (prop === 'dispose') {
+          // Avoid throwing in case an unmounting component is trying to access
+          // the dispose method.
+          return
+        }
+        throw ReferenceError(
+          `Illegal property access: "${String(prop)}" in "${
+            target.value
+          }" state`
+        )
       },
     })
   }
 
-  is<Value extends Extract<MachineValue<T>, State>>(
-    value: Value
-  ): this is Machine<T, Value> {
+  is<Value extends MachineValue<T>>(value: Value): this is Machine<T, Value> {
     return this.value === value
   }
 
-  assert<Value extends Extract<MachineValue<T>, State>, Result>(
-    value: Value,
-    callback: (state: Readonly<MachineState<T, Value>>) => Result
-  ): Result | undefined {
+  assert<Value extends MachineValue<T>>(
+    value: Value
+  ): Readonly<MachineState<T, Value>> {
     if (this.value === value) {
-      return callback(this.state as any)
+      return this.state
     }
     throw Error(`Expected "${value}", got "${this.value}"`)
   }
