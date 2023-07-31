@@ -1,6 +1,6 @@
 import { currentComponent } from '../internal/global'
 import { Ref, ref } from '../observable'
-import { useMemo } from './useMemo'
+import { useDepsArray } from './useDepsArray'
 
 export function useRef<T>(): Ref<T | undefined> &
   [value: T | undefined, set: Ref<T | undefined>[1]]
@@ -20,10 +20,8 @@ export function useRef<T>(
 ): Ref<any> {
   const component = currentComponent.get()!
   const index = component.nextHookIndex++
-  if (deps) {
-    useMemo(() => {
-      component.hooks[index] = null
-    }, deps)
+  if (deps && useDepsArray(deps)) {
+    component.hooks[index] = null
   }
   return (component.hooks[index] ||= ref(
     init instanceof Function ? init() : init
