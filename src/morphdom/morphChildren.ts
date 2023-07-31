@@ -19,7 +19,7 @@ import { morph } from './morph'
 const defaultNextSibling = (node: ChildNode) => node.nextSibling
 
 export interface FromParentNode {
-  childNodes: ChildNode[]
+  childNodes: { length: number }
   firstChild: ChildNode | null
   insertBefore: (node: ChildNode, nextNode: ChildNode) => void
   appendChild: (node: ChildNode) => void
