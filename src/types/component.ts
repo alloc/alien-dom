@@ -7,4 +7,4 @@ export type PropsWithChildren<Props> = Props & {
 export type FunctionComponent<
   Props = {},
   Result extends JSX.ChildrenProp = JSX.ChildrenProp
-> = (props: Props, context?: any) => Result
+> = (props: Props) => Result
