@@ -55,6 +55,9 @@ export default (): vite.Plugin => {
       if (!/\.[jt]sx$/.test(id)) {
         return
       }
+      if (id.includes('node_modules')) {
+        return
+      }
       const jsxImportSource = await loadJsxImportSource(id)
       if (jsxImportSource !== 'alien-dom') {
         return
