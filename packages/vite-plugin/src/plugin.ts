@@ -1,4 +1,4 @@
-import { nebuSelfUpdating, SelfUpdatingPluginState } from '@alien-dom/nebu'
+import type { SelfUpdatingPluginState } from '@alien-dom/nebu'
 import { nebu } from 'nebu'
 import * as tsconfck from 'tsconfck'
 import * as vite from 'vite'
@@ -40,6 +40,7 @@ export default (): vite.Plugin => {
     },
     async buildStart() {
       // TODO: hot module reloading
+      const { nebuSelfUpdating } = await import('@alien-dom/nebu')
       nebuPlugins = [nebuSelfUpdating(selfUpdating)]
 
       // TODO: watch for tsconfig files in dev mode
