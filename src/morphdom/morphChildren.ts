@@ -183,6 +183,9 @@ export function morphChildren(
 type ToNode = ChildNode | DeferredHostNode | DeferredComponentNode
 
 function isCompatibleNode(fromNode: Node, toNode: ToNode) {
+  if (fromNode === toNode) {
+    return true
+  }
   if (isDeferredNode(toNode)) {
     if (isFunction(toNode.tag)) {
       const tags = kAlienElementTags(fromNode)
