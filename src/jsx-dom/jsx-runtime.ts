@@ -82,4 +82,4 @@ export const createElement = (
   tag: any,
   { key, ...props }: any,
   ...children: any[]
-) => jsx(tag, { ...props, children }, key)
+) => jsx(tag, children.length ? { ...props, children } : props, key)
