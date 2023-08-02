@@ -16,9 +16,10 @@ export function useElementRef<T extends Element>(
 
 const kElementType = Symbol.for('ElementRef')
 
-export const isElementRef = <T extends Element = Element>(
-  arg: any
-): arg is ElementRef<T> => !!(arg && arg[kElementType])
+export const isElementRef: {
+  <T extends Element>(arg: T): arg is ElementRef<T>
+  <T extends Element = Element>(arg: any): arg is ElementRef<T>
+} = (arg): arg is ElementRef => !!(arg && arg[kElementType])
 
 export function createElementRef<T extends Element>(
   effect?: (element: T) => EffectResult
