@@ -161,6 +161,7 @@ export function hmrRegister(
         kAlienHotUpdate(newRender, true)
         Reflect.set(oldComponent, kAlienRenderFunc.symbol, newRender)
       })
+      console.info(`[HMR] ${name} component updated`)
     })
   }
 }
