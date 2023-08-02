@@ -3,6 +3,7 @@ import { depsHaveChanged } from '../functions/depsHaveChanged'
 import type { DefaultElement, StyleAttributes } from '../internal/types'
 import { UpdateStyle, toArray, updateStyle } from '../jsx-dom/util'
 import { observe } from '../observable'
+import { isElementRef } from './useElementRef'
 import { usePrevious } from './usePrevious'
 import { useState } from './useState'
 
@@ -44,7 +45,13 @@ export function useStyle(
     if (!style || !depsHaveChanged(deps, prevDeps)) return
 
     for (const element of elements) {
-      updateStyle(element, style)
+      if (isElementRef(element)) {
+        element.onceElementExists(element => {
+          updateStyle(element, style)
+        })
+      } else {
+        updateStyle(element, style)
+      }
     }
   } else if (deps) {
     const state = useState(initialState, style, deps)
