@@ -1,6 +1,7 @@
 import { isArray, isFunction } from '@alloc/is'
 import { Disposable, attachDisposer } from './disposable'
 import { onMount, onUnmount } from './domObserver'
+import { EffectResult } from './hooks'
 import {
   EffectFlags,
   disableEffect,
@@ -331,7 +332,7 @@ export type AlienEffectType<Args extends any[]> = (
   : never
 
 export function defineEffectType<Args extends any[]>(
-  enable: (...args: Args) => (() => void) | void
+  enable: (...args: Args) => EffectResult
 ): AlienEffectType<Args> {
   return ((target: any, ...args: any[]) => {
     const effect = enable.bind(null) as any

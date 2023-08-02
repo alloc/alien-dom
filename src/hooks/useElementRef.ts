@@ -1,9 +1,11 @@
+import { AlienEffectType, defineEffectType } from '../effects'
 import { EffectResult } from './useEffect'
 import { useState } from './useState'
 
 export type ElementRef<T extends Element = Element> = T & {
   toElement(): T | null
   setElement(element: T | null): void
+  onceElementExists: AlienEffectType<[effect: (element: T) => EffectResult]>
 }
 
 export function useElementRef<T extends Element>(
@@ -23,6 +25,24 @@ export function createElementRef<T extends Element>(
 ): ElementRef<T> {
   let element: T | null = null
   let effectResult: EffectResult | undefined
+  let pendingEffects = new Set<(element: T) => void>()
+
+  const onceElementExists = defineEffectType(
+    (effect: (element: T) => EffectResult) => {
+      let dispose: EffectResult | undefined
+      if (element) {
+        return effect(element)
+      }
+      const pendingEffect = (element: T) => {
+        dispose = effect(element)
+      }
+      pendingEffects.add(pendingEffect)
+      return () => {
+        pendingEffects.delete(pendingEffect)
+        dispose?.()
+      }
+    }
+  )
 
   return new Proxy(
     {
@@ -35,10 +55,15 @@ export function createElementRef<T extends Element>(
           effectResult()
           effectResult = undefined
         }
-        if (element && effect) {
-          effectResult = effect(element)
+        if (element) {
+          effectResult = effect?.(element)
+          for (const pendingEffect of pendingEffects) {
+            pendingEffect(element)
+          }
+          pendingEffects.clear()
         }
       },
+      onceElementExists,
     } as ElementRef<T>,
     {
       get(target, prop) {
