@@ -1,5 +1,5 @@
-import { isString } from '@alloc/is'
-import { Intersect, Remap } from '@alloc/types'
+import { isArray, isString } from '@alloc/is'
+import { AllKeys, Intersect, Remap } from '@alloc/types'
 import { noop } from './jsx-dom/util'
 import { ReadonlyRef, ref } from './observable'
 
@@ -53,6 +53,11 @@ export type MachineState<
 export type MachineValue<T extends MachineType> = //
   T extends MachineType<any, infer State> ? State['value'] : never
 
+export type MachineValueWithKey<
+  T extends MachineType,
+  Key extends keyof any
+> = Extract<MachineState<T>, { [K in Key]: any }>['value']
+
 export type MachineParams<T extends MachineType> = //
   T extends MachineType<infer Params> ? Params : never
 
@@ -93,8 +98,11 @@ export type MachineProxy<
 interface ProxiedMachine<T extends MachineType, State extends MachineValue<T>>
   extends Machine<T, State> {
   is<Value extends MachineValue<T>>(
-    value: Value
+    value: Value | Value[]
   ): this is MachineProxy<T, Value>
+  has<Key extends AllKeys<MachineState<T>>>(
+    key: Key
+  ): this is MachineProxy<T, MachineValueWithKey<T, Key>>
 }
 
 type OmitValue<T> = T extends any ? Remap<Omit<T, 'value'>> : never
@@ -144,8 +152,16 @@ export class Machine<
     })
   }
 
-  is<Value extends MachineValue<T>>(value: Value): this is Machine<T, Value> {
-    return this.value === value
+  is<Value extends MachineValue<T>>(
+    value: Value | Value[]
+  ): this is Machine<T, Value> {
+    return isArray(value) ? value.includes(this.value) : this.value === value
+  }
+
+  has<Key extends AllKeys<MachineState<T>>>(
+    key: Key
+  ): this is Machine<T, MachineValueWithKey<T, Key>> {
+    return key in this.state
   }
 
   assert<Value extends MachineValue<T>>(
