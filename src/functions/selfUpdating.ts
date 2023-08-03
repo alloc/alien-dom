@@ -5,10 +5,9 @@ import { AlienComponent } from '../internal/component'
 import { forwardContext, getContext } from '../internal/context'
 import { isComment, isElement, isFragment, isNode } from '../internal/duck'
 import {
-  getFragmentHeader,
-  getFragmentNodes,
-  prepareFragment,
+  prependFragmentHeader,
   updateParentFragment,
+  wrapWithFragment,
 } from '../internal/fragment'
 import { fromElementThunk } from '../internal/fromElementThunk'
 import {
@@ -26,13 +25,10 @@ import {
 } from '../internal/symbols'
 import type { AnyElement } from '../internal/types'
 import {
-  createFragmentNode,
-  deferComponentNode,
   evaluateDeferredNode,
   isDeferredNode,
   isShadowRoot,
 } from '../jsx-dom/node'
-import { resolveChildren } from '../jsx-dom/resolveChildren'
 import { ShadowRootContext } from '../jsx-dom/shadow'
 import { compareNodeNames, noop } from '../jsx-dom/util'
 import { morph } from '../morphdom/morph'
@@ -172,17 +168,11 @@ export function selfUpdating<
           if (newRootNode != null) {
             // When a non-node is returned, wrap it in a fragment.
             if (!isNode(newRootNode) && !isDeferredNode(newRootNode)) {
-              const children = resolveChildren(
+              newRootNode = wrapWithFragment(
                 newRootNode,
-                undefined,
-                self.context
+                self.context,
+                /* isDeferred */ rootNode != null
               )
-              if (rootNode) {
-                // Apply the children as a fragment update.
-                newRootNode = deferComponentNode(Fragment, null, children)
-              } else {
-                newRootNode = createFragmentNode(children)
-              }
             }
 
             // Update the root node if possible.
@@ -243,9 +233,7 @@ export function selfUpdating<
             // Fragments always have a component-specific comment node as
             // their first child, which is how a fragment can be replaced.
             else if (rootNode !== newRootNode && isFragment(newRootNode)) {
-              newRootNode.prepend(
-                document.createComment(DEV ? componentName() : '')
-              )
+              prependFragmentHeader(newRootNode, DEV ? componentName() : '')
             }
 
             // Replace the old root node if one exists and wasn't replaced by a
@@ -253,7 +241,7 @@ export function selfUpdating<
             if (rootNode && !fromSameDeeperComponent(rootNode, newRootNode)) {
               if (isFragment(rootNode)) {
                 // Remove any nodes owned by the old fragment.
-                const oldNodes = getFragmentNodes(rootNode)
+                const oldNodes = kAlienFragmentNodes(rootNode)!
                 if (oldNodes[0].parentElement) {
                   oldNodes.slice(1).forEach(node => unmount(node))
                 }
@@ -263,10 +251,6 @@ export function selfUpdating<
 
               // We can't logically replace a node with no parent.
               if (rootNode.parentElement) {
-                if (isFragment(newRootNode)) {
-                  newRootNode = prepareFragment(newRootNode)
-                }
-
                 rootNode.replaceWith(newRootNode)
                 unmount(rootNode, true, self)
               } else if (DEV) {
@@ -317,7 +301,7 @@ export function selfUpdating<
       // When the root node is a fragment, use its first child to determine if
       // the fragment has been connected to the DOM.
       if (isFragment(rootNode)) {
-        rootNode = getFragmentHeader(rootNode)
+        rootNode = kAlienFragmentNodes(rootNode)![0]
       }
 
       if (isMounted && rootNode.isConnected) {

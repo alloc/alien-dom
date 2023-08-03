@@ -1,8 +1,8 @@
 import { AlienComponent } from '../internal/component'
-import { getFragmentNodes } from '../internal/fragment'
 import {
   kAlienEffects,
   kAlienElementTags,
+  kAlienFragmentNodes,
   kAlienHostProps,
 } from '../internal/symbols'
 import { isElement, isFragment, isTextNode } from './typeChecking'
@@ -24,9 +24,12 @@ export function unmount(
   // Recurse through the last descendants first, so effects are disabled
   // bottom-up in reverse order.
   if (isFragment(node)) {
-    const childNodes = getFragmentNodes(node)
+    const childNodes = kAlienFragmentNodes(node) || Array.from(node.childNodes)
     for (let i = childNodes.length - 1; i >= 0; i--) {
-      unmount(childNodes[i], true)
+      const childNode = childNodes[i]
+      if (childNode) {
+        unmount(childNode, true)
+      }
     }
   } else {
     if (isElement(node)) {

@@ -6,11 +6,11 @@ import { Observer, Ref, observe } from '../observable'
 import { FunctionComponent, JSX } from '../types'
 import { deepEquals } from './deepEquals'
 import { isFragment } from './duck'
-import { getFragmentHeader } from './fragment'
 import { currentComponent } from './global'
 import {
   kAlienElementKey,
   kAlienElementTags,
+  kAlienFragmentNodes,
   kAlienRenderFunc,
 } from './symbols'
 
@@ -60,7 +60,7 @@ export class AlienComponent<Props = any> {
       return null
     }
     if (isFragment(rootNode)) {
-      rootNode = getFragmentHeader(rootNode)
+      rootNode = kAlienFragmentNodes(rootNode)![0]
     }
     return rootNode.ownerDocument
   }

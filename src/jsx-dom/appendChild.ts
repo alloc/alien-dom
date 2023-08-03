@@ -7,7 +7,6 @@ import {
   isNode,
   isTextNode,
 } from '../internal/duck'
-import { prepareFragment } from '../internal/fragment'
 import { currentComponent } from '../internal/global'
 import {
   kAlienElementKey,
@@ -20,15 +19,27 @@ import type { ResolvedChild } from './resolveChildren'
 import { ShadowRootContext } from './shadow'
 
 export function appendChild(
+  child: ResolvedChild,
+  parent: ParentNode
+): ChildNode | undefined
+
+export function appendChild(
   child: ResolvedChild | DocumentFragment,
   parent: ParentNode
-) {
+): ChildNode | DocumentFragment | undefined
+
+export function appendChild(
+  child: ResolvedChild | DocumentFragment,
+  parent: ParentNode
+): ChildNode | DocumentFragment | undefined {
+  if (child === null) {
+    return
+  }
+
   if (isNode(child)) {
     // Text nodes cannot have an element key.
     if (!isTextNode(child)) {
-      if (isFragment(child)) {
-        child = prepareFragment(child)
-      } else if (isElement(child) || isComment(child)) {
+      if (isElement(child) || isComment(child)) {
         const key = kAlienElementKey(child)
         if (key != null) {
           // Find a pending update for the child node, if any. Give up if we
@@ -43,7 +54,7 @@ export function appendChild(
             component = component.parent
           }
         }
-      } else {
+      } else if (!isFragment(child)) {
         throw Error('Unsupported node type')
       }
 
@@ -65,10 +76,15 @@ export function appendChild(
     } else {
       parent.appendChild(child)
     }
-  } else if (isDeferredNode(child)) {
+    return child
+  }
+
+  if (isDeferredNode(child)) {
     child = evaluateDeferredNode(child)
-    appendChild(child, parent)
-  } else if (isShadowRoot(child)) {
+    return appendChild(child, parent)
+  }
+
+  if (isShadowRoot(child)) {
     const shadowRoot = (parent as HTMLElement).attachShadow(child.props)
     const ancestorShadowRoot = setContext(
       ShadowRootContext,

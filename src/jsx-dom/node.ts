@@ -6,8 +6,13 @@ import {
   applyRefProp,
 } from '../internal/applyProp'
 import { AlienContextMap, setContext } from '../internal/context'
+import { FragmentKeys, FragmentNodes } from '../internal/fragment'
 import { HostProps } from '../internal/hostProps'
-import { kAlienElementKey } from '../internal/symbols'
+import {
+  kAlienElementKey,
+  kAlienFragmentKeys,
+  kAlienFragmentNodes,
+} from '../internal/symbols'
 import { DefaultElement } from '../internal/types'
 import { SVGNamespace } from '../jsx-dom/jsx-runtime'
 import { ReadonlyRef, isRef } from '../observable'
@@ -104,7 +109,7 @@ export function evaluateDeferredNode(node: AnyDeferredNode) {
   if (isDeferredHostNode(node)) {
     hostNode = createHostNode(node)
   } else if (node.tag === Fragment) {
-    hostNode = createFragmentNode(node.children as ResolvedChild[])
+    hostNode = createFragmentNode(node.children!, kAlienFragmentKeys(node)!)
   } else {
     // For consistency, the context used by a deferred component node must match
     // the context that existed when the JSX element was declared.
@@ -161,10 +166,18 @@ export function createHostNode(
 export const createTextNode = (text: any) =>
   document.createTextNode(String(text))
 
-export function createFragmentNode(children: ResolvedChild[]) {
+export function createFragmentNode(
+  children: ResolvedChild[],
+  childKeys: FragmentKeys
+) {
   const fragment = document.createDocumentFragment()
-  for (const child of children) {
-    appendChild(child, fragment)
+
+  const childNodes = new Array(children.length + 1) as FragmentNodes
+  for (let i = 0; i < children.length; i++) {
+    childNodes[i + 1] = appendChild(children[i], fragment)
   }
+
+  kAlienFragmentNodes(fragment, childNodes)
+  kAlienFragmentKeys(fragment, childKeys)
   return fragment
 }

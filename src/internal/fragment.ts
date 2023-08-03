@@ -1,3 +1,8 @@
+import { Fragment } from '../jsx-dom/jsx-runtime'
+import { createFragmentNode, deferComponentNode } from '../jsx-dom/node'
+import { resolveChildren } from '../jsx-dom/resolveChildren'
+import type { JSX } from '../types/jsx'
+import { AlienContextMap } from './context'
 import {
   kAlienElementKey,
   kAlienFragmentKeys,
@@ -5,35 +10,46 @@ import {
   kAlienParentFragment,
 } from './symbols'
 
-/**
- * Prepare a fragment node for insertion into the DOM.
- */
-export function prepareFragment(fragment: DocumentFragment) {
-  let childNodes = kAlienFragmentNodes(fragment)
-  if (!childNodes) {
-    // This is the first time the fragment is being appended, so
-    // cache its child nodes.
-    childNodes = Array.from(fragment.childNodes)
-    kAlienFragmentNodes(fragment, childNodes)
-    kAlienFragmentKeys(fragment, childNodes.map(kAlienElementKey.get))
+export type FragmentNodes = [Comment, ...(ChildNode | undefined)[]]
+export type FragmentKeys = (JSX.ElementKey | undefined)[]
+
+export function wrapWithFragment(
+  wrappedChild: JSX.ChildrenProp,
+  context: AlienContextMap,
+  isDeferred?: boolean
+) {
+  const childKeys: FragmentKeys = [undefined]
+  const children = resolveChildren(
+    wrappedChild,
+    undefined,
+    context,
+    (_, childKey) => {
+      childKeys.push(childKey)
+    }
+  )
+  if (isDeferred) {
+    const node = deferComponentNode(Fragment, null, children)
+    kAlienFragmentKeys(node, childKeys)
+    return node
   }
-  return fragment
+  return createFragmentNode(children, childKeys)
 }
 
-export function getFragmentNodes(parent: DocumentFragment) {
-  const oldNodes = kAlienFragmentNodes(parent)
-  return oldNodes || Array.from(parent.childNodes)
-}
+export function prependFragmentHeader(
+  fragment: DocumentFragment,
+  comment: string
+) {
+  const header = document.createComment(comment)
+  fragment.prepend(header)
 
-export function getFragmentHeader(fragment: DocumentFragment) {
-  const oldNodes = kAlienFragmentNodes(fragment)
-  return oldNodes ? oldNodes[0] : fragment.firstChild!
+  const childNodes = kAlienFragmentNodes(fragment)!
+  childNodes[0] = header
 }
 
 export function updateParentFragment(
   fragment: DocumentFragment,
-  oldNodes: ChildNode[],
-  newNodes: ChildNode[]
+  oldNodes: (ChildNode | undefined)[],
+  newNodes: (ChildNode | undefined)[]
 ) {
   const parentFragment = kAlienParentFragment(fragment)
   if (parentFragment) {
@@ -43,28 +59,26 @@ export function updateParentFragment(
 
 function spliceFragment(
   fragment: DocumentFragment,
-  oldSlice: ChildNode[],
-  newSlice: ChildNode[]
+  oldSlice: (ChildNode | undefined)[],
+  newSlice: (ChildNode | undefined)[]
 ) {
-  const oldNodes = fragment.childNodes.length
-    ? Array.from(fragment.childNodes)
-    : kAlienFragmentNodes(fragment)!
-
+  const oldNodes = kAlienFragmentNodes(fragment)!
   const offset = oldNodes.indexOf(oldSlice[0])
   if (offset < 0) {
     return
   }
 
-  const newNodes = [...oldNodes]
+  const newNodes = [...oldNodes] as FragmentNodes
   newNodes.splice(offset, oldSlice.length, ...newSlice)
 
   // FIXME: this seems wrong, since the parent fragment should apply its own
   // positional keys when being updated
-  const newKeys = newNodes.map(kAlienElementKey.get)
+  const newKeys = newNodes.map(node => node && kAlienElementKey(node))
   kAlienFragmentKeys(fragment, newKeys)
 
   if (fragment.childNodes.length) {
-    fragment.replaceChildren(...newNodes)
+    const replacements = newNodes.filter(Boolean) as ChildNode[]
+    fragment.replaceChildren(...replacements)
   } else {
     kAlienFragmentNodes(fragment, newNodes)
     updateParentFragment(fragment, oldNodes, newNodes)

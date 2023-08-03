@@ -18,10 +18,9 @@ import { morph } from './morph'
 
 const defaultNextSibling = (node: ChildNode) => node.nextSibling
 
-export interface FromParentNode {
+export interface ParentNode {
   childNodes: { length: number }
   firstChild: ChildNode | null
-  insertBefore: (node: ChildNode, nextNode: ChildNode) => void
   appendChild: (node: ChildNode) => void
 }
 
@@ -30,17 +29,25 @@ export interface FromParentNode {
  * to be preserved.
  */
 export function morphChildren(
-  fromParentNode: FromParentNode,
+  fromParentNode: ParentNode,
   toChildNodes: ResolvedChild[],
   component?: AlienComponent | null,
-  getFromKey: (
-    fromNode: ChildNode
-  ) => JSX.ElementKey | undefined = kAlienElementKey.get,
-  getNextSibling: (fromNode: ChildNode) => ChildNode | null = defaultNextSibling
+  options: {
+    getFromKey?: (fromNode: ChildNode) => JSX.ElementKey | undefined
+    getNextSibling?: (fromNode: ChildNode) => ChildNode | null
+    /** When a child node is new, preserved, or undefined, this callback is invoked. */
+    onChildNode?: (node: ChildNode | undefined) => void
+  } = {}
 ): void {
   if (!fromParentNode.childNodes.length && !toChildNodes.length) {
     return
   }
+
+  const {
+    getFromKey = kAlienElementKey.get,
+    getNextSibling = defaultNextSibling,
+    onChildNode = noop,
+  } = options
 
   /** The `node` will be discarded unless false is returned. */
   const onBeforeNodeDiscarded = component
@@ -83,6 +90,12 @@ export function morphChildren(
   outer: while (toChildIndex < toChildNodes.length) {
     const toChildNode = toChildNodes[toChildIndex]
 
+    if (toChildNode === null) {
+      onChildNode(undefined)
+      toChildIndex++
+      continue
+    }
+
     if (isShadowRoot(toChildNode)) {
       throw Error('ShadowRoot must be the only child')
     }
@@ -112,13 +125,14 @@ export function morphChildren(
             nextSibling
           )
 
+          onChildNode(matchingNode)
           toChildIndex++
           continue
         }
       }
 
       // This node has no compatible from node.
-      insertChild(fromParentNode, toChildNode, fromChildNode)
+      insertChild(fromParentNode, toChildNode, fromChildNode, onChildNode)
       toChildIndex++
 
       // Remove the incompatible from node.
@@ -136,6 +150,7 @@ export function morphChildren(
         // Unkeyed nodes are matched by nodeType and nodeName.
         else if (isCompatibleNode(fromChildNode, toChildNode)) {
           updateChild(fromParentNode, fromChildNode, toChildNode, component)
+          onChildNode(fromChildNode)
 
           fromChildNode = fromNextSibling
           toChildIndex++
@@ -150,7 +165,7 @@ export function morphChildren(
       }
 
       // This node has no compatible from node.
-      insertChild(fromParentNode, toChildNode)
+      insertChild(fromParentNode, toChildNode, null, onChildNode)
       toChildIndex++
     }
   }
@@ -210,9 +225,10 @@ function isDiscardableNode(node: Node) {
 }
 
 function insertChild(
-  parentNode: FromParentNode,
+  parentNode: ParentNode,
   node: ToNode,
-  nextSibling?: ChildNode | null
+  nextSibling: ChildNode | null,
+  onChildNode: (node: ChildNode | undefined) => void
 ) {
   let newChild: ChildNode
   if (isDeferredNode(node)) {
@@ -220,7 +236,7 @@ function insertChild(
     if (isFragment(evaluatedNode)) {
       // FIXME: should this update positional keys?
       return evaluatedNode.childNodes.forEach(childNode => {
-        insertChild(parentNode, childNode, nextSibling)
+        insertChild(parentNode, childNode, nextSibling, onChildNode)
       })
     }
     newChild = evaluatedNode
@@ -228,14 +244,15 @@ function insertChild(
     newChild = node
   }
   if (nextSibling) {
-    parentNode.insertBefore(newChild, nextSibling)
+    nextSibling.before(newChild)
   } else {
     parentNode.appendChild(newChild)
   }
+  onChildNode(newChild)
 }
 
 function updateChild(
-  parentNode: FromParentNode,
+  parentNode: ParentNode,
   fromNode: ChildNode,
   toNode: ToNode,
   component?: AlienComponent | null,
@@ -257,7 +274,5 @@ function updateChild(
   }
 
   // Reorder the node if necessary.
-  if (nextSibling) {
-    parentNode.insertBefore(fromNode, nextSibling)
-  }
+  nextSibling?.before(fromNode)
 }

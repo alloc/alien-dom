@@ -6,7 +6,13 @@
 
 - **While rendering:** Properties of a JSX element are not guaranteed to be up-to-date. If you need to access a property of a JSX element, do so within an event handler or effect.
 
+- **While rendering:** Never use native DOM methods to alter the `childNodes` array of a JSX element.
+
+- Never use native DOM methods to alter the `childNodes` array of a JSX fragment.
+
 - Replacing or removing the root node of a component with native DOM methods will break component effects. You should rerender the component instead.
+
+- If an array of JSX elements doesn't have a stable order, you should use a `key` prop to help the renderer identify which elements have been added, removed, or moved. Alternatively, you can render a list of elements outside the render phase, so you're in control of updating it.
 
 ### JSX elements
 

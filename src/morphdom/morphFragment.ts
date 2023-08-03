@@ -1,9 +1,9 @@
 import { AlienComponent } from '../internal/component'
-import { updateParentFragment } from '../internal/fragment'
+import { FragmentNodes, updateParentFragment } from '../internal/fragment'
 import { kAlienFragmentKeys, kAlienFragmentNodes } from '../internal/symbols'
 import { AnyDeferredNode } from '../jsx-dom/node'
 import { ResolvedChild } from '../jsx-dom/resolveChildren'
-import { FromParentNode, morphChildren } from './morphChildren'
+import { ParentNode, morphChildren } from './morphChildren'
 
 export function morphFragment(
   fromFragment: DocumentFragment,
@@ -20,49 +20,48 @@ export function morphFragment(
     ])
   )
 
-  const fromParentNode = new FromParentFragment(fromNodes)
-  morphChildren(
-    fromParentNode,
-    toFragment.children as ResolvedChild[],
-    component,
+  const nodes: FragmentNodes = [fromNodes[0]]
+  const keys = kAlienFragmentKeys(toFragment)!
+
+  const fragment = new ParentFragment(fromNodes)
+  morphChildren(fragment, toFragment.children as ResolvedChild[], component, {
     // Child nodes of a fragment may have their positional keys replaced by
     // their actual parent node, so we need to use the fragment's key cache.
-    fromNode => fromKeyLookup.get(fromNode),
+    getFromKey: fromNode => fromKeyLookup.get(fromNode),
     // Avoid using the native ".nextSibling" accessor, since that doesn't
     // respect the fragment's end boundary.
-    fromNode => {
+    getNextSibling: fromNode => {
       if (fromNode !== lastFromNode) {
         return fromNode.nextSibling
       }
       return null
-    }
-  )
+    },
+    // This callback helps us preserve the positions of any undefined values in
+    // the toFragment's children array, which is crucial for positional keys.
+    onChildNode: node => {
+      nodes.push(node)
+    },
+  })
 
-  const toNodes = [fromParentNode.header, ...fromParentNode.childNodes]
-  updateParentFragment(fromFragment, fromNodes, toNodes)
-  kAlienFragmentNodes(fromFragment, toNodes)
+  kAlienFragmentNodes(fromFragment, nodes)
+  kAlienFragmentKeys(fromFragment, keys)
 
+  updateParentFragment(fromFragment, fromNodes, nodes)
   return fromFragment
 }
 
-class FromParentFragment implements FromParentNode {
-  header: ChildNode
+class ParentFragment implements ParentNode {
+  header: Comment
   childNodes: ChildNode[]
-  constructor(childNodes: ChildNode[]) {
+  constructor(childNodes: FragmentNodes) {
     this.header = childNodes[0]
-    this.childNodes = childNodes.slice(1)
+    this.childNodes = childNodes.slice(1).filter(Boolean) as ChildNode[]
   }
   get firstChild() {
     return this.childNodes[0] || null
   }
-  insertBefore(node: ChildNode, nextNode: ChildNode) {
-    const nextNodeIndex = this.childNodes.indexOf(nextNode)
-    this.childNodes.splice(nextNodeIndex, 0, node)
-    nextNode.before(node)
-  }
   appendChild(node: ChildNode) {
     const lastChild = this.childNodes.at(-1)!
-    this.childNodes.push(node)
     lastChild.after(node)
   }
 }
