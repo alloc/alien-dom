@@ -8,6 +8,7 @@ export * from './element'
 export * from './hooks'
 export * from './machine'
 export * from './observable'
+export * from './platform'
 export * from './promises'
 export * from './selectors'
 

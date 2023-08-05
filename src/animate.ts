@@ -24,6 +24,7 @@ import {
 } from './internal/types'
 import { isSvgChild } from './jsx-dom/svg-tags'
 import { keys, toArray } from './jsx-dom/util'
+import { window } from './platform'
 import { $$, AlienSelector } from './selectors'
 
 export type SpringAnimation<

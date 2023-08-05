@@ -13,6 +13,7 @@ import {
 } from '../jsx-dom/util'
 import { morphChildren } from '../morphdom/morphChildren'
 import { ReadonlyRef, isRef } from '../observable'
+import { window } from '../platform'
 import { DOMClassAttribute, HTMLStyleAttribute, JSX } from '../types'
 import { AlienComponent } from './component'
 import { hasTagName, isNode } from './duck'

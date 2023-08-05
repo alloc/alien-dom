@@ -80,7 +80,7 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
 /** This is used by JSX SVG elements. */
 export const createElement = (
   tag: any,
-  { key, ...props }: any,
+  { key, ...props }: any = {},
   ...children: any[]
 ) =>
   jsx(

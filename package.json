@@ -1,5 +1,6 @@
 {
   "name": "alien-dom",
+  "type": "module",
   "version": "0.8.0-beta.0",
   "description": "Enhanced DOM APIs mixed with jsx-dom",
   "main": "index.js",
@@ -29,7 +30,9 @@
   "prettier": "@alloc/prettier-config",
   "scripts": {
     "build": "rimraf dist && cd src && tsup-node --treeshake smallest --define.DEV false",
-    "dev": "cd src && tsup-node --watch --sourcemap --define.DEV true"
+    "dev": "cd src && tsup-node --watch --sourcemap --define.DEV true",
+    "test": "NODE_OPTIONS='--loader=tsx --no-warnings=ExperimentalWarnings' ava --watch",
+    "debug": "NODE_OPTIONS='--loader=tsx --no-warnings=ExperimentalWarnings' ava debug"
   },
   "dependencies": {
     "@alloc/types": "^2.3.0",
@@ -42,20 +45,24 @@
     "@alloc/prettier-config": "^1.0.0",
     "ava": "^5.2.0",
     "linear-color": "^1.2.0",
+    "linkedom": "^0.15.1",
     "prettier": "^2.8.7",
     "tsup": "^6.7.0",
     "tsx": "^3.12.7",
     "typescript": "^5.1.3"
   },
   "ava": {
+    "require": [
+      "./spec/ava.setup.cjs"
+    ],
     "files": [
-      "**/*.test.*"
+      "src/**/*.test.*",
+      "spec/**/*.test.*",
+      "packages/**/*.test.*"
     ],
     "extensions": {
-      "ts": "module"
-    },
-    "nodeArguments": [
-      "--loader=tsx"
-    ]
+      "ts": "module",
+      "tsx": "module"
+    }
   }
 }
