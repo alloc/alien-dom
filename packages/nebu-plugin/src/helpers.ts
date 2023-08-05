@@ -168,6 +168,9 @@ export function getDeclarationKind(path: Node): DeclarationKind | null {
     }
     return null
   }
+  if (path.parent.isCatchClause()) {
+    return 'param'
+  }
   if (isFunctionNode(path.parent)) {
     if (path.parent.params.includes(path as any)) {
       return 'param'
