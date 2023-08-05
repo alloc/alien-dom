@@ -37,11 +37,11 @@ importers:
       '@types/node': ^18.15.11
       esbuild: ^0.17.17
       esbuild-extra: ^0.3.0
-      nebu: ^2.3.8
+      nebu: ^2.4.2
     dependencies:
       '@alien-dom/nebu': link:../nebu-plugin
       esbuild-extra: 0.3.0_esbuild@0.17.17
-      nebu: 2.3.8
+      nebu: 2.4.2
     devDependencies:
       '@types/node': 18.15.11
       esbuild: 0.17.17
@@ -91,6 +91,7 @@ packages:
 
   /@alloc/is/3.1.2:
     resolution: {integrity: sha512-VgfKuuc45fpQRanNLYNnNWVwYBy19FSBGU5Y5q4CPuglv6KLhb+ipVy7lfn9CWM43lKRzkRPU+mt8eT+mPDhDA==}
+    dev: true
 
   /@alloc/prettier-config/1.0.0:
     resolution: {integrity: sha512-xm50V1qxSdTh1O1fKA+gqcU605YSnxfq6HwtYSFU3fRsKMFnUSuSOxqSAPI7y2sRxqPed2EIuGmNn107LVQM6g==}
@@ -1526,17 +1527,6 @@ packages:
     hasBin: true
     dev: true
 
-  /nebu/2.3.8:
-    resolution: {integrity: sha512-dkQxMk8MFt8wK+Cc2J/IaAkBmOehLOEjiWa9ElRt1MXkHPNOgcJxw6XOnUWxpLB9v/xEiWLyeBymaBhMvV9AQw==}
-    engines: {node: '>= 7.6.0'}
-    dependencies:
-      '@alloc/is': 3.1.2
-      '@alloc/types': 2.3.0
-      eslint-visitor-keys: 3.4.0
-      magic-string: 0.24.1
-      meriyah: 4.3.5
-    dev: false
-
   /nebu/2.4.0:
     resolution: {integrity: sha512-FKWOc+b9uLocBzIiMg0zPiO+4oFtWslykywdESmjeavPWKfewLo5pdavAB2c1uPh+OIloB9A/pYl7d3CihXWEg==}
     engines: {node: '>= 7.6.0'}
@@ -1545,6 +1535,16 @@ packages:
       eslint-visitor-keys: 3.4.0
       magic-string: 0.24.1
       meriyah: 4.3.5
+
+  /nebu/2.4.2:
+    resolution: {integrity: sha512-PovhX2svUwiTm0UNLQdXUQj4cRBhM0G8ze/5b03au3+fK+7a40LvevRU+50iBhpD0MnvjFzu579Wq0mhrk4YpA==}
+    engines: {node: '>= 7.6.0'}
+    dependencies:
+      '@alloc/types': 2.3.0
+      eslint-visitor-keys: 3.4.0
+      magic-string: 0.24.1
+      meriyah: 4.3.5
+    dev: false
 
   /nofilter/3.1.0:
     resolution: {integrity: sha512-l2NNj07e9afPnhAhvgVrCD/oy2Ai1yfLpuo3EpiO1jFTsB4sFz6oIfAfSZyQzVpkZQ9xS8ZS5g1jCBgq4Hwo0g==}
