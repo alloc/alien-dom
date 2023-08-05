@@ -91,6 +91,7 @@ export function defineChannel<
     if (target.parentNode) {
       bubble(target.parentNode, message)
     } else if (untargetedReceivers) {
+      message.currentTarget = document
       for (const receiver of [...untargetedReceivers]) {
         receiver(message)
         if (message.stopImmediatePropagation === noop) {
@@ -140,11 +141,12 @@ export function defineChannel<
   }
 
   const sendMessage: SendMessageFn<Message> = (arg1: any, arg2?: any) => {
+    let message: AlienMessage | null
+
     if (isNode(arg1)) {
       if (targetedReceiverCaches) {
-        bubble(arg1, {
-          ...(arg2 as object),
-          target: arg1,
+        message = {
+          ...(arg2 as AlienMessage),
           currentTarget: arg1,
           stopPropagation() {
             this.stopPropagation = noop
@@ -152,15 +154,22 @@ export function defineChannel<
           stopImmediatePropagation() {
             this.stopImmediatePropagation = noop
           },
-        })
+        }
+        return bubble(arg1, message as AlienBubblingMessage)
       }
-    } else if (untargetedReceivers) {
-      let message: AlienMessage | null = {
-        ...(arg1 as object),
-        stopPropagation: noop,
-        stopImmediatePropagation() {
-          message = null
-        },
+
+      message = {
+        ...(arg2 as AlienMessage),
+        target: arg1,
+        currentTarget: document,
+      }
+    }
+
+    if (untargetedReceivers) {
+      message ||= { ...arg1 } as AlienMessage
+      message.stopPropagation = noop
+      message.stopImmediatePropagation = () => {
+        message = null
       }
       for (const receiver of [...untargetedReceivers]) {
         receiver(message)
