@@ -1,4 +1,6 @@
+import { onMount } from '../domObserver'
 import { currentComponent } from '../internal/global'
+import { ShadowRootContext } from '../jsx-dom/shadow'
 import { EffectResult, useEffect } from './useEffect'
 import { useState } from './useState'
 
@@ -36,16 +38,25 @@ const initEventTarget = (
   dispose?: () => void
 } => ({
   setElement(element) {
-    if (!element) {
+    if (this.enabled) {
       this.dispose?.()
       this.dispose = undefined
-      this.enabled = false
-      return
     }
-    const result = this.enable(element)
-    this.enabled = true
-    if (result) {
-      this.dispose = result
+    this.enabled = element != null
+    if (element) {
+      if (element.isConnected) {
+        const result = this.enable(element)
+        if (result) {
+          this.dispose = result
+        }
+      } else {
+        const shadowRoot = ShadowRootContext.get()
+        this.dispose = onMount(
+          element,
+          () => this.setElement(element),
+          shadowRoot
+        ).dispose
+      }
     }
   },
   enabled: false,
