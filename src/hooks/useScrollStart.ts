@@ -7,6 +7,8 @@ export function useScrollStart(handler: (event: Event) => void) {
   return useEventTarget<HTMLElement>(target => {
     if (isDocument(target)) {
       target = target.scrollingElement as HTMLElement
+    } else {
+      target = findScrollingElement(target)
     }
     let started = false
     let stopTimer = -1
@@ -26,4 +28,17 @@ export function useScrollStart(handler: (event: Event) => void) {
       target.removeEventListener('scroll', onScroll)
     }
   })
+}
+
+function findScrollingElement(elem: HTMLElement) {
+  const root = document.scrollingElement as HTMLElement
+  while (elem && elem !== root) {
+    const style = getComputedStyle(elem)
+    const overflow = style.overflow + style.overflowY + style.overflowX
+    if (overflow.includes('scroll')) {
+      return elem
+    }
+    elem = elem.parentElement!
+  }
+  return root
 }
