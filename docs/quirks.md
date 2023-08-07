@@ -22,7 +22,7 @@
 
 - If a JSX element is referenced by a variable declared during render, subsequent renders will always reuse the same DOM element. This avoids issues with closures (i.e. effects and event listeners) ever having stale references to the DOM elements they need.
 
-- If a JSX element has a `ref` prop, the ref prop is only set to the original DOM element (the one actually connected to a document).
+- If a JSX element has a `ref` prop, the ref prop is only set to the original DOM element (the one actually connected to a document). When an element ref's `setElement` method is called, the DOM element is **not** guaranteed to be connected to a document yet.
 
 - JSX elements cannot be referenced (by variable or `ref` prop) if declared within a loop or non-component function. Move the JSX element into a separate component that your loop or function renders instead.
 
