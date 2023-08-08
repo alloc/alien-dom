@@ -194,6 +194,7 @@ interface ArrayMutators<T> {
 }
 
 interface ArrayIterators<T> {
+  at(index: number): T | undefined
   indexOf(searchElement: T, fromIndex?: number): number
   map<U>(
     callbackfn: (value: T, index: number, array: T[]) => U,
@@ -243,6 +244,7 @@ const arrayEnumerator = (name: keyof ArrayIterators<any>) =>
   shift: arrayMutator('shift'),
   unshift: arrayMutator('unshift'),
   splice: arrayMutator('splice'),
+  at: arrayEnumerator('at'),
   indexOf: arrayEnumerator('indexOf'),
   map: arrayEnumerator('map'),
 })
