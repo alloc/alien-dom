@@ -220,10 +220,17 @@ class KeyBindingContext {
     }
     const onKeyUp = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase()
+      activeKeys.delete(key)
       if (modifierKeys.includes(key)) {
-        activeKeys.clear()
-      } else {
-        activeKeys.delete(key)
+        // When a modifier key is released, all non-modifier keys are dropped
+        // from the active keys. This is necessary because the browser can
+        // prevent "keyup" events for non-modifier keys from being sent when a
+        // native shortcut is triggered.
+        activeKeys.forEach(key => {
+          if (!modifierKeys.includes(key)) {
+            activeKeys.delete(key)
+          }
+        })
       }
       onKeyChange(event)
     }
