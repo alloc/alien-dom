@@ -165,19 +165,25 @@ class KeyBindingContext {
 
     const { activeKeys } = this
 
-    const onKeyChange = (e?: KeyboardEvent) => {
+    const onKeyChange = (event?: KeyboardEvent) => {
       let stopPropagation = false
 
+      // Modifier keys must be pressed first.
+      const isModifierChange =
+        event && modifierKeys.includes(event.key.toLowerCase())
+
       for (const binding of this.bindings) {
-        if (comboMatches(binding.combo, activeKeys)) {
-          if (stopPropagation) continue
-          if (e?.type === 'keydown') {
+        // If no event is given, the activeKeys set was cleared, so there's no
+        // point in checking for a match.
+        if (event && comboMatches(binding.combo, activeKeys)) {
+          if (stopPropagation || isModifierChange) continue
+          if (event.type === 'keydown') {
             binding.isActive = true
             if (binding.onKeyDown) {
               binding.onKeyUp = binding.onKeyDown({
                 target,
-                repeat: e?.repeat ?? false,
-                preventDefault: e?.preventDefault.bind(e) ?? noop,
+                repeat: event?.repeat ?? false,
+                preventDefault: event?.preventDefault.bind(event) ?? noop,
                 stopPropagation() {
                   stopPropagation = true
                 },
@@ -194,7 +200,7 @@ class KeyBindingContext {
       }
 
       if (stopPropagation) {
-        e?.stopPropagation()
+        event?.stopPropagation()
       }
 
       // Newly added bindings aren't activated until all keys are released, so
