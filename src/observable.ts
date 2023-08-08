@@ -196,6 +196,7 @@ interface ArrayMutators<T> {
 interface ArrayIterators<T> {
   at(index: number): T | undefined
   indexOf(searchElement: T, fromIndex?: number): number
+  includes(searchElement: T, fromIndex?: number): boolean
   map<U>(
     callbackfn: (value: T, index: number, array: T[]) => U,
     thisArg?: any
@@ -246,6 +247,7 @@ const arrayEnumerator = (name: keyof ArrayIterators<any>) =>
   splice: arrayMutator('splice'),
   at: arrayEnumerator('at'),
   indexOf: arrayEnumerator('indexOf'),
+  includes: arrayEnumerator('includes'),
   map: arrayEnumerator('map'),
 })
 
