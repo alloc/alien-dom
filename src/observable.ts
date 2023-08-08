@@ -194,6 +194,7 @@ interface ArrayMutators<T> {
 }
 
 interface ArrayIterators<T> {
+  indexOf(searchElement: T, fromIndex?: number): number
   map<U>(
     callbackfn: (value: T, index: number, array: T[]) => U,
     thisArg?: any
@@ -242,6 +243,7 @@ const arrayEnumerator = (name: keyof ArrayIterators<any>) =>
   shift: arrayMutator('shift'),
   unshift: arrayMutator('unshift'),
   splice: arrayMutator('splice'),
+  indexOf: arrayEnumerator('indexOf'),
   map: arrayEnumerator('map'),
 })
 
