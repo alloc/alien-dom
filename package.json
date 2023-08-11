@@ -29,7 +29,8 @@
   "prettier": "@alloc/prettier-config",
   "scripts": {
     "build": "rimraf dist && cd src && tsup-node --treeshake smallest --define.DEV false",
-    "dev": "cd src && tsup-node --watch --sourcemap --define.DEV true"
+    "dev": "cd src && tsup-node --watch --sourcemap --define.DEV true",
+    "test": "NODE_OPTIONS='--loader=tsx' ava"
   },
   "dependencies": {
     "@alloc/types": "^2.3.0",
@@ -53,9 +54,6 @@
     ],
     "extensions": {
       "ts": "module"
-    },
-    "nodeArguments": [
-      "--loader=tsx"
-    ]
+    }
   }
 }

@@ -649,6 +649,22 @@ function computeNextVersion() {
   access = parentAccess
 }
 
+/**
+ * Run a function and collect all refs that were accessed.
+ */
+export function collectAccessedRefs<T>(fn: () => T, accessedRefs: Set<Ref>) {
+  const parentAccess = access
+  access = ref => {
+    accessedRefs.add(ref)
+    return parentAccess(ref)
+  }
+  try {
+    return fn()
+  } finally {
+    access = parentAccess
+  }
+}
+
 //
 // Convenience functions
 //

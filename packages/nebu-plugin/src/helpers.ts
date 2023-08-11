@@ -80,12 +80,25 @@ export function findExternalReferences(
     },
     Identifier(path) {
       // Don't track property names as variable references.
-      if (path.parent.isMemberExpression() && path.parent.property === path) {
+      if (
+        path.parent.isMemberExpression() &&
+        path.parent.property === path &&
+        !path.parent.computed
+      ) {
         const scope = findScope(path, scopes)
-        scope.propertyAccess.add(path)
-        if (!path.parent.computed) {
+
+        // Skip tracking the property access if it's a method call.
+        const grandParent = path.parent.parent
+        if (
+          grandParent.isCallExpression() &&
+          grandParent.callee === path.parent
+        ) {
+          scope.functionCalls.add(path)
           return
         }
+
+        scope.propertyAccess.add(path)
+        return
       }
 
       // Ignore static object keys.
@@ -119,6 +132,10 @@ export function findExternalReferences(
         scope.context[path.name] = path
       } else {
         scope.references.add(path.name)
+
+        if (path.parent.isCallExpression() && path.parent.callee === path) {
+          scope.functionCalls.add(path)
+        }
       }
     },
   })
@@ -156,6 +173,7 @@ export function findExternalReferences(
   return {
     deps: [...externalReferences],
     hasPropertyAccess: rootScope.propertyAccess.size > 0,
+    hasFunctionCall: rootScope.functionCalls.size > 0,
   }
 }
 
@@ -197,6 +215,7 @@ export type Scope = {
   context: Record<string, Node.Identifier>
   references: Set<string>
   propertyAccess: Set<Node.Identifier>
+  functionCalls: Set<Node.Identifier>
 }
 
 export function createScope(
@@ -208,6 +227,7 @@ export function createScope(
     context,
     references: new Set(),
     propertyAccess: new Set(),
+    functionCalls: new Set(),
   }
 }
 

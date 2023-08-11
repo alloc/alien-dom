@@ -1,8 +1,9 @@
+import { isArray, isFunction } from '@alloc/is'
 import { AlienContext } from '../context'
 import { AlienEffects } from '../effects'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { AnyDeferredNode } from '../jsx-dom/node'
-import { Observer, Ref, observe } from '../observable'
+import { Observer, ReadonlyRef, Ref, collectAccessedRefs } from '../observable'
 import { FunctionComponent, JSX } from '../types'
 import { deepEquals } from './deepEquals'
 import { isFragment } from './duck'
@@ -11,6 +12,7 @@ import {
   kAlienElementKey,
   kAlienElementTags,
   kAlienFragmentNodes,
+  kAlienMemo,
   kAlienRenderFunc,
 } from './symbols'
 
@@ -74,7 +76,8 @@ export class AlienComponent<Props = any> {
       this.observer.dispose()
     }
     this.render = render!
-    this.observer = observe(this.render)
+    this.observer = new ComponentObserver(this)
+    this.observer.update(render)
   }
 
   /**
@@ -151,37 +154,107 @@ export class AlienComponent<Props = any> {
   }
 }
 
+class ComponentObserver extends Observer {
+  constructor(private component: AlienComponent) {
+    super()
+  }
+  willUpdate(ref: ReadonlyRef): void {
+    const { memos } = this.component
+    memos?.forEach((memo, key) => {
+      if (Memo.isMemo(memo) && memo.refs?.has(ref)) {
+        memos.delete(key)
+      }
+    })
+  }
+}
+
+/** @internal */
+export class Memo {
+  static isMemo = (value: any): value is Memo => kAlienMemo.in(value)
+  constructor(
+    public value: any,
+    public deps?: readonly any[],
+    public refs?: Set<ReadonlyRef>
+  ) {
+    kAlienMemo(this, true)
+  }
+}
+
 /**
  * @internal
- * The compiler inserts `registerObject` calls for inline callback props.
+ * The compiler inserts `registerMemo` calls for props with an inlined object,
+ * array, or function call as its value.
  */
-export function registerObject(
+export function registerMemo(
   key: string,
-  newObject: object,
-  // Pass true for deep equality check.
-  deps?: readonly any[] | true
+  value: any,
+  deps?: readonly any[] | false
 ) {
   const component = currentComponent.get()!
   if (component) {
-    let memo = component.memos?.get(key)
-    if (deps) {
-      if (
-        memo &&
-        (deps === true
-          ? deepEquals(newObject, memo[0])
-          : !depsHaveChanged(deps, memo[1]))
-      ) {
-        newObject = memo[0]
+    let memo: Memo | undefined
+    if (component.memos?.has(key)) {
+      memo = component.memos.get(key) as Memo
+
+      // Compare dependency arrays if possible. The memo is never dirty when
+      // deps is false or when value is a function and deps is not an array.
+      // If none of that applies, a deep equality check is done.
+      const dirty = isArray(deps)
+        ? depsHaveChanged(deps, memo.deps)
+        : deps !== false &&
+          !(isFunction(value) || deepEquals(value, memo.value))
+
+      if (dirty) {
+        memo = undefined
       } else {
-        memo = [newObject, deps]
+        value = deps ? memo.value : memo
       }
-    } else if (memo) {
-      newObject = memo
+    }
+    if (memo === undefined) {
+      if (deps) {
+        let refs: Set<Ref> | undefined
+        if (isFunction(value)) {
+          refs = new Set()
+          value = collectAccessedRefs(value, refs)
+        }
+        memo = new Memo(value, deps, refs)
+      } else {
+        // Skip creating a Memo wrapper if no deps are provided.
+        memo = value
+      }
     }
     component.newMemos ||= new Map()
-    component.newMemos.set(key, memo || newObject)
+    component.newMemos.set(key, memo)
   }
-  return newObject
+  return value
+}
+
+/**
+ * @internal
+ * Like `registerMemo` but for inlined callback props.
+ */
+export function registerCallback(
+  key: string,
+  callback: Function,
+  deps?: readonly any[] | false
+) {
+  const component = currentComponent.get()!
+  if (component) {
+    let memo = component.memos?.get(key) as Memo | undefined
+    if (deps) {
+      if (memo && !depsHaveChanged(deps, memo.deps)) {
+        callback = memo.value
+      } else {
+        memo = new Memo(callback, deps)
+      }
+    } else if (memo) {
+      // Skip creating a Memo wrapper if no deps are provided.
+      callback = memo as any
+    }
+    component.newMemos ||= new Map()
+    component.newMemos.set(key, memo || callback)
+  }
+  return callback
 }
 
 /**

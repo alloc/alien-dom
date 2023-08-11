@@ -1,6 +1,6 @@
 import test from 'ava'
-import selfUpdatingTransform from './selfUpdating'
 import { nebu } from 'nebu'
+import selfUpdatingTransform from './selfUpdating'
 
 test('self-referencing variable with function value', t => {
   // Basic case
@@ -76,5 +76,43 @@ test('displayName added to selfUpdating component', t => {
   let result = nebu.process('const Foo = selfUpdating(() => null);', [
     selfUpdatingTransform(),
   ])
+  t.snapshot(result.js)
+})
+
+// Any inline object/array should be auto-memoized. By "inline", I mean the
+// object/array is declared within the JSX prop's value expression.
+test('auto-memoized inline style object', t => {
+  let result = nebu.process(
+    'function RedInput() { return <Input style={{ color: "red" }} /> }',
+    { jsx: true, plugins: [selfUpdatingTransform()] }
+  )
+  t.snapshot(result.js)
+
+  // Next, test a style array.
+  result = nebu.process(
+    'function RedInput() { return <Input style={[{ color: "red" }]} /> }',
+    { jsx: true, plugins: [selfUpdatingTransform()] }
+  )
+  t.snapshot(result.js)
+
+  // Next, test a style object that references a constant.
+  result = nebu.process(
+    'function RedInput() { const red = "red"; return <Input style={{ color: red }} /> }',
+    { jsx: true, plugins: [selfUpdatingTransform()] }
+  )
+  t.snapshot(result.js)
+
+  // Next, test a style object with a function call in it.
+  result = nebu.process(
+    'function RedInput() { return <Input style={{ color: getRed() }} /> }',
+    { jsx: true, plugins: [selfUpdatingTransform()] }
+  )
+  t.snapshot(result.js)
+
+  // Next, test a style object with a method call in it.
+  result = nebu.process(
+    'function RedInput() { return <Input style={{ color: window.getRed() }} /> }',
+    { jsx: true, plugins: [selfUpdatingTransform()] }
+  )
   t.snapshot(result.js)
 })

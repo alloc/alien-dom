@@ -39,16 +39,20 @@ export default function (
       const componentFns = new Set<Node>()
       const helpers = new Map<string, string>()
 
-      const createMemo = () => {
-        helpers.set('registerObject', '__objectMemo')
-        return `__objectMemo("${globalId}#${moduleNextId++}", `
+      const createMemo = (type: 'memo' | 'callback' = 'memo') => {
+        const importedName = 'register' + type[0].toUpperCase() + type.slice(1)
+        const localName = '__' + importedName
+        helpers.set(importedName, localName)
+        return `${localName}("${globalId}#${moduleNextId++}", `
       }
 
-      const createThunk = (memo = true) => (memo ? createMemo() : ``) + `() => `
+      const createElementThunk = (memo: boolean) =>
+        (memo ? createMemo('callback') : '') + '() => '
 
       const createDeps = (node: Node, memo = true) => {
         if (memo) {
-          const { deps, hasPropertyAccess } = findExternalReferences(node)
+          const { deps, hasPropertyAccess, hasFunctionCall } =
+            findExternalReferences(node)
 
           // Skip memoizing if property access is used in a JSX child
           // thunk during render.
@@ -56,19 +60,34 @@ export default function (
             hasPropertyAccess &&
             (node.isJSXElement() || node.parent.parent.isJSXElement())
           ) {
-            return ``
+            return null
           }
 
-          return deps.length > 0
-            ? isFunctionNode(node) || node.isJSXElement() || !hasPropertyAccess
-              ? `, [${deps}])`
-              : // Memoized objects/arrays with property access must
-                // use deep equality, so that computed properties aren't
-                // accessed twice.
-                `, true)`
-            : `)`
+          const isCallback = isFunctionNode(node)
+          const isElement = node.isJSXElement()
+
+          if (isCallback || isElement || !hasPropertyAccess) {
+            return {
+              names: deps,
+              code: deps.length
+                ? `, [${deps}])`
+                : isCallback
+                ? ')'
+                : ', false)',
+              needObserver: !isCallback && !isElement && hasFunctionCall,
+            }
+          }
+
+          // Memoized objects/arrays with property access must use deep
+          // equality, so that computed properties aren't accessed twice.
+          return {
+            names: null,
+            code: ')',
+            needObserver: false,
+          }
         }
-        return ``
+
+        return null
       }
 
       const handleElementRefs = (path: FunctionNode) => {
@@ -146,8 +165,15 @@ export default function (
             if (nearestContext === context) {
               const deps = createDeps(node)
               if (deps) {
-                node.before(createMemo())
-                node.after(deps)
+                const type = isFunctionNode(node) ? 'callback' : 'memo'
+                if (type === 'memo' && deps.needObserver) {
+                  const needParens = node.isObjectExpression()
+                  node.before(createMemo() + '() => ' + (needParens ? '(' : ''))
+                  node.after((needParens ? ')' : '') + deps.code)
+                } else {
+                  node.before(createMemo(type))
+                  node.after(deps.code)
+                }
               }
             }
           }
@@ -189,11 +215,8 @@ export default function (
         componentFn.params.forEach(param => {
           const memoize = createMemoizer(param)
           param.process({
-            CallExpression: memoize,
             FunctionExpression: memoize,
             ArrowFunctionExpression: memoize,
-            ObjectExpression: memoize,
-            ArrayExpression: memoize,
           })
         })
 
@@ -222,7 +245,7 @@ export default function (
             // Inline object props (e.g. the "style" prop) are not
             // memoized for host elements.
             const canAutoMemoize =
-              !openingElem.name.isJSXIdentifier() ||
+              openingElem.name.isJSXIdentifier() &&
               !/^[a-z]/.test(openingElem.name.name)
 
             // Elements within loops and non-component functions cannot
@@ -240,7 +263,7 @@ export default function (
             }
           },
           // Auto-memoize any variables declared during render with
-          // function/object/array expressions as values.
+          // function expressions as values.
           VariableDeclarator: memoizeVariable,
           AssignmentExpression: memoizeVariable,
         })
@@ -296,8 +319,10 @@ export default function (
 
         thunk.attributes.forEach(attr => {
           const value = attr.value as Node.JSXExpressionContainer
-          value.expression.before(createThunk(needsMemo))
-          value.expression.after(createDeps(value.expression, needsMemo))
+          const deps = createDeps(value.expression, needsMemo)
+
+          value.expression.before(createElementThunk(needsMemo))
+          deps && value.expression.after(deps.code)
         })
 
         if (thunk.children.size) {
@@ -307,20 +332,20 @@ export default function (
             }
             if (child.isJSXExpressionContainer()) {
               const deps = createDeps(child.expression, needsMemo)
-              child.expression.before(createThunk(!!deps && needsMemo))
+              child.expression.before(createElementThunk(!!deps && needsMemo))
               if (deps) {
-                child.expression.after(deps)
+                child.expression.after(deps.code)
               }
             } else {
               const deps = createDeps(child, needsMemo)
               // HACK: we can't do this the easier way, due to a nebu bug
               const prevChild = children[i - 1]
               if (prevChild && thunk.children.has(prevChild)) {
-                prevChild.after(`{` + createThunk(!!deps && needsMemo))
+                prevChild.after(`{` + createElementThunk(!!deps && needsMemo))
               } else {
-                child.before(`{` + createThunk(!!deps && needsMemo))
+                child.before(`{` + createElementThunk(!!deps && needsMemo))
               }
-              child.after(deps + `}`)
+              child.after((deps?.code || '') + `}`)
             }
           })
         }

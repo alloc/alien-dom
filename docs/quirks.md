@@ -14,6 +14,8 @@
 
 - If an array of JSX elements doesn't have a stable order, you should use a `key` prop to help the renderer identify which elements have been added, removed, or moved. Alternatively, you can render a list of elements outside the render phase, so you're in control of updating it.
 
+- For functions declared in components, avoid referencing variables declared after them or you might see stale values. Instead, declare the function after the variables it references. This guideline doesn't apply to functions nested in non-component functions.
+
 ### JSX elements
 
 - If a JSX element is created outside a render pass, you must remove it from the DOM with an `unmount(node)` call. Otherwise, any persistent effects will leak memory. Of course, if you plan to reuse the element, you can safely remove it with `node.remove()` and reinsert it later.
