@@ -99,14 +99,11 @@ export class AlienComponent<Props = any> {
 
   startRender() {
     this.newEffects = new AlienEffects()
-    this.updates = new Map()
     this.newRefs = new Map()
     this.nextHookIndex = 0
-    return this as {
-      rootNode: ChildNode | DocumentFragment | null
-      updates: Map<JSX.ElementKey, AnyDeferredNode>
-      newEffects: AlienEffects
-    }
+    this.updates = new Map()
+
+    return this as AlienRunningComponent<Props>
   }
 
   endRender(threw?: boolean) {
@@ -152,6 +149,12 @@ export class AlienComponent<Props = any> {
     kAlienElementKey(element, key)
     this.newRefs!.set(key, element)
   }
+}
+
+export declare class AlienRunningComponent<Props = any> extends AlienComponent {
+  updates: Map<JSX.ElementKey, AnyDeferredNode>
+  newRefs: ElementRefs
+  newEffects: AlienEffects
 }
 
 class ComponentObserver extends Observer {

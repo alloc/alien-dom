@@ -1,13 +1,14 @@
 import { markPureComponent } from '../functions/markPureComponent'
 import { isFragment, isNode } from '../internal/duck'
 import { FragmentKeys } from '../internal/fragment'
-import { kAlienFragmentKeys } from '../internal/symbols'
+import { currentComponent } from '../internal/global'
+import { kAlienElementKey, kAlienFragmentKeys } from '../internal/symbols'
 import {
   createFragmentNode,
   deferComponentNode,
   isDeferredNode,
 } from '../jsx-dom/node'
-import { resolveChildren } from '../jsx-dom/resolveChildren'
+import { ResolvedChild, resolveChildren } from '../jsx-dom/resolveChildren'
 import type { JSX } from '../types'
 
 export function Fragment(props: { children: JSX.ChildrenProp }) {
@@ -27,7 +28,7 @@ export function Fragment(props: { children: JSX.ChildrenProp }) {
     undefined,
     undefined,
     (childNode, childKey) => {
-      isDeferred ||= isDeferredNode(childNode)
+      isDeferred ||= isDeferredChild(childNode)
       childKeys.push(childKey)
     }
   )
@@ -42,3 +43,19 @@ export function Fragment(props: { children: JSX.ChildrenProp }) {
 }
 
 markPureComponent(Fragment)
+
+function isDeferredChild(child: ResolvedChild) {
+  if (isDeferredNode(child)) {
+    return true
+  }
+  if (child != null) {
+    const key = kAlienElementKey(child)
+    if (key != null) {
+      const component = currentComponent.get()
+      if (component) {
+        return component.updates.has(key)
+      }
+    }
+  }
+  return false
+}

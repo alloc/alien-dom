@@ -5,7 +5,6 @@ export function useMicrotask(effect: () => void, shouldRun = true) {
   const component = currentComponent.get()!
   const state = useState(initialState)
   if (shouldRun) {
-    const effects = component.newEffects!
     const nextRun = () => {
       if (nextRun == state.nextRun) {
         state.nextRun = undefined
@@ -19,7 +18,7 @@ export function useMicrotask(effect: () => void, shouldRun = true) {
 
     // The effect is enabled in the microtask after the parent element
     // is set, so we don't need to call queueMicrotask() ourselves.
-    effects.run(nextRun)
+    component.newEffects.run(nextRun)
   }
 }
 

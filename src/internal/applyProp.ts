@@ -14,7 +14,7 @@ import {
 import { morphChildren } from '../morphdom/morphChildren'
 import { ReadonlyRef, isRef } from '../observable'
 import { DOMClassAttribute, HTMLStyleAttribute, JSX } from '../types'
-import { AlienComponent } from './component'
+import { AlienRunningComponent } from './component'
 import { hasTagName, isNode } from './duck'
 import { flattenClassProp } from './flattenClassProp'
 import { MergeStylesFn, flattenStyleProp } from './flattenStyleProp'
@@ -339,7 +339,7 @@ export function applyKeyProp(
   node: ChildNode | DocumentFragment | AnyDeferredNode,
   key: JSX.ElementKey,
   oldNode: ChildNode | DocumentFragment | undefined,
-  component: AlienComponent | null
+  component: AlienRunningComponent | null
 ) {
   if (component) {
     const cachedNode = oldNode || (isNode(node) && node)
@@ -351,7 +351,7 @@ export function applyKeyProp(
     // might be the cached result of an element thunk.
     if (node !== oldNode) {
       if (isDeferredNode(node)) {
-        component.updates!.set(key, node)
+        component.updates.set(key, node)
       }
       if (oldNode) {
         kAlienElementKey(node, key)

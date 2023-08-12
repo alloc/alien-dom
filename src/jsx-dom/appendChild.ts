@@ -1,3 +1,4 @@
+import { AlienComponent } from '../internal/component'
 import { setContext } from '../internal/context'
 import {
   hasTagName,
@@ -44,7 +45,7 @@ export function appendChild(
         if (key != null) {
           // Find a pending update for the child node, if any. Give up if we
           // find a parent component isn't being updated.
-          let component = currentComponent.get()
+          let component: AlienComponent | null = currentComponent.get()
           while (component && component.updates) {
             const update = component.updates.get(key)
             if (update) {
