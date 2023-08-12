@@ -117,13 +117,7 @@ export function morphChildren(
             fromChildNode = getNextSibling(fromChildNode)
           }
 
-          updateChild(
-            fromParentNode,
-            matchingNode,
-            toChildNode,
-            component,
-            nextSibling
-          )
+          updateChild(matchingNode, toChildNode, component, nextSibling)
 
           onChildNode(matchingNode)
           toChildIndex++
@@ -149,7 +143,7 @@ export function morphChildren(
         }
         // Unkeyed nodes are matched by nodeType and nodeName.
         else if (isCompatibleNode(fromChildNode, toChildNode)) {
-          updateChild(fromParentNode, fromChildNode, toChildNode, component)
+          updateChild(fromChildNode, toChildNode, component)
           onChildNode(fromChildNode)
 
           fromChildNode = fromNextSibling
@@ -252,7 +246,6 @@ function insertChild(
 }
 
 function updateChild(
-  parentNode: ParentNode,
   fromNode: ChildNode,
   toNode: ToNode,
   component?: AlienComponent | null,
