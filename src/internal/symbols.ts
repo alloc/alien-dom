@@ -1,5 +1,4 @@
 import type { AlienEffects } from '../effects'
-import type { FunctionComponent } from '../types/component'
 import type { JSX } from '../types/jsx'
 import type { ElementTags } from './component'
 import type { FragmentKeys, FragmentNodes } from './fragment'
@@ -25,7 +24,7 @@ export const kAlienParentFragment = createSymbolProperty<
 export const kAlienPureComponent =
   createSymbolProperty<boolean>('pureComponent')
 export const kAlienRenderFunc =
-  createSymbolProperty<FunctionComponent>('renderFunc')
+  createSymbolProperty<(props: any) => any>('renderFunc')
 export const kAlienSelfUpdating = createSymbolProperty<any>('selfUpdating')
 export const kAlienThunkResult =
   createSymbolProperty<JSX.Children>('thunkResult')

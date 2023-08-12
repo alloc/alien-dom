@@ -323,7 +323,8 @@ export function selfUpdating<
     return self.rootNode
   }
 
-  kAlienSelfUpdating(Component, render)
+  kAlienRenderFunc(Component, render)
+  kAlienSelfUpdating(Component, Component)
   return Component
 }
 

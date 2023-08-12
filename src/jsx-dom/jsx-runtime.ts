@@ -17,8 +17,6 @@ export type { JSX }
 
 export const SVGNamespace = 'http://www.w3.org/2000/svg'
 
-const selfUpdatingTags = new WeakMap<any, any>()
-
 export { jsx as jsxs }
 
 type Props = {
@@ -30,11 +28,11 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
   const component = currentComponent.get()
 
   const hasImpureTag = typeof tag !== 'string' && !kAlienPureComponent.in(tag)
-  if (hasImpureTag && !kAlienSelfUpdating.in(tag)) {
-    let selfUpdatingTag = selfUpdatingTags.get(tag)
+  if (hasImpureTag) {
+    let selfUpdatingTag = kAlienSelfUpdating(tag)
     if (!selfUpdatingTag) {
       selfUpdatingTag = selfUpdating(tag)
-      selfUpdatingTags.set(tag, selfUpdatingTag)
+      kAlienSelfUpdating(tag, selfUpdatingTag)
     }
     tag = selfUpdatingTag
   }
