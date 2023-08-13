@@ -1,0 +1,25 @@
+{
+  "name": "@alien-dom/node",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rimraf dist && tsup-node src/index.ts --format esm --dts",
+    "dev": "tsup-node src/index.ts --format esm --dts --watch --sourcemap",
+    "prepublishOnly": "rimraf dist && tsup-node src/index.ts --format esm --dts"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@alien-dom/nebu": "workspace:^",
+    "nebu": "^2.4.2",
+    "sucrase": "^3.34.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.15.11",
+    "tsup": "^6.7.0",
+    "typings-esm-loader": "^2.0.1"
+  }
+}
