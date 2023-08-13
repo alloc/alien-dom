@@ -1,5 +1,6 @@
 {
   "name": "alien-dom",
+  "type": "module",
   "version": "0.8.0-beta.0",
   "description": "Enhanced DOM APIs mixed with jsx-dom",
   "main": "index.js",
@@ -30,7 +31,8 @@
   "scripts": {
     "build": "rimraf dist && cd src && tsup-node --treeshake smallest --define.DEV false",
     "dev": "cd src && tsup-node --watch --sourcemap --define.DEV true",
-    "test": "NODE_OPTIONS='--loader=tsx' ava"
+    "test": "NODE_OPTIONS='--loader @alien-dom/node --loader tsx --no-warnings=ExperimentalWarnings' ava --watch --no-worker-threads",
+    "debug": "NODE_OPTIONS='--loader @alien-dom/node --loader tsx --no-warnings=ExperimentalWarnings' ava debug"
   },
   "dependencies": {
     "@alloc/types": "^2.3.0",
@@ -38,22 +40,33 @@
     "ts-key-enum": "^2.0.12"
   },
   "devDependencies": {
+    "@alien-dom/node": "workspace:^",
     "@alloc/fast-rimraf": "^1.0.8",
     "@alloc/is": "^3.1.2",
     "@alloc/prettier-config": "^1.0.0",
     "ava": "^5.2.0",
+    "flush-microtasks": "^1.0.1",
     "linear-color": "^1.2.0",
+    "linkedom": "^0.15.1",
+    "nanospy": "^1.0.0",
     "prettier": "^2.8.7",
     "tsup": "^6.7.0",
     "tsx": "^3.12.7",
     "typescript": "^5.1.3"
   },
   "ava": {
+    "require": [
+      "./spec/setup/globals.ts",
+      "./spec/setup/jsx.ts"
+    ],
     "files": [
-      "**/*.test.*"
+      "src/**/*.test.*",
+      "spec/**/*.test.*",
+      "packages/**/*.test.*"
     ],
     "extensions": {
-      "ts": "module"
+      "ts": "module",
+      "tsx": "module"
     }
   }
 }

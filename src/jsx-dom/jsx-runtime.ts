@@ -76,15 +76,14 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
 }
 
 /** This is used by JSX SVG elements. */
-export const createElement = (
-  tag: any,
-  { key, ...props }: any,
-  ...children: any[]
-) =>
-  jsx(
+export function createElement(tag: any, props: any, ...children: any[]) {
+  let key: JSX.ElementKey | undefined
+  props && ({ key, ...props } = props)
+  return jsx(
     tag,
     children.length
       ? { ...props, children: children.length > 1 ? children : children[0] }
-      : props,
+      : props || {},
     key
   )
+}

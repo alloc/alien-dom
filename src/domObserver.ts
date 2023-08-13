@@ -1,13 +1,16 @@
 import { defineEffectType, getCurrentEffect } from './effects'
-import { isElement } from './internal/duck'
+import { isComment, isElement } from './internal/duck'
+import { DefaultElement } from './internal/types'
 import { binaryInsert } from './jsx-dom/util'
+import { MutationObserver, document } from './platform'
 
-type ElementListener = (element: Element) => void
+type ObservableNode = DefaultElement | Comment
+type NodeCallback = (node: ObservableNode) => void
 
 type RootNodeObserver = {
   rootNode: Node
-  onAdded: Set<ElementListener>
-  onRemoved: Set<ElementListener>
+  onAdded: Set<NodeCallback>
+  onRemoved: Set<NodeCallback>
   dispose: () => void
 }
 
@@ -16,23 +19,23 @@ const observersByRoot = new WeakMap<Node, RootNodeObserver>()
 function observe(rootNode: Node) {
   let result = observersByRoot.get(rootNode)
   if (!result) {
-    const onAdded = new Set<ElementListener>()
-    const onRemoved = new Set<ElementListener>()
+    const onAdded = new Set<NodeCallback>()
+    const onRemoved = new Set<NodeCallback>()
 
     let queued = false
-    const added = new Set<Element>()
-    const removed = new Set<Element>()
+    const added = new Set<ObservableNode>()
+    const removed = new Set<ObservableNode>()
 
     const observer = new MutationObserver(mutations => {
       for (const mutation of mutations) {
         for (const node of Array.from(mutation.addedNodes)) {
-          if (isElement(node) && !removed.delete(node)) {
-            added.add(node)
+          if (isElement(node) || isComment(node)) {
+            removed.delete(node) || added.add(node)
           }
         }
         for (const node of Array.from(mutation.removedNodes)) {
-          if (isElement(node) && !added.delete(node)) {
-            removed.add(node)
+          if (isElement(node) || isComment(node)) {
+            added.delete(node) || removed.add(node)
           }
         }
       }
@@ -82,47 +85,49 @@ export function matchDescendants<E extends Element>(
   selector: string,
   effect: (node: E) => void
 ) {
-  return observeNewDescendants(target, node => {
-    node.matches(selector) && effect(node as E)
-    node.querySelectorAll(selector).forEach(effect as any)
+  return observeNewDescendants(target, parentNode => {
+    if (isElement(parentNode)) {
+      parentNode.matches(selector) && effect(parentNode as any)
+      parentNode.querySelectorAll(selector).forEach(effect as any)
+    }
   })
 }
 
 export function observeNewChildren(
   target: Node,
-  listener: (node: Element) => void
+  listener: (childNode: ObservableNode) => void
 ) {
-  return observeNewDescendants(target, node => {
-    if (node.parentElement == target) {
-      listener(node)
+  return observeNewDescendants(target, childNode => {
+    if (childNode.parentElement == target) {
+      listener(childNode)
     }
   })
 }
 
 export function observeRemovedChildren(
   target: Node,
-  listener: (node: Element) => void
+  listener: (childNode: ObservableNode) => void
 ) {
-  return observeRemovedDescendants(target, node => {
-    if (node.parentElement == target) {
-      listener(node)
+  return observeRemovedDescendants(target, childNode => {
+    if (childNode.parentElement == target) {
+      listener(childNode)
     }
   })
 }
 
 export const observeNewDescendants = /* @__PURE__ */ defineEffectType(
-  (target: Node, listener: (node: Element) => void) => {
+  (target: Node, callback: NodeCallback) => {
     const observer = observe(target)
-    observer.onAdded.add(listener)
-    return () => removeElementListener(observer, 'onAdded', listener)
+    observer.onAdded.add(callback)
+    return () => removeElementListener(observer, 'onAdded', callback)
   }
 )
 
 export const observeRemovedDescendants = /* @__PURE__ */ defineEffectType(
-  (target: Node, listener: (node: Element) => void) => {
+  (target: Node, callback: NodeCallback) => {
     const observer = observe(target)
-    observer.onRemoved.add(listener)
-    return () => removeElementListener(observer, 'onRemoved', listener)
+    observer.onRemoved.add(callback)
+    return () => removeElementListener(observer, 'onRemoved', callback)
   }
 )
 
@@ -133,7 +138,7 @@ export const observeRemovedDescendants = /* @__PURE__ */ defineEffectType(
 export const onMount = (
   target: ChildNode,
   effect: () => void,
-  rootNode: Node = document
+  rootNode: Node = document as any
 ) => createElementObserver(target, 'onAdded', effect, rootNode)
 
 /**
@@ -170,8 +175,9 @@ const createElementObserver = defineEffectType(
 
     let depth = key == 'onRemoved' ? getElementDepth(target) : null
 
-    function listener(element: Element) {
-      if (element.contains(target)) {
+    function listener(parentNode: ObservableNode) {
+      // The strict equals check if required for comment nodes.
+      if (parentNode === target || parentNode.contains(target)) {
         if (self?.context) {
           self.context.remove(self)
         } else {
@@ -216,7 +222,7 @@ function getElementDepth(elem: ChildNode, stopAt?: Element) {
 function removeElementListener(
   observer: RootNodeObserver,
   key: 'onAdded' | 'onRemoved',
-  listener: ElementListener
+  listener: NodeCallback
 ) {
   if (
     observer[key].delete(listener) &&

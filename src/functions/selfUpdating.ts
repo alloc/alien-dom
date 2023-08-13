@@ -1,7 +1,7 @@
 import { isFunction, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
 import { ContextStore } from '../context'
-import { AlienComponent } from '../internal/component'
+import { AlienComponent, AlienRunningComponent } from '../internal/component'
 import { forwardContext, getContext } from '../internal/context'
 import { isComment, isElement, isFragment, isNode } from '../internal/duck'
 import {
@@ -34,6 +34,7 @@ import { compareNodeNames, noop } from '../jsx-dom/util'
 import { morph } from '../morphdom/morph'
 import { morphFragment } from '../morphdom/morphFragment'
 import { ref } from '../observable'
+import { document } from '../platform'
 import type { JSX } from '../types/jsx'
 import { attachRef } from './attachRef'
 import { unmount } from './unmount'
@@ -95,7 +96,7 @@ export function selfUpdating<
       context,
       updateProps,
       componentName
-    )
+    ) as AlienRunningComponent
 
     let updateScheduled = false
 

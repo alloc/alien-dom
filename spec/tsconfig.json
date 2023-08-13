@@ -1,13 +1,16 @@
 {
-  "include": ["*.d.ts", "dist"],
+  "include": ["./"],
   "compilerOptions": {
     "esModuleInterop": true,
     "jsx": "react-jsx",
+    "jsxImportSource": "./jsx-runtime",
     "lib": ["dom", "esnext"],
     "module": "esnext",
     "moduleResolution": "node",
     "noEmit": true,
+    "outDir": "../dist",
     "target": "esnext",
+    "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
     "types": []
