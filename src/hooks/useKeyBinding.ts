@@ -6,7 +6,6 @@ import { currentComponent } from '../internal/global'
 import { kAlienHostProps } from '../internal/symbols'
 import { noop, toArray } from '../jsx-dom/util'
 import { ref } from '../observable'
-import { window } from '../platform'
 import { EffectResult, useEffect } from './useEffect'
 import { useState } from './useState'
 

@@ -1,6 +1,5 @@
 // @ts-nocheck
 import { DocumentFragment, Element, parseHTML } from 'linkedom'
-import { document, setPlatform } from '../../src/platform.ts'
 
 globalThis.DEV = true
 
@@ -9,7 +8,12 @@ globalThis.React = {}
 
 const window = parseHTML('<html><body></body></html>')
 window.Element = Element
-setPlatform(window)
+
+globalThis.window = window
+globalThis.document = window.document
+globalThis.MutationObserver = window.MutationObserver
+globalThis.Element = window.Element
+globalThis.NodeList = window.NodeList
 
 const defineToString = (prototype: any, toString: (obj: any) => string) => {
   function toStringMethod() {

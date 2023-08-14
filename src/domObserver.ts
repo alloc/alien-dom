@@ -2,7 +2,6 @@ import { defineEffectType, getCurrentEffect } from './effects'
 import { isComment, isElement } from './internal/duck'
 import { DefaultElement } from './internal/types'
 import { binaryInsert } from './jsx-dom/util'
-import { MutationObserver, document } from './platform'
 
 type ObservableNode = DefaultElement | Comment
 type NodeCallback = (node: ObservableNode) => void

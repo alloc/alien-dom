@@ -2,7 +2,6 @@ import test from 'ava'
 import { flushMicroTasks } from 'flush-microtasks'
 import { spy } from 'nanospy'
 import { useMicrotask } from '../src/hooks/useMicrotask'
-import { document } from '../src/platform'
 import './setup/cleanup'
 
 let app: HTMLElement

@@ -1,7 +1,6 @@
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import { createFragmentNode, deferComponentNode } from '../jsx-dom/node'
 import { resolveChildren } from '../jsx-dom/resolveChildren'
-import { document } from '../platform'
 import type { JSX } from '../types/jsx'
 import { AlienContextMap } from './context'
 import {

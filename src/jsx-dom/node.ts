@@ -16,7 +16,6 @@ import {
 import { DefaultElement } from '../internal/types'
 import { SVGNamespace } from '../jsx-dom/jsx-runtime'
 import { ReadonlyRef, isRef } from '../observable'
-import { document } from '../platform'
 import type { JSX } from '../types/jsx'
 import { appendChild } from './appendChild'
 import { resolveChildren, type ResolvedChild } from './resolveChildren'

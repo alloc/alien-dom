@@ -2,7 +2,6 @@ import { markPureComponent } from '../functions/markPureComponent'
 import { currentMode } from '../internal/global'
 import { kAlienManualUpdates } from '../internal/symbols'
 import { appendChild } from '../jsx-dom/appendChild'
-import { document } from '../platform'
 import type { JSX } from '../types/jsx'
 
 export function ManualUpdates(props: {
