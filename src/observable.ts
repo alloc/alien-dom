@@ -217,40 +217,6 @@ const updateLengthRef = (
   }
 }
 
-const arrayMutator = (name: keyof ArrayMutators<any>) =>
-  function (this: InternalRef<any>, ...args: any[]) {
-    const oldArray = this._value
-    const newArray = oldArray.slice()
-    const result = newArray[name](...args)
-    setValue.call(this, newArray)
-    updateLengthRef(kLengthRef(this), oldArray, newArray)
-    return result
-  }
-
-const arrayEnumerator = (name: keyof ArrayIterators<any>) =>
-  function (this: InternalRef<any>, ...args: any[]) {
-    return this.value[name](...args)
-  }
-
-/* @__PURE__ */ assignPrototype(ArrayRef.prototype, {
-  [kRefType]: 'ArrayRef',
-  observe(this: InternalRef<any[]>, index: number) {
-    return computed(
-      () => this.value[index],
-      DEV && isString(this.debugId) ? `${this.debugId}[${index}]` : undefined
-    )
-  },
-  push: arrayMutator('push'),
-  pop: arrayMutator('pop'),
-  shift: arrayMutator('shift'),
-  unshift: arrayMutator('unshift'),
-  splice: arrayMutator('splice'),
-  at: arrayEnumerator('at'),
-  indexOf: arrayEnumerator('indexOf'),
-  includes: arrayEnumerator('includes'),
-  map: arrayEnumerator('map'),
-})
-
 const arrayTraps: ProxyHandler<InternalRef<any[]>> = {
   get(target, key) {
     if (key === Symbol.iterator) {
@@ -315,11 +281,49 @@ const arrayTraps: ProxyHandler<InternalRef<any[]>> = {
  *
  * Note: The array is cloned before each mutation.
  */
-export const arrayRef = <T>(
+export let arrayRef = <T>(
   init?: readonly T[],
   debugId?: string | number
-): ArrayRef<T> =>
-  new Proxy(new ArrayRef(init || [], debugId), arrayTraps as any)
+): ArrayRef<T> => {
+  arrayRef = (init, debugId) =>
+    new Proxy(new ArrayRef(init || [], debugId), arrayTraps as any)
+
+  const arrayMutator = (name: keyof ArrayMutators<any>) =>
+    function (this: InternalRef<any>, ...args: any[]) {
+      const oldArray = this._value
+      const newArray = oldArray.slice()
+      const result = newArray[name](...args)
+      setValue.call(this, newArray)
+      updateLengthRef(kLengthRef(this), oldArray, newArray)
+      return result
+    }
+
+  const arrayEnumerator = (name: keyof ArrayIterators<any>) =>
+    function (this: InternalRef<any>, ...args: any[]) {
+      return this.value[name](...args)
+    }
+
+  assignPrototype(ArrayRef.prototype, {
+    [kRefType]: 'ArrayRef',
+    observe(this: InternalRef<any[]>, index: number) {
+      return computed(
+        () => this.value[index],
+        DEV && isString(this.debugId) ? `${this.debugId}[${index}]` : undefined
+      )
+    },
+    push: arrayMutator('push'),
+    pop: arrayMutator('pop'),
+    shift: arrayMutator('shift'),
+    unshift: arrayMutator('unshift'),
+    splice: arrayMutator('splice'),
+    at: arrayEnumerator('at'),
+    indexOf: arrayEnumerator('indexOf'),
+    includes: arrayEnumerator('includes'),
+    map: arrayEnumerator('map'),
+  })
+
+  return arrayRef(init, debugId)
+}
 
 //
 // Plain observers
