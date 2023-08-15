@@ -280,7 +280,7 @@ export function registerNestedTag(key: string, tag: FunctionComponent) {
   if (component) {
     const oldTag = component.memos?.get(key)
     if (oldTag) {
-      kAlienRenderFunc(oldTag, tag)
+      oldTag[kAlienRenderFunc.symbol] = tag
       tag = oldTag
     } else {
       const renderRef = ref(tag)
