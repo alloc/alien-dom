@@ -1,9 +1,16 @@
 import { isArray, isFunction } from '@alloc/is'
 import { AlienContext } from '../context'
 import { AlienEffects } from '../effects'
+import { attachRef } from '../functions/attachRef'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { AnyDeferredNode } from '../jsx-dom/node'
-import { Observer, ReadonlyRef, Ref, collectAccessedRefs } from '../observable'
+import {
+  Observer,
+  ReadonlyRef,
+  Ref,
+  collectAccessedRefs,
+  ref,
+} from '../observable'
 import { FunctionComponent, JSX } from '../types'
 import { deepEquals } from './deepEquals'
 import { isFragment } from './duck'
@@ -276,11 +283,11 @@ export function registerNestedTag(key: string, tag: FunctionComponent) {
       kAlienRenderFunc(oldTag, tag)
       tag = oldTag
     } else {
+      const renderRef = ref(tag)
       const Component = (props: any) => {
-        const render = kAlienRenderFunc(Component)!
-        return render(props)
+        return (void 0, renderRef.value)(props)
       }
-      kAlienRenderFunc(Component, tag)
+      attachRef(Component, kAlienRenderFunc.symbol, renderRef)
       tag = Component
     }
     component.newMemos ||= new Map()
