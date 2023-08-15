@@ -7,6 +7,7 @@ export const attachRef = (
   didSet?: (key: keyof any, newValue: any, oldValue: any) => void
 ) => {
   Object.defineProperty(props, key, {
+    configurable: true,
     enumerable: true,
     get: Reflect.get.bind(Reflect, ref, 'value'),
     set: didSet
