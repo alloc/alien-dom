@@ -22,7 +22,7 @@ export function defineMachine<T extends MachineType>(
         (arg1: any, arg2?: any) => {
           const newState = isString(arg1) ? { ...arg2, value: arg1 } : arg1
           stateRef.value = newState
-          onChange(newState)
+          onChange(newState, this)
           return newState
         },
         this
@@ -34,7 +34,7 @@ export function defineMachine<T extends MachineType>(
 export interface MachineClass<T extends MachineType = any> {
   new (
     params: Readonly<MachineParams<T>>,
-    onChange?: (state: Readonly<MachineState<T>>) => void
+    onChange?: MachineCallback<T>
   ): Machine<T>
 }
 
@@ -62,7 +62,8 @@ export type MachineParams<T extends MachineType> = //
   T extends MachineType<infer Params> ? Params : never
 
 export type MachineCallback<T extends MachineType> = (
-  state: Readonly<MachineState<T>>
+  state: Readonly<MachineState<T>>,
+  self: Machine<T>
 ) => void
 
 type VoidMachineValue<T extends MachineType> =
