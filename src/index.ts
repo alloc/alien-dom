@@ -13,6 +13,7 @@ export * from './selectors'
 
 /// Functions
 export * from './functions/attachRef'
+export * from './functions/createElementRef'
 export * from './functions/depsHaveChanged'
 export * from './functions/dom'
 export * from './functions/editClassList'

@@ -1,9 +1,9 @@
 import type { Falsy } from '@alloc/types'
+import { isElementRef } from '../functions/createElementRef'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import type { DefaultElement, StyleAttributes } from '../internal/types'
 import { UpdateStyle, toArray, updateStyle } from '../jsx-dom/util'
 import { observe } from '../observable'
-import { isElementRef } from './useElementRef'
 import { usePrevious } from './usePrevious'
 import { useState } from './useState'
 
