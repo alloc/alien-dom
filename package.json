@@ -46,6 +46,7 @@
     "@alloc/prettier-config": "^1.0.0",
     "ava": "^5.2.0",
     "flush-microtasks": "^1.0.1",
+    "jsx-runtime": "link:./spec/jsx-runtime",
     "linear-color": "^1.2.0",
     "linkedom": "^0.15.1",
     "nanospy": "^1.0.0",

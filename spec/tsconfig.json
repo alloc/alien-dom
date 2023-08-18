@@ -1,9 +1,8 @@
 {
-  "include": ["./"],
   "compilerOptions": {
     "esModuleInterop": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "./jsx-runtime",
+    "jsxImportSource": "jsx-runtime",
     "lib": ["dom", "esnext"],
     "module": "esnext",
     "moduleResolution": "node",

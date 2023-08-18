@@ -36,6 +36,9 @@ importers:
       flush-microtasks:
         specifier: ^1.0.1
         version: 1.0.1
+      jsx-runtime:
+        specifier: link:./spec/jsx-runtime
+        version: link:spec/jsx-runtime
       linear-color:
         specifier: ^1.2.0
         version: 1.2.0
@@ -57,18 +60,6 @@ importers:
       typescript:
         specifier: ^5.1.3
         version: 5.1.3
-
-  node_modules/.pnpm/@types+node@18.15.11/node_modules/@types/node:
-    devDependencies:
-      typings-esm-loader:
-        specifier: ^2.0.1
-        version: 2.0.1
-
-  packages/ava-plugin:
-    dependencies:
-      '@alien-dom/esbuild':
-        specifier: workspace:^
-        version: link:../esbuild-plugin
 
   packages/esbuild-plugin:
     dependencies:
