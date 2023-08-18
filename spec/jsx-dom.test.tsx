@@ -38,3 +38,8 @@ test('component with fragment as root node', t => {
   app = <App title="Hello">Welcome to my app!</App>
   t.snapshot(app.toString())
 })
+
+test('render 0 as text', t => {
+  app = <div>{0}</div>
+  t.snapshot(app.toString())
+})

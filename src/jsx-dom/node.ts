@@ -76,6 +76,11 @@ export const isDeferredHostNode = (
   node: DeferredNode
 ): node is DeferredHostNode => isString(node.tag)
 
+const processDeferredChildren = (children: DeferredChildren) =>
+  children !== false && children != null && !isRef(children)
+    ? resolveChildren(children)
+    : children
+
 export const deferHostNode = (
   tag: string,
   { ref, children, namespaceURI, ...props }: any
@@ -84,8 +89,7 @@ export const deferHostNode = (
   tag,
   ref,
   props,
-  children:
-    children && (isRef(children) ? children : resolveChildren(children)),
+  children: processDeferredChildren(children),
   namespaceURI,
   context: undefined,
 })
@@ -139,7 +143,7 @@ export function createHostNode(
   // deferHostNode constructor.
   isString(tag)
     ? (({ ref, children, namespaceURI, ...props } = props),
-      children && !isRef(children) && (children = resolveChildren(children)))
+      (children = processDeferredChildren(children)))
     : ({ tag, props, ref, children, namespaceURI } = tag)
 
   const hostNode = (
