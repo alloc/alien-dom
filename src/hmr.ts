@@ -1,6 +1,7 @@
 import { isArray, isFunction } from '@alloc/is'
 import { attachRef } from './functions/attachRef'
 import { selfUpdating } from './functions/selfUpdating'
+import { unmount } from './functions/unmount'
 import { AlienComponent } from './internal/component'
 import { isFragment } from './internal/duck'
 import { currentComponent } from './internal/global'
@@ -65,9 +66,8 @@ export function hmrComponent(render: (props: any) => JSX.Element) {
       oldElements.forEach((element, i) => {
         if (i === 0 && result !== null) {
           element.replaceWith(result)
-        } else {
-          element.remove()
         }
+        unmount(element)
       })
     }
   })
