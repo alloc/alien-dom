@@ -31,8 +31,8 @@
   "scripts": {
     "build": "rimraf dist && cd src && tsup-node --treeshake smallest --define.DEV false",
     "dev": "cd src && tsup-node --watch --sourcemap --define.DEV true",
-    "test": "NODE_OPTIONS='--loader @alien-dom/node --loader tsx --no-warnings=ExperimentalWarnings' ava --watch --no-worker-threads",
-    "debug": "NODE_OPTIONS='--loader @alien-dom/node --loader tsx --no-warnings=ExperimentalWarnings' ava debug"
+    "test": "NODE_OPTIONS='--loader @alien-dom/node --no-warnings=ExperimentalWarnings' ava --watch --no-worker-threads",
+    "debug": "NODE_OPTIONS='--loader @alien-dom/node --no-warnings=ExperimentalWarnings' ava debug"
   },
   "dependencies": {
     "@alloc/types": "^2.3.0",
@@ -44,9 +44,9 @@
     "@alloc/fast-rimraf": "^1.0.8",
     "@alloc/is": "^3.1.2",
     "@alloc/prettier-config": "^1.0.0",
+    "alien-dom": "link:./src",
     "ava": "^5.2.0",
     "flush-microtasks": "^1.0.1",
-    "jsx-runtime": "link:./spec/jsx-runtime",
     "linear-color": "^1.2.0",
     "linkedom": "^0.15.1",
     "nanospy": "^1.0.0",

@@ -14,7 +14,7 @@ test('useMicrotask should fire once mounted', async t => {
     return null
   }
 
-  app = <App title="Hello">Welcome to my app!</App>
+  app = <App />
   t.is(callback.callCount, 0)
 
   await flushMicroTasks()

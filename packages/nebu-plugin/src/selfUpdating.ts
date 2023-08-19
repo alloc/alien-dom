@@ -12,6 +12,8 @@ import { JSXThunkParent, collectThunkParents } from './thunk'
 declare const process: any
 
 export type SelfUpdatingPluginState = {
+  /** @default "alien-dom/dist/helpers.mjs" */
+  helpersId?: string
   /**
    * This value is used to prevent key collisions across builds.
    */
@@ -27,6 +29,7 @@ export type SelfUpdatingPluginState = {
 export default function (
   state: SelfUpdatingPluginState = { globalNextId: 0 }
 ): Plugin {
+  const helpersId = state.helpersId ?? 'alien-dom/dist/helpers.mjs'
   const ensureComponentNames =
     state.ensureComponentNames ?? process.env.NODE_ENV !== 'production'
 
@@ -357,7 +360,7 @@ export default function (
           `import { ${Array.from(
             helpers,
             ([from, alias]) => `${from} as ${alias}`
-          ).join(', ')} } from 'alien-dom/dist/helpers.mjs'\n`
+          ).join(', ')} } from '${helpersId}'\n`
         )
       }
     },
