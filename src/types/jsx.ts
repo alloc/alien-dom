@@ -1,6 +1,6 @@
 import type { AnyElement } from '../internal/types'
 import type { AlienNode, ShadowRootNode } from '../jsx-dom/node'
-import { ReadonlyRef } from '../observable'
+import type { ReadonlyRef } from '../observable'
 import type { AttrWithRef, Attributes } from './attr'
 import type {
   ChangeEventHandler,

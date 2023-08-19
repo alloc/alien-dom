@@ -21,7 +21,7 @@ interface DetailedHTMLFactory<
 }
 
 type AcceptObservableProps<E extends object> = {
-  [K in keyof E]: E[K] | ReadonlyRef<E[K]>
+  [K in keyof E]: E[K] | (K extends `on${string}` ? never : ReadonlyRef<E[K]>)
 }
 
 export type DetailedHTMLProps<
