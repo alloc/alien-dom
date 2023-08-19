@@ -1,5 +1,6 @@
 export * from './useArrayRef'
 export * from './useAsync'
+export * from './useAutoBind'
 export * from './useBoundingBox'
 export * from './useCallbackProp'
 export * from './useClickOutside'
