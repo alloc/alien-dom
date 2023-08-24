@@ -57,6 +57,8 @@ export function promiseRace<T>(promises: Iterable<T | PromiseLike<T>>) {
  * Disposable promises are useful for async dependencies that need to be
  * disposed of when the component unmounts. For example, async data should stop
  * loading on unmount and event listeners should be removed.
+ *
+ * NOTE: This type is meant for arguments. For return values, use `Disposable<Promise<T>>`.
  */
 export interface DisposablePromise<T> extends PromiseLike<T> {
   dispose: () => void
