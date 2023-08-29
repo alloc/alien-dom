@@ -21,7 +21,10 @@ export type Refs<T extends object> = {
 }
 
 class RefBindings {
-  constructor(private _refs: Record<keyof any, Ref>) {}
+  declare _refs: Record<keyof any, Ref>
+  constructor(refs: Record<keyof any, Ref>) {
+    Object.defineProperty(this, '_refs', { value: refs })
+  }
   bind(key: keyof any) {
     return this._refs[key] || (this as any)[key]
   }
