@@ -46,6 +46,7 @@
     "@alloc/prettier-config": "^1.0.0",
     "alien-dom": "link:./src",
     "ava": "^5.2.0",
+    "dedent": "^1.5.1",
     "flush-microtasks": "^1.0.1",
     "linear-color": "^1.2.0",
     "linkedom": "^0.15.1",

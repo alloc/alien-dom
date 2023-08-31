@@ -180,6 +180,9 @@ export function findExternalReferences(
 export type DeclarationKind = 'var' | 'let' | 'const' | 'param' | 'function'
 
 export function getDeclarationKind(path: Node): DeclarationKind | null {
+  if (path.isProgram()) {
+    return null
+  }
   if (path.parent.isVariableDeclarator()) {
     if (path.parent.id === path) {
       return (path.parent.parent as Node.VariableDeclaration).kind
@@ -193,7 +196,10 @@ export function getDeclarationKind(path: Node): DeclarationKind | null {
     if (path.parent.params.includes(path as any)) {
       return 'param'
     }
-    if (path.parent.isFunctionDeclaration() && path.parent.id === path) {
+    if (path.parent.isArrowFunctionExpression()) {
+      return null
+    }
+    if (path.parent.id === path) {
       return 'function'
     }
     return null
@@ -204,10 +210,10 @@ export function getDeclarationKind(path: Node): DeclarationKind | null {
   if (path.parent.isAssignmentPattern() && path.parent.left !== path) {
     return null
   }
-  if (path.parent) {
-    return getDeclarationKind(path.parent)
+  if (path.parent.isStatement()) {
+    return null
   }
-  return null
+  return getDeclarationKind(path.parent)
 }
 
 export type Scope = {
