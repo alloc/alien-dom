@@ -36,6 +36,9 @@ importers:
       ava:
         specifier: ^5.2.0
         version: 5.3.1
+      dedent:
+        specifier: ^1.5.1
+        version: 1.5.1
       flush-microtasks:
         specifier: ^1.0.1
         version: 1.0.1
@@ -1038,6 +1041,15 @@ packages:
         optional: true
     dependencies:
       ms: 2.1.2
+    dev: true
+
+  /dedent@1.5.1:
+    resolution: {integrity: sha512-+LxW+KLWxu3HW3M2w2ympwtqPrqYRzU8fqi6Fhd18fBALe15blJPI/I4+UHveMVG6lJqB4JNd4UG0S5cnVHwIg==}
+    peerDependencies:
+      babel-plugin-macros: ^3.1.0
+    peerDependenciesMeta:
+      babel-plugin-macros:
+        optional: true
     dev: true
 
   /dir-glob@3.0.1:
