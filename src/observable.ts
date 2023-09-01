@@ -354,6 +354,7 @@ export class Observer {
 
   constructor(readonly queue: Observer.Queue = updateQueue) {
     this.nextCompute ||= noop
+    this.didObserve ||= noop
     this.willUpdate ||= noop
     this.onUpdate ||= passThrough
   }
@@ -423,6 +424,7 @@ export class Observer {
     if (DEV && hooks) {
       hooks.observe(this, ref, newValue, oldValue)
     }
+    this.didObserve(ref, newValue, oldValue)
     if (this.version !== currentVersion) {
       this.version = currentVersion
       this.queue.add(this)
@@ -450,7 +452,18 @@ export class Observer {
 // These methods can be implemented by a subclass or set directly.
 export interface Observer {
   nextCompute(oldRefs?: Set<InternalRef<any>>): any
+  /**
+   * Called whenever an observed ref is changed.
+   */
+  didObserve(ref: ReadonlyRef<any>, newValue: any, oldValue: any): void
+  /**
+   * Called when the observer has been queued to run.
+   */
   willUpdate(ref: ReadonlyRef<any>, newValue: any, oldValue: any): void
+  /**
+   * Called with the result of the `compute` function. You must either return it
+   * or return a new result.
+   */
   onUpdate(result: any): any
 }
 
