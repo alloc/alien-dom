@@ -168,7 +168,7 @@ class ComponentObserver extends Observer {
   constructor(private component: AlienComponent) {
     super()
   }
-  willUpdate(ref: ReadonlyRef): void {
+  didObserve(ref: ReadonlyRef): void {
     const { memos } = this.component
     memos?.forEach((memo, key) => {
       if (Memo.isMemo(memo) && memo.refs?.has(ref)) {
