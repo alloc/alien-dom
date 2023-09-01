@@ -130,29 +130,6 @@ export class Machine<
     return this.state.value
   }
 
-  get proxy(): MachineProxy<T, State> {
-    return new Proxy(this as any, {
-      get(target, prop) {
-        if (prop in target) {
-          return target[prop]
-        }
-        if (prop in target.state) {
-          return target.state[prop]
-        }
-        if (prop === 'dispose') {
-          // Avoid throwing in case an unmounting component is trying to access
-          // the dispose method.
-          return
-        }
-        throw ReferenceError(
-          `Illegal property access: "${String(prop)}" in "${
-            target.value
-          }" state`
-        )
-      },
-    })
-  }
-
   peek() {
     return this.stateRef.peek().value
   }
@@ -177,4 +154,27 @@ export class Machine<
     }
     throw Error(`Expected "${value}", got "${this.value}"`)
   }
+}
+
+export function toMachineProxy<T extends MachineType>(
+  machine: Machine<T>
+): MachineProxy<T> {
+  return new Proxy(machine as any, {
+    get(machine, prop) {
+      if (prop in machine) {
+        return machine[prop]
+      }
+      if (prop in machine.state) {
+        return machine.state[prop]
+      }
+      if (prop === 'dispose') {
+        // Avoid throwing in case an unmounting component is trying to access
+        // the dispose method.
+        return
+      }
+      throw ReferenceError(
+        `Illegal property access: "${String(prop)}" in "${machine.value}" state`
+      )
+    },
+  })
 }
