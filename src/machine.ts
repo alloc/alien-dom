@@ -153,6 +153,10 @@ export class Machine<
     })
   }
 
+  peek() {
+    return this.stateRef.peek().value
+  }
+
   is<Value extends MachineValue<T>>(
     value: Value | Value[]
   ): this is Machine<T, Value> {
