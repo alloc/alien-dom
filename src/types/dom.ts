@@ -27,7 +27,6 @@ export type DOMClassAttribute =
 
 export interface DOMAttributes<T> {
   children?: JSX.ChildrenProp | undefined
-  dangerouslySetInnerHTML?: { __html: string } | undefined
 
   // Clipboard Events
   onCopy?: ClipboardEventHandler<T> | undefined
