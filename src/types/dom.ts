@@ -65,10 +65,10 @@ export interface DOMAttributes<T> {
   onInvalidCapture?: FormEventHandler<T> | undefined
 
   // Image Events
-  onLoad?: ReactEventHandler<T> | undefined
-  onLoadCapture?: ReactEventHandler<T> | undefined
-  onError?: ReactEventHandler<T> | undefined // also a Media Event
-  onErrorCapture?: ReactEventHandler<T> | undefined // also a Media Event
+  onLoad?: EventHandler<Event, T> | undefined
+  onLoadCapture?: EventHandler<Event, T> | undefined
+  onError?: EventHandler<Event, T> | undefined // also a Media Event
+  onErrorCapture?: EventHandler<Event, T> | undefined // also a Media Event
 
   // Keyboard Events
   onKeyDown?: KeyboardEventHandler<T> | undefined
@@ -79,50 +79,50 @@ export interface DOMAttributes<T> {
   onKeyUpCapture?: KeyboardEventHandler<T> | undefined
 
   // Media Events
-  onAbort?: ReactEventHandler<T> | undefined
-  onAbortCapture?: ReactEventHandler<T> | undefined
-  onCanPlay?: ReactEventHandler<T> | undefined
-  onCanPlayCapture?: ReactEventHandler<T> | undefined
-  onCanPlayThrough?: ReactEventHandler<T> | undefined
-  onCanPlayThroughCapture?: ReactEventHandler<T> | undefined
-  onDurationChange?: ReactEventHandler<T> | undefined
-  onDurationChangeCapture?: ReactEventHandler<T> | undefined
-  onEmptied?: ReactEventHandler<T> | undefined
-  onEmptiedCapture?: ReactEventHandler<T> | undefined
-  onEncrypted?: ReactEventHandler<T> | undefined
-  onEncryptedCapture?: ReactEventHandler<T> | undefined
-  onEnded?: ReactEventHandler<T> | undefined
-  onEndedCapture?: ReactEventHandler<T> | undefined
-  onLoadedData?: ReactEventHandler<T> | undefined
-  onLoadedDataCapture?: ReactEventHandler<T> | undefined
-  onLoadedMetadata?: ReactEventHandler<T> | undefined
-  onLoadedMetadataCapture?: ReactEventHandler<T> | undefined
-  onLoadStart?: ReactEventHandler<T> | undefined
-  onLoadStartCapture?: ReactEventHandler<T> | undefined
-  onPause?: ReactEventHandler<T> | undefined
-  onPauseCapture?: ReactEventHandler<T> | undefined
-  onPlay?: ReactEventHandler<T> | undefined
-  onPlayCapture?: ReactEventHandler<T> | undefined
-  onPlaying?: ReactEventHandler<T> | undefined
-  onPlayingCapture?: ReactEventHandler<T> | undefined
-  onProgress?: ReactEventHandler<T> | undefined
-  onProgressCapture?: ReactEventHandler<T> | undefined
-  onRateChange?: ReactEventHandler<T> | undefined
-  onRateChangeCapture?: ReactEventHandler<T> | undefined
-  onSeeked?: ReactEventHandler<T> | undefined
-  onSeekedCapture?: ReactEventHandler<T> | undefined
-  onSeeking?: ReactEventHandler<T> | undefined
-  onSeekingCapture?: ReactEventHandler<T> | undefined
-  onStalled?: ReactEventHandler<T> | undefined
-  onStalledCapture?: ReactEventHandler<T> | undefined
-  onSuspend?: ReactEventHandler<T> | undefined
-  onSuspendCapture?: ReactEventHandler<T> | undefined
-  onTimeUpdate?: ReactEventHandler<T> | undefined
-  onTimeUpdateCapture?: ReactEventHandler<T> | undefined
-  onVolumeChange?: ReactEventHandler<T> | undefined
-  onVolumeChangeCapture?: ReactEventHandler<T> | undefined
-  onWaiting?: ReactEventHandler<T> | undefined
-  onWaitingCapture?: ReactEventHandler<T> | undefined
+  onAbort?: EventHandler<Event, T> | undefined
+  onAbortCapture?: EventHandler<Event, T> | undefined
+  onCanPlay?: EventHandler<Event, T> | undefined
+  onCanPlayCapture?: EventHandler<Event, T> | undefined
+  onCanPlayThrough?: EventHandler<Event, T> | undefined
+  onCanPlayThroughCapture?: EventHandler<Event, T> | undefined
+  onDurationChange?: EventHandler<Event, T> | undefined
+  onDurationChangeCapture?: EventHandler<Event, T> | undefined
+  onEmptied?: EventHandler<Event, T> | undefined
+  onEmptiedCapture?: EventHandler<Event, T> | undefined
+  onEncrypted?: EventHandler<Event, T> | undefined
+  onEncryptedCapture?: EventHandler<Event, T> | undefined
+  onEnded?: EventHandler<Event, T> | undefined
+  onEndedCapture?: EventHandler<Event, T> | undefined
+  onLoadedData?: EventHandler<Event, T> | undefined
+  onLoadedDataCapture?: EventHandler<Event, T> | undefined
+  onLoadedMetadata?: EventHandler<Event, T> | undefined
+  onLoadedMetadataCapture?: EventHandler<Event, T> | undefined
+  onLoadStart?: EventHandler<Event, T> | undefined
+  onLoadStartCapture?: EventHandler<Event, T> | undefined
+  onPause?: EventHandler<Event, T> | undefined
+  onPauseCapture?: EventHandler<Event, T> | undefined
+  onPlay?: EventHandler<Event, T> | undefined
+  onPlayCapture?: EventHandler<Event, T> | undefined
+  onPlaying?: EventHandler<Event, T> | undefined
+  onPlayingCapture?: EventHandler<Event, T> | undefined
+  onProgress?: EventHandler<Event, T> | undefined
+  onProgressCapture?: EventHandler<Event, T> | undefined
+  onRateChange?: EventHandler<Event, T> | undefined
+  onRateChangeCapture?: EventHandler<Event, T> | undefined
+  onSeeked?: EventHandler<Event, T> | undefined
+  onSeekedCapture?: EventHandler<Event, T> | undefined
+  onSeeking?: EventHandler<Event, T> | undefined
+  onSeekingCapture?: EventHandler<Event, T> | undefined
+  onStalled?: EventHandler<Event, T> | undefined
+  onStalledCapture?: EventHandler<Event, T> | undefined
+  onSuspend?: EventHandler<Event, T> | undefined
+  onSuspendCapture?: EventHandler<Event, T> | undefined
+  onTimeUpdate?: EventHandler<Event, T> | undefined
+  onTimeUpdateCapture?: EventHandler<Event, T> | undefined
+  onVolumeChange?: EventHandler<Event, T> | undefined
+  onVolumeChangeCapture?: EventHandler<Event, T> | undefined
+  onWaiting?: EventHandler<Event, T> | undefined
+  onWaitingCapture?: EventHandler<Event, T> | undefined
 
   // MouseEvents
   onAuxClick?: MouseEventHandler<T> | undefined
@@ -163,8 +163,8 @@ export interface DOMAttributes<T> {
   onMouseUpCapture?: MouseEventHandler<T> | undefined
 
   // Selection Events
-  onSelect?: ReactEventHandler<T> | undefined
-  onSelectCapture?: ReactEventHandler<T> | undefined
+  onSelect?: EventHandler<Event, T> | undefined
+  onSelectCapture?: EventHandler<Event, T> | undefined
 
   // Touch Events
   onTouchCancel?: TouchEventHandler<T> | undefined
@@ -226,11 +226,9 @@ type ChangeEvent = Event
 // Event Handler Types
 // ----------------------------------------------------------------------
 
-type EventHandler<E extends Event, T> = (
+export type EventHandler<E extends Event = Event, T = Element> = (
   event: AlienEvent<E, Extract<T, Element>>
 ) => void
-
-export type ReactEventHandler<T = Element> = EventHandler<Event, T>
 
 export type ClipboardEventHandler<T = Element> = EventHandler<ClipboardEvent, T>
 export type CompositionEventHandler<T = Element> = EventHandler<

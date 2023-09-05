@@ -2,11 +2,7 @@ import type { AnyElement } from '../internal/types'
 import type { AlienNode, ShadowRootNode } from '../jsx-dom/node'
 import type { ReadonlyRef } from '../observable'
 import type { AttrWithRef, Attributes } from './attr'
-import type {
-  ChangeEventHandler,
-  DragEventHandler,
-  ReactEventHandler,
-} from './dom'
+import type { ChangeEventHandler, DragEventHandler, EventHandler } from './dom'
 import type {
   DetailedHTMLProps,
   HTMLAttributeAnchorTarget,
@@ -524,7 +520,7 @@ interface DataHTMLAttributes<T> extends HTMLAttributes<T> {
 
 interface DetailsHTMLAttributes<T> extends HTMLAttributes<T> {
   open?: boolean | undefined
-  onToggle?: ReactEventHandler<T> | undefined
+  onToggle?: EventHandler<Event, T> | undefined
 }
 
 interface DelHTMLAttributes<T> extends HTMLAttributes<T> {
