@@ -48,7 +48,7 @@ export interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
   innerHTML?: string | undefined
   innerText?: string | undefined
   textContent?: string | undefined
-  dataset?: { [key: string]: string } | undefined
+  dataset?: { [key: string]: string | ReadonlyRef<string> } | undefined
 
   // Standard HTML Attributes
   accessKey?: string | undefined
