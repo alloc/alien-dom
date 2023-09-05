@@ -158,7 +158,9 @@ export class AlienComponent<Props = any> {
   }
 }
 
-export declare class AlienRunningComponent<Props = any> extends AlienComponent {
+export declare class AlienRunningComponent<
+  Props = any
+> extends AlienComponent<Props> {
   updates: Map<JSX.ElementKey, AnyDeferredNode>
   newRefs: ElementRefs
   newEffects: AlienEffects
