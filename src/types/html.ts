@@ -52,6 +52,10 @@ export type HTMLStyleAttribute =
   | null
   | undefined
 
+export type HTMLDatasetAttribute = {
+  [key: string]: string | ReadonlyRef<string> | undefined
+}
+
 export interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
   // Extension
   namespaceURI?: string | undefined
@@ -59,7 +63,7 @@ export interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
   innerHTML?: string | undefined
   innerText?: string | undefined
   textContent?: string | undefined
-  dataset?: { [key: string]: string | ReadonlyRef<string> } | undefined
+  dataset?: HTMLDatasetAttribute | undefined
 
   // Standard HTML Attributes
   accessKey?: string | undefined

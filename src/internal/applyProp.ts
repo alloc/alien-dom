@@ -123,7 +123,15 @@ export function applyDatasetProp(
   value: any,
   hostProps?: HostProps
 ): void {
-  applyObjectProp(node, 'dataset', value, hostProps)
+  applyObjectProp(
+    node,
+    'dataset',
+    value,
+    hostProps,
+    // All dataset properties are stringified, so we need to handle "undefined"
+    // values explicitly to ensure the property is removed.
+    ObjectPropFlag.RemoveUndefined
+  )
 }
 
 export function applyStyleProp(
@@ -132,9 +140,13 @@ export function applyStyleProp(
   hostProps?: HostProps
 ): void {
   const merge: MergeStylesFn = (style, value) =>
-    applyObjectProp(node, 'style', value, hostProps, style)
+    applyObjectProp(node, 'style', value, hostProps, 0, style)
   const style = flattenStyleProp(node, value, {}, merge, hostProps)
   updateStyle(node, style, UpdateStyle.NonAnimated)
+}
+
+export const enum ObjectPropFlag {
+  RemoveUndefined = 1,
 }
 
 /**
@@ -148,8 +160,10 @@ export function applyObjectProp(
   prop: string,
   newValues: any,
   hostProps?: HostProps,
+  flags: ObjectPropFlag | 0 = 0,
   out: any = node[prop]
 ) {
+  const removeUndefined = flags & ObjectPropFlag.RemoveUndefined
   for (const key in newValues) {
     let newValue = newValues[key]
     newValue = addHostProp(
@@ -158,7 +172,11 @@ export function applyObjectProp(
       newValue,
       applyNestedProp
     )
-    out[key] = newValue
+    if (removeUndefined && newValue === undefined) {
+      delete out[key]
+    } else {
+      out[key] = newValue
+    }
   }
 }
 
