@@ -23,7 +23,7 @@ export type AlienReceiver<
   Target extends Node | void = any
 > = (
   message: (Target extends void ? AlienMessage : AlienBubblingMessage) & Message
-) => void
+) => boolean | void
 
 type MessageInput<Message extends object> = Message extends any
   ? {} extends Message
@@ -40,8 +40,8 @@ type AddReceiverFn<Message extends object> = {
 }
 
 type SendMessageFn<Message extends object> = {
-  <Target extends Node>(target: Target, message: MessageInput<Message>): void
-  (message: MessageInput<Message>): void
+  <Target extends Node>(target: Target, message: MessageInput<Message>): boolean
+  (message: MessageInput<Message>): boolean
 }
 
 /**
@@ -74,31 +74,38 @@ export function defineChannel<
   let untargetedReceivers: Set<AlienReceiver<object, void>> | undefined
   let targetedReceiverCaches: WeakMap<Node, Set<AlienReceiver>> | undefined
 
-  const bubble = (target: Node, message: AlienBubblingMessage) => {
+  const bubble = (target: Node, message: AlienBubblingMessage): boolean => {
+    let received = false
+
     const receivers = targetedReceiverCaches!.get(target)
     if (receivers) {
       message.currentTarget = target
       for (const receiver of [...receivers]) {
-        receiver(message)
+        received = receiver(message) !== false || received
         if (message.stopImmediatePropagation === noop) {
-          return
+          break
         }
       }
       if (message.stopPropagation === noop) {
-        return
+        return received
       }
     }
+
     if (target.parentNode) {
-      bubble(target.parentNode, message)
-    } else if (untargetedReceivers) {
+      return bubble(target.parentNode, message)
+    }
+
+    if (untargetedReceivers) {
       message.currentTarget = document
       for (const receiver of [...untargetedReceivers]) {
-        receiver(message)
+        received = receiver(message) !== false || received
         if (message.stopImmediatePropagation === noop) {
-          return
+          break
         }
       }
     }
+
+    return received
   }
 
   const addReceiver: AddReceiverFn<Message> = (arg1: any, arg2?: any): any => {
@@ -165,6 +172,8 @@ export function defineChannel<
       }
     }
 
+    let received = false
+
     if (untargetedReceivers) {
       message ||= { ...arg1 } as AlienMessage
       message.stopPropagation = noop
@@ -172,12 +181,14 @@ export function defineChannel<
         message = null
       }
       for (const receiver of [...untargetedReceivers]) {
-        receiver(message)
+        received = receiver(message) !== false || received
         if (!message) {
-          return
+          break
         }
       }
     }
+
+    return received
   }
 
   return makeIterable(
