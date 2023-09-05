@@ -2,7 +2,12 @@ import type { AnyElement, StyleAttributes } from '../internal/types'
 import type { ReadonlyRef } from '../observable'
 import type { AriaAttributes, AriaRole } from './aria'
 import type { AttrWithRef, Booleanish } from './attr'
-import type { DOMAttributes, DOMClassAttribute, DOMFactory } from './dom'
+import type {
+  DOMAttributes,
+  DOMClassAttribute,
+  DOMFactory,
+  EventHandler,
+} from './dom'
 import type { JSX } from './jsx'
 
 export type HTMLElementTagNames = keyof HTMLElementTagNameMap
@@ -21,7 +26,13 @@ interface DetailedHTMLFactory<
 }
 
 type AcceptObservableProps<E extends object> = {
-  [K in keyof E]: E[K] | (K extends `on${string}` ? never : ReadonlyRef<E[K]>)
+  [K in keyof E]:
+    | E[K]
+    | (K extends 'children' | `on${string}`
+        ? never
+        : E[K] extends Record<string, any> | EventHandler | undefined
+        ? never
+        : ReadonlyRef<E[K]>)
 }
 
 export type DetailedHTMLProps<
