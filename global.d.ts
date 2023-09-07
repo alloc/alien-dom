@@ -1,14 +1,17 @@
 import {
-  AlienElementList,
-  AlienTag,
-  AlienSelect,
-  AlienElement,
-} from './dist/element'
-import {
   AnimationsParam,
   HTMLAnimatedProps,
   SVGAnimatedProps,
 } from './dist/animate'
+import {
+  AlienElement,
+  AlienElementList,
+  AlienSelect,
+  AlienTag,
+} from './dist/element'
+import * as t from './dist/types'
+
+type AnyElement = Element
 
 declare global {
   interface Element {
@@ -26,6 +29,26 @@ declare global {
   interface SVGElement extends AlienElement<SVGElement> {
     readonly childNodes: AlienElementList<SVGElement>
     spring(animations: AnimationsParam<this, SVGAnimatedProps>): this
+  }
+  namespace JSX {
+    type Element = t.JSX.Element
+    type ElementKey = t.JSX.ElementKey
+    type ElementRef<Element extends AnyElement = AnyElement> =
+      t.JSX.ElementRef<Element>
+    type RefProp<Element extends AnyElement = AnyElement> =
+      t.JSX.RefProp<Element>
+    type Child = t.JSX.Child
+    type Children = t.JSX.Children
+    type ChildrenProp = t.JSX.ChildrenProp
+    type ElementOption = t.JSX.ElementOption
+    type ElementProp = t.JSX.ElementProp
+    type ElementsOption = t.JSX.ElementsOption
+    type ElementsProp = t.JSX.ElementsProp
+    type ElementType = t.JSX.ElementType
+    type IntrinsicAttributes = t.JSX.IntrinsicAttributes
+    type IntrinsicElements = t.JSX.IntrinsicElements
+    type ElementAttributes<T> = t.JSX.ElementAttributes<T>
+    type InstanceType<T extends string> = t.JSX.InstanceType<T>
   }
 }
 
