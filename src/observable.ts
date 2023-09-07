@@ -98,6 +98,49 @@ export class ReadonlyRef<T = any> {
   peek() {
     return this._value
   }
+
+  /**
+   * Create a `ComputedRef` whose value is derived from `this.value` using the
+   * given function.
+   */
+  computedMap<U>(compute: (value: T) => U) {
+    return computed(() => compute(this.value))
+  }
+
+  /**
+   * Create a `ComputedRef` that does the following:
+   *
+   * If `this.value` is truthy, use the first argument. Otherwise, use the
+   * second argument (if none is provided, return undefined). Function arguments
+   * are called within the `computed` function.
+   */
+  computedIf<True>(
+    trueValue: ComputedInput<True>
+  ): ComputedRef<True | undefined>
+  computedIf<True, False>(
+    trueValue: ComputedInput<True>,
+    falseValue: ComputedInput<False>
+  ): ComputedRef<True | False>
+  computedIf(trueValue: any, falseValue?: any): ComputedRef<any> {
+    return computed(() =>
+      this.value
+        ? evaluateInput(trueValue)
+        : falseValue !== undefined
+        ? evaluateInput(falseValue)
+        : undefined
+    )
+  }
+
+  /**
+   * Create a `ComputedRef` that uses the first argument if `this.value` is
+   * falsy. Otherwise, undefined is used. Function arguments are called within
+   * the `computed` function.
+   */
+  computedElse<False>(
+    falseValue: ComputedInput<False>
+  ): ComputedRef<False | undefined> {
+    return computed(() => (this.value ? undefined : evaluateInput(falseValue)))
+  }
 }
 
 export class Ref<T = any> extends ReadonlyRef<T> {
@@ -743,3 +786,22 @@ export function peek<T>(compute: () => T) {
     access = parentAccess
   }
 }
+
+/**
+ * Coerce a possibly reactive value to a raw value.
+ */
+export const unref = <T>(arg: T | ReadonlyRef<T>): T =>
+  isRef(arg) ? arg.value : arg
+
+/**
+ * For values used as inputs to `computed` wrappers.
+ */
+export type ComputedInput<T> = T | ReadonlyRef<T> | (() => T | ReadonlyRef<T>)
+
+/**
+ * Similar to `unref` but also supports thunk values.
+ *
+ * Most useful inside `computed` callbacks.
+ */
+export const evaluateInput = <T>(arg: ComputedInput<T>) =>
+  unref(isFunction(arg) ? arg() : arg)
