@@ -368,6 +368,91 @@ export let arrayRef = <T>(
   return arrayRef(init, debugId)
 }
 
+// Ref maps
+
+export class RefMap<K, V> {
+  protected _map: Map<K, Ref<V>>
+  protected _sizeRef: Ref<number>
+  protected _keysRef: ArrayRef<K>
+
+  constructor(entries?: Iterable<[K, V]>) {
+    this._map = new Map(
+      entries && Array.from(entries, entry => [entry[0], ref(entry[1])])
+    )
+    this._sizeRef = ref(this._map.size)
+    this._keysRef = arrayRef(Array.from(this._map.keys()))
+  }
+
+  get size() {
+    return this._sizeRef.value
+  }
+
+  get(key: K) {
+    return computed(() => {
+      const value = this._map.get(key)
+      if (value) {
+        return value.value
+      }
+      // Recompute if the key is added.
+      computed(() => this._keysRef.includes(key)).value
+      return undefined
+    }).value
+  }
+
+  peek(key: K) {
+    return this._map.get(key)?.peek()
+  }
+
+  peekSize() {
+    return this._sizeRef.peek()
+  }
+
+  set(key: K, newValue: V) {
+    let value = this._map.get(key)
+    if (value) {
+      value.value = newValue
+    } else {
+      this._map.set(key, (value = ref(newValue)))
+      this._keysRef.push(key)
+      this._sizeRef.value++
+    }
+  }
+
+  delete(key: K) {
+    if (this._map.delete(key)) {
+      const keys = this._keysRef.peek()
+      this._keysRef.splice(keys.indexOf(key), 1)
+      this._sizeRef.value--
+    }
+  }
+
+  clear() {
+    this._map.clear()
+    this._keysRef.length = 0
+    this._sizeRef.value = 0
+  }
+
+  forEach(callback: (value: V, key: K, map: RefMap<K, V>) => void) {
+    this._sizeRef.value // <- observe added/removed keys
+    this._map.forEach((value, key) => callback(value.value, key, this))
+  }
+
+  [Symbol.iterator](): Iterator<[K, V]> {
+    const keys = this._keysRef.value
+    let index = 0
+    return {
+      next: () => {
+        if (index < keys.length) {
+          const key = keys[index++]
+          const value = this._map.get(key)!
+          return { value: [key, value.peek()], done: false }
+        }
+        return { value: undefined, done: true }
+      },
+    }
+  }
+}
+
 //
 // Plain observers
 //
@@ -733,6 +818,8 @@ export const ref: {
   <T>(value: T, debugId?: string | number): Ref<T>
   <T>(value?: T, debugId?: string | number): Ref<T | undefined>
 } = (value, debugId) => new Ref(value, debugId)
+
+export const refMap = <K, V>(entries?: Iterable<[K, V]>) => new RefMap(entries)
 
 export const computed = <T>(compute: () => T, debugId?: string | number) =>
   new ComputedRef(compute, debugId)
