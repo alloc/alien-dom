@@ -1,6 +1,7 @@
 import { AnimationsParam, animate } from './animate'
 import { Disposable } from './disposable'
 import { AlienBoundEffect, AlienEffect, AlienEffects } from './effects'
+import { UnrefElement } from './functions/createElementRef'
 import { observeAs } from './functions/observeAs'
 import { applyProp } from './internal/applyProp'
 import { canMatch } from './internal/duck'
@@ -120,16 +121,18 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
 
     return iterable
   }
-  filter<SelectedElement extends AnyElement = this>(
+  filter<SelectedElement extends AnyElement = UnrefElement<this>>(
     selector: string
   ): AlienSelect<SelectedElement, this> | null {
     return this.matches(selector) ? (this as any) : null
   }
   replaceText(value: string): this
-  replaceText(value: () => string): Disposable<AlienBoundEffect<this>>
+  replaceText(
+    value: () => string
+  ): Disposable<AlienBoundEffect<UnrefElement<this>>>
   replaceText(value?: string | (() => string)) {
     if (typeof value == 'function') {
-      return observeAs(this, target => {
+      return observeAs(this as UnrefElement<this>, target => {
         target.textContent = value()
       })
     } else {
@@ -220,7 +223,7 @@ export interface AlienElement<Element extends AnyElement>
    * component's render function (if this element is returned by the
    * component).
    */
-  effects(): AlienEffects<this>
+  effects(): AlienEffects<UnrefElement<this>>
 
   effect(effect: AlienEffect<void, [], false>): Disposable<typeof effect>
   effect<Args extends any[]>(
@@ -332,7 +335,7 @@ export type AlienSelect<
   T extends string | AnyElement,
   Context extends AnyElement = AnyElement
 > = T extends string
-  ? AlienTagNameMap<Context> extends infer TagNameMap
+  ? AlienTagNameMap<UnrefElement<Context>> extends infer TagNameMap
     ? TagNameMap extends any
       ? Extract<LooseAccess<TagNameMap, T>, Node>
       : never

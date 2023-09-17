@@ -4,9 +4,11 @@ import type { EffectResult } from '../hooks/useEffect'
 
 export type ElementRef<T extends Element = Element> = T & {
   toElement(): T | null
-  setElement(element: T | null): void
   onceElementExists(effect: (element: T) => EffectResult): Disposable
+  setElement(element: T | null): void
 }
+
+export type UnrefElement<T> = T extends ElementRef<infer U> ? U : T
 
 export function createElementRef<T extends Element>(
   effect?: (element: T) => EffectResult
