@@ -91,7 +91,7 @@ export class ReadonlyRef<T = any> {
     return 'ReadonlyRef'
   }
 
-  get value() {
+  get value(): T {
     return access(this as any)
   }
 
@@ -387,8 +387,8 @@ export class RefMap<K, V> {
     return this._sizeRef.value
   }
 
-  get(key: K) {
-    return computed(() => {
+  get(key: K): V | undefined {
+    return computed((): V | undefined => {
       const value = this._map.get(key)
       if (value) {
         return value.value
@@ -534,7 +534,7 @@ export class Observer {
    */
   update<T>(
     compute: (oldRefs?: Set<InternalRef<any>>) => T = this.nextCompute
-  ) {
+  ): T {
     const oldRefs = new Set(this.refs)
     this.nextCompute = compute
 
@@ -636,7 +636,7 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
     this._observer.update()
   }
 
-  protected _update() {
+  protected _update(): T {
     this._dirty = false
 
     if (this._observer) {
@@ -679,7 +679,7 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
     return 'ComputedRef'
   }
 
-  get value() {
+  get value(): T {
     if (this._observer) {
       if (this._dirty) {
         this._update()
