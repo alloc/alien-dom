@@ -24,12 +24,16 @@ declare global {
     ): this is AlienSelect<Element>
   }
   interface HTMLElement extends AlienElement<HTMLElement> {
+    readonly firstElementChild: HTMLElement | SVGElement | null
+    readonly lastElementChild: HTMLElement | SVGElement | null
     readonly childNodes: AlienElementList
     spring(
       animations: AnimationsParam<UnrefElement<this>, HTMLAnimatedProps>
     ): this
   }
   interface SVGElement extends AlienElement<SVGElement> {
+    readonly firstElementChild: SVGElement | null
+    readonly lastElementChild: SVGElement | null
     readonly childNodes: AlienElementList<SVGElement>
     spring(
       animations: AnimationsParam<UnrefElement<this>, SVGAnimatedProps>
