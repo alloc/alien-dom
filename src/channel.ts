@@ -5,76 +5,118 @@ import { isNode } from './internal/duck'
 import { makeIterable } from './internal/iterable'
 import { noop } from './jsx-dom/util'
 
-export interface AlienMessage {
-  readonly target?: Node
-  currentTarget?: Node
+type ChannelTarget<T extends ChannelFunction> = //
+  T extends ChannelFunction<any, infer Target> ? Target : never
+type ChannelData<T extends ChannelFunction> = //
+  T extends ChannelFunction<infer Data> ? Data : never
+
+export interface AlienMessage<
+  T extends ChannelFunction = ChannelFunction,
+  Target extends ChannelTarget<T> = ChannelTarget<T>
+> {
+  readonly target?: Target
+  currentTarget?: ChannelTarget<T>
   stopPropagation(): void
   stopImmediatePropagation(): void
 }
 
-export interface AlienBubblingMessage<Target extends Node = any>
-  extends AlienMessage {
+export interface AlienBubblingMessage<
+  T extends ChannelFunction = ChannelFunction,
+  Target extends ChannelTarget<T> = ChannelTarget<T>
+> extends AlienMessage<T, Target> {
   readonly target: Target
-  currentTarget: Node
+  currentTarget: ChannelTarget<T>
 }
 
 export type AlienReceiver<
-  Message extends object = {},
-  Target extends Node | void = any
+  T extends ChannelFunction = ChannelFunction,
+  Target extends ChannelTarget<T> = ChannelTarget<T>
 > = (
-  message: (Target extends void ? AlienMessage : AlienBubblingMessage) & Message
+  message: (ChannelTarget<T> extends void
+    ? AlienMessage<T, Target>
+    : AlienBubblingMessage<T, Target>) &
+    ChannelData<T>
 ) => boolean | void
 
-type MessageInput<Message extends object> = Message extends any
-  ? {} extends Message
+type AlienChannelEffect<Target extends object | void> = Disposable<
+  AlienBoundEffect<Target>
+>
+
+type ChannelAddReceiver<T extends ChannelFunction = ChannelFunction> = {
+  <Target extends ChannelTarget<T>>(
+    target: Target,
+    receiver: AlienReceiver<T>
+  ): AlienChannelEffect<Target>
+
+  (
+    receiver: AlienReceiver<ChannelFunction<ChannelData<T>, void>>
+  ): AlienChannelEffect<void>
+}
+
+type VoidIfEmpty<Data extends object> = Data extends any
+  ? {} extends Data
     ? void
-    : Message
+    : Data
   : never
 
-type AddReceiverFn<Message extends object> = {
-  <Target extends Node>(
+type ChannelSend<T extends ChannelFunction = ChannelFunction> = {
+  <Target extends ChannelTarget<T>>(
     target: Target,
-    receiver: AlienReceiver<Message, Target>
-  ): Disposable<AlienBoundEffect<Target>>
-  (receiver: AlienReceiver<Message, void>): Disposable<AlienBoundEffect<void>>
-}
+    message: VoidIfEmpty<ChannelData<T>>
+  ): boolean
 
-type SendMessageFn<Message extends object> = {
-  <Target extends Node>(target: Target, message: MessageInput<Message>): boolean
-  (message: MessageInput<Message>): boolean
+  (message: VoidIfEmpty<ChannelData<T>>): boolean
 }
 
 /**
  * Channels are strongly typed event buses.
  *
- * When an element is passed as the first argument, the channel will
- * only send messages to receivers that are bound to that element or to
- * one of its ancestors.
+ * When an element is passed as the first argument, the channel will only send
+ * messages to receivers that are bound to that element or to one of its
+ * ancestors.
  *
- * The `Message` type must be a plain object. Use the `{}` type to
- * represent a message with no custom metadata.
+ * The `Data` type must be a plain object. Use the `{}` type to represent a
+ * message with no custom metadata.
  */
-export type AlienChannel<Message extends object> = AddReceiverFn<Message> &
-  SendMessageFn<Message> &
-  [SendMessageFn<Message>, AddReceiverFn<Message>]
+export type AlienChannel<
+  Data extends object = Record<string, any>,
+  Target extends object | void = any
+> = ChannelFunction<Data, Target> &
+  [
+    ChannelSend<ChannelFunction<Data, Target>>,
+    ChannelAddReceiver<ChannelFunction<Data, Target>>
+  ]
+
+interface ChannelFunction<
+  Data extends object = Record<string, any>,
+  Target extends object | void = any
+> extends ChannelAddReceiver<ChannelFunction<Data, Target>>,
+    ChannelSend<ChannelFunction<Data, Target>> {}
 
 /**
  * Channels are strongly typed event buses.
  *
- * When an element is passed as the first argument, the channel will
- * only send messages to receivers that are bound to that element or to
- * one of its ancestors.
+ * When an element is passed as the first argument, the channel will only send
+ * messages to receivers that are bound to that element or to one of its
+ * ancestors.
  *
- * The `Message` type must be a plain object. Use the `{}` type to
- * represent a message with no custom metadata.
+ * The `Data` type must be a plain object. Use the `{}` type to represent a
+ * message with no custom metadata.
  */
 export function defineChannel<
-  Message extends object = {}
->(): AlienChannel<Message> {
-  let untargetedReceivers: Set<AlienReceiver<object, void>> | undefined
-  let targetedReceiverCaches: WeakMap<Node, Set<AlienReceiver>> | undefined
+  Data extends object = {},
+  Target extends object = Node
+>({
+  isTarget = isNode as any,
+  parentKey = 'parentNode' as any,
+}: {
+  isTarget?(node: any): node is Target
+  parentKey?: Extract<keyof Target, string>
+} = {}): ChannelFunction<Data> {
+  let untargetedReceivers: Set<AlienReceiver> | undefined
+  let targetedReceiverCaches: WeakMap<Target, Set<AlienReceiver>> | undefined
 
-  const bubble = (target: Node, message: AlienBubblingMessage): boolean => {
+  const bubble = (target: Target, message: AlienBubblingMessage): boolean => {
     let received = false
 
     const receivers = targetedReceiverCaches!.get(target)
@@ -91,8 +133,8 @@ export function defineChannel<
       }
     }
 
-    if (target.parentNode) {
-      return bubble(target.parentNode, message)
+    if (target[parentKey]) {
+      return bubble(target[parentKey] as any, message)
     }
 
     if (untargetedReceivers) {
@@ -108,13 +150,13 @@ export function defineChannel<
     return received
   }
 
-  const addReceiver: AddReceiverFn<Message> = (arg1: any, arg2?: any): any => {
-    if (isNode(arg1)) {
+  const addReceiver: ChannelAddReceiver = (arg1: any, arg2?: any): any => {
+    if (isTarget(arg1)) {
       const receiversByTarget = (targetedReceiverCaches ||= new WeakMap())
       return createEffect({
         target: arg1,
         args: [arg2],
-        enable(target: Node, receiver: AlienReceiver) {
+        enable(target: Target, receiver: AlienReceiver) {
           const receivers = receiversByTarget.get(target) || new Set()
           receiversByTarget.set(target, receivers)
 
@@ -147,10 +189,10 @@ export function defineChannel<
     })
   }
 
-  const sendMessage: SendMessageFn<Message> = (arg1: any, arg2?: any) => {
+  const sendMessage: ChannelSend = (arg1: any, arg2?: any) => {
     let message: AlienMessage | null
 
-    if (isNode(arg1)) {
+    if (isTarget(arg1)) {
       if (targetedReceiverCaches) {
         message = {
           ...(arg2 as AlienMessage),
