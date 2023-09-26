@@ -45,6 +45,11 @@ export declare namespace JSX {
   type Children = Child | Children[]
   type ChildrenProp = Thunkable<Children | ReadonlyRef<Children>>
 
+  // Required for TypeScript to work: https://www.typescriptlang.org/docs/handbook/jsx.html#children-type-checking
+  interface ElementChildrenAttribute {
+    children: ChildrenProp
+  }
+
   /** The result of a `JSX.ElementProp` being passed into `fromElementProp` */
   type ElementOption =
     | HTMLElement
