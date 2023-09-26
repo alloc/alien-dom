@@ -28,6 +28,9 @@ export function useObserver(
     const ref = arg1,
       onChange = arg2 as (value: any, oldValue: any) => void,
       deps = arg3!
-    useEffect(ref ? () => observe(ref, onChange).destructor : noop, deps)
+    useEffect(ref ? () => observe(ref, onChange).destructor : noop, [
+      ...deps,
+      !!ref,
+    ])
   }
 }
