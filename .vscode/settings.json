@@ -3,5 +3,11 @@
   "editor.wordWrapColumn": 100,
   "editor.codeActionsOnSave": {
     "source.organizeImports": true
-  }
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/*.snap": true
+  },
+  "typescript.tsdk": "node_modules/typescript/lib"
 }
