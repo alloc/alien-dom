@@ -31,9 +31,7 @@ export function morph(
     }
 
     morphAttributes(fromParentNode, toParentNode.props)
-    if (toChildNodes) {
-      morphChildren(fromParentNode, toChildNodes, component)
-    }
+    morphChildren(fromParentNode, toChildNodes, component)
 
     if (toParentNode.ref) {
       applyRefProp(fromParentNode, toParentNode.ref, fromProps)

@@ -1,4 +1,5 @@
 import { isArray, isFunction } from '@alloc/is'
+import { Falsy } from '@alloc/types'
 import { unmount } from '../functions/unmount'
 import { AlienComponent } from '../internal/component'
 import { hasTagName, isElement, isFragment } from '../internal/duck'
@@ -30,7 +31,7 @@ export interface ParentNode {
  */
 export function morphChildren(
   fromParentNode: ParentNode,
-  toChildNodes: ResolvedChild[],
+  toChildNodes: ResolvedChild[] | Falsy,
   component?: AlienComponent | null,
   options: {
     getFromKey?: (fromNode: ChildNode) => JSX.ElementKey | undefined
@@ -39,8 +40,12 @@ export function morphChildren(
     onChildNode?: (node: ChildNode | undefined) => void
   } = {}
 ): void {
-  if (!fromParentNode.childNodes.length && !toChildNodes.length) {
-    return
+  if (!fromParentNode.childNodes.length) {
+    if (!toChildNodes || !toChildNodes.length) {
+      return
+    }
+  } else {
+    toChildNodes ||= []
   }
 
   const {
