@@ -56,7 +56,7 @@ export default (): Plugin => (config, flags) => {
         }
       },
       async update(files) {
-        const clientUpdaterPath = path.resolve(__dirname, 'client.js')
+        const clientUpdaterPath = new URL('client.js', import.meta.url).pathname
         await Promise.all(
           Array.from(clients, client =>
             client.evaluateModule(clientUpdaterPath, [files])
