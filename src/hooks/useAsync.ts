@@ -1,5 +1,6 @@
-import { isPlainObject } from '@alloc/is'
+import { isFunction, isPlainObject } from '@alloc/is'
 import { Exclusive, Falsy } from '@alloc/types'
+import { Disposable } from '../disposable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { keys } from '../jsx-dom/util'
 import { ref } from '../observable'
@@ -13,7 +14,7 @@ export function useAsync<T>(
 ) {
   const instance = useState(UseAsync<UseAsyncAwaited<T>>, deps)
   if (!get) {
-    instance.disabled = true
+    instance.stale = true
     instance.abort()
   } else {
     const reset = depsHaveChanged(deps, instance.deps)
@@ -23,7 +24,7 @@ export function useAsync<T>(
       instance.abort()
     }
 
-    if (reset || instance.disabled) {
+    if (reset || instance.stale) {
       let promise: Promise<any>
       try {
         instance.markAttempt()
@@ -46,11 +47,13 @@ export class UseAsync<T> {
   private abortCtrl = new AbortController()
   timestamp: number | null = null
   promise: Promise<void> | null = null
+  effects: Disposable[] = []
   numAttempts = 0
-  disabled = true
+  stale = true
 
   constructor(public deps: readonly any[]) {}
 
+  /** @observable */
   get status() {
     const state = this.state.value
     return state
@@ -63,12 +66,17 @@ export class UseAsync<T> {
       ? 'loading'
       : 'idle'
   }
+
+  /** @observable */
   get result(): T | undefined {
     return this.state.value?.loaded
   }
+
+  /** @observable */
   get error() {
     return this.state.value?.error
   }
+
   get abort() {
     return () => {
       const state = this.state.peek()
@@ -77,15 +85,19 @@ export class UseAsync<T> {
         this.promise = null
         this.numAttempts = 0
         this.state.value = { aborted: true }
+        this.effects.forEach(effect => effect.dispose())
       }
     }
   }
+
   get aborted() {
     return this.abortCtrl.signal.aborted
   }
+
   get abortSignal() {
     return this.abortCtrl.signal
   }
+
   get retry() {
     return (reset?: boolean) => {
       if (reset) {
@@ -93,7 +105,7 @@ export class UseAsync<T> {
       }
       const state = this.state.peek()
       if (state && !('value' in state)) {
-        this.disabled = true
+        this.stale = true
         this.state.value = {
           retries: (state.retries || 0) + 1,
         }
@@ -102,7 +114,7 @@ export class UseAsync<T> {
   }
 
   markAttempt() {
-    this.disabled = false
+    this.stale = false
     this.timestamp = Date.now()
     this.numAttempts++
     if (this.aborted) {
@@ -128,6 +140,28 @@ export class UseAsync<T> {
 
     // Subscribe to changes.
     this.state.value
+  }
+
+  /**
+   * Track a disposable effect that will be disposed when the component unmounts
+   * or the async getter is called again.
+   */
+  get track() {
+    const { abortSignal, effects } = this
+    function track(effect: () => void): typeof effect
+    function track<E extends Disposable>(effect: E): E
+    function track(effect: Disposable | (() => void)): any {
+      if (isFunction(effect)) {
+        effect = { dispose: effect }
+      }
+      if (abortSignal.aborted) {
+        effect.dispose()
+        abortSignal.throwIfAborted()
+      }
+      effects.push(effect)
+      return effect
+    }
+    return track
   }
 
   protected dispose() {
