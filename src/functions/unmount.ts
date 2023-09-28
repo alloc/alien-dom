@@ -16,7 +16,7 @@ import { isElement, isFragment, isTextNode } from './typeChecking'
 export function unmount(
   node: ChildNode | null | undefined,
   skipRemove?: boolean,
-  keepComponent?: AlienComponent
+  keepComponent?: AlienComponent | null
 ): void {
   if (!node) {
     return

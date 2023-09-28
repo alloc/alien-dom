@@ -122,9 +122,10 @@ export function morphChildren(
             fromChildNode = getNextSibling(fromChildNode)
           }
 
-          updateChild(matchingNode, toChildNode, component, nextSibling)
+          onChildNode(
+            updateChild(matchingNode, toChildNode, component, nextSibling)
+          )
 
-          onChildNode(matchingNode)
           toChildIndex++
           continue
         }
@@ -267,10 +268,19 @@ function updateChild(
 
   if (isDeferredNode(toNode)) {
     morph(fromNode as any, toNode, component)
-  } else if (fromNode !== toNode && !isElement(fromNode)) {
-    fromNode.nodeValue = toNode.nodeValue
+  } else if (fromNode !== toNode) {
+    if (!isElement(fromNode)) {
+      fromNode.nodeValue = toNode.nodeValue
+    } else if (nextSibling) {
+      unmount(fromNode, false, component)
+      fromNode = toNode
+    } else {
+      fromNode.replaceWith(toNode)
+      unmount(fromNode, true, component)
+    }
   }
 
   // Reorder the node if necessary.
   nextSibling?.before(fromNode)
+  return fromNode
 }
