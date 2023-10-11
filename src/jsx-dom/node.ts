@@ -1,4 +1,4 @@
-import { isString } from '@alloc/is'
+import { isArray, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
 import {
   applyChildrenProp,
@@ -57,10 +57,12 @@ export interface DeferredHostNode extends DeferredNode {
   namespaceURI: string | undefined
 }
 
+export type DeferredChild = ChildNode | AlienNode
 export type DeferredChildren =
-  | ResolvedChild[]
+  | (DeferredChild | null)[]
   | ReadonlyRef<JSX.Children>
   | false
+  | null
   | undefined
 
 export interface DeferredComponentNode extends DeferredNode {
@@ -77,9 +79,9 @@ export const isDeferredHostNode = (
   node: DeferredNode
 ): node is DeferredHostNode => isString(node.tag)
 
-const processDeferredChildren = (children: DeferredChildren) =>
+const processDeferredChildren = (children: DeferredChildren | DeferredChild) =>
   children !== false && children != null && !isRef(children)
-    ? resolveChildren(children)
+    ? resolveChildren(children, isArray(children) ? '' : '*0')
     : children
 
 export const deferHostNode = (
