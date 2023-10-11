@@ -1,9 +1,10 @@
 import { isArray, isFunction } from '@alloc/is'
 import { Falsy } from '@alloc/types'
+import { getElementKey } from '../functions/getElementKey'
 import { unmount } from '../functions/unmount'
 import { AlienComponent } from '../internal/component'
 import { hasTagName, isElement, isFragment } from '../internal/duck'
-import { kAlienElementKey, kAlienElementTags } from '../internal/symbols'
+import { kAlienElementPosition, kAlienElementTags } from '../internal/symbols'
 import {
   DeferredComponentNode,
   DeferredHostNode,
@@ -49,7 +50,7 @@ export function morphChildren(
   }
 
   const {
-    getFromKey = kAlienElementKey.get,
+    getFromKey = getElementKey,
     getNextSibling = defaultNextSibling,
     onChildNode = noop,
   } = options
@@ -105,7 +106,7 @@ export function morphChildren(
       throw Error('ShadowRoot must be the only child')
     }
 
-    const toChildKey = kAlienElementKey(toChildNode)
+    const toChildKey = getElementKey(toChildNode)
     if (toChildKey != null) {
       const matchingNode = fromElementsByKey.get(toChildKey)
       if (matchingNode) {
@@ -221,7 +222,8 @@ function isCompatibleNode(fromNode: Node, toNode: ToNode) {
 }
 
 function isDiscardableNode(node: Node) {
-  return !isElement(node) || kAlienElementKey.in(node)
+  // Avoid removing nodes that were added to the DOM by a native API.
+  return !isElement(node) || kAlienElementPosition(node) !== undefined
 }
 
 function insertChild(
@@ -259,7 +261,7 @@ function updateChild(
 ) {
   // Convert an element reference to its deferred node.
   if (component && fromNode === toNode) {
-    const key = kAlienElementKey(toNode)!
+    const key = getElementKey(toNode)!
     const update = component.updates?.get(key)
     if (update) {
       toNode = update

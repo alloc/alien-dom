@@ -8,6 +8,8 @@ import { createSymbolProperty } from './symbolProperty'
 export const kAlienEffects = createSymbolProperty<AlienEffects>('effects')
 export const kAlienElementKey =
   createSymbolProperty<JSX.ElementKey>('elementKey')
+export const kAlienElementPosition =
+  createSymbolProperty<JSX.ElementKey>('elementPosition')
 export const kAlienElementTags =
   createSymbolProperty<ElementTags>('elementTags')
 export const kAlienFragmentKeys =

@@ -135,6 +135,7 @@ export class AlienComponent<Props = any> {
 
   setRootNode(rootNode: ChildNode | DocumentFragment) {
     this.rootNode = rootNode
+    this.rootKey = kAlienElementKey(rootNode)
 
     // Register this component instance with the root node, so the node can be
     // morphed by future renders.
@@ -144,12 +145,6 @@ export class AlienComponent<Props = any> {
       kAlienElementTags(rootNode, tags)
     }
     tags.set(this.tag, this)
-
-    // Move the element key from the node to the component. If the node is
-    // mounted outside a render (e.g. from an event handler), an undefined key
-    // signals that the node cannot be unmounted through morphing.
-    this.rootKey = kAlienElementKey(rootNode)
-    kAlienElementKey(rootNode, undefined)
   }
 
   setRef(key: JSX.ElementKey, element: ChildNode | DocumentFragment) {

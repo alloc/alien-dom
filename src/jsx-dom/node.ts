@@ -10,6 +10,7 @@ import { FragmentKeys, FragmentNodes } from '../internal/fragment'
 import { HostProps } from '../internal/hostProps'
 import {
   kAlienElementKey,
+  kAlienElementPosition,
   kAlienFragmentKeys,
   kAlienFragmentNodes,
 } from '../internal/symbols'
@@ -108,6 +109,7 @@ export const deferComponentNode = (
 
 export function evaluateDeferredNode(node: AnyDeferredNode) {
   const key = kAlienElementKey(node)
+  const position = kAlienElementPosition(node)
 
   let hostNode: Element | Comment | DocumentFragment
   if (isDeferredHostNode(node)) {
@@ -128,6 +130,7 @@ export function evaluateDeferredNode(node: AnyDeferredNode) {
   }
 
   kAlienElementKey(hostNode, key)
+  kAlienElementPosition(hostNode, position)
   return hostNode
 }
 

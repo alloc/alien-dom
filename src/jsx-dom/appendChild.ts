@@ -1,3 +1,4 @@
+import { getElementKey } from '../functions/getElementKey'
 import { AlienComponent } from '../internal/component'
 import { setContext } from '../internal/context'
 import {
@@ -9,11 +10,7 @@ import {
   isTextNode,
 } from '../internal/duck'
 import { currentComponent } from '../internal/global'
-import {
-  kAlienElementKey,
-  kAlienElementTags,
-  kAlienParentFragment,
-} from '../internal/symbols'
+import { kAlienElementTags, kAlienParentFragment } from '../internal/symbols'
 import { ref } from '../observable'
 import { evaluateDeferredNode, isDeferredNode, isShadowRoot } from './node'
 import type { ResolvedChild } from './resolveChildren'
@@ -41,7 +38,7 @@ export function appendChild(
     // Text nodes cannot have an element key.
     if (!isTextNode(child)) {
       if (isElement(child) || isComment(child)) {
-        const key = kAlienElementKey(child)
+        const key = getElementKey(child)
         if (key != null) {
           // Find a pending update for the child node, if any. Give up if we
           // find a parent component isn't being updated.

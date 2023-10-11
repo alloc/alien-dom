@@ -5,6 +5,7 @@ import type { JSX } from '../types/jsx'
 import { AlienContextMap } from './context'
 import {
   kAlienElementKey,
+  kAlienElementPosition,
   kAlienFragmentKeys,
   kAlienFragmentNodes,
   kAlienParentFragment,
@@ -71,9 +72,10 @@ function spliceFragment(
   const newNodes = [...oldNodes] as FragmentNodes
   newNodes.splice(offset, oldSlice.length, ...newSlice)
 
-  // FIXME: this seems wrong, since the parent fragment should apply its own
-  // positional keys when being updated
-  const newKeys = newNodes.map(node => node && kAlienElementKey(node))
+  const parentPosition = kAlienElementPosition(fragment) ?? ''
+  const newKeys = newNodes.map(
+    (node, i) => node && (kAlienElementKey(node) || parentPosition + '*' + i)
+  )
   kAlienFragmentKeys(fragment, newKeys)
 
   if (fragment.childNodes.length) {
