@@ -154,14 +154,35 @@ export function hmrRegister(
     queueMicrotask(() => {
       // Any old components that are still mounted will re-add
       // themselves to the component registry when re-rendered.
-      const oldComponents = [...components]
+      let oldComponents = [...components]
       components.clear()
-      oldComponents.forEach(oldComponent => {
+
+      let i = 0
+      let deadline = Date.now() + 32
+
+      const update = () => {
+        const oldComponent = oldComponents[i]
         const newRender = kAlienRenderFunc(component)
         kAlienHotUpdate(newRender, true)
         Reflect.set(oldComponent, kAlienRenderFunc.symbol, newRender)
-      })
-      console.info(`[HMR] ${name} component updated`)
+        if (++i === oldComponents.length) {
+          console.info(
+            `[HMR] ${name} component updated (${i}/${oldComponents.length})`
+          )
+        } else if (deadline < Date.now()) {
+          console.info(
+            `[HMR] ${name} component updated (${i}/${oldComponents.length})`
+          )
+          setTimeout(() => {
+            deadline = Date.now() + 32
+            update()
+          }, 1)
+        } else {
+          update()
+        }
+      }
+
+      update()
     })
   }
 }
