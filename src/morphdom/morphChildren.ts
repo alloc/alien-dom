@@ -26,6 +26,13 @@ export interface ParentNode {
   appendChild: (node: ChildNode) => void
 }
 
+type MorphChildrenOptions = {
+  getFromKey?: (fromNode: ChildNode) => JSX.ElementKey | undefined
+  getNextSibling?: (fromNode: ChildNode) => ChildNode | null
+  /** When a child node is new, preserved, or undefined, this callback is invoked. */
+  onChildNode?: (node: ChildNode | undefined) => void
+}
+
 /**
  * Find direct children that can be morphed/added and allow for discarded nodes
  * to be preserved.
@@ -34,12 +41,7 @@ export function morphChildren(
   fromParentNode: ParentNode,
   toChildNodes: ResolvedChild[] | Falsy,
   component?: AlienComponent | null,
-  options: {
-    getFromKey?: (fromNode: ChildNode) => JSX.ElementKey | undefined
-    getNextSibling?: (fromNode: ChildNode) => ChildNode | null
-    /** When a child node is new, preserved, or undefined, this callback is invoked. */
-    onChildNode?: (node: ChildNode | undefined) => void
-  } = {}
+  options: MorphChildrenOptions = {}
 ): void {
   if (!fromParentNode.childNodes.length) {
     if (!toChildNodes || !toChildNodes.length) {
@@ -49,20 +51,7 @@ export function morphChildren(
     toChildNodes ||= []
   }
 
-  const {
-    getFromKey = getElementKey,
-    getNextSibling = defaultNextSibling,
-    onChildNode = noop,
-  } = options
-
-  /** The `node` will be discarded unless false is returned. */
-  const onBeforeNodeDiscarded = component
-    ? // Never remove a node that was added by an event listener or effect. Any
-      // nodes added by a component render will have a position-based key defined
-      // automatically if they're missing an explicit key, so this check is
-      // sufficient.
-      isDiscardableNode
-    : noop
+  const { getFromKey = getElementKey, onChildNode = noop } = options
 
   if (!isArray(toChildNodes)) {
     toChildNodes = Array.from(toChildNodes)
@@ -76,20 +65,18 @@ export function morphChildren(
     return
   }
 
-  const fromElementsByKey = new Map<JSX.ElementKey, Element>()
-  const unmatchedFromKeys = new Set<JSX.ElementKey>()
-  for (
-    let fromChildNode = fromParentNode.firstChild;
-    fromChildNode;
-    fromChildNode = getNextSibling(fromChildNode)
-  ) {
-    const key = getFromKey(fromChildNode)
-    if (key != null && isElement(fromChildNode)) {
-      fromElementsByKey.set(key, fromChildNode)
-    }
+  let fromChildNode = fromParentNode.firstChild
+  if (fromChildNode && !isDiscardableNode(fromChildNode)) {
+    fromChildNode = nextDiscardableNode(fromChildNode, component, options)
   }
 
-  let fromChildNode = fromParentNode.firstChild
+  const unmatchedFromKeys = new Set<JSX.ElementKey>()
+  const fromElementsByKey = collectKeyedElements(
+    fromChildNode,
+    component,
+    options
+  )
+
   let toChildIndex = 0
 
   // Find matching nodes.
@@ -120,7 +107,11 @@ export function morphChildren(
             nextSibling = fromChildNode
           } else {
             // Continue to the next from node.
-            fromChildNode = getNextSibling(fromChildNode)
+            fromChildNode = nextDiscardableNode(
+              fromChildNode,
+              component,
+              options
+            )
           }
 
           onChildNode(
@@ -137,14 +128,18 @@ export function morphChildren(
       toChildIndex++
 
       // Remove the incompatible from node.
-      if (matchingNode && onBeforeNodeDiscarded(matchingNode) !== false) {
+      if (matchingNode) {
         unmount(matchingNode)
       }
     } else {
       while (fromChildNode) {
-        const fromNextSibling = getNextSibling(fromChildNode)
-        const fromChildKey = getFromKey(fromChildNode)
+        const fromNextSibling = nextDiscardableNode(
+          fromChildNode,
+          component,
+          options
+        )
 
+        const fromChildKey = getFromKey(fromChildNode)
         if (fromChildKey != null) {
           unmatchedFromKeys.add(fromChildKey)
         }
@@ -156,9 +151,8 @@ export function morphChildren(
           fromChildNode = fromNextSibling
           toChildIndex++
           continue outer
-        }
-        // Unkeyed nodes are removed immediately when no match is found.
-        else if (onBeforeNodeDiscarded(fromChildNode) !== false) {
+        } else {
+          // Unkeyed nodes are removed immediately when no match is found.
           unmount(fromChildNode)
         }
 
@@ -176,19 +170,15 @@ export function morphChildren(
   // Remove any from nodes with unmatched keys.
   for (const key of unmatchedFromKeys) {
     removedFromNode = fromElementsByKey.get(key)
-
-    if (removedFromNode && onBeforeNodeDiscarded(removedFromNode) !== false) {
+    if (removedFromNode) {
       unmount(removedFromNode)
     }
   }
 
   // Remove any remaining from nodes.
   while ((removedFromNode = fromChildNode)) {
-    fromChildNode = getNextSibling(fromChildNode)
-
-    if (onBeforeNodeDiscarded(removedFromNode) !== false) {
-      unmount(removedFromNode)
-    }
+    fromChildNode = nextDiscardableNode(fromChildNode, component, options)
+    unmount(removedFromNode)
   }
 
   if (hasTagName(fromParentNode, 'SELECT')) {
@@ -285,4 +275,37 @@ function updateChild(
   // Reorder the node if necessary.
   nextSibling?.before(fromNode)
   return fromNode
+}
+
+function nextDiscardableNode(
+  node: ChildNode,
+  component: AlienComponent | Falsy,
+  options: MorphChildrenOptions
+) {
+  const { getNextSibling = defaultNextSibling } = options
+  let nextSibling = getNextSibling(node)
+  while (nextSibling && component && !isDiscardableNode(nextSibling)) {
+    nextSibling = getNextSibling(nextSibling)
+  }
+  return nextSibling
+}
+
+function collectKeyedElements(
+  firstChildNode: ChildNode | null,
+  component: AlienComponent | null | undefined,
+  options: MorphChildrenOptions
+) {
+  const { getFromKey = getElementKey } = options
+  const fromElementsByKey = new Map<JSX.ElementKey, Element>()
+  for (
+    let fromChildNode = firstChildNode;
+    fromChildNode;
+    fromChildNode = nextDiscardableNode(fromChildNode, component, options)
+  ) {
+    const key = getFromKey(fromChildNode)
+    if (key != null && isElement(fromChildNode)) {
+      fromElementsByKey.set(key, fromChildNode)
+    }
+  }
+  return fromElementsByKey
 }
