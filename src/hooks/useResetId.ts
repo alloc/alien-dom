@@ -15,11 +15,14 @@ import { usePrevious } from './usePrevious'
 export function useResetId(
   reset: boolean | readonly any[] | undefined
 ): number | false {
-  const prevReset = reset !== undefined ? usePrevious(reset) : null
+  let prevReset: typeof reset | null = null
   if (reset === undefined) {
     reset = false
-  } else if (typeof reset !== 'boolean') {
-    reset = !Array.isArray(prevReset) || depsHaveChanged(reset, prevReset)
+  } else {
+    prevReset = usePrevious(reset)
+    if (typeof reset !== 'boolean') {
+      reset = !Array.isArray(prevReset) || depsHaveChanged(reset, prevReset)
+    }
   }
   return prevReset !== null && useGlobalId(reset)
 }
