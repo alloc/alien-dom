@@ -1,0 +1,17 @@
+{
+  "name": "@alien-dom/demos",
+  "type": "module",
+  "scripts": {
+    "dev": "htmelt --watch"
+  },
+  "dependencies": {
+    "alien-dom": "link:.."
+  },
+  "devDependencies": {
+    "@alien-dom/htmelt": "link:../packages/htmelt-plugin",
+    "@htmelt/preval": "^0.1.0",
+    "@htmelt/unocss": "^0.3.1",
+    "htmelt": "^0.4.4",
+    "unocss-preset-alloc": "^0.22.9"
+  }
+}

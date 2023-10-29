@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "alien-dom",
+    "lib": ["dom", "esnext"],
+    "module": "esnext",
+    "moduleResolution": "node",
+    "noEmit": true,
+    "target": "esnext",
+    "sourceMap": true,
+    "strict": true,
+    "strictNullChecks": false,
+    "types": ["htmelt/client", "@htmelt/preval/client", "alien-dom/global"]
+  }
+}

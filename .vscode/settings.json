@@ -9,5 +9,6 @@
     "**/.DS_Store": true,
     "**/*.snap": true
   },
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "unocss.root": ["./demos"]
 }

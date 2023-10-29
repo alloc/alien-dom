@@ -1,0 +1,14 @@
+body {
+  font-family: Inter;
+  margin: 0;
+}
+
+div {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  &[role='button'] {
+    cursor: pointer;
+  }
+}
