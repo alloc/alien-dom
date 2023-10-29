@@ -187,10 +187,17 @@ export function hmrRegister(
   }
 }
 
-function registerComponent(component: FunctionComponent) {
-  const key = kAlienComponentKey(component)!
-  const [components] = componentRegistry[key]
-  components.add(component)
+function registerComponent(component: FunctionComponent, isRetry?: boolean) {
+  const key = kAlienComponentKey(component)
+  if (key == null) {
+    if (isRetry) {
+      throw Error('Component was never passed to hmrRegister')
+    }
+    queueMicrotask(() => registerComponent(component, true))
+  } else {
+    const [components] = componentRegistry[key]
+    components.add(component)
+  }
 }
 
 type ComponentInstance = {
