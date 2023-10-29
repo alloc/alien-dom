@@ -208,6 +208,8 @@ export type UseAsyncAwaited<T> = T extends readonly (infer Item)[]
 
 type UseAsyncAwaitedItem<T> = T extends PromiseLike<infer Item>
   ? UseAsyncAwaited<Item>
+  : T extends (...args: any[]) => any
+  ? T
   : T extends object
   ? { [K in keyof T]: Awaited<T[K]> }
   : T
