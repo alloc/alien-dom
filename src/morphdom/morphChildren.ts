@@ -52,6 +52,18 @@ export function morphChildren(
   }
 
   const { getFromKey = getElementKey, onChildNode = noop } = options
+<<<<<<< Updated upstream
+=======
+
+  /** The `node` will be discarded unless false is returned. */
+  const onBeforeNodeDiscarded = component
+    ? // Never remove a node that was added by an event listener or effect. Any
+      // nodes added by a component render will have a position-based key defined
+      // automatically if they're missing an explicit key, so this check is
+      // sufficient.
+      isDiscardableNode
+    : noop
+>>>>>>> Stashed changes
 
   if (!isArray(toChildNodes)) {
     toChildNodes = Array.from(toChildNodes)
@@ -65,9 +77,23 @@ export function morphChildren(
     return
   }
 
+<<<<<<< Updated upstream
   let fromChildNode = fromParentNode.firstChild
   if (fromChildNode && !isDiscardableNode(fromChildNode)) {
     fromChildNode = nextDiscardableNode(fromChildNode, component, options)
+=======
+  const fromElementsByKey = new Map<JSX.ElementKey, Element>()
+  const unmatchedFromKeys = new Set<JSX.ElementKey>()
+  for (
+    let fromChildNode = fromParentNode.firstChild;
+    fromChildNode;
+    fromChildNode = nextDiscardableNode(fromChildNode, component, options)
+  ) {
+    const key = getFromKey(fromChildNode)
+    if (key != null && isElement(fromChildNode)) {
+      fromElementsByKey.set(key, fromChildNode)
+    }
+>>>>>>> Stashed changes
   }
 
   const unmatchedFromKeys = new Set<JSX.ElementKey>()
@@ -138,6 +164,10 @@ export function morphChildren(
           component,
           options
         )
+<<<<<<< Updated upstream
+=======
+        const fromChildKey = getFromKey(fromChildNode)
+>>>>>>> Stashed changes
 
         const fromChildKey = getFromKey(fromChildNode)
         if (fromChildKey != null) {
@@ -178,7 +208,14 @@ export function morphChildren(
   // Remove any remaining from nodes.
   while ((removedFromNode = fromChildNode)) {
     fromChildNode = nextDiscardableNode(fromChildNode, component, options)
+<<<<<<< Updated upstream
     unmount(removedFromNode)
+=======
+
+    if (onBeforeNodeDiscarded(removedFromNode) !== false) {
+      unmount(removedFromNode)
+    }
+>>>>>>> Stashed changes
   }
 
   if (hasTagName(fromParentNode, 'SELECT')) {
@@ -289,6 +326,7 @@ function nextDiscardableNode(
   }
   return nextSibling
 }
+<<<<<<< Updated upstream
 
 function collectKeyedElements(
   firstChildNode: ChildNode | null,
@@ -309,3 +347,5 @@ function collectKeyedElements(
   }
   return fromElementsByKey
 }
+=======
+>>>>>>> Stashed changes

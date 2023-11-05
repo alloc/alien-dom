@@ -1,16 +1,16 @@
-import type { Falsy } from '@alloc/types'
+import type { AnyFn, Falsy } from '@alloc/types'
 import { SpringAnimation, animate } from '../animate'
 import { selfUpdating } from '../functions/selfUpdating'
 import { toElements } from '../functions/toElements'
 import { useEffect } from '../hooks/useEffect'
 import { useState } from '../hooks/useState'
-import { isElement } from '../internal/duck'
+import { isElement, isNode } from '../internal/duck'
 import { unwrap } from '../internal/element'
 import type { AnyElement, StyleAttributes } from '../internal/types'
 import { Fragment } from '../jsx-dom/jsx-runtime'
-import { isDeferredNode } from '../jsx-dom/node'
+import { evaluateDeferredNode } from '../jsx-dom/node'
+import { morphFragment } from '../morphdom/morphFragment'
 import type { JSX } from '../types/jsx'
-import { ManualUpdates } from './ManualUpdates'
 
 /** The style applied to the container that wraps leaving elements. */
 const leaveStyle: StyleAttributes = {
@@ -22,20 +22,25 @@ const leaveStyle: StyleAttributes = {
   pointerEvents: 'none',
 }
 
-export function Transition<T>(props: {
+export type TransitionData<T> = {
   id: T
-  enter: (
-    id: T,
-    element: JSX.Element,
-    initial: boolean,
-    relatedId: T | undefined
-  ) => SpringAnimation<JSX.Element> | SpringAnimation<JSX.Element>[] | Falsy
-  leave: (
-    id: T,
-    element: JSX.Element,
-    relatedId: T | undefined
-  ) => SpringAnimation<JSX.Element> | SpringAnimation<JSX.Element>[] | Falsy
-  children: JSX.ElementsProp
+  element: JSX.Element
+  initial: boolean
+  relatedId?: T
+}
+
+export type TransitionAnimation<T> =
+  | ((data: TransitionData<T>) => Exclude<TransitionAnimation<T>, AnyFn>)
+  | SpringAnimation<JSX.Element>
+  | SpringAnimation<JSX.Element>[]
+  | Falsy
+
+export function Transition<T>(props: {
+  /** The unique identifier for the current entered element. */
+  id: T
+  enter: TransitionAnimation<T>
+  leave: TransitionAnimation<T>
+  children: JSX.ChildrenProp
 }) {
   const state = useState(initialState)
 
@@ -52,20 +57,26 @@ export function Transition<T>(props: {
   // We must wrap props.children in a fragment so that jsx-dom can
   // replace any element references with their latest versions (or a
   // placeholder if nothing changed).
-  let children = Fragment(props) as any
+  let children = Fragment(props)
 
   const reusedChildren = state.children.get(props.id)
-  if (reusedChildren) {
-    // updateNode(reusedChildren, children as any)
-    children = reusedChildren as any
+  if (isNode(children)) {
+    console.log('children is a fragment node')
+  } else {
+    console.log('children is a deferred fragment')
+    if (reusedChildren) {
+      children = morphFragment(reusedChildren, children)
+      console.log('morphed children')
+    } else {
+      children = evaluateDeferredNode(children) as DocumentFragment
+      console.log('evaluated children')
+    }
   }
 
+  // If the ID changed or this is the first render...
   if (previousId !== undefined || state.children.size === 0) {
     state.currentId = props.id
 
-    if (isDeferredNode(children)) {
-      throw Error('not yet supported')
-    }
     if (children.childNodes.length) {
       if (reusedChildren) {
         const reusedElements = state.elements.get(props.id)!
@@ -175,14 +186,10 @@ export function Transition<T>(props: {
   }, [props.id])
 
   return (
-    <ManualUpdates
-      // Since this component isn't transformed due to being in
-      // node_modules, we have to manually wrap the children with a thunk
-      // to ensure the ManualUpdates effect is applied.
-      children={() => {
-        return [leavingElements, children]
-      }}
-    />
+    <>
+      {leavingElements}
+      {children}
+    </>
   )
 }
 
@@ -192,7 +199,7 @@ Transition = /* @__PURE__ */ selfUpdating(Transition)
 const initialState = (): {
   currentId: any
   /** The most recent `children` prop for each `id` prop. */
-  children: Map<any, JSX.Element>
+  children: Map<any, DocumentFragment>
   /** The animated elements of each `id` prop. */
   elements: Map<any, AnyElement | AnyElement[]>
 } => ({
