@@ -1,15 +1,18 @@
+import { isArray, isFunction } from '@alloc/is'
 import type { AnyFn, Falsy } from '@alloc/types'
 import { SpringAnimation, animate } from '../animate'
 import { selfUpdating } from '../functions/selfUpdating'
 import { toElements } from '../functions/toElements'
 import { useEffect } from '../hooks/useEffect'
 import { useState } from '../hooks/useState'
-import { isElement, isNode } from '../internal/duck'
-import { unwrap } from '../internal/element'
+import { isNode } from '../internal/duck'
+import { kAlienFragmentNodes } from '../internal/symbols'
 import type { AnyElement, StyleAttributes } from '../internal/types'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import { evaluateDeferredNode } from '../jsx-dom/node'
 import { morphFragment } from '../morphdom/morphFragment'
+import { unref } from '../observable'
+import { DOMClassAttribute } from '../types'
 import type { JSX } from '../types/jsx'
 
 /** The style applied to the container that wraps leaving elements. */
@@ -25,12 +28,15 @@ const leaveStyle: StyleAttributes = {
 export type TransitionData<T> = {
   id: T
   element: JSX.Element
-  initial: boolean
-  relatedId?: T
+  relatedId: T | undefined
 }
 
-export type TransitionAnimation<T> =
-  | ((data: TransitionData<T>) => Exclude<TransitionAnimation<T>, AnyFn>)
+export type TransitionEnterData<T> = TransitionData<T> & {
+  initial: boolean
+}
+
+export type TransitionAnimation<Data extends TransitionData<any>> =
+  | ((data: Data) => Exclude<TransitionAnimation<Data>, AnyFn>)
   | SpringAnimation<JSX.Element>
   | SpringAnimation<JSX.Element>[]
   | Falsy
@@ -38,11 +44,21 @@ export type TransitionAnimation<T> =
 export function Transition<T>(props: {
   /** The unique identifier for the current entered element. */
   id: T
-  enter: TransitionAnimation<T>
-  leave: TransitionAnimation<T>
+  enter?: TransitionAnimation<TransitionEnterData<T>>
+  leave?: TransitionAnimation<TransitionData<T>>
+  leaveClass?: DOMClassAttribute
   children: JSX.ChildrenProp
 }) {
   const state = useState(initialState)
+  console.log(
+    'Transition.render(\n  props = %O\n  prevState = %O\n)',
+    { ...unref(props) },
+    {
+      id: state.currentId,
+      children: new Map(state.children),
+      elements: new Map(state.elements),
+    }
+  )
 
   const previousId = props.id !== state.currentId ? state.currentId : undefined
   const leavingElements = Array.from(
@@ -88,9 +104,9 @@ export function Transition<T>(props: {
           // Leaving elements are wrapped in an absolute-positioned
           // container, which we want to remove now that the elements are
           // re-entering.
-          newEnteredElements = unwrap(reusedElements).filter(child =>
-            isElement(child)
-          ) as JSX.Element[]
+          newEnteredElements = Array.from(
+            reusedElements.children
+          ) as AnyElement[]
         }
       } else {
         initial = true
@@ -104,8 +120,6 @@ export function Transition<T>(props: {
     }
 
     if (previousId !== undefined) {
-      // We can assume the previous elements are an array, because we
-      // don't wrap entered elements in a container.
       const previousChildren = state.children.get(previousId)!
       newLeavingElements = toElements(previousChildren)
 
@@ -113,8 +127,12 @@ export function Transition<T>(props: {
         // Use a random key to prevent morphdom from merging two "leave
         // containers" together.
         const leaveKey = Math.random()
-        const leaveContainer = <div key={leaveKey} style={leaveStyle} />
-        // leaveContainer.append(...getFragmentNodes(previousChildren as any))
+        const leaveContainer = (
+          <div key={leaveKey} class={props.leaveClass} style={leaveStyle} />
+        )
+        for (const leavingNode of kAlienFragmentNodes(previousChildren)!) {
+          leavingNode && leaveContainer.append(leavingNode)
+        }
 
         const previousElements = state.elements.get(previousId)!
         const previousIndex = leavingElements.indexOf(previousElements)
@@ -126,13 +144,21 @@ export function Transition<T>(props: {
 
   useEffect(() => {
     newEnteredElements?.forEach(element => {
-      const transition = props.enter(
-        props.id,
-        element as JSX.Element,
-        initial,
-        previousId
-      )
+      const transition = isFunction(props.enter)
+        ? props.enter({
+            id: props.id,
+            element: element as JSX.Element,
+            initial,
+            relatedId: previousId,
+          })
+        : props.enter
+
       if (transition) {
+        // Unset the `from` prop if the element is re-entering.
+        if (reusedChildren) {
+          const t = isArray(transition) ? transition[0] : transition
+          t.from = undefined
+        }
         animate(element as JSX.Element, transition)
       }
     })
@@ -146,15 +172,19 @@ export function Transition<T>(props: {
           if (--leavingCount === 0) {
             leaveContainer.remove()
             state.children.delete(previousId)
+            state.elements.delete(previousId)
           }
         }
 
         newLeavingElements.forEach(element => {
-          let transition = props.leave(
-            previousId,
-            element as JSX.Element,
-            props.id
-          )
+          let transition = isFunction(props.leave)
+            ? props.leave({
+                id: previousId,
+                element: element as JSX.Element,
+                relatedId: props.id,
+              })
+            : props.leave
+
           if (transition) {
             if (!Array.isArray(transition)) {
               const { onRest } = transition
@@ -186,10 +216,10 @@ export function Transition<T>(props: {
   }, [props.id])
 
   return (
-    <>
+    <Fragment key="0">
       {leavingElements}
       {children}
-    </>
+    </Fragment>
   )
 }
 

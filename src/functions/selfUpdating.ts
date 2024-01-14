@@ -4,11 +4,7 @@ import { ContextStore } from '../context'
 import { AlienComponent, AlienRunningComponent } from '../internal/component'
 import { forwardContext, getContext } from '../internal/context'
 import { isComment, isElement, isFragment, isNode } from '../internal/duck'
-import {
-  prependFragmentHeader,
-  updateParentFragment,
-  wrapWithFragment,
-} from '../internal/fragment'
+import { updateParentFragment, wrapWithFragment } from '../internal/fragment'
 import { fromElementThunk } from '../internal/fromElementThunk'
 import {
   currentComponent,
@@ -66,24 +62,21 @@ export function selfUpdating<
       attachRef(props, key, ref(initialValue))
     }
 
-    let oldPropChanged = false
     let newPropAdded = false
 
     const updateProps = (newProps: Partial<Props>) => {
       for (const key in newProps) {
         const newValue = newProps[key]
         if (props.hasOwnProperty(key)) {
-          const oldValue = props[key]
           props[key] = newValue as any
-          if (newValue !== oldValue) {
-            oldPropChanged = true
-          }
         } else {
           attachRef(props, key, ref(newValue))
           newPropAdded = true
         }
       }
-      if (oldPropChanged || newPropAdded) {
+      // When a prop has its initial value set, the component must be manually
+      // updated in case the prop's absence influenced the render result.
+      if (newPropAdded) {
         self.update()
       }
     }
@@ -232,8 +225,14 @@ export function selfUpdating<
             }
             // Fragments always have a component-specific comment node as
             // their first child, which is how a fragment can be replaced.
-            else if (rootNode !== newRootNode && isFragment(newRootNode)) {
-              prependFragmentHeader(newRootNode, DEV ? componentName() : '')
+            else if (
+              DEV &&
+              rootNode !== newRootNode &&
+              isFragment(newRootNode)
+            ) {
+              const newChildren =
+                kAlienFragmentNodes(newRootNode) || newRootNode.childNodes
+              newChildren[0].nodeValue = componentName()
             }
 
             // Replace the old root node if one exists and wasn't replaced by a
@@ -294,7 +293,6 @@ export function selfUpdating<
         currentMode.pop('ref')
 
         self.endRender(threw)
-        oldPropChanged = false
         newPropAdded = false
       }
 

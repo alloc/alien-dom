@@ -1,8 +1,13 @@
 import { Fragment } from '../jsx-dom/jsx-runtime'
-import { createFragmentNode, deferComponentNode } from '../jsx-dom/node'
-import { resolveChildren } from '../jsx-dom/resolveChildren'
+import {
+  createFragmentNode,
+  deferCompositeNode,
+  isDeferredNode,
+} from '../jsx-dom/node'
+import { ResolvedChild, resolveChildren } from '../jsx-dom/resolveChildren'
 import type { JSX } from '../types/jsx'
 import { AlienContextMap } from './context'
+import { currentComponent } from './global'
 import {
   kAlienElementKey,
   kAlienElementPosition,
@@ -15,36 +20,42 @@ export type FragmentNodes = [Comment, ...(ChildNode | undefined)[]]
 export type FragmentKeys = (JSX.ElementKey | undefined)[]
 
 export function wrapWithFragment(
-  wrappedChild: JSX.ChildrenProp,
-  context: AlienContextMap,
+  childrenProp: JSX.ChildrenProp,
+  context?: AlienContextMap,
   isDeferred?: boolean
 ) {
   const childKeys: FragmentKeys = [undefined]
   const children = resolveChildren(
-    wrappedChild,
+    childrenProp,
     undefined,
     context,
-    (_, childKey) => {
+    (childNode, childKey) => {
+      isDeferred ||= isDeferredChild(childNode)
       childKeys.push(childKey)
     }
   )
   if (isDeferred) {
-    const node = deferComponentNode(Fragment, null, children)
+    const node = deferCompositeNode(Fragment, null, children)
     kAlienFragmentKeys(node, childKeys)
     return node
   }
   return createFragmentNode(children, childKeys)
 }
 
-export function prependFragmentHeader(
-  fragment: DocumentFragment,
-  comment: string
-) {
-  const header = document.createComment(comment)
-  fragment.prepend(header)
-
-  const childNodes = kAlienFragmentNodes(fragment)!
-  childNodes[0] = header
+function isDeferredChild(child: ResolvedChild) {
+  if (isDeferredNode(child)) {
+    return true
+  }
+  if (child != null) {
+    const key = kAlienElementKey(child)
+    if (key != null) {
+      const component = currentComponent.get()
+      if (component) {
+        return component.updates.has(key)
+      }
+    }
+  }
+  return false
 }
 
 export function updateParentFragment(

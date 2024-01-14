@@ -25,7 +25,7 @@ import { svgTags } from './svg-tags'
 export type AlienNode =
   | ShadowRootNode
   | DeferredHostNode
-  | DeferredComponentNode
+  | DeferredCompositeNode
 
 /** Special nodes are distinguished by a numeric property of this symbol. */
 export const kAlienNodeType = Symbol.for('alien:nodeType')
@@ -65,12 +65,12 @@ export type DeferredChildren =
   | null
   | undefined
 
-export interface DeferredComponentNode extends DeferredNode {
+export interface DeferredCompositeNode extends DeferredNode {
   tag: (props: any) => JSX.ChildrenProp
   children?: ResolvedChild[]
 }
 
-export type AnyDeferredNode = DeferredHostNode | DeferredComponentNode
+export type AnyDeferredNode = DeferredHostNode | DeferredCompositeNode
 
 export const isDeferredNode = (node: any): node is AnyDeferredNode =>
   !!node && (node as any)[kAlienNodeType] === kDeferredNodeType
@@ -97,11 +97,11 @@ export const deferHostNode = (
   context: undefined,
 })
 
-export const deferComponentNode = (
+export const deferCompositeNode = (
   tag: (props: any) => JSX.ChildrenProp,
   props: any,
   children?: ResolvedChild[]
-): DeferredComponentNode => ({
+): DeferredCompositeNode => ({
   [kAlienNodeType]: kDeferredNodeType,
   tag,
   props,
@@ -181,7 +181,10 @@ export function createFragmentNode(
 ) {
   const fragment = document.createDocumentFragment()
 
+  const header = document.createComment(DEV ? 'Fragment' : '')
   const childNodes = new Array(children.length + 1) as FragmentNodes
+
+  childNodes[0] = appendChild(header, fragment) as Comment
   for (let i = 0; i < children.length; i++) {
     childNodes[i + 1] = appendChild(children[i], fragment)
   }

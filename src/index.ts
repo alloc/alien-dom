@@ -30,7 +30,6 @@ export * from './functions/typeChecking'
 export * from './functions/unmount'
 
 /// Components
-export * from './components/ManualUpdates'
 export * from './components/Transition'
 
 /// Third Party

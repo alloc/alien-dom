@@ -56,6 +56,7 @@ export declare namespace JSX {
     | SVGElement
     | DocumentFragment
     | ShadowRootNode
+    | AlienNode
     | false
     | null
     | undefined

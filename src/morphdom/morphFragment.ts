@@ -1,5 +1,6 @@
 import { AlienComponent } from '../internal/component'
 import { FragmentNodes, updateParentFragment } from '../internal/fragment'
+import { currentComponent } from '../internal/global'
 import { kAlienFragmentKeys, kAlienFragmentNodes } from '../internal/symbols'
 import { AnyDeferredNode } from '../jsx-dom/node'
 import { ResolvedChild } from '../jsx-dom/resolveChildren'
@@ -8,16 +9,24 @@ import { ParentNode, morphChildren } from './morphChildren'
 export function morphFragment(
   fromFragment: DocumentFragment,
   toFragment: AnyDeferredNode,
-  component?: AlienComponent | null
+  component: AlienComponent | null = currentComponent.get()
 ) {
+  const fromKeys = kAlienFragmentKeys(fromFragment)!
   const fromNodes = kAlienFragmentNodes(fromFragment)!
-  const lastFromNode = fromNodes.at(-1)
 
+  const parentElement = fromNodes[0].parentElement
+  for (let i = 1; i < fromNodes.length; i++) {
+    const fromNode = fromNodes[i]
+    if (fromNode && fromNode.parentElement !== parentElement) {
+      fromKeys.splice(i, 1)
+      fromNodes.splice(i, 1)
+      i--
+    }
+  }
+
+  const lastFromNode = fromNodes.at(-1)
   const fromKeyLookup = new Map(
-    kAlienFragmentKeys(fromFragment)!.map((key, index) => [
-      fromNodes[index],
-      key,
-    ])
+    fromKeys.map((key, index) => [fromNodes[index], key])
   )
 
   const nodes: FragmentNodes = [fromNodes[0]]
@@ -61,7 +70,8 @@ class ParentFragment implements ParentNode {
     return this.childNodes[0] || null
   }
   appendChild(node: ChildNode) {
-    const lastChild = this.childNodes.at(-1)!
+    const lastChild = this.childNodes.at(-1) || this.header
+    this.childNodes.push(node)
     lastChild.after(node)
   }
 }

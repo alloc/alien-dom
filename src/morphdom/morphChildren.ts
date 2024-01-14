@@ -3,10 +3,16 @@ import { Falsy } from '@alloc/types'
 import { getElementKey } from '../functions/getElementKey'
 import { unmount } from '../functions/unmount'
 import { AlienComponent } from '../internal/component'
-import { hasTagName, isElement, isFragment } from '../internal/duck'
-import { kAlienElementPosition, kAlienElementTags } from '../internal/symbols'
+import { hasTagName, isComment, isElement, isFragment } from '../internal/duck'
 import {
-  DeferredComponentNode,
+  kAlienElementPosition,
+  kAlienElementTags,
+  kAlienFragmentNodes,
+  kAlienParentFragment,
+} from '../internal/symbols'
+import { Fragment } from '../jsx-dom/jsx-runtime'
+import {
+  DeferredCompositeNode,
   DeferredHostNode,
   evaluateDeferredNode,
   isDeferredNode,
@@ -17,6 +23,8 @@ import { resolveSelected } from '../jsx-dom/resolveSelected'
 import { compareNodeNames, noop } from '../jsx-dom/util'
 import { JSX } from '../types/jsx'
 import { morph } from './morph'
+import { morphComposite } from './morphComposite'
+import { morphFragment } from './morphFragment'
 
 const defaultNextSibling = (node: ChildNode) => node.nextSibling
 
@@ -52,18 +60,6 @@ export function morphChildren(
   }
 
   const { getFromKey = getElementKey, onChildNode = noop } = options
-<<<<<<< Updated upstream
-=======
-
-  /** The `node` will be discarded unless false is returned. */
-  const onBeforeNodeDiscarded = component
-    ? // Never remove a node that was added by an event listener or effect. Any
-      // nodes added by a component render will have a position-based key defined
-      // automatically if they're missing an explicit key, so this check is
-      // sufficient.
-      isDiscardableNode
-    : noop
->>>>>>> Stashed changes
 
   if (!isArray(toChildNodes)) {
     toChildNodes = Array.from(toChildNodes)
@@ -77,31 +73,13 @@ export function morphChildren(
     return
   }
 
-<<<<<<< Updated upstream
   let fromChildNode = fromParentNode.firstChild
   if (fromChildNode && !isDiscardableNode(fromChildNode)) {
     fromChildNode = nextDiscardableNode(fromChildNode, component, options)
-=======
-  const fromElementsByKey = new Map<JSX.ElementKey, Element>()
-  const unmatchedFromKeys = new Set<JSX.ElementKey>()
-  for (
-    let fromChildNode = fromParentNode.firstChild;
-    fromChildNode;
-    fromChildNode = nextDiscardableNode(fromChildNode, component, options)
-  ) {
-    const key = getFromKey(fromChildNode)
-    if (key != null && isElement(fromChildNode)) {
-      fromElementsByKey.set(key, fromChildNode)
-    }
->>>>>>> Stashed changes
   }
 
   const unmatchedFromKeys = new Set<JSX.ElementKey>()
-  const fromElementsByKey = collectKeyedElements(
-    fromChildNode,
-    component,
-    options
-  )
+  const fromNodesByKey = collectKeyedNodes(fromChildNode, component, options)
 
   let toChildIndex = 0
 
@@ -121,10 +99,47 @@ export function morphChildren(
 
     const toChildKey = getElementKey(toChildNode)
     if (toChildKey != null) {
-      const matchingNode = fromElementsByKey.get(toChildKey)
+      const matchingNode = fromNodesByKey.get(toChildKey)
       if (matchingNode) {
         // Speed up future lookups and prevent removal.
-        fromElementsByKey.delete(toChildKey)
+        fromNodesByKey.delete(toChildKey)
+
+        if (isFragment(matchingNode)) {
+          let nextSibling: ChildNode | null = null
+
+          let childNodes = kAlienFragmentNodes(matchingNode)!
+          if (childNodes[0] !== fromChildNode) {
+            // Move the fragment before the current from node.
+            nextSibling = fromChildNode
+          } else {
+            // Jump to the end of the fragment.
+            const lastChildNode = childNodes.at(-1) as ChildNode
+            fromChildNode = nextDiscardableNode(
+              lastChildNode,
+              component,
+              options
+            )
+          }
+
+          if (isDeferredNode(toChildNode)) {
+            if (toChildNode.tag === Fragment) {
+              morphFragment(matchingNode, toChildNode as any, component)
+            } else {
+              morphComposite(matchingNode, toChildNode as any)
+            }
+          }
+
+          childNodes = kAlienFragmentNodes(matchingNode)!
+          for (const childNode of childNodes) {
+            if (childNode) {
+              nextSibling?.before(childNode)
+            }
+            onChildNode(childNode)
+          }
+
+          toChildIndex++
+          continue
+        }
 
         if (isCompatibleNode(matchingNode, toChildNode)) {
           let nextSibling: ChildNode | null = null
@@ -164,10 +179,6 @@ export function morphChildren(
           component,
           options
         )
-<<<<<<< Updated upstream
-=======
-        const fromChildKey = getFromKey(fromChildNode)
->>>>>>> Stashed changes
 
         const fromChildKey = getFromKey(fromChildNode)
         if (fromChildKey != null) {
@@ -195,11 +206,11 @@ export function morphChildren(
     }
   }
 
-  let removedFromNode: ChildNode | null | undefined
+  let removedFromNode: ChildNode | DocumentFragment | null | undefined
 
   // Remove any from nodes with unmatched keys.
   for (const key of unmatchedFromKeys) {
-    removedFromNode = fromElementsByKey.get(key)
+    removedFromNode = fromNodesByKey.get(key)
     if (removedFromNode) {
       unmount(removedFromNode)
     }
@@ -208,14 +219,7 @@ export function morphChildren(
   // Remove any remaining from nodes.
   while ((removedFromNode = fromChildNode)) {
     fromChildNode = nextDiscardableNode(fromChildNode, component, options)
-<<<<<<< Updated upstream
     unmount(removedFromNode)
-=======
-
-    if (onBeforeNodeDiscarded(removedFromNode) !== false) {
-      unmount(removedFromNode)
-    }
->>>>>>> Stashed changes
   }
 
   if (hasTagName(fromParentNode, 'SELECT')) {
@@ -223,7 +227,7 @@ export function morphChildren(
   }
 }
 
-type ToNode = ChildNode | DeferredHostNode | DeferredComponentNode
+type ToNode = ChildNode | DeferredHostNode | DeferredCompositeNode
 
 function isCompatibleNode(fromNode: Node, toNode: ToNode) {
   if (fromNode === toNode) {
@@ -326,26 +330,39 @@ function nextDiscardableNode(
   }
   return nextSibling
 }
-<<<<<<< Updated upstream
 
-function collectKeyedElements(
+function collectKeyedNodes(
   firstChildNode: ChildNode | null,
   component: AlienComponent | null | undefined,
   options: MorphChildrenOptions
 ) {
   const { getFromKey = getElementKey } = options
-  const fromElementsByKey = new Map<JSX.ElementKey, Element>()
+  const fromNodesByKey = new Map<JSX.ElementKey, Element | DocumentFragment>()
   for (
     let fromChildNode = firstChildNode;
     fromChildNode;
     fromChildNode = nextDiscardableNode(fromChildNode, component, options)
   ) {
-    const key = getFromKey(fromChildNode)
-    if (key != null && isElement(fromChildNode)) {
-      fromElementsByKey.set(key, fromChildNode)
+    let key: JSX.ElementKey | undefined
+    if (isElement(fromChildNode)) {
+      key = getFromKey(fromChildNode)
+      if (key != null) {
+        fromNodesByKey.set(key, fromChildNode)
+      }
+    } else if (isComment(fromChildNode)) {
+      const fragment = kAlienParentFragment(fromChildNode)
+      if (!fragment) {
+        continue
+      }
+      key = getElementKey(fragment)
+      if (key != null) {
+        fromNodesByKey.set(key, fragment)
+
+        // Skip to the end of the fragment.
+        const childNodes = kAlienFragmentNodes(fragment)!
+        fromChildNode = childNodes.at(-1) as ChildNode
+      }
     }
   }
-  return fromElementsByKey
+  return fromNodesByKey
 }
-=======
->>>>>>> Stashed changes

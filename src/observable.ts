@@ -469,6 +469,7 @@ export declare namespace Observer {
   ) => void
   type OnUpdateFn = (result: any) => any
   type Queue = {
+    has(observer: Observer): boolean
     add(observer: Observer): void
     delete(observer: Observer): void
   }
@@ -553,10 +554,18 @@ export class Observer {
       hooks.observe(this, ref, newValue, oldValue)
     }
     this.didObserve(ref, newValue, oldValue)
+    this.scheduleUpdate(ref, newValue, oldValue)
+  }
+
+  scheduleUpdate(ref?: ReadonlyRef<any>, newValue?: any, oldValue?: any) {
     if (this.version !== currentVersion) {
       this.version = currentVersion
-      this.queue.add(this)
-      this.willUpdate(ref, newValue, oldValue)
+      if (!this.queue.has(this)) {
+        this.queue.add(this)
+        if (ref) {
+          this.willUpdate(ref, newValue, oldValue)
+        }
+      }
     }
   }
 
@@ -647,6 +656,7 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
     // a temporary observer is created in case a ref is changed after this
     // update but before the `currentVersion` counter is incremented again.
     const observer = new Observer({
+      has: () => this._dirty,
       add: () => {
         this._dirty = true
         // If this computed ref is accessed, another synchronous observer will
@@ -702,7 +712,7 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
 
   private static Observer = class extends Observer {
     constructor(readonly ref: ComputedRef) {
-      super(computeQueue)
+      super()
       if (ref._refs) {
         ref._refs.forEach(ref => this._access(ref))
         ref._refs = null
@@ -742,12 +752,22 @@ function onObservedUpdate() {
   }
 }
 
-// Computed refs always run before plain observers.
-const computeQueue = new Set<Observer>()
 const updateQueue = new Set<Observer>()
 
 function hasQueuedObservers() {
-  return computeQueue.size + updateQueue.size > 0
+  return updateQueue.size > 0
+}
+
+// Observers with deeper dependencies are updated last.
+function sortObservers(a: Observer, b: Observer) {
+  if (a.depth < b.depth) {
+    return -1
+  }
+  if (b.depth < a.depth) {
+    return 1
+  }
+  // Sort oldest first.
+  return a.id - b.id
 }
 
 type InternalObserver = Observer & {
@@ -768,9 +788,12 @@ function computeNextVersion() {
   access = (ref: InternalRef<any>) => currentObserver._access(ref, oldRefs)
 
   const update = (observer: Observer) => {
-    oldRefs = new Set(observer.refs)
-    currentObserver = observer as InternalObserver
-    currentObserver._update(false, oldRefs)
+    // Skip the update if the observer was disposed.
+    if (updateQueue.delete(observer)) {
+      oldRefs = new Set(observer.refs)
+      currentObserver = observer as InternalObserver
+      currentObserver._update(false, oldRefs)
+    }
   }
 
   for (let loops = 0; hasQueuedObservers(); loops++) {
@@ -778,17 +801,10 @@ function computeNextVersion() {
       throw (DEV && devError) || Error('Cycle detected')
     }
 
-    // Computed refs run in order of depth.
-    const computedRefs = [...computeQueue].sort((a, b) => b.depth - a.depth)
-    computeQueue.clear()
-
-    computedRefs.forEach(update)
-
-    // Plain observers run in order of creation.
-    const updatedObservers = [...updateQueue].sort((a, b) => a.id - b.id)
-    updateQueue.clear()
-
-    updatedObservers.forEach(update)
+    if (updateQueue.size) {
+      const updatedObservers = [...updateQueue].sort(sortObservers)
+      updatedObservers.forEach(update)
+    }
   }
 
   access = parentAccess
