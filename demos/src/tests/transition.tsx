@@ -15,8 +15,18 @@ export function Test() {
           onClick={() => (clicked.value = !clicked.value)}>
           <Transition
             id={clicked.value}
-            enter={{ to: { opacity: 1 }, from: { opacity: 0 } }}
-            leave={{ to: { opacity: 0 } }}
+            enter={{
+              from: { opacity: 0 },
+              to: { opacity: 1 },
+              spring: { dilate: 2 },
+              onChange(props) {
+                console.log('enter.onChange', props)
+              },
+            }}
+            leave={{
+              to: { opacity: 0 },
+              spring: { dilate: 2 },
+            }}
             leaveClass="justify-center items-center">
             {clicked.value === false ? (
               <span
