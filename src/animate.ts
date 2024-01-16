@@ -35,6 +35,7 @@ export type SpringAnimation<
   spring?: SpringConfigOption<Props>
   velocity?: number | { [K in keyof Props]?: number }
   delay?: SpringDelay | { [K in keyof Props]?: SpringDelay }
+  dilate?: number
   anchor?: [number, number]
   onStart?: () => void
   onChange?: FrameCallback<Element, Props>
@@ -318,9 +319,10 @@ function addTimelineTimeout(
   key: string
 ) {
   if (delay > 0) {
+    const dilation = animation.dilate ?? 1
     const timerId = setTimeout(() => {
       applyAnimation(target, state, animation, spring, [key])
-    }, delay)
+    }, delay * dilation)
 
     const timeline = ((timelines ||= {})[key] ||= [])
     timeline.push({ ...animation, timerId })
@@ -397,6 +399,7 @@ function applyAnimation(
       animation.from?.[key],
       oldNode,
       spring,
+      animation.dilate,
       !animation.velocity || isNumber(animation.velocity)
         ? animation.velocity
         : animation.velocity[key],
@@ -423,6 +426,7 @@ function updateAnimatedNode(
   from: any,
   node: AnimatedNode | null,
   spring: SpringResolver,
+  dilate?: number,
   velocity?: number,
   frame?: Record<string, any> | null,
   onChange?: FrameCallback<any>,
@@ -458,6 +462,7 @@ function updateAnimatedNode(
     from: parsedFrom,
     lastPosition: null,
     lastVelocity: null,
+    dilation: 1,
     isRelative: false,
     transformFn: resolveTransformFn(key, svgMode),
     spring: null!,
@@ -471,6 +476,7 @@ function updateAnimatedNode(
   node.from = parsedFrom
   node.spring = spring(key)
   node.frame = frame || null
+  node.dilation = dilate ?? 1
   node.onChange = onChange || null
   node.onRest = onRest || null
 
@@ -525,7 +531,7 @@ let nextElementId = 1
 function startLoop() {
   if (loop) return
   loop = requestAnimationFrame(function step(now) {
-    const dt = now - (lastTime || now)
+    const dt = Math.min(64, now - (lastTime || now))
     lastTime = now
 
     let stepResults: Map<DefaultElement, any> | undefined
@@ -761,7 +767,9 @@ function advance(
   let finished = false
 
   const step = 1 // 1ms
+  const stepFactor = 1 / node.dilation
   const numSteps = Math.max(1, Math.ceil(dt / step))
+
   for (let n = 0; n < numSteps; ++n) {
     isMoving = Math.abs(velocity) > restVelocity
 
@@ -786,8 +794,8 @@ function advance(
     const dampingForce = -config.friction * 0.001 * velocity
     const acceleration = (springForce + dampingForce) / config.mass // pt/ms^2
 
-    velocity = velocity + acceleration * step // pt/ms
-    position = position + velocity * step
+    velocity = velocity + acceleration * step * stepFactor // pt/ms
+    position = position + velocity * step * stepFactor
   }
 
   if (finished) {

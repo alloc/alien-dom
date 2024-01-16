@@ -20,6 +20,7 @@ export type AnimatedNode<T extends AnimatedType = AnimatedType> = {
   v0: number
   lastVelocity: number | null
   lastPosition: number | null
+  dilation: number
   isRelative: boolean
   transformFn: string | null
   spring: ResolvedSpringConfig
