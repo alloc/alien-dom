@@ -94,6 +94,7 @@ export type SpringConfig = {
   mass?: number
   bounce?: number
   clamp?: boolean
+  dilate?: number
   restVelocity?: number
 }
 
@@ -760,7 +761,7 @@ function advance(
 
   let finished = false
 
-  const step = 1 // 1ms
+  const step = config.dilate ?? 1 // 1ms
   const numSteps = Math.max(1, Math.ceil(dt / step))
   for (let n = 0; n < numSteps; ++n) {
     isMoving = Math.abs(velocity) > restVelocity
