@@ -188,16 +188,23 @@ export function Transition<T>(props: {
           if (transition) {
             if (!Array.isArray(transition)) {
               const { onRest } = transition
-              transition.onRest = (...args) => {
-                onRest?.(...args)
-                onTransitionEnd()
+              transition = {
+                ...transition,
+                onRest(...args) {
+                  onRest?.(...args)
+                  onTransitionEnd()
+                },
               }
             } else if (transition.length) {
               // Assume the last animation is the last to finish.
-              const { onRest } = transition[transition.length - 1]
-              transition[transition.length - 1].onRest = (...args) => {
-                onRest?.(...args)
-                onTransitionEnd()
+              const index = transition.length - 1
+              const { onRest } = transition[index]
+              transition[index] = {
+                ...transition[index],
+                onRest(...args) {
+                  onRest?.(...args)
+                  onTransitionEnd()
+                },
               }
             } else {
               transition = false
