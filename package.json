@@ -30,7 +30,7 @@
   "prettier": "@alloc/prettier-config",
   "scripts": {
     "build": "rimraf dist && cd src && tsup-node --treeshake smallest --define.DEV false",
-    "dev": "cd src && tsup-node --watch --sourcemap --define.DEV true",
+    "dev": "cd src && tsup-node --watch --sourcemap --define.DEV true --clean",
     "test": "NODE_OPTIONS='--loader @alien-dom/node --no-warnings=ExperimentalWarnings' ava --watch --no-worker-threads",
     "debug": "NODE_OPTIONS='--loader @alien-dom/node --no-warnings=ExperimentalWarnings' ava debug"
   },
