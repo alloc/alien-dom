@@ -64,7 +64,7 @@ function TestList({
             location.hash = toSlug(name)
             activeTest.value = tests[name]
           }}>
-          <span>{toTitleCase(name.match(/\.\/tests\/(\w+)/)![1])}</span>
+          <span>{toTitleCase(name.match(/\.\/tests\/([\w-]+)/)![1])}</span>
         </div>
       ))}
     </div>
@@ -81,9 +81,11 @@ export function App({ tests }: { tests: Record<string, () => Promise<any>> }) {
 }
 
 function toTitleCase(str: string) {
-  return str.replace(/(\w)(\w*)/g, (_, c1, c2) => c1.toUpperCase() + c2)
+  return str
+    .replace(/(\w)(\w*)/g, (_, c1, c2) => c1.toUpperCase() + c2)
+    .replace(/-/g, ' ')
 }
 
 function toSlug(str: string) {
-  return str.match(/\/(\w+)\./)![1]
+  return str.match(/\/([\w-]+)\./)![1]
 }

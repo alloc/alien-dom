@@ -15,17 +15,17 @@ export function Test() {
           onClick={() => (clicked.value = !clicked.value)}>
           <Transition
             id={clicked.value}
-            enter={{
+            enter={({ id }) => ({
               from: { opacity: 0 },
               to: { opacity: 1 },
-              spring: { dilate: 2 },
+              spring: { dilate: 4 },
               onChange(props) {
-                console.log('enter.onChange', props)
+                console.log('%s/enter.onChange', id, props)
               },
-            }}
+            })}
             leave={{
               to: { opacity: 0 },
-              spring: { dilate: 2 },
+              spring: { dilate: 4 },
             }}
             leaveClass="justify-center items-center">
             {clicked.value === false ? (
@@ -45,7 +45,7 @@ export function Test() {
         </div>
         <div
           role="button"
-          class="cursor-pointer px-40 py-10 bg-gray100 hover:bg-gray200 rounded-full"
+          class="cursor-pointer px-40 py-10 bg-gray100 hover:bg-gray200 rounded-full self-center"
           onClick={() => {
             const nextColor = (color.value + 1) % colors.length
             console.log('nextColor:', nextColor, colors[nextColor])
