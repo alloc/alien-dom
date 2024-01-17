@@ -526,7 +526,7 @@ let nextElementId = 1
 function startLoop() {
   if (loop) return
   loop = requestAnimationFrame(function step(now) {
-    const dt = now - (lastTime || now)
+    const dt = Math.min(64, now - (lastTime || now))
     lastTime = now
 
     let stepResults: Map<DefaultElement, any> | undefined
@@ -761,8 +761,10 @@ function advance(
 
   let finished = false
 
-  const step = config.dilate ?? 1 // 1ms
+  const step = 1 // 1ms
+  const stepFactor = 1 / (config.dilate || 1)
   const numSteps = Math.max(1, Math.ceil(dt / step))
+
   for (let n = 0; n < numSteps; ++n) {
     isMoving = Math.abs(velocity) > restVelocity
 
@@ -787,8 +789,8 @@ function advance(
     const dampingForce = -config.friction * 0.001 * velocity
     const acceleration = (springForce + dampingForce) / config.mass // pt/ms^2
 
-    velocity = velocity + acceleration * step // pt/ms
-    position = position + velocity * step
+    velocity = velocity + acceleration * step * stepFactor // pt/ms
+    position = position + velocity * step * stepFactor
   }
 
   if (finished) {
@@ -876,6 +878,8 @@ function ensureFromValues(
       const to = node.to as ParsedValue
       if (!from || from[1] == to[1]) {
         node.from = from || [cssTransformDefaults[node.transformFn] || 0, to[1]]
+        console.log('%s from', key, node.from)
+        console.log('%s to  ', key, node.to)
       } else {
         console.error(`Unit mismatch for "${key}": ${from[1]} != ${to[1]}`)
       }
@@ -884,6 +888,8 @@ function ensureFromValues(
       node.from = isColorKey(key, state.svgMode)
         ? parseColor(resolveCssVariable(value, target))
         : [parseFloat(value), '']
+      console.log('%s from', key, node.from)
+      console.log('%s to  ', key, node.to)
     }
   }
 }

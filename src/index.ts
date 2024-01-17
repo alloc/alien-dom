@@ -24,10 +24,12 @@ export * from './functions/mergeDisposers'
 export * from './functions/mount'
 export * from './functions/observeAs'
 export * from './functions/refs'
+export * from './functions/restoreComponentRefs'
 export * from './functions/selfUpdating'
 export * from './functions/toElements'
 export * from './functions/typeChecking'
 export * from './functions/unmount'
+export * from './functions/updateProps'
 
 /// Components
 export * from './components/Transition'

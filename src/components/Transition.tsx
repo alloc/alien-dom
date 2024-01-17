@@ -1,6 +1,7 @@
 import { isArray, isFunction } from '@alloc/is'
 import type { AnyFn, Falsy } from '@alloc/types'
 import { SpringAnimation, animate } from '../animate'
+import { restoreComponentRefs } from '../functions/restoreComponentRefs'
 import { selfUpdating } from '../functions/selfUpdating'
 import { toElements } from '../functions/toElements'
 import { useEffect } from '../hooks/useEffect'
@@ -11,7 +12,6 @@ import type { AnyElement, StyleAttributes } from '../internal/types'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import { evaluateDeferredNode } from '../jsx-dom/node'
 import { morphFragment } from '../morphdom/morphFragment'
-import { unref } from '../observable'
 import { DOMClassAttribute } from '../types'
 import type { JSX } from '../types/jsx'
 
@@ -50,21 +50,17 @@ export function Transition<T>(props: {
   children: JSX.ChildrenProp
 }) {
   const state = useState(initialState)
-  console.log(
-    'Transition.render(\n  props = %O\n  prevState = %O\n)',
-    { ...unref(props) },
-    {
-      id: state.currentId,
-      children: new Map(state.children),
-      elements: new Map(state.elements),
-    }
-  )
 
   const previousId = props.id !== state.currentId ? state.currentId : undefined
   const leavingElements = Array.from(
     state.elements,
     ([id, element]) => id !== props.id && element
   ).filter(Boolean)
+
+  const reusedChildren = state.children.get(props.id)
+  if (reusedChildren) {
+    restoreComponentRefs(reusedChildren)
+  }
 
   let newLeavingElements: AnyElement[] | undefined
   let newEnteredElements: AnyElement[] | undefined
@@ -75,17 +71,16 @@ export function Transition<T>(props: {
   // placeholder if nothing changed).
   let children = Fragment(props)
 
-  const reusedChildren = state.children.get(props.id)
   if (isNode(children)) {
-    console.log('children is a fragment node')
+    console.debug('children is a fragment node')
   } else {
-    console.log('children is a deferred fragment')
+    console.debug('children is a deferred fragment')
     if (reusedChildren) {
       children = morphFragment(reusedChildren, children)
-      console.log('morphed children')
+      console.debug('morphed children')
     } else {
       children = evaluateDeferredNode(children) as DocumentFragment
-      console.log('evaluated children')
+      console.debug('evaluated children')
     }
   }
 
@@ -93,26 +88,23 @@ export function Transition<T>(props: {
   if (previousId !== undefined || state.children.size === 0) {
     state.currentId = props.id
 
-    if (children.childNodes.length) {
-      if (reusedChildren) {
-        const reusedElements = state.elements.get(props.id)!
-        if (Array.isArray(reusedElements)) {
-          // If an array is found, then no elements were rendered before,
-          // so this an empty array was stored (and never wrapped).
-          newEnteredElements = reusedElements
-        } else {
-          // Leaving elements are wrapped in an absolute-positioned
-          // container, which we want to remove now that the elements are
-          // re-entering.
-          newEnteredElements = Array.from(
-            reusedElements.children
-          ) as AnyElement[]
-        }
+    if (reusedChildren) {
+      const reusedElements = state.elements.get(props.id)!
+      if (Array.isArray(reusedElements)) {
+        // If an array is found, then no elements were rendered before,
+        // so this an empty array was stored (and never wrapped).
+        newEnteredElements = reusedElements
       } else {
-        initial = true
-        newEnteredElements = toElements(children)
-        state.children.set(props.id, children)
+        // Leaving elements are wrapped in an absolute-positioned
+        // container, which we want to remove now that the elements are
+        // re-entering.
+        newEnteredElements = Array.from(reusedElements.children)
+        state.elements.set(props.id, newEnteredElements)
       }
+    } else if (children.childNodes.length) {
+      initial = true
+      newEnteredElements = toElements(children)
+      state.children.set(props.id, children)
       state.elements.set(props.id, newEnteredElements)
     } else {
       state.children.delete(props.id)
@@ -159,6 +151,7 @@ export function Transition<T>(props: {
           const t = isArray(transition) ? transition[0] : transition
           t.from = undefined
         }
+        console.log('%s/enter', props.id, transition)
         animate(element as JSX.Element, transition)
       }
     })
@@ -211,6 +204,7 @@ export function Transition<T>(props: {
             }
           }
           if (transition) {
+            console.log('%s/leave', previousId, transition)
             animate(element as JSX.Element, transition)
           } else {
             onTransitionEnd()

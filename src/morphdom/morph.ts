@@ -13,31 +13,33 @@ import { morphChildren } from './morphChildren'
 import { morphComposite } from './morphComposite'
 
 /**
- * This function assumes the two nodes are compatible.
+ * This function assumes the two host nodes are compatible.
  */
 export function morph(
   fromParentNode: DefaultElement,
   toParentNode: AnyDeferredNode,
   component?: AlienComponent | null
-): void {
+) {
   // Check for a deferred component update.
-  if (isDeferredHostNode(toParentNode)) {
-    const fromProps = kAlienHostProps(fromParentNode)
-
-    let toChildNodes: DeferredChildren
-    if (isRef(toParentNode.children)) {
-      toChildNodes = addChildrenRef(toParentNode.children, fromProps)
-    } else {
-      toChildNodes = toParentNode.children
-    }
-
-    morphAttributes(fromParentNode, toParentNode.props)
-    morphChildren(fromParentNode, toChildNodes, component)
-
-    if (toParentNode.ref) {
-      applyRefProp(fromParentNode, toParentNode.ref, fromProps)
-    }
-  } else {
-    morphComposite(fromParentNode, toParentNode)
+  if (!isDeferredHostNode(toParentNode)) {
+    return morphComposite(fromParentNode, toParentNode)
   }
+
+  const fromProps = kAlienHostProps(fromParentNode)
+
+  let toChildNodes: DeferredChildren
+  if (isRef(toParentNode.children)) {
+    toChildNodes = addChildrenRef(toParentNode.children, fromProps)
+  } else {
+    toChildNodes = toParentNode.children
+  }
+
+  morphAttributes(fromParentNode, toParentNode.props)
+  morphChildren(fromParentNode, toChildNodes, component)
+
+  if (toParentNode.ref) {
+    applyRefProp(fromParentNode, toParentNode.ref, fromProps)
+  }
+
+  return fromParentNode
 }
