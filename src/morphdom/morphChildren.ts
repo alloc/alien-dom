@@ -6,6 +6,7 @@ import { AlienComponent } from '../internal/component'
 import { hasTagName, isComment, isElement, isFragment } from '../internal/duck'
 import { FragmentNodes } from '../internal/fragment'
 import {
+  kAlienElementKey,
   kAlienElementPosition,
   kAlienElementTags,
   kAlienFragmentNodes,
@@ -336,6 +337,7 @@ function updateChild(
   }
 
   if (morphedNode && morphedNode !== fromNode) {
+    console.log('morph returned a new node', morphedNode)
     const fromPosition = kAlienElementPosition(fromNode)
     if (isFragment(morphedNode)) {
       const childNodes = kAlienFragmentNodes(morphedNode)!
@@ -384,9 +386,8 @@ function collectKeyedNodes(
     fromChildNode;
     fromChildNode = nextDiscardableNode(fromChildNode, component, options)
   ) {
-    let key: JSX.ElementKey | undefined
     if (isElement(fromChildNode)) {
-      key = getFromKey(fromChildNode)
+      const key = getFromKey(fromChildNode)
       if (key != null) {
         fromNodesByKey.set(key, fromChildNode)
       }
@@ -395,14 +396,17 @@ function collectKeyedNodes(
       if (!fragment) {
         continue
       }
-      key = getElementKey(fragment)
+      const position = kAlienElementPosition(fragment)
+      if (position != null) {
+        fromNodesByKey.set(position, fragment)
+      }
+      const key = kAlienElementKey(fragment)
       if (key != null) {
         fromNodesByKey.set(key, fragment)
-
-        // Skip to the end of the fragment.
-        const childNodes = kAlienFragmentNodes(fragment)!
-        fromChildNode = childNodes.at(-1) as ChildNode
       }
+      // Skip to the end of the fragment.
+      const childNodes = kAlienFragmentNodes(fragment)!
+      fromChildNode = childNodes.at(-1) as ChildNode
     }
   }
   return fromNodesByKey

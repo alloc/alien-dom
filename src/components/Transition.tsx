@@ -1,5 +1,5 @@
-import { isArray, isFunction } from '@alloc/is'
-import type { AnyFn, Falsy } from '@alloc/types'
+import { isFunction } from '@alloc/is'
+import type { Falsy } from '@alloc/types'
 import { SpringAnimation, animate } from '../animate'
 import { restoreComponentRefs } from '../functions/restoreComponentRefs'
 import { selfUpdating } from '../functions/selfUpdating'
@@ -15,6 +15,8 @@ import { morphFragment } from '../morphdom/morphFragment'
 import { DOMClassAttribute } from '../types'
 import type { JSX } from '../types/jsx'
 
+const nothing = Symbol('nothing')
+
 /** The style applied to the container that wraps leaving elements. */
 const leaveStyle: StyleAttributes = {
   position: 'absolute',
@@ -25,33 +27,39 @@ const leaveStyle: StyleAttributes = {
   pointerEvents: 'none',
 }
 
-export type TransitionData<T> = {
-  id: T
+export type TransitionData<Id> = {
+  id: Id
   element: JSX.Element
-  relatedId: T | undefined
+  relatedId: Id | undefined
 }
 
-export type TransitionEnterData<T> = TransitionData<T> & {
-  initial: boolean
+export type TransitionDependency = PromiseLike<any> & {
+  stop(): void
 }
 
-export type TransitionAnimation<Data extends TransitionData<any>> =
-  | ((data: Data) => Exclude<TransitionAnimation<Data>, AnyFn>)
+const dependencies = new WeakMap<AnyElement, TransitionDependency>()
+
+export type TransitionAnimation =
   | SpringAnimation<JSX.Element>
   | SpringAnimation<JSX.Element>[]
+  | TransitionDependency
   | Falsy
+
+export type TransitionProp<Id, Data = {}> =
+  | ((data: TransitionData<Id> & Data) => TransitionAnimation)
+  | TransitionAnimation
 
 export function Transition<T>(props: {
   /** The unique identifier for the current entered element. */
   id: T
-  enter?: TransitionAnimation<TransitionEnterData<T>>
-  leave?: TransitionAnimation<TransitionData<T>>
+  enter?: TransitionProp<T, { initial: boolean }>
+  leave?: TransitionProp<T>
   leaveClass?: DOMClassAttribute
   children: JSX.ChildrenProp
 }) {
   const state = useState(initialState)
 
-  const previousId = props.id !== state.currentId ? state.currentId : undefined
+  const previousId = state.currentId
   const leavingElements = Array.from(
     state.elements,
     ([id, element]) => id !== props.id && element
@@ -71,21 +79,16 @@ export function Transition<T>(props: {
   // placeholder if nothing changed).
   let children = Fragment(props)
 
-  if (isNode(children)) {
-    console.debug('children is a fragment node')
-  } else {
-    console.debug('children is a deferred fragment')
+  if (!isNode(children)) {
     if (reusedChildren) {
       children = morphFragment(reusedChildren, children)
-      console.debug('morphed children')
     } else {
       children = evaluateDeferredNode(children) as DocumentFragment
-      console.debug('evaluated children')
     }
   }
 
   // If the ID changed or this is the first render...
-  if (previousId !== undefined || state.children.size === 0) {
+  if (props.id !== previousId) {
     state.currentId = props.id
 
     if (reusedChildren) {
@@ -111,7 +114,7 @@ export function Transition<T>(props: {
       state.elements.delete(props.id)
     }
 
-    if (previousId !== undefined) {
+    if (previousId !== nothing) {
       const previousChildren = state.children.get(previousId)!
       newLeavingElements = toElements(previousChildren)
 
@@ -136,6 +139,9 @@ export function Transition<T>(props: {
 
   useEffect(() => {
     newEnteredElements?.forEach(element => {
+      const oldDependency = dependencies.get(element)
+      oldDependency?.stop()
+
       const transition = isFunction(props.enter)
         ? props.enter({
             id: props.id,
@@ -145,13 +151,9 @@ export function Transition<T>(props: {
           })
         : props.enter
 
-      if (transition) {
-        // Unset the `from` prop if the element is re-entering.
-        if (reusedChildren) {
-          const t = isArray(transition) ? transition[0] : transition
-          t.from = undefined
-        }
-        console.log('%s/enter', props.id, transition)
+      if (isDependency(transition)) {
+        dependencies.set(element, transition)
+      } else if (transition) {
         animate(element as JSX.Element, transition)
       }
     })
@@ -170,6 +172,9 @@ export function Transition<T>(props: {
         }
 
         newLeavingElements.forEach(element => {
+          const oldDependency = dependencies.get(element)
+          oldDependency?.stop()
+
           let transition = isFunction(props.leave)
             ? props.leave({
                 id: previousId,
@@ -177,6 +182,11 @@ export function Transition<T>(props: {
                 relatedId: props.id,
               })
             : props.leave
+
+          if (isDependency(transition)) {
+            dependencies.set(element, transition)
+            return transition.then(onTransitionEnd)
+          }
 
           if (transition) {
             if (!Array.isArray(transition)) {
@@ -203,8 +213,8 @@ export function Transition<T>(props: {
               transition = false
             }
           }
+
           if (transition) {
-            console.log('%s/leave', previousId, transition)
             animate(element as JSX.Element, transition)
           } else {
             onTransitionEnd()
@@ -234,7 +244,15 @@ const initialState = (): {
   /** The animated elements of each `id` prop. */
   elements: Map<any, AnyElement | AnyElement[]>
 } => ({
-  currentId: undefined,
+  currentId: nothing,
   children: new Map(),
   elements: new Map(),
 })
+
+function isDependency(value: any): value is TransitionDependency {
+  return (
+    value &&
+    typeof value.then === 'function' &&
+    typeof value.stop === 'function'
+  )
+}

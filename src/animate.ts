@@ -878,8 +878,6 @@ function ensureFromValues(
       const to = node.to as ParsedValue
       if (!from || from[1] == to[1]) {
         node.from = from || [cssTransformDefaults[node.transformFn] || 0, to[1]]
-        console.log('%s from', key, node.from)
-        console.log('%s to  ', key, node.to)
       } else {
         console.error(`Unit mismatch for "${key}": ${from[1]} != ${to[1]}`)
       }
@@ -888,8 +886,6 @@ function ensureFromValues(
       node.from = isColorKey(key, state.svgMode)
         ? parseColor(resolveCssVariable(value, target))
         : [parseFloat(value), '']
-      console.log('%s from', key, node.from)
-      console.log('%s to  ', key, node.to)
     }
   }
 }

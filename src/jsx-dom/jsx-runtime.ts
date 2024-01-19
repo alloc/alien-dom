@@ -12,6 +12,7 @@ import {
   deferCompositeNode,
   deferHostNode,
 } from './node'
+import { compareNodeWithTag } from './util'
 
 export { Fragment }
 export type { JSX }
@@ -28,7 +29,7 @@ type Props = {
 export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
   const component = currentComponent.get()
 
-  const hasImpureTag = typeof tag !== 'string' && !kAlienPureComponent.in(tag)
+  const hasImpureTag = !isString(tag) && !kAlienPureComponent.in(tag)
   if (hasImpureTag && tag !== Fragment) {
     let selfUpdatingTag = kAlienSelfUpdating(tag)
     if (!selfUpdatingTag) {
@@ -45,6 +46,9 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
   // return this original node so an API like React's useRef isn't needed.
   if (key != null && component?.refs) {
     oldNode = component.refs.get(key)
+    if (oldNode && !compareNodeWithTag(oldNode, tag)) {
+      oldNode = undefined
+    }
   }
 
   // Defer DOM updates until the morphing phase. If a JSX element has a key but
