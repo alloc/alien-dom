@@ -15,14 +15,11 @@ export function Test() {
           onClick={() => (clicked.value = !clicked.value)}>
           <Transition
             id={clicked.value}
-            enter={({ id }) => ({
+            enter={{
               from: { opacity: 0 },
               to: { opacity: 1 },
               spring: { dilate: 4 },
-              onChange(props) {
-                console.log('%s/enter.onChange', id, props)
-              },
-            })}
+            }}
             leave={{
               to: { opacity: 0 },
               spring: { dilate: 4 },
