@@ -71,7 +71,13 @@ class ParentFragment implements ParentNode {
   }
   appendChild(node: ChildNode) {
     const lastChild = this.childNodes.at(-1) || this.header
-    this.childNodes.push(node)
-    lastChild.after(node)
+    if (lastChild !== node) {
+      const previousIndex = this.childNodes.indexOf(node)
+      if (previousIndex !== -1) {
+        this.childNodes.splice(previousIndex, 1)
+      }
+      this.childNodes.push(node)
+      lastChild.after(node)
+    }
   }
 }

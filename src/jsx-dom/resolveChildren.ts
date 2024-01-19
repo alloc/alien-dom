@@ -80,7 +80,7 @@ export function resolveChildren(
         child.context = context
       }
     } else if (isFunction(child)) {
-      child = fromElementThunk(child)
+      child = fromElementThunk(child, true)
       resolveChildren(child, position, context, onChildNode, nodes)
     } else if (isArrayLike(child)) {
       children = child

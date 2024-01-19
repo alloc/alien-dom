@@ -4,13 +4,13 @@ import { SpringAnimation, animate } from '../animate'
 import { restoreComponentRefs } from '../functions/restoreComponentRefs'
 import { selfUpdating } from '../functions/selfUpdating'
 import { toElements } from '../functions/toElements'
+import { isNode } from '../functions/typeChecking'
 import { useEffect } from '../hooks/useEffect'
 import { useState } from '../hooks/useState'
-import { isNode } from '../internal/duck'
 import { kAlienFragmentNodes } from '../internal/symbols'
 import type { AnyElement, StyleAttributes } from '../internal/types'
 import { Fragment } from '../jsx-dom/jsx-runtime'
-import { evaluateDeferredNode } from '../jsx-dom/node'
+import { evaluateDeferredNode, isDeferredNode } from '../jsx-dom/node'
 import { morphFragment } from '../morphdom/morphFragment'
 import { DOMClassAttribute } from '../types'
 import type { JSX } from '../types/jsx'
@@ -67,6 +67,14 @@ export function Transition<T>(props: {
 
   const reusedChildren = state.children.get(props.id)
   if (reusedChildren) {
+    const elements = state.elements.get(props.id)
+    if (isNode(elements)) {
+      // Restore the nodes of the fragment.
+      const childNodes = kAlienFragmentNodes(reusedChildren)!
+      elements.childNodes.forEach((childNode, index) => {
+        childNodes[index + 1] = childNode
+      })
+    }
     restoreComponentRefs(reusedChildren)
   }
 
@@ -79,7 +87,7 @@ export function Transition<T>(props: {
   // placeholder if nothing changed).
   let children = Fragment(props)
 
-  if (!isNode(children)) {
+  if (isDeferredNode(children)) {
     if (reusedChildren) {
       children = morphFragment(reusedChildren, children)
     } else {
