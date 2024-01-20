@@ -124,13 +124,17 @@ export function morphChildren(
             )
           }
 
-          let resolvedNode: DocumentFragment | Element | Comment = matchingNode
+          let resolvedNode: DocumentFragment | ChildNode = matchingNode
           if (isDeferredNode(toChildNode)) {
             if (toChildNode.tag === Fragment) {
               morphFragment(matchingNode, toChildNode as any, component)
             } else {
               resolvedNode = morphComposite(matchingNode, toChildNode as any)
             }
+          } else {
+            resolvedNode =
+              (!isFragment(toChildNode) && kAlienParentFragment(toChildNode)) ||
+              toChildNode
           }
 
           const oldChildNodes = childNodes as FragmentNodes
