@@ -1,135 +1,16 @@
 import { isArray, isFunction } from '@alloc/is'
 import { attachRef } from './functions/attachRef'
 import { selfUpdating } from './functions/selfUpdating'
-import { unmount } from './functions/unmount'
 import { AlienComponent } from './internal/component'
-import { isFragment } from './internal/duck'
 import { currentComponent } from './internal/global'
 import { createSymbolProperty } from './internal/symbolProperty'
 import { kAlienRenderFunc } from './internal/symbols'
-import { jsx } from './jsx-dom/jsx-runtime'
 import { ref } from './observable'
 import type { FunctionComponent } from './types/component'
 import type { JSX } from './types/jsx'
 
 const kAlienComponentKey = createSymbolProperty<string>('componentKey')
 const kAlienHotUpdate = createSymbolProperty<boolean>('hotUpdate')
-
-export function hmrSelfUpdating(render: (props: any) => JSX.Element) {
-  const renderRef = ref(render)
-  const Component = selfUpdating(props => {
-    const component = currentComponent.get()
-    const render = renderRef.value
-    const result = hmrRender(component, render, props)
-
-    registerComponent(Component)
-    return result
-  })
-  attachRef(Component, kAlienRenderFunc.symbol, renderRef)
-  return Component
-}
-
-export function hmrComponent(render: (props: any) => JSX.Element) {
-  const renderRef = ref(render)
-  const Component = (props: any) => {
-    const component = currentComponent.get()
-    const render = renderRef.value
-    const result = hmrRender(component, render, props)
-
-    // Elements are only registered when this component isn't used by a
-    // self-updating ancestor, since this component will be made
-    // self-updating in that case.
-    if (!component) {
-      registerElements(result, Component, props)
-    }
-
-    registerComponent(Component)
-    return result
-  }
-  attachRef(Component, kAlienRenderFunc.symbol, renderRef, () => {
-    const instances = instanceRegistry.get(Component)
-    if (!instances) {
-      return
-    }
-
-    const oldInstances = [...instances]
-    instances.clear()
-
-    for (const oldInstance of oldInstances) {
-      const oldElements = oldInstance.elements.filter(
-        element => element.isConnected
-      )
-      if (!oldElements.length) {
-        continue
-      }
-      const result = jsx(Component, oldInstance.props)
-      oldElements.forEach((element, i) => {
-        if (i === 0 && result !== null) {
-          element.replaceWith(result)
-        }
-        unmount(element)
-      })
-    }
-  })
-  return Component
-}
-
-function hmrRender(
-  component: AlienComponent | null,
-  render: (props: any) => JSX.Element,
-  props: any
-): JSX.Element | null
-
-function hmrRender(
-  component: AlienComponent | null,
-  render: (props: any, update: any) => JSX.Element,
-  props: any,
-  update: any
-): JSX.Element | null
-
-function hmrRender(
-  component: AlienComponent | null,
-  render: (props: any, update?: any) => JSX.Element,
-  props: any,
-  update?: any
-): JSX.Element | null {
-  if (!component) {
-    return render(props, update)
-  }
-  const canTruncate = kAlienHotUpdate.in(render)
-  if (canTruncate) {
-    clearMemoized(component)
-    kAlienHotUpdate(render, false)
-  }
-  try {
-    return render(props, update)
-  } catch (e: any) {
-    // If rendering fails, try resetting the hook state.
-    if (canTruncate) {
-      try {
-        component.truncate(0)
-        return render(props, update)
-      } catch {}
-    }
-    console.error(e)
-    return null
-  }
-}
-
-function clearMemoized(component: AlienComponent) {
-  component.memos = null
-  component.hooks.forEach((hook, index, hooks) => {
-    if (hook && hook.hasOwnProperty('dispose')) {
-      if (isArray(hook.deps) && !hook.deps.length) {
-        return // Skip mount effects.
-      }
-      if (isFunction(hook.dispose)) {
-        hook.dispose()
-      }
-      hooks[index] = undefined
-    }
-  })
-}
 
 const componentRegistry: {
   [key: string]: [component: Set<FunctionComponent>, hash: string]
@@ -187,6 +68,16 @@ export function hmrRegister(
   }
 }
 
+export function hmrSelfUpdating(render: (props: any) => JSX.Element) {
+  const renderRef = ref(render)
+  const Component = selfUpdating(props => {
+    registerComponent(Component)
+    return hmrRender(renderRef.value, props)
+  })
+  attachRef(Component, kAlienRenderFunc.symbol, renderRef)
+  return Component
+}
+
 function registerComponent(component: FunctionComponent, isRetry?: boolean) {
   const key = kAlienComponentKey(component)
   if (key == null) {
@@ -200,45 +91,58 @@ function registerComponent(component: FunctionComponent, isRetry?: boolean) {
   }
 }
 
-type ComponentInstance = {
-  elements: JSX.Element[]
-  props: object
-}
+function hmrRender(
+  render: (props: any) => JSX.Element,
+  props: any
+): JSX.Element | null
 
-const instanceRegistry = new Map<FunctionComponent, Set<ComponentInstance>>()
+function hmrRender(
+  render: (props: any, update: any) => JSX.Element,
+  props: any,
+  update: any
+): JSX.Element | null
 
-function registerElements(
-  element: JSX.Element | null,
-  component: FunctionComponent,
-  props: object
-) {
-  let instances = instanceRegistry.get(component)
-  if (!instances) {
-    instances = new Set()
-    instanceRegistry.set(component, instances)
+function hmrRender(
+  render: (props: any, update?: any) => JSX.Element,
+  props: any,
+  update?: any
+): JSX.Element | null {
+  const component = currentComponent.get()
+  if (!component) {
+    console.warn('hmrRender failed unexpectedly')
+    return null
   }
-
-  const instance: ComponentInstance = { elements: [], props }
-  instances.add(instance)
-
-  if (element) {
-    if (isFragment(element)) {
-      registerFragment(element, instance)
-    } else {
-      instance.elements.push(element)
+  const isHotUpdate = kAlienHotUpdate(render)
+  if (isHotUpdate) {
+    kAlienHotUpdate(render, false)
+    clearMemoized(component)
+  }
+  try {
+    return render(props, update)
+  } catch (e: any) {
+    // If rendering fails, try resetting the hook state.
+    if (isHotUpdate) {
+      try {
+        component.truncate(0)
+        return render(props, update)
+      } catch {}
     }
+    console.error(e)
+    return null
   }
 }
 
-function registerFragment(
-  fragment: JSX.Element | DocumentFragment,
-  instance: ComponentInstance
-) {
-  fragment.childNodes.forEach(child => {
-    if (isFragment(child)) {
-      registerFragment(child, instance)
-    } else {
-      instance.elements.push(child as JSX.Element)
+function clearMemoized(component: AlienComponent) {
+  component.memos = null
+  component.hooks.forEach((hook, index, hooks) => {
+    if (hook && hook.hasOwnProperty('dispose')) {
+      if (isArray(hook.deps) && !hook.deps.length) {
+        return // Skip mount effects.
+      }
+      if (isFunction(hook.dispose)) {
+        hook.dispose()
+      }
+      hooks[index] = undefined
     }
   })
 }

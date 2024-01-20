@@ -1,5 +1,5 @@
-import { computeComponentHashes } from './hash'
 import type { Node, Plugin } from 'nebu'
+import { computeComponentHashes } from './hash'
 import { FunctionNode } from './helpers'
 
 type State = { file: string; code: string }
@@ -30,7 +30,7 @@ export default (options: {
         const callee = selfUpdatingCall.callee as Node.Identifier
         callee.replace('hmrSelfUpdating')
       } else {
-        component.function.before(`hmrComponent(`)
+        component.function.before(`hmrSelfUpdating(`)
         component.function.after(`)`)
         if (component.function.isFunctionDeclaration()) {
           component.function.before(`const ${component.id.name} = `)
@@ -49,7 +49,7 @@ export default (options: {
 
     program.unshift(
       'body',
-      `import { hmrSelfUpdating, hmrComponent, hmrRegister } from "alien-dom/dist/hmr.mjs"\n`
+      `import { hmrSelfUpdating, hmrRegister } from "alien-dom/dist/hmr.mjs"\n`
     )
 
     options.onHmrAdded?.(file)
