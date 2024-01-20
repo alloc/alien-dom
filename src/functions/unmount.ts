@@ -28,7 +28,7 @@ export function unmount(
     for (let i = childNodes.length - 1; i >= 0; i--) {
       const childNode = childNodes[i]
       if (childNode) {
-        unmount(childNode, true)
+        unmount(childNode)
       }
     }
   } else {
