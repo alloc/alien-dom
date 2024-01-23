@@ -80,8 +80,8 @@ export function morphChildren(
     fromChildNode = nextDiscardableNode(fromChildNode, component, options)
   }
 
-  const unmatchedFromKeys = new Set<JSX.ElementKey>()
   const fromNodesByKey = collectKeyedNodes(fromChildNode, component, options)
+  const unusedFromNodes = new Set<ChildNode | DocumentFragment>()
 
   let toChildIndex = 0
 
@@ -156,7 +156,7 @@ export function morphChildren(
           }
 
           if (matchingNode !== resolvedNode) {
-            unmount(matchingNode)
+            unusedFromNodes.add(matchingNode)
           }
 
           toChildIndex++
@@ -196,7 +196,7 @@ export function morphChildren(
 
       // Remove the incompatible from node.
       if (matchingNode) {
-        unmount(matchingNode)
+        unusedFromNodes.add(matchingNode)
       }
     } else {
       while (fromChildNode) {
@@ -208,7 +208,7 @@ export function morphChildren(
 
         const fromChildKey = getFromKey(fromChildNode)
         if (fromChildKey != null) {
-          unmatchedFromKeys.add(fromChildKey)
+          unusedFromNodes.add(fromChildNode)
         }
         // Unkeyed nodes are matched by nodeType and nodeName.
         else if (isCompatibleNode(fromChildNode, toChildNode)) {
@@ -218,8 +218,7 @@ export function morphChildren(
           toChildIndex++
           continue outer
         } else {
-          // Unkeyed nodes are removed immediately when no match is found.
-          unmount(fromChildNode)
+          unusedFromNodes.add(fromChildNode)
         }
 
         fromChildNode = fromNextSibling
@@ -231,20 +230,19 @@ export function morphChildren(
     }
   }
 
-  let removedFromNode: ChildNode | DocumentFragment | null | undefined
+  let discardedNode: ChildNode | DocumentFragment | null | undefined
 
-  // Remove any from nodes with unmatched keys.
-  for (const key of unmatchedFromKeys) {
-    removedFromNode = fromNodesByKey.get(key)
-    if (removedFromNode) {
-      unmount(removedFromNode)
-    }
+  // Remove any from nodes that were skipped over.
+  for (discardedNode of unusedFromNodes) {
+    unmount(discardedNode)
   }
 
-  // Remove any remaining from nodes.
-  while ((removedFromNode = fromChildNode)) {
+  // Remove any from nodes remaining at the end of the parent.
+  while ((discardedNode = fromChildNode)) {
     fromChildNode = nextDiscardableNode(fromChildNode, component, options)
-    unmount(removedFromNode)
+    if (!unusedFromNodes.has(discardedNode)) {
+      unmount(discardedNode)
+    }
   }
 
   if (hasTagName(fromParentNode, 'SELECT')) {
