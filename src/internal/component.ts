@@ -100,6 +100,7 @@ export class AlienComponent<Props = any> {
     }
   }
 
+  /** Force a component to rerender. */
   update() {
     if (this.observer) {
       this.observer.scheduleUpdate()

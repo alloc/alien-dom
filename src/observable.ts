@@ -174,7 +174,10 @@ function setValue<T>(this: ReadonlyRef<T>, newValue: T) {
     this._observers.forEach(observer => {
       observer.observe(this, newValue, oldValue)
     })
-    onObservedUpdate()
+    if (nextVersion === currentVersion && updateQueue.size > 0) {
+      nextVersion++
+      scheduleUpdates()
+    }
   }
 }
 
@@ -554,17 +557,22 @@ export class Observer {
       hooks.observe(this, ref, newValue, oldValue)
     }
     this.didObserve(ref, newValue, oldValue)
-    this.scheduleUpdate(ref, newValue, oldValue)
+    if (this.version !== currentVersion) {
+      this.scheduleUpdate(ref, newValue, oldValue)
+    }
   }
 
   scheduleUpdate(ref?: ReadonlyRef<any>, newValue?: any, oldValue?: any) {
-    if (this.version !== currentVersion) {
-      this.version = currentVersion
-      if (!this.queue.has(this)) {
-        this.queue.add(this)
-        if (ref) {
-          this.willUpdate(ref, newValue, oldValue)
-        }
+    this.version = currentVersion
+    if (!this.queue.has(this)) {
+      this.queue.add(this)
+      if (ref) {
+        this.willUpdate(ref, newValue, oldValue)
+      }
+      // If no ref is provided, this is a forced update, which means the update
+      // queue may not be flushed unless we ask for it here.
+      else if (this.queue === updateQueue) {
+        scheduleUpdates()
       }
     }
   }
@@ -745,17 +753,14 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
 // Update loop
 //
 
-function onObservedUpdate() {
-  if (nextVersion === currentVersion && hasQueuedObservers()) {
-    nextVersion++
-    Promise.resolve().then(computeNextVersion)
-  }
-}
-
 const updateQueue = new Set<Observer>()
+let updateScheduled = false
 
-function hasQueuedObservers() {
-  return updateQueue.size > 0
+function scheduleUpdates() {
+  if (!updateScheduled) {
+    updateScheduled = true
+    Promise.resolve().then(processUpdates)
+  }
 }
 
 // Observers with deeper dependencies are updated last.
@@ -775,7 +780,8 @@ type InternalObserver = Observer & {
   _update: (sync?: boolean, oldRefs?: Set<InternalRef<any>>) => any
 }
 
-function computeNextVersion() {
+function processUpdates() {
+  updateScheduled = false
   currentVersion = nextVersion
 
   // Capture the stack trace before the infinite loop.
@@ -796,7 +802,7 @@ function computeNextVersion() {
     }
   }
 
-  for (let loops = 0; hasQueuedObservers(); loops++) {
+  for (let loops = 0; updateQueue.size > 0; loops++) {
     if (loops > 100) {
       throw (DEV && devError) || Error('Cycle detected')
     }
