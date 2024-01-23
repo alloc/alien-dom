@@ -50,7 +50,7 @@ function TestList({
   }, [])
 
   return (
-    <div class="w-400 h-full shrink-0 span:text-30 gap-30 border-r-1 border-r-gray300">
+    <div class="w-400 h-full shrink-0 text-size-[min(0.08vw,0.66px)] span:text-30 gap-30 border-r-1 border-r-gray300">
       {Object.keys(tests).map(name => (
         <div
           class={[
