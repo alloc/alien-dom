@@ -11,10 +11,17 @@ import {
 } from '../internal/duck'
 import { currentComponent } from '../internal/global'
 import { kAlienParentFragment } from '../internal/symbols'
+import { morph } from '../morphdom/morph'
 import { ref } from '../observable'
-import { evaluateDeferredNode, isDeferredNode, isShadowRoot } from './node'
+import {
+  AnyDeferredNode,
+  evaluateDeferredNode,
+  isDeferredNode,
+  isShadowRoot,
+} from './node'
 import type { ResolvedChild } from './resolveChildren'
 import { ShadowRootContext } from './shadow'
+import { compareNodeWithTag } from './util'
 
 export function appendChild(
   child: ResolvedChild,
@@ -42,14 +49,21 @@ export function appendChild(
         if (key != null) {
           // Find a pending update for the child node, if any. Give up if we
           // find a parent component isn't being updated.
+          let update: AnyDeferredNode | undefined
           let component: AlienComponent | null = currentComponent.get()
-          while (component && component.updates) {
-            const update = component.updates.get(key)
-            if (update) {
+          for (; component; component = component.parent) {
+            if ((update = component.updates?.get(key))) break
+          }
+          if (update) {
+            // It's possible that the child node was created in an earlier
+            // render but never appended to the DOM (or it's being moved into a
+            // newly created node). In that case, let's morph the existing node
+            // instead of creating a new one.
+            if (isElement(child) && compareNodeWithTag(child, update.tag)) {
+              morph(child, update)
+            } else {
               child = evaluateDeferredNode(update)
-              break
             }
-            component = component.parent
           }
         }
       } else if (!isFragment(child)) {
