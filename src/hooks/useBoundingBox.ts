@@ -6,7 +6,8 @@ import { useState } from './useState'
 
 export type BoundingBox = DOMRectReadOnly & {
   observer: ResizeObserver | null
-  setElement(element: AnyElement): void
+  setElement(element: AnyElement | null): void
+  dispose(): void
 }
 
 export function useBoundingBox(): BoundingBox {
@@ -72,6 +73,9 @@ const initBoundingBox = (): BoundingBox => {
       resizeEffect = hostProps.addEffect(
         createDisposable([], observer.disconnect, observer)
       )
+    },
+    dispose() {
+      this.setElement(null)
     },
   }
 }
