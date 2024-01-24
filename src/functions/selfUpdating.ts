@@ -19,6 +19,7 @@ import {
   kAlienSelfUpdating,
 } from '../internal/symbols'
 import type { AnyElement } from '../internal/types'
+import { Fragment } from '../jsx-dom/jsx-runtime'
 import {
   evaluateDeferredNode,
   isDeferredNode,
@@ -27,6 +28,7 @@ import {
 import { ShadowRootContext } from '../jsx-dom/shadow'
 import { compareNodeWithTag, noop } from '../jsx-dom/util'
 import { morph } from '../morphdom/morph'
+import { morphComposite } from '../morphdom/morphComposite'
 import { morphFragment } from '../morphdom/morphFragment'
 import { ref } from '../observable'
 import type { JSX } from '../types/jsx'
@@ -175,7 +177,11 @@ export function selfUpdating<
               compareNodeWithTag(rootNode, newRootNode.tag)
             ) {
               if (isFragment(rootNode)) {
-                morphFragment(rootNode, newRootNode, self)
+                if (newRootNode.tag === Fragment) {
+                  morphFragment(rootNode, newRootNode, self)
+                } else {
+                  morphComposite(rootNode, newRootNode as any)
+                }
                 updated = true
               } else if (isElement(rootNode)) {
                 morph(rootNode, newRootNode, self)
