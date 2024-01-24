@@ -27,7 +27,9 @@ type Props = {
 }
 
 export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
-  const component = currentComponent.get()
+  if (!tag) {
+    return null
+  }
 
   const hasImpureTag = !isString(tag) && !kAlienPureComponent.in(tag)
   if (hasImpureTag && tag !== Fragment) {
@@ -39,26 +41,29 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
     tag = selfUpdatingTag
   }
 
+  let shouldDefer: boolean | undefined
   let oldNode: ChildNode | DocumentFragment | undefined
   let node: ChildNode | DocumentFragment | AnyDeferredNode | undefined
 
-  // Use the element key to discover the original version of this node. We will
-  // return this original node so an API like React's useRef isn't needed.
-  if (key != null && component?.refs) {
-    oldNode = component.refs.get(key)
-    if (oldNode && !compareNodeWithTag(oldNode, tag)) {
-      oldNode = undefined
+  const component = currentComponent.get()
+  if (component) {
+    // Use the JSX element's key to locate an existing DOM node. We will return
+    // this node so the component can reference it without misdirection.
+    if (key != null && component.refs) {
+      oldNode = component.refs.get(key)
+      if (oldNode && !compareNodeWithTag(oldNode, tag)) {
+        oldNode = undefined
+      }
     }
-  }
 
-  // Defer DOM updates until the morphing phase. If a JSX element has a key but
-  // no previous node, the DOM node is created immediately. If a JSX element
-  // doesn't have a key, the DOM node won't be created until required.
-  const isDeferred = component != null && (oldNode != null || key == null)
+    // Defer the creation of any DOM nodes until the morphing phase, unless the
+    // JSX element has a key without a DOM node.
+    shouldDefer = oldNode != null || key == null
+  }
 
   if (isFunction(tag)) {
     // Pure components are never deferred.
-    if (hasImpureTag && isDeferred) {
+    if (hasImpureTag && shouldDefer) {
       if (tag !== Fragment) {
         node = deferCompositeNode(tag, props)
       } else {
@@ -68,7 +73,7 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
       node = tag(props) as Exclude<typeof node, undefined>
     }
   } else if (isString(tag)) {
-    if (isDeferred) {
+    if (shouldDefer) {
       node = deferHostNode(tag, props)
     } else {
       node = createHostNode(tag, props)
