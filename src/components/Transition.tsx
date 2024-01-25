@@ -1,6 +1,6 @@
 import { isFunction } from '@alloc/is'
 import type { Falsy } from '@alloc/types'
-import { SpringAnimation, animate } from '../animate'
+import { AnimatedProps, SpringAnimation, animate } from '../animate'
 import { restoreComponentRefs } from '../functions/restoreComponentRefs'
 import { selfUpdating } from '../functions/selfUpdating'
 import { toElements } from '../functions/toElements'
@@ -49,14 +49,17 @@ export type TransitionProp<Id, Data = {}> =
   | ((data: TransitionData<Id> & Data) => TransitionAnimation)
   | TransitionAnimation
 
-export function Transition<T>(props: {
+export type TransitionProps<Id> = {
   /** The unique identifier for the current entered element. */
-  id: T
-  enter?: TransitionProp<T, { initial: boolean }>
-  leave?: TransitionProp<T>
+  id: Id
+  initial?: AnimatedProps<JSX.Element> | boolean
+  enter?: TransitionProp<Id, { initial: boolean }>
+  leave?: TransitionProp<Id>
   leaveClass?: DOMClassAttribute
   children: JSX.ChildrenProp
-}) {
+}
+
+export function Transition<Id>(props: TransitionProps<Id>) {
   const state = useState(initialState)
 
   const previousId = state.currentId
@@ -150,7 +153,7 @@ export function Transition<T>(props: {
       const oldDependency = dependencies.get(element)
       oldDependency?.stop()
 
-      const transition = isFunction(props.enter)
+      let transition = isFunction(props.enter)
         ? props.enter({
             id: props.id,
             element: element as JSX.Element,
@@ -162,6 +165,18 @@ export function Transition<T>(props: {
       if (isDependency(transition)) {
         dependencies.set(element, transition)
       } else if (transition) {
+        const { initial } = props
+        if (previousId === nothing) {
+          if (initial === false) {
+            transition = alterTransition(transition, t => {
+              return { ...t, immediate: true }
+            })
+          } else if (initial && initial !== true) {
+            transition = alterTransition(transition, t => {
+              return { ...t, from: { ...t.from, ...initial } }
+            })
+          }
+        }
         animate(element as JSX.Element, transition)
       }
     })
@@ -197,32 +212,20 @@ export function Transition<T>(props: {
           }
 
           if (transition) {
-            if (!Array.isArray(transition)) {
-              const { onRest } = transition
-              transition = {
-                ...transition,
-                onRest(...args) {
-                  onRest?.(...args)
-                  onTransitionEnd()
-                },
+            transition = alterTransition(
+              transition,
+              (transition, index, endIndex) => {
+                if (index < endIndex) return
+                const { onRest } = transition
+                return {
+                  ...transition,
+                  onRest: (...args) => {
+                    onRest?.(...args)
+                    onTransitionEnd()
+                  },
+                }
               }
-            } else if (transition.length) {
-              // Assume the last animation is the last to finish.
-              const index = transition.length - 1
-              const { onRest } = transition[index]
-              transition[index] = {
-                ...transition[index],
-                onRest(...args) {
-                  onRest?.(...args)
-                  onTransitionEnd()
-                },
-              }
-            } else {
-              transition = false
-            }
-          }
-
-          if (transition) {
+            )
             animate(element as JSX.Element, transition)
           } else {
             onTransitionEnd()
@@ -263,4 +266,27 @@ function isDependency(value: any): value is TransitionDependency {
     typeof value.then === 'function' &&
     typeof value.stop === 'function'
   )
+}
+
+function alterTransition(
+  transition: SpringAnimation<JSX.Element> | SpringAnimation<JSX.Element>[],
+  callback: (
+    transition: SpringAnimation<JSX.Element>,
+    index: number,
+    endIndex: number
+  ) => SpringAnimation<JSX.Element> | Falsy
+) {
+  if (Array.isArray(transition)) {
+    let newTransition: SpringAnimation<JSX.Element>[] | undefined
+    transition.forEach((t, i) => {
+      const result = callback(t, i, transition.length - 1)
+      if (result) {
+        newTransition ||= [...transition]
+        newTransition[i] = result
+      }
+    })
+    return newTransition || transition
+  }
+  const newTransition = callback(transition, 0, 0)
+  return newTransition || transition
 }
