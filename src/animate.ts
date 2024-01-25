@@ -1,4 +1,4 @@
-import { isFunction, isNumber, isPromise } from '@alloc/is'
+import { isBoolean, isFunction, isNumber, isPromise } from '@alloc/is'
 import { Any, Falsy } from '@alloc/types'
 import { Color, mixColor, parseColor } from 'linear-color'
 import { applyAnimatedValue, deleteTimeline } from './internal/animate'
@@ -35,6 +35,7 @@ export type SpringAnimation<
   spring?: SpringConfigOption<Props>
   velocity?: number | { [K in keyof Props]?: number }
   delay?: SpringDelay | { [K in keyof Props]?: SpringDelay }
+  immediate?: boolean | { [K in keyof Props]?: boolean }
   dilate?: number
   anchor?: [number, number]
   onStart?: () => void
@@ -403,6 +404,9 @@ function applyAnimation(
       !animation.velocity || isNumber(animation.velocity)
         ? animation.velocity
         : animation.velocity[key],
+      !animation.immediate || isBoolean(animation.immediate)
+        ? animation.immediate
+        : animation.immediate[key],
       frame,
       onChange,
       onRest
@@ -428,6 +432,7 @@ function updateAnimatedNode(
   spring: SpringResolver,
   dilate?: number,
   velocity?: number,
+  immediate?: boolean,
   frame?: Record<string, any> | null,
   onChange?: FrameCallback<any>,
   onRest?: FrameCallback<any>
@@ -484,8 +489,8 @@ function updateAnimatedNode(
     node.lastPosition = null
   }
 
-  if (velocity != null) {
-    node.v0 = velocity
+  if (immediate || velocity != null) {
+    node.v0 = immediate ? NaN : velocity!
     node.lastVelocity = null
   }
 
@@ -739,63 +744,69 @@ function advance(
     return to
   }
 
-  const equalFromTo = from == to
-
   let position = node.lastPosition == null ? from : node.lastPosition
   let velocity = node.lastVelocity == null ? node.v0 : node.lastVelocity
-
-  const precision =
-    defaultPrecisions[prop] ||
-    (equalFromTo ? 0.005 : Math.min(Math.abs(to - from) * 0.001, maxPrecision))
-
-  /** The velocity at which movement is essentially none */
-  const restVelocity = config.restVelocity || precision / 10
-
-  // Bouncing is opt-in (not to be confused with overshooting)
-  const bounceFactor = config.clamp ? 0 : config.bounce
-  const canBounce = bounceFactor !== undefined
-
-  /** When `true`, the value is increasing over time */
-  const isGrowing = equalFromTo ? node.v0 > 0 : from < to
-
-  /** When `true`, the velocity is considered moving */
-  let isMoving: boolean
-
-  /** When `true`, the velocity is being deflected or clamped */
-  let isBouncing = false
-
   let finished = false
 
-  const step = 1 // 1ms
-  const stepFactor = 1 / node.dilation
-  const numSteps = Math.max(1, Math.ceil(dt / step))
+  // Immediate animations have no velocity.
+  if (isNaN(velocity)) {
+    finished = true
+  } else {
+    const equalFromTo = from == to
 
-  for (let n = 0; n < numSteps; ++n) {
-    isMoving = Math.abs(velocity) > restVelocity
+    const precision =
+      defaultPrecisions[prop] ||
+      (equalFromTo
+        ? 0.005
+        : Math.min(Math.abs(to - from) * 0.001, maxPrecision))
 
-    if (!isMoving) {
-      finished = Math.abs(to - position) <= precision
-      if (finished) {
-        break
+    /** The velocity at which movement is essentially none */
+    const restVelocity = config.restVelocity || precision / 10
+
+    // Bouncing is opt-in (not to be confused with overshooting)
+    const bounceFactor = config.clamp ? 0 : config.bounce
+    const canBounce = bounceFactor !== undefined
+
+    /** When `true`, the value is increasing over time */
+    const isGrowing = equalFromTo ? node.v0 > 0 : from < to
+
+    /** When `true`, the velocity is considered moving */
+    let isMoving: boolean
+
+    /** When `true`, the velocity is being deflected or clamped */
+    let isBouncing = false
+
+    const step = 1 // 1ms
+    const stepFactor = 1 / node.dilation
+    const numSteps = Math.max(1, Math.ceil(dt / step))
+
+    for (let n = 0; n < numSteps; ++n) {
+      isMoving = Math.abs(velocity) > restVelocity
+
+      if (!isMoving) {
+        finished = Math.abs(to - position) <= precision
+        if (finished) {
+          break
+        }
       }
-    }
 
-    if (canBounce) {
-      isBouncing = position == to || position > to == isGrowing
+      if (canBounce) {
+        isBouncing = position == to || position > to == isGrowing
 
-      // Invert the velocity with a magnitude, or clamp it.
-      if (isBouncing) {
-        velocity = -velocity * bounceFactor
-        position = to
+        // Invert the velocity with a magnitude, or clamp it.
+        if (isBouncing) {
+          velocity = -velocity * bounceFactor
+          position = to
+        }
       }
+
+      const springForce = -config.tension * 0.000001 * (position - to)
+      const dampingForce = -config.friction * 0.001 * velocity
+      const acceleration = (springForce + dampingForce) / config.mass // pt/ms^2
+
+      velocity = velocity + acceleration * step * stepFactor // pt/ms
+      position = position + velocity * step * stepFactor
     }
-
-    const springForce = -config.tension * 0.000001 * (position - to)
-    const dampingForce = -config.friction * 0.001 * velocity
-    const acceleration = (springForce + dampingForce) / config.mass // pt/ms^2
-
-    velocity = velocity + acceleration * step * stepFactor // pt/ms
-    position = position + velocity * step * stepFactor
   }
 
   if (finished) {
