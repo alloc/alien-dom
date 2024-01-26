@@ -7,11 +7,19 @@ import { useState } from './useState'
 export type BoundingBox = DOMRectReadOnly & {
   observer: ResizeObserver | null
   setElement(element: AnyElement | null): void
+  lock(locked: boolean): void
   dispose(): void
 }
 
-export function useBoundingBox(): BoundingBox {
-  return useState(initBoundingBox)
+export type BoundingBoxOptions = {
+  /** Pause the resize observer when true. */
+  lock?: boolean
+}
+
+export function useBoundingBox(options: BoundingBoxOptions = {}): BoundingBox {
+  const bbox = useState(initBoundingBox)
+  bbox.lock(options.lock ?? false)
+  return bbox
 }
 
 const initBoundingBox = (): BoundingBox => {
@@ -25,7 +33,25 @@ const initBoundingBox = (): BoundingBox => {
   let leftRef: ComputedRef<number> | undefined
   let widthRef: ComputedRef<number> | undefined
   let heightRef: ComputedRef<number> | undefined
-  let resizeEffect: Disposable
+  let resizeEffect: Disposable | undefined
+  let observedElement: AnyElement | null = null
+  let locked = false
+
+  function observe(element: AnyElement) {
+    rectRef.value = element.getBoundingClientRect()
+    const observer = new ResizeObserver(() => {
+      if (!locked) {
+        rectRef.value = element.getBoundingClientRect()
+      }
+    })
+
+    observer.observe(element)
+
+    const hostProps = kAlienHostProps(element)!
+    resizeEffect = hostProps.addEffect(
+      createDisposable([], observer.disconnect, observer)
+    )
+  }
 
   return {
     get x() {
@@ -57,22 +83,24 @@ const initBoundingBox = (): BoundingBox => {
     },
     observer: null,
     setElement(element) {
-      if (!element) {
+      if (locked) return
+      if ((observedElement = element)) {
+        observe(element)
+      } else {
         resizeEffect?.dispose()
-        return
+        resizeEffect = undefined
       }
+    },
+    lock(flag) {
+      if (flag === locked) return
+      locked = flag
 
-      rectRef.value = element.getBoundingClientRect()
-      const observer = new ResizeObserver(() => {
-        rectRef.value = element.getBoundingClientRect()
-      })
-
-      observer.observe(element)
-
-      const hostProps = kAlienHostProps(element)!
-      resizeEffect = hostProps.addEffect(
-        createDisposable([], observer.disconnect, observer)
-      )
+      if (locked) {
+        resizeEffect?.dispose()
+        resizeEffect = undefined
+      } else if (observedElement) {
+        observe(observedElement)
+      }
     },
     dispose() {
       this.setElement(null)
