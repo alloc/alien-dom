@@ -155,6 +155,11 @@ export class Ref<T = any> extends ReadonlyRef<T> {
     this.value = arg
     return arg
   }
+
+  /** Use the negation operator on the current value. */
+  toggle() {
+    this.value = !this.value as any
+  }
 }
 
 export interface Ref<T> {
