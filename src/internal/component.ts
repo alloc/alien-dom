@@ -182,7 +182,7 @@ class ComponentObserver extends Observer {
 
 /** @internal */
 export class Memo {
-  static isMemo = (value: any): value is Memo => kAlienMemo.in(value)
+  static isMemo = (value: any): value is Memo => value != null && kAlienMemo.in(value)
   constructor(
     public value: any,
     public deps?: readonly any[],
