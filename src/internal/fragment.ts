@@ -97,3 +97,13 @@ function spliceFragment(
     updateParentFragment(fragment, oldNodes, newNodes)
   }
 }
+
+export function endOfFragment(fragment: DocumentFragment) {
+  const childNodes = kAlienFragmentNodes(fragment)!
+  for (let i = -1; i >= -childNodes.length; i--) {
+    const childNode = childNodes.at(i)
+    if (childNode) {
+      return childNode
+    }
+  }
+}

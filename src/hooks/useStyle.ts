@@ -1,5 +1,5 @@
 import type { Falsy } from '@alloc/types'
-import { isElementRef } from '../functions/createElementRef'
+import { isElementProxy } from '../elementProxy'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import type { DefaultElement, StyleAttributes } from '../internal/types'
 import { UpdateStyle, toArray, updateStyle } from '../jsx-dom/util'
@@ -45,7 +45,7 @@ export function useStyle(
     if (!style || !depsHaveChanged(deps, prevDeps)) return
 
     for (const element of elements) {
-      if (isElementRef(element)) {
+      if (isElementProxy(element)) {
         element.onceElementExists(element => {
           updateStyle(element, style)
         })

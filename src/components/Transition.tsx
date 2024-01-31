@@ -2,7 +2,6 @@ import { isFunction } from '@alloc/is'
 import type { Falsy } from '@alloc/types'
 import { AnimatedProps, SpringAnimation, animate } from '../animate'
 import { restoreComponentRefs } from '../functions/restoreComponentRefs'
-import { selfUpdating } from '../functions/selfUpdating'
 import { toElements } from '../functions/toElements'
 import { isNode } from '../functions/typeChecking'
 import { useEffect } from '../hooks/useEffect'
@@ -56,6 +55,8 @@ export type TransitionProps<Id> = {
   enter?: TransitionProp<Id, { initial: boolean }>
   leave?: TransitionProp<Id>
   leaveClass?: DOMClassAttribute
+  /** The element to be animated can be selected from the direct child. */
+  selector?: string
   children: JSX.ChildrenProp
 }
 
@@ -118,6 +119,11 @@ export function Transition<Id>(props: TransitionProps<Id>) {
     } else if (children.childNodes.length) {
       initial = true
       newEnteredElements = toElements(children)
+      if (props.selector) {
+        newEnteredElements = newEnteredElements.flatMap(element =>
+          Array.from(element.querySelectorAll(props.selector!))
+        )
+      }
       state.children.set(props.id, children)
       state.elements.set(props.id, newEnteredElements)
     } else {
@@ -244,9 +250,6 @@ export function Transition<Id>(props: TransitionProps<Id>) {
     </Fragment>
   )
 }
-
-// @ts-ignore: Prevent rename to Transition2 by esbuild.
-Transition = /* @__PURE__ */ selfUpdating(Transition)
 
 const initialState = (): {
   currentId: any

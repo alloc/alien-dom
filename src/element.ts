@@ -1,7 +1,7 @@
 import { AnimationsParam, animate } from './animate'
 import { Disposable } from './disposable'
 import { AlienBoundEffect, AlienEffect, AlienEffects } from './effects'
-import { UnrefElement } from './functions/createElementRef'
+import { FromElementProxy } from './elementProxy'
 import { observeAs } from './functions/observeAs'
 import { applyProp } from './internal/applyProp'
 import { canMatch } from './internal/duck'
@@ -121,7 +121,7 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
 
     return iterable
   }
-  filter<SelectedElement extends AnyElement = UnrefElement<this>>(
+  filter<SelectedElement extends AnyElement = FromElementProxy<this>>(
     selector: string
   ): AlienSelect<SelectedElement, this> | null {
     return this.matches(selector) ? (this as any) : null
@@ -129,10 +129,10 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
   replaceText(value: string): this
   replaceText(
     value: () => string
-  ): Disposable<AlienBoundEffect<UnrefElement<this>>>
+  ): Disposable<AlienBoundEffect<FromElementProxy<this>>>
   replaceText(value?: string | (() => string)) {
     if (typeof value == 'function') {
-      return observeAs(this as UnrefElement<this>, target => {
+      return observeAs(this as FromElementProxy<this>, target => {
         target.textContent = value()
       })
     } else {
@@ -223,7 +223,7 @@ export interface AlienElement<Element extends AnyElement>
    * component's render function (if this element is returned by the
    * component).
    */
-  effects(): AlienEffects<UnrefElement<this>>
+  effects(): AlienEffects<FromElementProxy<this>>
 
   effect(effect: AlienEffect<void, [], false>): Disposable<typeof effect>
   effect<Args extends any[]>(
@@ -335,7 +335,7 @@ export type AlienSelect<
   T extends string | AnyElement,
   Context extends AnyElement = AnyElement
 > = T extends string
-  ? AlienTagNameMap<UnrefElement<Context>> extends infer TagNameMap
+  ? AlienTagNameMap<FromElementProxy<Context>> extends infer TagNameMap
     ? TagNameMap extends any
       ? Extract<LooseAccess<TagNameMap, T>, Node>
       : never

@@ -1,22 +1,23 @@
-import { Disposable } from '../disposable'
-import { defineEffectType } from '../effects'
-import type { EffectResult } from '../hooks/useEffect'
+import { Disposable } from './disposable'
+import { defineEffectType } from './effects'
+import type { EffectResult } from './hooks/useEffect'
 
-export type ElementRef<T extends Element = Element> = T & {
+export type ElementProxy<T extends Element = Element> = T & {
   toElement(): T | null
   onceElementExists(effect: (element: T) => EffectResult): Disposable
   setElement(element: T | null): void
 }
 
-export type UnrefElement<T> = T extends ElementRef<infer U> ? U : T
+/** Coerce an `ElementProxy` to its original `Element` type. */
+export type FromElementProxy<T> = T extends ElementProxy<infer U> ? U : T
 
-export function createElementRef<T extends Element>(
+export function createElementProxy<T extends Element>(
   effect?: (element: T) => EffectResult
-): ElementRef<T> {
-  const ref = new InternalElementRef<T>(effect)
+): ElementProxy<T> {
+  const ref = new InternalElementProxy<T>(effect)
   return new Proxy(ref as any, {
     get(target, prop) {
-      if (prop === kElementType) {
+      if (prop === kElementProxyType) {
         return true
       }
       if (ref._element && prop in ref._element) {
@@ -34,14 +35,14 @@ export function createElementRef<T extends Element>(
   })
 }
 
-const kElementType = Symbol.for('ElementRef')
+const kElementProxyType = Symbol.for('ElementProxy')
 
-export const isElementRef: {
-  <T extends Element>(arg: T): arg is ElementRef<T>
-  <T extends Element = Element>(arg: any): arg is ElementRef<T>
-} = (arg): arg is ElementRef<Element> => !!(arg && arg[kElementType])
+export const isElementProxy: {
+  <T extends Element>(arg: T): arg is ElementProxy<T>
+  <T extends Element = Element>(arg: any): arg is ElementProxy<T>
+} = (arg): arg is ElementProxy<Element> => !!(arg && arg[kElementProxyType])
 
-class InternalElementRef<T extends Element = any> {
+class InternalElementProxy<T extends Element = any> {
   /** The element that was set. */
   _element: T | null = null
   /**
@@ -56,7 +57,7 @@ class InternalElementRef<T extends Element = any> {
     }
   }
 
-  get [kElementType]() {
+  get [kElementProxyType]() {
     return true
   }
 
@@ -85,7 +86,7 @@ class InternalElementRef<T extends Element = any> {
 }
 
 const onceElementExists = defineEffectType(
-  (ref: InternalElementRef<any>, effect: (element: any) => EffectResult) => {
+  (ref: InternalElementProxy<any>, effect: (element: any) => EffectResult) => {
     let dispose: EffectResult | undefined
     if (ref._element) {
       return effect(ref._element)

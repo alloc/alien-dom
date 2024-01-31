@@ -1,16 +1,16 @@
-import { ElementRef, isElementRef } from '../functions/createElementRef'
+import { ElementProxy, isElementProxy } from '../elementProxy'
 import { ReadonlyRef } from '../observable'
 import { useEffect } from './useEffect'
 import { useRef } from './useRef'
 
 export type UseVisibilityOptions = {
-  root?: Element | ElementRef | Document | null
+  root?: Element | ElementProxy | Document | null
   rootMargin?: string
   threshold?: number | number[]
 }
 
 export function useVisibility(
-  target: ElementRef,
+  target: ElementProxy,
   options: UseVisibilityOptions = {}
 ): ReadonlyRef<boolean> {
   const visibleRef = useRef(false)
@@ -19,7 +19,7 @@ export function useVisibility(
     return target.onceElementExists(target => {
       const init: IntersectionObserverInit = {
         ...options,
-        root: isElementRef(options.root)
+        root: isElementProxy(options.root)
           ? options.root.toElement()
           : options.root,
       }

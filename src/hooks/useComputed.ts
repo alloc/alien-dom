@@ -1,12 +1,33 @@
+import { depsHaveChanged } from '../functions/depsHaveChanged'
+import { noop } from '../jsx-dom/util'
 import { ComputedRef, computed } from '../observable'
-import { useMemo } from './useMemo'
+import { useState } from './useState'
 
 /**
- * Like `useMemo` but a `ComputedRef` is returned, which is observable and
- * lazily computed.
+ * Creates a `ComputedRef` that is updated when the dependencies change.
  */
-export const useComputed = <T>(
-  fn: () => T,
+export function useComputed<T>(
+  get: () => T,
   deps: readonly any[] = [],
   debugId?: string | number
-): ComputedRef<T> => useMemo(computed.bind(null, fn, debugId), deps) as any
+): ComputedRef<T> {
+  const state = useState(initialState, deps)
+  if (depsHaveChanged(deps, state.deps)) {
+    state.ref = computed(get, debugId)
+    state.deps = deps
+  }
+  return state.ref!
+}
+
+const initialState = (
+  deps: readonly any[]
+): {
+  deps: readonly any[]
+  ref: ComputedRef | null
+  dispose: (() => void) | void
+} => ({
+  deps,
+  ref: null,
+  // This is defined so HMR knows to rerun the ComputedRef.
+  dispose: noop,
+})

@@ -1,7 +1,7 @@
-import { createElementRef } from '../functions/createElementRef'
+import { createElementProxy } from '../elementProxy'
 import type { EffectResult } from './useEffect'
 import { useState } from './useState'
 
-export const useElementRef = <T extends Element>(
+export const useElementProxy = <T extends Element>(
   effect?: (element: T) => EffectResult
-) => useState(createElementRef<T>, effect)
+) => useState(createElementProxy<T>, effect)

@@ -6,6 +6,7 @@ import type {
   StepAnimation,
   StepAnimationFn,
 } from '../../animate'
+import { DefaultElement } from '../types'
 import type { AnimatedTransform } from './transform'
 
 export type ParsedValue = [number, string]
@@ -20,6 +21,7 @@ export type AnimatedNode<T extends AnimatedType = AnimatedType> = {
   v0: number
   lastVelocity: number | null
   lastPosition: number | null
+  dilation: number
   isRelative: boolean
   transformFn: string | null
   spring: ResolvedSpringConfig
@@ -42,7 +44,7 @@ export type AnimatedElement = {
    * The keys are the animated CSS properties.
    */
   style: Record<string, any>
-  onStart: (() => void) | null
+  onStart: ((target: DefaultElement) => void) | null
 }
 
 export type SpringTimeline = (SpringAnimation & {

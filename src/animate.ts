@@ -36,8 +36,9 @@ export type SpringAnimation<
   velocity?: number | { [K in keyof Props]?: number }
   delay?: SpringDelay | { [K in keyof Props]?: SpringDelay }
   immediate?: boolean | { [K in keyof Props]?: boolean }
+  dilate?: number
   anchor?: [number, number]
-  onStart?: () => void
+  onStart?: (target: Element) => void
   onChange?: FrameCallback<Element, Props>
   onRest?: FrameCallback<Element, Props>
 }
@@ -95,7 +96,6 @@ export type SpringConfig = {
   mass?: number
   bounce?: number
   clamp?: boolean
-  dilate?: number
   restVelocity?: number
 }
 
@@ -320,9 +320,10 @@ function addTimelineTimeout(
   key: string
 ) {
   if (delay > 0) {
+    const dilation = animation.dilate ?? 1
     const timerId = setTimeout(() => {
       applyAnimation(target, state, animation, spring, [key])
-    }, delay)
+    }, delay * dilation)
 
     const timeline = ((timelines ||= {})[key] ||= [])
     timeline.push({ ...animation, timerId })
@@ -399,6 +400,7 @@ function applyAnimation(
       animation.from?.[key],
       oldNode,
       spring,
+      animation.dilate,
       !animation.velocity || isNumber(animation.velocity)
         ? animation.velocity
         : animation.velocity[key],
@@ -428,6 +430,7 @@ function updateAnimatedNode(
   from: any,
   node: AnimatedNode | null,
   spring: SpringResolver,
+  dilate?: number,
   velocity?: number,
   immediate?: boolean,
   frame?: Record<string, any> | null,
@@ -464,6 +467,7 @@ function updateAnimatedNode(
     from: parsedFrom,
     lastPosition: null,
     lastVelocity: null,
+    dilation: 1,
     isRelative: false,
     transformFn: resolveTransformFn(key, svgMode),
     spring: null!,
@@ -477,6 +481,7 @@ function updateAnimatedNode(
   node.from = parsedFrom
   node.spring = spring(key)
   node.frame = frame || null
+  node.dilation = dilate ?? 1
   node.onChange = onChange || null
   node.onRest = onRest || null
 
@@ -526,7 +531,6 @@ const scaleKeys = ['scale', 'scaleX', 'scaleY']
 
 let loop: number | undefined
 let lastTime: number | undefined
-let nextElementId = 1
 
 function startLoop() {
   if (loop) return
@@ -571,7 +575,7 @@ function startLoop() {
       const { nodes, svgMode, style, onStart } = state
 
       if (onStart) {
-        onStart()
+        onStart(target)
         state.onStart = null
       }
 
@@ -772,7 +776,7 @@ function advance(
     let isBouncing = false
 
     const step = 1 // 1ms
-    const stepFactor = 1 / (config.dilate || 1)
+    const stepFactor = 1 / node.dilation
     const numSteps = Math.max(1, Math.ceil(dt / step))
 
     for (let n = 0; n < numSteps; ++n) {
@@ -887,7 +891,7 @@ function ensureFromValues(
       }
 
       const to = node.to as ParsedValue
-      if (!from || from[1] == to[1]) {
+      if (!from || from[1] == to[1] || isNaN(node.v0)) {
         node.from = from || [cssTransformDefaults[node.transformFn] || 0, to[1]]
       } else {
         console.error(`Unit mismatch for "${key}": ${from[1]} != ${to[1]}`)
