@@ -59,7 +59,7 @@ function createId(
   if (typeof reset !== 'boolean') {
     const deps = reset
     if (Array.isArray(state.prevReset)) {
-      reset = depsHaveChanged(deps, state.prevReset)
+      reset = deps !== state.prevReset && depsHaveChanged(deps, state.prevReset)
     } else {
       reset = defaultReset
     }
