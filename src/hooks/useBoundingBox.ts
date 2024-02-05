@@ -1,7 +1,11 @@
+import { isString } from '@alloc/is'
 import { Disposable, createDisposable } from '../disposable'
 import { kAlienHostProps } from '../internal/symbols'
 import { AnyElement } from '../internal/types'
-import { ComputedRef, computed, ref } from '../observable'
+import { ComputedRef, ReadonlyRef, computed, isRef, ref } from '../observable'
+import { useHookOffset } from './useHookOffset'
+import { useObserver } from './useObserver'
+import { useQuerySelector } from './useSelector'
 import { useState } from './useState'
 
 export type BoundingBox = DOMRectReadOnly & {
@@ -14,11 +18,37 @@ export type BoundingBox = DOMRectReadOnly & {
 export type BoundingBoxOptions = {
   /** Pause the resize observer when true. */
   lock?: boolean
+  /**
+   * If you cannot or prefer not to pass a ref, you may pass an element instead.
+   */
+  target?: string | HTMLElement | ReadonlyRef<HTMLElement | null> | null
 }
 
 export function useBoundingBox(options: BoundingBoxOptions = {}): BoundingBox {
   const bbox = useState(initBoundingBox)
   bbox.lock(options.lock ?? false)
+
+  let { target } = options
+  if (isString(target)) {
+    target = useQuerySelector<HTMLElement>(target)
+  } else {
+    useHookOffset(4)
+  }
+  if (isRef(target)) {
+    useObserver(
+      target,
+      target => {
+        bbox.setElement(target)
+      },
+      [bbox]
+    )
+  } else {
+    useHookOffset(2)
+    if (target) {
+      bbox.setElement(target)
+    }
+  }
+
   return bbox
 }
 

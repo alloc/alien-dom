@@ -1,8 +1,8 @@
 import { isFunction } from '@alloc/is'
 import { Falsy } from '@alloc/types'
-import { noop } from '../jsx-dom/util'
 import { ReadonlyRef, observe } from '../observable'
 import { EffectCallback, useEffect } from './useEffect'
+import { useHookOffset } from './useHookOffset'
 
 /** Observe a single ref. */
 export function useObserver<T>(
@@ -28,9 +28,15 @@ export function useObserver(
     const ref = arg1,
       onChange = arg2 as (value: any, oldValue: any) => void,
       deps = arg3!
-    useEffect(ref ? () => observe(ref, onChange).destructor : noop, [
-      ...deps,
-      !!ref,
-    ])
+
+    if (ref) {
+      useEffect(() => {
+        const initialValue = ref.value
+        onChange(initialValue, initialValue)
+        return observe(ref, onChange).destructor
+      }, deps)
+    } else {
+      useHookOffset(2)
+    }
   }
 }

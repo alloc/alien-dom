@@ -20,7 +20,7 @@ export function useRef<T>(
 ): Ref<any> {
   const component = currentComponent.get()!
   const index = component.nextHookIndex++
-  if (deps && useDepsArray(deps)) {
+  if (useDepsArray(deps)) {
     component.hooks[index] = null
   }
   return (component.hooks[index] ||= ref(

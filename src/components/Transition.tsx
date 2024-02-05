@@ -1,4 +1,4 @@
-import { isFunction } from '@alloc/is'
+import { isFunction, isPromiseLike } from '@alloc/is'
 import type { Falsy } from '@alloc/types'
 import { AnimatedProps, SpringAnimation, animate } from '../animate'
 import { restoreComponentRefs } from '../functions/restoreComponentRefs'
@@ -11,6 +11,7 @@ import type { AnyElement, StyleAttributes } from '../internal/types'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import { evaluateDeferredNode, isDeferredNode } from '../jsx-dom/node'
 import { morphFragment } from '../morphdom/morphFragment'
+import { Promisable } from '../promises'
 import { DOMClassAttribute } from '../types'
 import type { JSX } from '../types/jsx'
 
@@ -51,6 +52,9 @@ export type TransitionProp<Id, Data = {}> =
 export type TransitionProps<Id> = {
   /** The unique identifier for the current entered element. */
   id: Id
+  beforeEnter?: (
+    data: TransitionData<Id> & { initial: boolean }
+  ) => Promisable<any>
   initial?: AnimatedProps<JSX.Element> | boolean
   enter?: TransitionProp<Id, { initial: boolean }>
   leave?: TransitionProp<Id>
@@ -155,18 +159,14 @@ export function Transition<Id>(props: TransitionProps<Id>) {
   }
 
   useEffect(() => {
-    newEnteredElements?.forEach(element => {
+    const enter = (
+      element: Element,
+      data: TransitionData<Id> & { initial: boolean }
+    ) => {
       const oldDependency = dependencies.get(element)
       oldDependency?.stop()
 
-      let transition = isFunction(props.enter)
-        ? props.enter({
-            id: props.id,
-            element: element as JSX.Element,
-            initial,
-            relatedId: previousId,
-          })
-        : props.enter
+      let transition = isFunction(props.enter) ? props.enter(data) : props.enter
 
       if (isDependency(transition)) {
         dependencies.set(element, transition)
@@ -184,6 +184,38 @@ export function Transition<Id>(props: TransitionProps<Id>) {
           }
         }
         animate(element as JSX.Element, transition)
+      }
+    }
+
+    newEnteredElements?.forEach(element => {
+      const data = {
+        id: props.id,
+        element: element as JSX.Element,
+        initial,
+        relatedId: previousId,
+      }
+
+      if (props.beforeEnter) {
+        const result = props.beforeEnter(data)
+        if (isPromiseLike(result)) {
+          let stopped = false
+          const dependency: TransitionDependency = {
+            then: result.then.bind(result),
+            stop() {
+              stopped = true
+            },
+          }
+          dependencies.set(element, dependency)
+          dependency.then(() => {
+            if (!stopped) {
+              enter(element, data)
+            }
+          })
+        } else {
+          enter(element, data)
+        }
+      } else {
+        enter(element, data)
       }
     })
 
