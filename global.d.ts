@@ -3,13 +3,13 @@ import {
   AnimationsParam,
   HTMLAnimatedProps,
   SVGAnimatedProps,
-} from './dist/animate'
+} from './dist/addons/animate'
 import {
   AlienElement,
   AlienElementList,
   AlienSelect,
   AlienTag,
-} from './dist/element'
+} from './dist/addons/element'
 import * as t from './dist/types'
 
 type AnyElement = Element

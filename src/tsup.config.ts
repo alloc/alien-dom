@@ -4,10 +4,10 @@ import { defineConfig } from 'tsup'
 export default defineConfig({
   entry: [
     'index.ts',
-    'element.ts',
-    'animate.ts',
-    'hmr.ts',
     'helpers.ts',
+    'hmr.ts',
+    'addons/animate.ts',
+    'addons/element.ts',
     'internal/element.ts',
     'internal/nodeList.ts',
     'morphdom/index.ts',

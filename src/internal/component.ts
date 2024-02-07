@@ -132,8 +132,10 @@ export class AlienComponent<Props = any> {
   }
 
   truncate(length: number) {
-    for (let i = length; i < this.hooks.length; i++) {
-      this.hooks[i]?.dispose?.()
+    for (const hook of this.hooks) {
+      if (hook && isFunction(hook.dispose)) {
+        hook.dispose()
+      }
     }
     this.hooks.length = length
   }
@@ -182,7 +184,8 @@ class ComponentObserver extends Observer {
 
 /** @internal */
 export class Memo {
-  static isMemo = (value: any): value is Memo => value != null && kAlienMemo.in(value)
+  static isMemo = (value: any): value is Memo =>
+    value != null && kAlienMemo.in(value)
   constructor(
     public value: any,
     public deps?: readonly any[],
