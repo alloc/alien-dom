@@ -1,148 +1,115 @@
 import { isArray, isFunction } from '@alloc/is'
 import { attachRef } from './functions/attachRef'
+import { depsHaveChanged } from './functions/depsHaveChanged'
 import { selfUpdating } from './functions/selfUpdating'
-import { AlienComponent } from './internal/component'
 import { currentComponent } from './internal/global'
 import { createSymbolProperty } from './internal/symbolProperty'
 import { kAlienRenderFunc } from './internal/symbols'
-import { ref } from './observable'
+import { Ref, ref } from './observable'
 import type { FunctionComponent } from './types/component'
 import type { JSX } from './types/jsx'
 
 const kAlienComponentKey = createSymbolProperty<string>('componentKey')
-const kAlienHotUpdate = createSymbolProperty<boolean>('hotUpdate')
 
-const componentRegistry: {
-  [key: string]: [component: Set<FunctionComponent>, hash: string]
-} = {}
+type HotComponent = [
+  component: Ref<(props: any) => any>,
+  hash: string,
+  deps: any[]
+]
+
+const componentRegistry: { [key: string]: HotComponent } = {}
 
 export function hmrRegister(
   file: string,
   name: string,
-  component: FunctionComponent,
-  hash: string
+  newComponent: FunctionComponent,
+  hash: string,
+  deps: any[]
 ) {
   const key = file + ':' + name
-  kAlienComponentKey(component, key)
+  kAlienComponentKey(newComponent, key)
 
   // Keep the original component around, so it can be used by parent
   // components to update the new component instance.
-  const [components, oldHash] = componentRegistry[key] || [new Set()]
-  componentRegistry[key] = [components, hash]
+  let [renderRef, oldHash, oldDeps] = componentRegistry[key] || []
 
-  if (oldHash && oldHash !== hash) {
-    // Postpone updates until all `hmrRegister` calls have been made.
-    queueMicrotask(() => {
-      // Any old components that are still mounted will re-add
-      // themselves to the component registry when re-rendered.
-      let oldComponents = [...components]
-      components.clear()
+  const newRender = kAlienRenderFunc(newComponent)!
+  if (renderRef) {
+    const needsHotUpdate =
+      (oldHash != null && oldHash !== hash) ||
+      (oldDeps != null && depsHaveChanged(deps, oldDeps))
 
-      let i = 0
-      let deadline = Date.now() + 32
-
-      const update = () => {
-        const oldComponent = oldComponents[i]
-        const newRender = kAlienRenderFunc(component)
-        kAlienHotUpdate(newRender, true)
-        Reflect.set(oldComponent, kAlienRenderFunc.symbol, newRender)
-        if (++i === oldComponents.length) {
-          console.info(
-            `[HMR] ${name} component updated (${i}/${oldComponents.length})`
-          )
-        } else if (deadline < Date.now()) {
-          console.info(
-            `[HMR] ${name} component updated (${i}/${oldComponents.length})`
-          )
-          setTimeout(() => {
-            deadline = Date.now() + 32
-            update()
-          }, 1)
-        } else {
-          update()
-        }
-      }
-
-      update()
-    })
+    if (needsHotUpdate) {
+      renderRef.value = newRender
+    }
+  } else {
+    renderRef = ref(newRender)
   }
+
+  componentRegistry[key] = [renderRef, hash, deps]
+  attachRef(newComponent, kAlienRenderFunc.symbol, renderRef)
 }
 
 export function hmrSelfUpdating(render: (props: any) => JSX.Element) {
-  const renderRef = ref(render)
   const Component = selfUpdating(props => {
-    registerComponent(Component)
-    return hmrRender(renderRef.value, props)
+    if (kAlienComponentKey(Component) == null) {
+      console.error(
+        `[HMR] Component cannot be immediately used within the same module it was defined in. Either use "queueMicrotask" or import the component from another module.`
+      )
+      return null
+    }
+
+    // This access is what subscribes the component to hot updates.
+    const render = kAlienRenderFunc(Component) as (props: any) => JSX.Element
+
+    // Track which render function was last used by each component instance.
+    const component = currentComponent.get()!
+    const prevRender = kAlienRenderFunc(component)
+
+    let isHotUpdate: boolean | undefined
+    if (render !== prevRender) {
+      kAlienRenderFunc(component, render)
+
+      // If the component is being hot-updated, clear any memoized values and
+      // disposable hooks (except for initializer hooks).
+      if (prevRender) {
+        isHotUpdate = true
+        component.memos = null
+        component.hooks.forEach((hook, index, hooks) => {
+          if (hook?.dispose) {
+            if (isArray(hook.deps) && !hook.deps.length) {
+              return // Skip one-time effects.
+            }
+            if (isFunction(hook.dispose)) {
+              hook.dispose()
+            }
+            hooks[index] = undefined
+          }
+        })
+      }
+    }
+
+    try {
+      return render(props)
+    } catch (e: any) {
+      // If rendering fails, try clearing persistent hook state.
+      if (isHotUpdate) {
+        try {
+          const component = currentComponent.get()!
+          component.truncate(0)
+
+          return render(props)
+        } catch {}
+      }
+      console.error(e)
+      return null
+    }
   })
-  attachRef(Component, kAlienRenderFunc.symbol, renderRef)
+
+  // Make the raw component available to hmrRegister, so it can update older
+  // instances of the same component. Once that's done, the raw component is
+  // replaced with a reference to the latest revision.
+  kAlienRenderFunc(Component, render)
+
   return Component
-}
-
-function registerComponent(component: FunctionComponent, isRetry?: boolean) {
-  const key = kAlienComponentKey(component)
-  if (key == null) {
-    if (isRetry) {
-      throw Error('Component was never passed to hmrRegister')
-    }
-    queueMicrotask(() => registerComponent(component, true))
-  } else {
-    const [components] = componentRegistry[key]
-    components.add(component)
-  }
-}
-
-function hmrRender(
-  render: (props: any) => JSX.Element,
-  props: any
-): JSX.Element | null
-
-function hmrRender(
-  render: (props: any, update: any) => JSX.Element,
-  props: any,
-  update: any
-): JSX.Element | null
-
-function hmrRender(
-  render: (props: any, update?: any) => JSX.Element,
-  props: any,
-  update?: any
-): JSX.Element | null {
-  const component = currentComponent.get()
-  if (!component) {
-    console.warn('hmrRender failed unexpectedly')
-    return null
-  }
-  const isHotUpdate = kAlienHotUpdate(render)
-  if (isHotUpdate) {
-    kAlienHotUpdate(render, false)
-    clearMemoized(component)
-  }
-  try {
-    return render(props, update)
-  } catch (e: any) {
-    // If rendering fails, try resetting the hook state.
-    if (isHotUpdate) {
-      try {
-        component.truncate(0)
-        return render(props, update)
-      } catch {}
-    }
-    console.error(e)
-    return null
-  }
-}
-
-function clearMemoized(component: AlienComponent) {
-  component.memos = null
-  component.hooks.forEach((hook, index, hooks) => {
-    if (hook?.dispose) {
-      if (isArray(hook.deps) && !hook.deps.length) {
-        return // Skip mount effects.
-      }
-      if (isFunction(hook.dispose)) {
-        hook.dispose()
-      }
-      hooks[index] = undefined
-    }
-  })
 }
