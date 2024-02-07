@@ -1,4 +1,4 @@
-import { Disposable } from '../disposable'
+import { Disposable } from '../addons/disposable'
 
 export function mergeDisposers(...objects: Disposable[]) {
   return () => {

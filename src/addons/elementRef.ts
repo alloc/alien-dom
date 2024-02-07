@@ -1,10 +1,8 @@
-import { AnyElement } from './internal/types'
-import { JSX } from './types'
+import { AnyElement } from '../internal/types'
+import { JSX } from '../types'
 
-export abstract class ElementRef<Element extends AnyElement>
-  implements JSX.ElementRef
-{
-  protected element: Element | null = null
+export class ElementRef<Element extends AnyElement> implements JSX.ElementRef {
+  readonly element: Element | null = null
 
   setElement(element: Element | null): void {
     if (this.element) {
@@ -13,6 +11,7 @@ export abstract class ElementRef<Element extends AnyElement>
       }
       this.detach?.(this.element)
     }
+    // @ts-ignore
     this.element = element
     if (element) {
       this.attach?.(element)

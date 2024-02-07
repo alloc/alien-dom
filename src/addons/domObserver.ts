@@ -1,7 +1,7 @@
-import { defineEffectType, getCurrentEffect } from './effects'
-import { isComment, isElement } from './internal/duck'
-import { DefaultElement } from './internal/types'
-import { binaryInsert } from './jsx-dom/util'
+import { defineEffectType, getCurrentEffect } from '../effects'
+import { isComment, isElement } from '../internal/duck'
+import { DefaultElement } from '../internal/types'
+import { binaryInsert } from '../jsx-dom/util'
 
 type ObservableNode = DefaultElement | Comment
 type NodeCallback = (node: ObservableNode) => void

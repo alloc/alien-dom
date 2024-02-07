@@ -1,4 +1,4 @@
-import { OpenPromise } from '../promises'
+import { OpenPromise } from '../addons/promises'
 import { useMemo } from './useMemo'
 import { useState } from './useState'
 

@@ -1,5 +1,5 @@
 import type { Falsy } from '@alloc/types'
-import { isElementProxy } from '../elementProxy'
+import { isElementProxy } from '../addons/elementProxy'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import type { DefaultElement, StyleAttributes } from '../internal/types'
 import { UpdateStyle, toArray, updateStyle } from '../jsx-dom/util'

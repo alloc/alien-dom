@@ -1,6 +1,6 @@
 import { isString } from '@alloc/is'
 import type { Key } from 'ts-key-enum'
-import { Disposable, createDisposable } from '../disposable'
+import { Disposable, createDisposable } from '../addons/disposable'
 import { isDocument } from '../internal/duck'
 import { currentComponent } from '../internal/global'
 import { kAlienHostProps } from '../internal/symbols'

@@ -1,4 +1,4 @@
-import { onMount } from '../domObserver'
+import { onMount } from '../addons/domObserver'
 import { currentComponent } from '../internal/global'
 import { ShadowRootContext } from '../jsx-dom/shadow'
 import { EffectResult, useEffect } from './useEffect'

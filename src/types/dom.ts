@@ -1,5 +1,5 @@
 import type * as CSS from 'csstype'
-import type { AlienEvent } from '../element'
+import type { AlienEvent } from '../addons/element'
 import type { ReadonlyRef } from '../observable'
 import type { AttrWithRef } from './attr'
 import type { JSX } from './jsx'

@@ -1,4 +1,4 @@
-import { ElementProxy, isElementProxy } from '../elementProxy'
+import { ElementProxy, isElementProxy } from '../addons/elementProxy'
 import { ReadonlyRef } from '../observable'
 import { useEffect } from './useEffect'
 import { useRef } from './useRef'

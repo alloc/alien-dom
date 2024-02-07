@@ -1,9 +1,9 @@
 import { isFunction } from '@alloc/is'
+import { AlienBoundEffect, createEffect } from '../effects'
+import { isNode } from '../internal/duck'
+import { makeIterable } from '../internal/iterable'
+import { noop } from '../jsx-dom/util'
 import { Disposable } from './disposable'
-import { AlienBoundEffect, createEffect } from './effects'
-import { isNode } from './internal/duck'
-import { makeIterable } from './internal/iterable'
-import { noop } from './jsx-dom/util'
 
 type ChannelTarget<T extends ChannelFunction> = //
   T extends ChannelFunction<any, infer Target> ? Target : never

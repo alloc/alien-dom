@@ -1,6 +1,6 @@
 import { isFunction } from '@alloc/is'
 import { Falsy } from '@alloc/types'
-import { DisposablePromise } from '../promises'
+import { DisposablePromise } from '../addons/promises'
 import { VarArgs } from '../types'
 import { EffectResult, useEffect } from './useEffect'
 

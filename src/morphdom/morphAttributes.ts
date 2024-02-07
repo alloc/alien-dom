@@ -1,5 +1,5 @@
 import { isNumber } from '@alloc/is'
-import { Disposable } from '../disposable'
+import { Disposable } from '../addons/disposable'
 import {
   parseTransform,
   readTransform,

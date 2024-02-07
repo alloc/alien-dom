@@ -1,9 +1,9 @@
 import { isFunction, isString } from '@alloc/is'
 import { Falsy } from '@alloc/types'
-import { Disposable, attachDisposer } from './disposable'
+import { Disposable, attachDisposer } from './addons/disposable'
+import { Promisable } from './addons/promises'
 import { createSymbolProperty } from './internal/symbolProperty'
 import { noop } from './jsx-dom/util'
-import { Promisable } from './promises'
 
 const kRefType = Symbol.for('refType')
 

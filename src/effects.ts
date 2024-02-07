@@ -1,6 +1,7 @@
 import { isArray, isFunction } from '@alloc/is'
-import { Disposable, attachDisposer } from './disposable'
-import { onMount, onUnmount } from './domObserver'
+import { Disposable, attachDisposer } from './addons/disposable'
+import { onMount, onUnmount } from './addons/domObserver'
+import { Promisable } from './addons/promises'
 import { EffectResult } from './hooks'
 import {
   EffectFlags,
@@ -12,7 +13,6 @@ import {
 import { currentEffects } from './internal/global'
 import { kAlienEffects } from './internal/symbols'
 import type { AnyElement } from './internal/types'
-import { Promisable } from './promises'
 
 export interface AlienEffect<
   Target = any,
