@@ -23,5 +23,5 @@ type StateInitializer =
   | (new (...args: any[]) => object)
 
 function isClass(arg: StateInitializer): arg is new (...args: any[]) => any {
-  return /^(class |function [A-Z])/.test(arg.toString())
+  return /^(class[ {]|function [A-Z])/.test(arg.toString())
 }
