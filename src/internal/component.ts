@@ -132,7 +132,8 @@ export class AlienComponent<Props = any> {
   }
 
   truncate(length: number) {
-    for (const hook of this.hooks) {
+    for (let i = length; i < this.hooks.length; i++) {
+      const hook = this.hooks[i]
       if (hook && isFunction(hook.dispose)) {
         hook.dispose()
       }
