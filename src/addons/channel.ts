@@ -54,9 +54,9 @@ type ChannelAddReceiver<T extends ChannelFunction = ChannelFunction> = {
 }
 
 type VoidIfEmpty<Data extends object> = Data extends any
-  ? {} extends Data
-    ? void
-    : Data
+  ?
+      | ({} extends Data ? void : never)
+      | ({} extends Required<Data> ? never : Data)
   : never
 
 type ChannelSend<T extends ChannelFunction = ChannelFunction> = {
