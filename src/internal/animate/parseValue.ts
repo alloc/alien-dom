@@ -10,7 +10,7 @@ export function parseValue(
   if (typeof value == 'number') {
     return [value, defaultUnit || '']
   }
-  const match = value.match(/(-?[0-9]+(?:\.[0-9]+)?)(\D*)$/)
+  const match = value.match(/(-?[0-9]+(?:\.[0-9]+)?(?:[eE][-+]?[0-9]+)?)(\D*)$/)
   if (!match) {
     throw Error(`Invalid value: ${value}`)
   }
