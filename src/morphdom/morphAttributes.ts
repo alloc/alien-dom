@@ -193,8 +193,15 @@ const morphStyleProperty: typeof applyProp = (
 ) => {
   if (key === 'transform') {
     const svgMode = isSvgChild(fromNode)
+    const gpuMode = fromNode.classList.contains('transform-gpu')
     const oldTransform = parseTransform(readTransform(fromNode, svgMode))
-    const newTransform = renderTransform(oldTransform, newValue, false, svgMode)
+    const newTransform = renderTransform(
+      oldTransform,
+      newValue,
+      false,
+      svgMode,
+      gpuMode
+    )
     updateStyle(fromNode, { transform: newTransform })
   } else {
     newValue = addHostProp(fromProps, 'style.' + key, newValue, applyNestedProp)
