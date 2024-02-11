@@ -111,7 +111,14 @@ export class AnimatedTransform {
       )
     }
 
-    const newTransform = renderTransform(value, newCalls, isIdentity, svgMode)
+    const gpuMode = target.classList.contains('transform-gpu')
+    const newTransform = renderTransform(
+      value,
+      newCalls,
+      isIdentity,
+      svgMode,
+      gpuMode
+    )
     applyAnimatedValue(target, style, svgMode, 'transform', newTransform)
   }
 }
@@ -138,6 +145,10 @@ export function readTransform(target: Element, svgMode: boolean) {
 export function parseTransform(transform: string) {
   const result: ParsedTransform = []
   const regex = /([a-z]+)\(([^)]+)\)/gi
+
+  // Ignore "translate3d(…)" added for transform-gpu mode.
+  transform = transform.replace(/^translate3d\(0px, 0px, 0px\) ?/g, '')
+
   let match: RegExpMatchArray | null
   while ((match = regex.exec(transform))) {
     let transformFn = match[1]
@@ -163,7 +174,8 @@ export function renderTransform(
   cachedTransform: ParsedTransform,
   newTransform: TransformCall[],
   isIdentity: boolean,
-  svgMode: boolean
+  svgMode: boolean,
+  gpuMode: boolean
 ) {
   const transform: TransformCall[] = []
 
@@ -185,15 +197,18 @@ export function renderTransform(
   }
 
   if (isIdentity) {
-    return 'none'
+    return gpuMode ? 'translate3d(0,0,0)' : 'none'
   }
-  return transform
-    .map(([fn, value, unit = '']) => {
-      if (isArray(value)) {
-        value = value.map(arg => arg.join('')).join(svgMode ? ' ' : ', ')
-        return fn + '(' + value + ')'
-      }
-      return fn + `(${value}${unit})`
-    })
-    .join(' ')
+  return (
+    (gpuMode ? 'translate3d(0,0,0) ' : '') +
+    transform
+      .map(([fn, value, unit = '']) => {
+        if (isArray(value)) {
+          value = value.map(arg => arg.join('')).join(svgMode ? ' ' : ', ')
+          return fn + '(' + value + ')'
+        }
+        return fn + `(${value}${unit})`
+      })
+      .join(' ')
+  )
 }
