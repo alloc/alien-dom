@@ -747,12 +747,12 @@ function advance(
   let velocity = node.lastVelocity == null ? node.v0 : node.lastVelocity
   let finished = false
 
+  const equalFromTo = from == to
+
   // Immediate animations have no velocity.
-  if (isNaN(velocity)) {
+  if (isNaN(velocity) || (equalFromTo && velocity === 0)) {
     finished = true
   } else {
-    const equalFromTo = from == to
-
     const precision =
       defaultPrecisions[prop] ||
       (equalFromTo
