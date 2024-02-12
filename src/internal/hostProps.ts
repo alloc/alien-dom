@@ -1,10 +1,10 @@
 import { isArray } from '@alloc/is'
 import { Disposable, createDisposable } from '../addons/disposable'
-import { forEach } from '../jsx-dom/util'
 import { ReadonlyRef, observe } from '../observable'
 import { JSX } from '../types/jsx'
 import { kAlienHostProps } from './symbols'
 import { DefaultElement } from './types'
+import { forEach } from './utils'
 
 type HostProp = Disposable | Disposable[] | null
 

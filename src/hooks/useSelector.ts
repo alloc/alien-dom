@@ -71,13 +71,3 @@ export function useQuerySelectorAll<Element extends AnyElement>(
 
   return matches as any
 }
-
-function setFromNodeList<Element extends AnyElement>(
-  nodes: NodeListOf<Element>
-) {
-  const set = new Set<Element>()
-  for (let i = 0; i < nodes.length; i++) {
-    set.add(nodes[i])
-  }
-  return set
-}

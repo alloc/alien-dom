@@ -22,8 +22,8 @@ import {
   Length,
   TransformAttributes,
 } from '../internal/types'
+import { keys, toArray } from '../internal/utils'
 import { isSvgChild } from '../jsx-dom/svg-tags'
-import { keys, toArray } from '../jsx-dom/util'
 import { $$, AlienSelector } from './selectors'
 
 export type SpringAnimation<

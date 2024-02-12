@@ -1,4 +1,4 @@
-import { noop } from '../jsx-dom/util'
+import { defineProperty, noop } from '../internal/utils'
 import { ref } from '../observable'
 import { attachDisposer, isDisposable } from './disposable'
 
@@ -78,7 +78,7 @@ export class OpenPromise<T> extends Promise<T> {
   get settled(): boolean {
     const settled = ref(false)
     this.finally(() => (settled.value = true))
-    Object.defineProperty(this, 'settled', {
+    defineProperty(this, 'settled', {
       get: Reflect.get.bind(Reflect, settled, 'value'),
     })
     return settled.value

@@ -3,7 +3,7 @@ import { Falsy } from '@alloc/types'
 import { Disposable, attachDisposer } from './addons/disposable'
 import { Promisable } from './addons/promises'
 import { createSymbolProperty } from './internal/symbolProperty'
-import { noop } from './jsx-dom/util'
+import { defineProperty, noop } from './internal/utils'
 
 const kRefType = Symbol.for('refType')
 
@@ -37,7 +37,7 @@ declare module globalThis {
 
 let hooks = DEV && globalThis.__OBSERVABLE_HOOKS__
 if (DEV) {
-  Object.defineProperty(globalThis, '__OBSERVABLE_HOOKS__', {
+  defineProperty(globalThis, '__OBSERVABLE_HOOKS__', {
     configurable: true,
     get: () => hooks,
     set(newHooks) {
@@ -212,7 +212,7 @@ function assignPrototype(
   newProperties: Record<string, any>
 ): void {
   for (const key in newProperties) {
-    Object.defineProperty(prototype, key, {
+    defineProperty(prototype, key, {
       value: newProperties[key],
       writable: true,
       configurable: true,

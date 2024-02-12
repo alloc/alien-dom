@@ -1,6 +1,6 @@
 import { isArray } from '@alloc/is'
 import { attachRef } from '../functions/attachRef'
-import { keys } from '../jsx-dom/util'
+import { defineProperty, keys } from '../internal/utils'
 import { ArrayRef, Ref, arrayRef, ref } from '../observable'
 import { useState } from './useState'
 
@@ -23,7 +23,7 @@ export type Refs<T extends object> = {
 class RefBindings {
   declare _refs: Record<keyof any, Ref>
   constructor(refs: Record<keyof any, Ref>) {
-    Object.defineProperty(this, '_refs', { value: refs })
+    defineProperty(this, '_refs', { value: refs })
   }
   bind(key: keyof any) {
     return this._refs[key] || (this as any)[key]
