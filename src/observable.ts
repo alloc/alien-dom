@@ -885,6 +885,10 @@ export function observe(
   return observer
 }
 
+export function isReadonlyRef(value: any): boolean {
+  return !!value && value[kRefType] === 'ReadonlyRef'
+}
+
 export function isRef<T = any>(value: any): value is ReadonlyRef<T> {
   return !!value && value[kRefType] !== undefined
 }

@@ -1,20 +1,24 @@
-import { defineProperty } from '../internal/utils'
-import { Ref } from '../observable'
+import { defineProperty, set } from '../internal/utils'
+import { ReadonlyRef, isReadonlyRef } from '../observable'
 
 export const attachRef = (
   props: object,
   key: keyof any,
-  ref: Ref,
+  ref: ReadonlyRef,
   didSet?: (key: keyof any, newValue: any, oldValue: any) => void
 ) => {
   defineProperty(props, key, {
     configurable: true,
     enumerable: true,
     get: Reflect.get.bind(Reflect, ref, 'value'),
-    set: didSet
+    set: isReadonlyRef(ref)
+      ? () => {
+          throw TypeError('Cannot update the value of a readonly ref.')
+        }
+      : didSet
       ? newValue => {
           const oldValue = ref.peek()
-          ref.value = newValue
+          set(ref, 'value', newValue)
 
           // Even if the value doesn't change, we still need to call
           // this, since it still communicates intent to the parent.
