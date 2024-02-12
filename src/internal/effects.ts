@@ -2,10 +2,10 @@ import { isFunction } from '@alloc/is'
 import { Disposable, attachDisposer } from '../addons/disposable'
 import { AlienEffect, AlienEffects } from '../effects'
 import { ShadowRootContext } from '../jsx-dom/shadow'
-import { noop } from '../jsx-dom/util'
 import { currentEffects } from './global'
 import { kAlienEffects } from './symbols'
 import { AnyElement } from './types'
+import { noop } from './utils'
 
 export function getEffects<T extends AnyElement>(
   element: T,

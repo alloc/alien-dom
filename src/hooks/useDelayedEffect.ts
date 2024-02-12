@@ -1,6 +1,6 @@
 import { isFunction, isNumber } from '@alloc/is'
 import { DisposablePromise } from '../addons/promises'
-import { toArray } from '../jsx-dom/util'
+import { toArray } from '../internal/utils'
 import { VarArgs } from '../types'
 import { EffectCallback, useEffect } from './useEffect'
 

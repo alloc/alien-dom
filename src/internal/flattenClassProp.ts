@@ -1,9 +1,9 @@
 import { isArray, isBoolean, isObject } from '@alloc/is'
-import { keys } from '../jsx-dom/util'
 import { morphAttributes } from '../morphdom/morphAttributes'
 import { ReadonlyRef, isRef } from '../observable'
 import { DOMClassAttribute } from '../types'
 import { HostProps } from './hostProps'
+import { keys } from './utils'
 
 export function flattenClassProp(
   value: DOMClassAttribute | ReadonlyRef<DOMClassAttribute>,

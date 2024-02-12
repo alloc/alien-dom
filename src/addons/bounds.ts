@@ -1,5 +1,6 @@
 import { kAlienHostProps } from '../internal/symbols'
 import { AnyElement } from '../internal/types'
+import { defineProperty } from '../internal/utils'
 import { ComputedRef, computed, ref } from '../observable'
 import { Disposable, createDisposable } from './disposable'
 
@@ -55,7 +56,7 @@ export class ObservableBounds {
 
     let ref = this[propertyName]
     if (!ref)
-      Object.defineProperty(this, propertyName, {
+      defineProperty(this, propertyName, {
         enumerable: true,
         value: (ref = computed(() => this.rectRef.value?.[key] ?? NaN)),
       })
