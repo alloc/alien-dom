@@ -19,6 +19,7 @@ import {
   kAlienSelfUpdating,
 } from '../internal/symbols'
 import type { AnyElement } from '../internal/types'
+import { compareNodeWithTag, noop } from '../internal/utils'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import {
   evaluateDeferredNode,
@@ -26,7 +27,6 @@ import {
   isShadowRoot,
 } from '../jsx-dom/node'
 import { ShadowRootContext } from '../jsx-dom/shadow'
-import { compareNodeWithTag, noop } from '../jsx-dom/util'
 import { morph } from '../morphdom/morph'
 import { morphComposite } from '../morphdom/morphComposite'
 import { morphFragment } from '../morphdom/morphFragment'

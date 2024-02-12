@@ -4,13 +4,6 @@ import { appendChild } from '../jsx-dom/appendChild'
 import { AnyDeferredNode, isDeferredNode } from '../jsx-dom/node'
 import { ResolvedChild, resolveChildren } from '../jsx-dom/resolveChildren'
 import { resolveSelected } from '../jsx-dom/resolveSelected'
-import {
-  UpdateStyle,
-  decamelize,
-  forEach,
-  noop,
-  updateStyle,
-} from '../jsx-dom/util'
 import { morphChildren } from '../morphdom/morphChildren'
 import { ReadonlyRef, isRef } from '../observable'
 import { DOMClassAttribute, HTMLStyleAttribute, JSX } from '../types'
@@ -21,11 +14,11 @@ import { MergeStylesFn, flattenStyleProp } from './flattenStyleProp'
 import { HostProps } from './hostProps'
 import { kAlienElementKey } from './symbols'
 import { DefaultElement } from './types'
+import { UpdateStyle, updateStyle } from './updateStyle'
+import { decamelize, forEach, noop, set } from './utils'
 
 const nonPresentationSVGAttributes =
   /^(a(ll|t|u)|base[FP]|c(al|lipPathU|on)|di|ed|ex|filter[RU]|g(lyphR|r)|ke|l(en|im)|ma(rker[HUW]|s)|n|pat|pr|point[^e]|re[^n]|s[puy]|st[^or]|ta|textL|vi|xC|y|z)/
-
-const { set } = Reflect
 
 type ApplyFunction = (
   node: DefaultElement,

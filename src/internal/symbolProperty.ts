@@ -1,3 +1,5 @@
+import { defineProperty } from './utils'
+
 export interface SymbolProperty<T> {
   /** Access the current value */
   <U extends T>(target: any): U | undefined
@@ -31,7 +33,7 @@ export function createSymbolProperty<T = unknown>(
     if (arguments.length === 1) {
       return target[symbol]
     }
-    Object.defineProperty(target, symbol, {
+    defineProperty(target, symbol, {
       value,
       configurable: true,
     })

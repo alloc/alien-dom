@@ -1,3 +1,4 @@
+import { defineProperty } from '../internal/utils'
 import { Ref } from '../observable'
 
 export const attachRef = (
@@ -6,7 +7,7 @@ export const attachRef = (
   ref: Ref,
   didSet?: (key: keyof any, newValue: any, oldValue: any) => void
 ) => {
-  Object.defineProperty(props, key, {
+  defineProperty(props, key, {
     configurable: true,
     enumerable: true,
     get: Reflect.get.bind(Reflect, ref, 'value'),

@@ -3,6 +3,7 @@ import { ReadonlyRef } from '../observable'
 import type { JSX } from '../types/jsx'
 import { currentComponent } from './global'
 import { kAlienThunkResult } from './symbols'
+import { defineProperty } from './utils'
 
 type ThunkResult = JSX.Children | ReadonlyRef<JSX.Children>
 
@@ -17,7 +18,7 @@ export function fromElementThunk(
       return thunk()
     }
 
-    Object.defineProperty(thunk, kAlienThunkResult.symbol, {
+    defineProperty(thunk, kAlienThunkResult.symbol, {
       get() {
         // Avoid evaluating an element thunk more than once per render.
         let result: ThunkResult = component.newMemos

@@ -15,8 +15,9 @@ import { flattenStyleProp } from '../internal/flattenStyleProp'
 import { kAlienHostProps } from '../internal/symbols'
 import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
 import { DefaultElement } from '../internal/types'
+import { UpdateStyle, updateStyle } from '../internal/updateStyle'
+import { forEach, keys, noop } from '../internal/utils'
 import { isSvgChild } from '../jsx-dom/svg-tags'
-import { UpdateStyle, forEach, keys, noop, updateStyle } from '../jsx-dom/util'
 
 export function morphAttributes(
   fromNode: DefaultElement,

@@ -16,7 +16,8 @@ import type {
   DefaultElement,
   StyleAttributes,
 } from '../internal/types'
-import { UpdateStyle, keys, updateStyle } from '../jsx-dom/util'
+import { UpdateStyle, updateStyle } from '../internal/updateStyle'
+import { keys } from '../internal/utils'
 import type { DetailedHTMLProps, HTMLAttributes } from '../types/html'
 import type { SVGAttributes } from '../types/svg'
 import { AnimationsParam, animate } from './animate'

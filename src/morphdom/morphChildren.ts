@@ -12,6 +12,7 @@ import {
   kAlienFragmentNodes,
   kAlienParentFragment,
 } from '../internal/symbols'
+import { compareNodeNames, noop } from '../internal/utils'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import {
   DeferredCompositeNode,
@@ -22,7 +23,6 @@ import {
 } from '../jsx-dom/node'
 import { ResolvedChild } from '../jsx-dom/resolveChildren'
 import { resolveSelected } from '../jsx-dom/resolveSelected'
-import { compareNodeNames, noop } from '../jsx-dom/util'
 import { JSX } from '../types/jsx'
 import { morph } from './morph'
 import { morphComposite } from './morphComposite'
