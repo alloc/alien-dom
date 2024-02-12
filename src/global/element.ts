@@ -2,10 +2,10 @@ import { isNumber } from '@alloc/is'
 import { Disposable } from '../addons/disposable'
 import { AlienElement, AlienEvent } from '../addons/element'
 import { AlienBoundEffect } from '../effects'
+import { createEventEffect } from '../internal/eventEffect'
+import { AnyElement, AnyEvent } from '../internal/types'
 import { isUnitlessNumber } from '../jsx-dom/css-props'
 import { CSSProperties } from '../types/dom'
-import { createEventEffect } from './eventEffect'
-import { AnyElement, AnyEvent } from './types'
 
 export const AlienElementPrototype = new Proxy(AlienElement.prototype, {
   get(target, key, receiver) {
@@ -211,19 +211,3 @@ type HTMLBubblingEvents =
   | 'select'
   | 'submit'
   | 'unload'
-
-/**
- * Replace this node with its children.
- */
-export function unwrap<T extends Node = ChildNode>(node: Node) {
-  const children: T[] = []
-  const parent = node.parentNode
-  if (parent) {
-    while (node.firstChild) {
-      children.push(node.firstChild as any)
-      parent.insertBefore(node.firstChild, node)
-    }
-    parent.removeChild(node)
-  }
-  return children
-}
