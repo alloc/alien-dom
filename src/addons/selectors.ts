@@ -1,5 +1,5 @@
+import { createAlienElementList } from '../global/nodeList'
 import { hasForEach, isIterable } from '../internal/duck'
-import { createAlienElementList } from '../internal/nodeList'
 import { AnyElement, DefaultElement } from '../internal/types'
 import type {
   AlienElement,

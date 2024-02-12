@@ -1,21 +1,21 @@
 import { AlienBoundEffect, AlienEffect, AlienEffects } from '../effects'
 import { observeAs } from '../functions/observeAs'
-import { applyProp } from '../internal/applyProp'
-import { canMatch } from '../internal/duck'
-import { EffectFlags, enableEffect, getEffects } from '../internal/effects'
 import type {
   AlienEventMethod,
   AlienEventMethods,
   AlienStyleMethods,
-} from '../internal/element'
-import { unwrap } from '../internal/element'
-import { AlienNodeList } from '../internal/nodeList'
+} from '../global/element'
+import type { AlienNodeList } from '../global/nodeList'
+import { applyProp } from '../internal/applyProp'
+import { canMatch } from '../internal/duck'
+import { EffectFlags, enableEffect, getEffects } from '../internal/effects'
 import type {
   AnyElement,
   AnyEvent,
   DefaultElement,
   StyleAttributes,
 } from '../internal/types'
+import { unwrap } from '../internal/unwrap'
 import { UpdateStyle, updateStyle } from '../internal/updateStyle'
 import { keys } from '../internal/utils'
 import type { DetailedHTMLProps, HTMLAttributes } from '../types/html'
