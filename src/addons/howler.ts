@@ -304,26 +304,27 @@ export class Howl<Sprite extends string | null = any>
       if (Howl.muted) {
         this.disconnect()
       } else {
-        const oldVolume = volume
+        let oldVolume = volume
         volume = computeVolume(this, options)
 
+        const { currentTime } = audioContext
         if (fadeInDuration > 0) {
           if (fadeInStart === -1) {
-            gain.gain.value = 0
-
-            fadeInStart = audioContext.currentTime
+            fadeInStart = currentTime
             setTimeout(() => {
               fadeInDuration = 0
             }, fadeInDuration)
-          } else {
-            gain.gain.value = volume * (gain.gain.value / oldVolume)
+          } else if (oldVolume > 0) {
+            oldVolume = volume * (gain.gain.value / oldVolume)
           }
+
+          gain.gain.setValueAtTime(oldVolume, currentTime)
           gain.gain.linearRampToValueAtTime(
             volume,
             fadeInStart + fadeInDuration / 1000
           )
         } else if (fadeOutStart === -1) {
-          gain.gain.value = volume
+          gain.gain.setValueAtTime(volume, currentTime)
         }
       }
     })
@@ -338,6 +339,7 @@ export class Howl<Sprite extends string | null = any>
       this.statusRef.value = 'stopping'
 
       fadeOutStart = audioContext.currentTime
+      gain.gain.setValueAtTime(gain.gain.value, fadeOutStart)
       gain.gain.linearRampToValueAtTime(0, fadeOutStart + duration)
 
       setTimeout(() => {
