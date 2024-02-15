@@ -1,12 +1,13 @@
 import { ElementRef } from '../addons/elementRef'
 import { AnyElement } from '../internal/types'
+import { at } from '../internal/utils'
 import { useState } from './useState'
 
 export class ElementArray<T extends AnyElement = AnyElement> extends Array<
   ElementRef<T>
 > {
   get(index: number) {
-    const ref = this.at(index)
+    const ref = at(this, index)
     return ref?.element ?? null
   }
   bind(index: number) {
