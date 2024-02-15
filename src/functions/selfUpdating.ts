@@ -19,7 +19,7 @@ import {
   kAlienSelfUpdating,
 } from '../internal/symbols'
 import type { AnyElement } from '../internal/types'
-import { compareNodeWithTag, noop } from '../internal/utils'
+import { compareNodeWithTag, noop } from '../internal/util'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import {
   evaluateDeferredNode,

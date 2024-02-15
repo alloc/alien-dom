@@ -5,7 +5,7 @@ import { ShadowRootContext } from '../jsx-dom/shadow'
 import { currentEffects } from './global'
 import { kAlienEffects } from './symbols'
 import { AnyElement } from './types'
-import { noop } from './utils'
+import { noop } from './util'
 
 export function getEffects<T extends AnyElement>(
   element: T,

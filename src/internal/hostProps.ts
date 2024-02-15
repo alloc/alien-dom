@@ -4,7 +4,7 @@ import { ReadonlyRef, observe } from '../observable'
 import { JSX } from '../types/jsx'
 import { kAlienHostProps } from './symbols'
 import { DefaultElement } from './types'
-import { forEach } from './utils'
+import { forEach } from './util'
 
 type HostProp = Disposable | Disposable[] | null
 

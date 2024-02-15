@@ -4,7 +4,7 @@ import { isSvgChild } from '../jsx-dom/svg-tags'
 import { isAnimatedStyleProp, stopAnimatingKey } from './animate'
 import { cssTransformAliases, cssTransformUnits } from './transform'
 import { DefaultElement } from './types'
-import { set } from './utils'
+import { set } from './util'
 
 export const enum UpdateStyle {
   /** Interrupt related animations. */

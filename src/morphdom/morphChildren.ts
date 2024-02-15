@@ -12,7 +12,7 @@ import {
   kAlienFragmentNodes,
   kAlienParentFragment,
 } from '../internal/symbols'
-import { compareNodeNames, noop } from '../internal/utils'
+import { compareNodeNames, noop } from '../internal/util'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import {
   DeferredCompositeNode,

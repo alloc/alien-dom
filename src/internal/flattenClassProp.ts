@@ -3,7 +3,7 @@ import { morphAttributes } from '../morphdom/morphAttributes'
 import { ReadonlyRef, isRef } from '../observable'
 import { DOMClassAttribute } from '../types'
 import { HostProps } from './hostProps'
-import { keys } from './utils'
+import { keys } from './util'
 
 export function flattenClassProp(
   value: DOMClassAttribute | ReadonlyRef<DOMClassAttribute>,

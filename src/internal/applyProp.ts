@@ -15,7 +15,7 @@ import { HostProps } from './hostProps'
 import { kAlienElementKey } from './symbols'
 import { DefaultElement } from './types'
 import { UpdateStyle, updateStyle } from './updateStyle'
-import { decamelize, forEach, noop, set } from './utils'
+import { decamelize, forEach, noop, set } from './util'
 
 const nonPresentationSVGAttributes =
   /^(a(ll|t|u)|base[FP]|c(al|lipPathU|on)|di|ed|ex|filter[RU]|g(lyphR|r)|ke|l(en|im)|ma(rker[HUW]|s)|n|pat|pr|point[^e]|re[^n]|s[puy]|st[^or]|ta|textL|vi|xC|y|z)/

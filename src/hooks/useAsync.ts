@@ -2,7 +2,7 @@ import { isFunction, isPlainObject } from '@alloc/is'
 import { Exclusive, Falsy } from '@alloc/types'
 import { Disposable } from '../addons/disposable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
-import { keys } from '../internal/utils'
+import { keys } from '../internal/util'
 import { ref } from '../observable'
 import { useState } from './useState'
 
