@@ -15,6 +15,7 @@ import {
   kAlienFragmentNodes,
   kAlienParentFragment,
 } from './symbols'
+import { at } from './utils'
 
 export type FragmentNodes = [Comment, ...(ChildNode | undefined)[]]
 export type FragmentKeys = (JSX.ElementKey | undefined)[]
@@ -101,7 +102,7 @@ function spliceFragment(
 export function endOfFragment(fragment: DocumentFragment) {
   const childNodes = kAlienFragmentNodes(fragment)!
   for (let i = -1; i >= -childNodes.length; i--) {
-    const childNode = childNodes.at(i)
+    const childNode = at(childNodes, i)
     if (childNode) {
       return childNode
     }
