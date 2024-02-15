@@ -8,7 +8,7 @@ export {
   keys,
   noop,
   toArray,
-} from '../internal/utils'
+} from '../internal/util'
 
 export function includes<T>(arg: T | readonly T[], value: T): boolean {
   return isArray(arg) ? arg.includes(value) : arg === value

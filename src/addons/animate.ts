@@ -22,7 +22,7 @@ import {
   Length,
   TransformAttributes,
 } from '../internal/types'
-import { keys, toArray } from '../internal/utils'
+import { keys, toArray } from '../internal/util'
 import { isSvgChild } from '../jsx-dom/svg-tags'
 import { $$, AlienSelector } from './selectors'
 

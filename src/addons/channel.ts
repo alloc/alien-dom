@@ -2,7 +2,7 @@ import { isFunction } from '@alloc/is'
 import { AlienBoundEffect, createEffect } from '../effects'
 import { isNode } from '../internal/duck'
 import { makeIterable } from '../internal/iterable'
-import { noop } from '../internal/utils'
+import { noop } from '../internal/util'
 import { Disposable } from './disposable'
 
 type ChannelTarget<T extends ChannelFunction> = //

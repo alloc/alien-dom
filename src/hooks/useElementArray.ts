@@ -1,6 +1,6 @@
 import { ElementRef } from '../addons/elementRef'
 import { AnyElement } from '../internal/types'
-import { at } from '../internal/utils'
+import { at } from '../internal/util'
 import { useState } from './useState'
 
 export class ElementArray<T extends AnyElement = AnyElement> extends Array<

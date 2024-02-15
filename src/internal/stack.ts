@@ -1,4 +1,4 @@
-import { at } from './utils'
+import { at } from './util'
 
 export function createStack<T>(baseValue?: T) {
   const stack: (T | null)[] = [baseValue ?? null]

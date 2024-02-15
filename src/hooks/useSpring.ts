@@ -8,7 +8,7 @@ import { getAnimatedKeys } from '../internal/animate'
 import { currentEffects } from '../internal/global'
 import { shallowEquals } from '../internal/shallowEquals'
 import type { DefaultElement } from '../internal/types'
-import { toArray } from '../internal/utils'
+import { toArray } from '../internal/util'
 import { useState } from './useState'
 
 export function useSpring<Element extends DefaultElement>(

@@ -17,7 +17,7 @@ import type {
 } from '../internal/types'
 import { unwrap } from '../internal/unwrap'
 import { UpdateStyle, updateStyle } from '../internal/updateStyle'
-import { keys } from '../internal/utils'
+import { keys } from '../internal/util'
 import type { DetailedHTMLProps, HTMLAttributes } from '../types/html'
 import type { SVGAttributes } from '../types/svg'
 import { AnimationsParam, animate } from './animate'

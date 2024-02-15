@@ -1,4 +1,4 @@
-import { defineProperty } from './utils'
+import { defineProperty } from './util'
 
 export function makeIterable<T extends object>(
   obj: T,

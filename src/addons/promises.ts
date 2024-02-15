@@ -1,4 +1,4 @@
-import { defineProperty, noop } from '../internal/utils'
+import { defineProperty, noop } from '../internal/util'
 import { ref } from '../observable'
 import { attachDisposer, isDisposable } from './disposable'
 

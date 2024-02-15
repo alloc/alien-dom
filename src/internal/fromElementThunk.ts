@@ -3,7 +3,7 @@ import { ReadonlyRef } from '../observable'
 import type { JSX } from '../types/jsx'
 import { currentComponent } from './global'
 import { kAlienThunkResult } from './symbols'
-import { defineProperty } from './utils'
+import { defineProperty } from './util'
 
 type ThunkResult = JSX.Children | ReadonlyRef<JSX.Children>
 

@@ -15,7 +15,7 @@ import {
   kAlienFragmentNodes,
   kAlienParentFragment,
 } from './symbols'
-import { at } from './utils'
+import { at } from './util'
 
 export type FragmentNodes = [Comment, ...(ChildNode | undefined)[]]
 export type FragmentKeys = (JSX.ElementKey | undefined)[]

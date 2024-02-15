@@ -1,4 +1,4 @@
-import { defineProperty } from '../internal/utils'
+import { defineProperty } from '../internal/util'
 
 export type Disposable<T = {}> = T & { dispose(): void }
 

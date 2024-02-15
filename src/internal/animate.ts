@@ -1,7 +1,7 @@
 import type { SpringTimeline } from './animate/types'
 import { animatedElements } from './global'
 import type { DefaultElement } from './types'
-import { decamelize } from './utils'
+import { decamelize } from './util'
 
 export function deleteTimeline(
   timelines: Record<string, SpringTimeline>,

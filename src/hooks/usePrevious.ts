@@ -1,5 +1,5 @@
 import { depsHaveChanged } from '../functions/depsHaveChanged'
-import { noop } from '../internal/utils'
+import { noop } from '../internal/util'
 import { useState } from './useState'
 
 export function usePrevious<T>(value: T): T | undefined
