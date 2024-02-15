@@ -3,7 +3,7 @@
 
 import { isArray } from '@alloc/is'
 import { attachRef } from '../functions/attachRef'
-import { noop } from '../internal/utils'
+import { noop } from '../internal/util'
 import { Observer, ReadonlyRef, Ref, isRef, observe, ref } from '../observable'
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] }

@@ -16,7 +16,7 @@ import { kAlienHostProps } from '../internal/symbols'
 import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
 import { DefaultElement } from '../internal/types'
 import { UpdateStyle, updateStyle } from '../internal/updateStyle'
-import { forEach, keys, noop } from '../internal/utils'
+import { forEach, keys, noop } from '../internal/util'
 import { isSvgChild } from '../jsx-dom/svg-tags'
 
 export function morphAttributes(

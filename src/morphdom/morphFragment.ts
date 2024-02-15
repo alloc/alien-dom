@@ -7,7 +7,7 @@ import {
 } from '../internal/fragment'
 import { currentComponent } from '../internal/global'
 import { kAlienFragmentKeys, kAlienFragmentNodes } from '../internal/symbols'
-import { at } from '../internal/utils'
+import { at } from '../internal/util'
 import { AnyDeferredNode } from '../jsx-dom/node'
 import { ResolvedChild } from '../jsx-dom/resolveChildren'
 import { ParentNode, morphChildren } from './morphChildren'
