@@ -12,6 +12,10 @@ export function decamelize(s: string, separator: string) {
   return s.replace(/[A-Z]/g, match => separator + match.toLowerCase())
 }
 
+export function at<T>(arr: readonly T[], index: number): T {
+  return index < 0 ? arr[arr.length + index] : arr[index]
+}
+
 export function toArray<T>(a: T): T extends readonly any[] ? T : T[] {
   return isArray(a) ? (a as any) : [a]
 }

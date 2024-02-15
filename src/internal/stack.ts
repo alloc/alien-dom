@@ -1,8 +1,10 @@
+import { at } from './utils'
+
 export function createStack<T>(baseValue?: T) {
   const stack: (T | null)[] = [baseValue ?? null]
   return {
-    is: (value: T) => stack.at(-1) === value,
-    get: stack.at.bind(stack, -1) as () => T | null,
+    is: (value: T) => at(stack, -1) === value,
+    get: () => at(stack, -1),
     push: (value: T) => void stack.push(value),
     pop(value: T) {
       while (true) {

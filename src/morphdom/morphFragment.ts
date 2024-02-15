@@ -7,6 +7,7 @@ import {
 } from '../internal/fragment'
 import { currentComponent } from '../internal/global'
 import { kAlienFragmentKeys, kAlienFragmentNodes } from '../internal/symbols'
+import { at } from '../internal/utils'
 import { AnyDeferredNode } from '../jsx-dom/node'
 import { ResolvedChild } from '../jsx-dom/resolveChildren'
 import { ParentNode, morphChildren } from './morphChildren'
@@ -88,7 +89,7 @@ class ParentFragment implements ParentNode {
     return this.childNodes[0] || null
   }
   appendChild(node: ChildNode) {
-    const lastChild = this.childNodes.at(-1) || this.header
+    const lastChild = at(this.childNodes, -1) || this.header
     if (lastChild !== node) {
       const previousIndex = this.childNodes.indexOf(node)
       if (previousIndex !== -1) {
