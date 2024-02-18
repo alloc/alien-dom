@@ -14,6 +14,12 @@ import { useState } from './useState'
  * reduce its memory impact to zero when the `reset` argument is
  * undefined.
  */
+export function useResetId(reset: ResetOption): number
+export function useResetId(reset: ResetOption | undefined): number | false
+
+export function useResetId(reset: string): string
+export function useResetId(reset: string | undefined): string | false
+
 export function useResetId(
   reset: string | ResetOption | undefined
 ): string | number | false
