@@ -1,7 +1,11 @@
 import { isBoolean, isFunction, isNumber, isPromise } from '@alloc/is'
 import { Any, Falsy } from '@alloc/types'
 import { Color, mixColor, parseColor } from 'linear-color'
-import { applyAnimatedValue, deleteTimeline } from '../internal/animate'
+import {
+  applyAnimatedValue,
+  deleteTimeline,
+  kAlienAnimatedState,
+} from '../internal/animate'
 import { parseValue } from '../internal/animate/parseValue'
 import {
   AnimatedTransform,
@@ -179,6 +183,7 @@ export function animate(
           current: {},
           index,
         }
+        animatedElements.set(target, state)
       })
 
       startLoop()
@@ -292,7 +297,7 @@ export function animate(
 }
 
 function ensureAnimatedElement(target: DefaultElement): AnimatedElement {
-  let state = animatedElements.get(target)
+  let state = kAlienAnimatedState(target)
   if (!state) {
     state = {
       svgMode: isSvgChild(target),
@@ -305,7 +310,7 @@ function ensureAnimatedElement(target: DefaultElement): AnimatedElement {
       style: {},
       onStart: null,
     }
-    animatedElements.set(target, state)
+    kAlienAnimatedState(target, state)
   }
   return state
 }
@@ -418,6 +423,10 @@ function applyAnimation(
       if (node.transformFn) {
         state.transform ||= new AnimatedTransform(target, svgMode)
       }
+    }
+
+    if (node && !node.done) {
+      animatedElements.set(target, state)
     }
   }
 }
@@ -582,8 +591,6 @@ function startLoop() {
       type FrameValue = [string, AnimatedNode<any>]
       const frames = new Map<Record<string, any>, FrameValue[]>()
 
-      let done = true
-
       if (nodes) {
         for (const [key, node] of Object.entries(nodes)) {
           if (node.done) {
@@ -591,7 +598,6 @@ function startLoop() {
           }
           // TODO figure out why node.from is sometimes null
           if (node.from == null) {
-            done = false
             continue
           }
           const position = advance(node, node.spring, dt, key)
@@ -599,9 +605,6 @@ function startLoop() {
             const values = frames.get(node.frame) || []
             frames.set(node.frame, values)
             values.push([key, node])
-          }
-          if (!node.done) {
-            done = false
           }
           const { to } = node
           if (Array.isArray(to)) {
@@ -646,8 +649,6 @@ function startLoop() {
         if (frame.done) {
           state.step = null
           state.frame = null
-        } else {
-          done = false
         }
       }
 
@@ -670,7 +671,13 @@ function startLoop() {
         }
       }
 
-      if (!done) {
+      const done =
+        !(state.nodes && Object.values(state.nodes).some(node => !node.done)) &&
+        !state.step
+
+      if (done) {
+        animatedElements.delete(target)
+      } else {
         loopDone = false
       }
     }
@@ -868,7 +875,7 @@ function ensureFromValues(
   }
 
   for (const [key, node] of Object.entries(nodes)) {
-    if (node.from != null) {
+    if (node.done || node.from != null) {
       continue
     }
     if (node.transformFn) {
