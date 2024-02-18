@@ -26,15 +26,11 @@ export function useBounds(options: UseBoundsOptions = {}) {
     useHookOffset(4)
   }
   if (isRef(target)) {
-    useObserver(
-      target,
-      target => {
-        bbox.setElement(target)
-      },
-      [bbox]
-    )
+    useObserver(target, target => {
+      bbox.setElement(target)
+    })
   } else {
-    useHookOffset(2)
+    useHookOffset(3)
     if (target) {
       bbox.setElement(target)
     }
