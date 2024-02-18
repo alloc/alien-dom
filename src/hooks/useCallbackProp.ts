@@ -1,4 +1,5 @@
-import { useMemo } from './useMemo'
+import { Falsy } from '@alloc/types'
+import { useState } from './useState'
 
 /**
  * This creates a stable callback (i.e. its reference never changes) whose
@@ -11,13 +12,13 @@ export function useCallbackProp<T extends (...args: any[]) => any>(
 ): T
 
 export function useCallbackProp<T extends (...args: any[]) => void>(
-  callback: T | false | null | undefined
+  callback: T | Falsy
 ): T
 
 export function useCallbackProp<T extends (...args: any[]) => any>(
-  callback: T | false | null | undefined
+  callback: T | Falsy
 ) {
-  const state = useMemo(() => ({ callback }), [])
+  const state = useState(initialState)
   state.callback = callback
 
   return function (this: any, ...args: any[]) {
@@ -26,3 +27,9 @@ export function useCallbackProp<T extends (...args: any[]) => any>(
     }
   } as T
 }
+
+const initialState = <T extends (...args: any[]) => any>(): {
+  callback: T | Falsy
+} => ({
+  callback: false,
+})
