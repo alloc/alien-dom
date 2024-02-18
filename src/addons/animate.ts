@@ -489,8 +489,8 @@ function updateAnimatedNode(
     node.lastPosition = null
   }
 
-  if (immediate || velocity != null) {
-    node.v0 = immediate ? NaN : velocity!
+  if (immediate || velocity != null || isNaN(node.v0)) {
+    node.v0 = immediate ? NaN : velocity ?? 0
     node.lastVelocity = null
   }
 
