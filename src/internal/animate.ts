@@ -1,7 +1,10 @@
-import type { SpringTimeline } from './animate/types'
-import { animatedElements } from './global'
+import type { AnimatedElement, SpringTimeline } from './animate/types'
+import { createSymbolProperty } from './symbolProperty'
 import type { DefaultElement } from './types'
 import { decamelize } from './util'
+
+export const kAlienAnimatedState =
+  createSymbolProperty<AnimatedElement>('alien.animated')
 
 export function deleteTimeline(
   timelines: Record<string, SpringTimeline>,
@@ -21,7 +24,7 @@ export function deleteTimeline(
 }
 
 export function getAnimatedKeys(element: DefaultElement) {
-  const state = animatedElements.get(element)
+  const state = kAlienAnimatedState(element)
   if (state) {
     const keys = Object.keys(state.style)
     if (keys.length) {
@@ -31,7 +34,7 @@ export function getAnimatedKeys(element: DefaultElement) {
 }
 
 export function stopAnimatingKey(element: DefaultElement, key: string) {
-  const state = animatedElements.get(element)
+  const state = kAlienAnimatedState(element)
   if (state?.nodes) {
     const node = state.nodes[key]
     if (node?.done === false) {
@@ -47,7 +50,7 @@ export function stopAnimatingKey(element: DefaultElement, key: string) {
 }
 
 export function isAnimatedStyleProp(element: DefaultElement, key: string) {
-  const state = animatedElements.get(element)
+  const state = kAlienAnimatedState(element)
   return state?.nodes?.[key] != null
 }
 
