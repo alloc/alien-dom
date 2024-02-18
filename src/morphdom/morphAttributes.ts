@@ -203,7 +203,9 @@ const morphStyleProperty: typeof applyProp = (
       svgMode,
       gpuMode
     )
-    updateStyle(fromNode, { transform: newTransform })
+    // TODO: we should be able to merge in non-animated transform calls, but
+    // they are currently ignored if any transform call has been animated.
+    updateStyle(fromNode, { transform: newTransform }, UpdateStyle.NonAnimated)
   } else {
     newValue = addHostProp(fromProps, 'style.' + key, newValue, applyNestedProp)
     updateStyle(fromNode, { [key]: newValue }, UpdateStyle.NonAnimated)
