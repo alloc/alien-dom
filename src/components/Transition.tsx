@@ -175,7 +175,7 @@ export function Transition<Id>(props: TransitionProps<Id>) {
         if (previousId === nothing) {
           if (initial === false) {
             transition = alterTransition(transition, t => {
-              return { ...t, immediate: true }
+              return { ...t, immediate: true, delay: undefined }
             })
           } else if (initial && initial !== true) {
             transition = alterTransition(transition, t => {
