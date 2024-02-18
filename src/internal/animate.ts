@@ -51,7 +51,13 @@ export function stopAnimatingKey(element: DefaultElement, key: string) {
 
 export function isAnimatedStyleProp(element: DefaultElement, key: string) {
   const state = kAlienAnimatedState(element)
-  return state?.nodes?.[key] != null
+  if (!state) {
+    return false
+  }
+  if (key === 'transform') {
+    return state.transform != null
+  }
+  return state.nodes?.[key] != null
 }
 
 export function applyAnimatedValue(
