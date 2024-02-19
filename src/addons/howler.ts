@@ -13,8 +13,7 @@ type Pluck<T extends object | null, K extends keyof T> = T extends null
   ? Pick<T, K>
   : null
 
-const audioContext =
-  typeof AudioContext !== 'undefined' ? new AudioContext() : null!
+let audioContext: AudioContext = null!
 
 const useOgg = /* @__PURE__ */ checkAudioType('audio/ogg; codecs="vorbis"')
 const useAac = !useOgg && /* @__PURE__ */ checkAudioType('audio/aac;')
@@ -93,6 +92,17 @@ export class Howl<Sprite extends string | null = any>
     attachRef(this, 'status', this.statusRef)
     attachRef(this, 'maxVolume', this.maxVolumeRef)
     attachRef(this, 'muted', this.mutedRef)
+
+    if (!audioContext && typeof AudioContext !== 'undefined') {
+      audioContext = new AudioContext()
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+          suspendAudioContext(true)
+        } else if (runningHowls.size > 0) {
+          resumeAudioContext()
+        }
+      })
+    }
 
     // Pre-loading is always enabled.
     if (audioContext) {
@@ -477,7 +487,9 @@ function computeVolume(howl: Howl, options: Howl.PlayOptions) {
 function resetHowl(howl: Howl) {
   howl.statusRef.value = 'loaded'
   runningHowls.delete(howl)
-  suspendAudioContext()
+  if (runningHowls.size == 0) {
+    suspendAudioContext()
+  }
 }
 
 /**
@@ -513,11 +525,17 @@ function resumeAudioContext() {
   }
 }
 
-function suspendAudioContext() {
-  if (runningHowls.size > 0) return
-  if (contextSuspendTimer) return
+function suspendAudioContext(immediate?: boolean) {
+  const contextStatus = contextStatusRef.peek()
+  if (contextStatus === ContextStatus.Suspended) {
+    return
+  }
+  if (contextStatus === ContextStatus.RunOnceSuspended) {
+    contextStatusRef.value = ContextStatus.Suspending
+    return
+  }
 
-  contextSuspendTimer = setTimeout(async () => {
+  async function suspend() {
     contextStatusRef.value = ContextStatus.Suspending
     contextSuspendTimer = undefined
 
@@ -533,5 +551,14 @@ function suspendAudioContext() {
     } else {
       contextStatusRef.value = ContextStatus.Suspended
     }
-  }, 30e3)
+  }
+
+  if (immediate) {
+    clearTimeout(contextSuspendTimer)
+    contextSuspendTimer = undefined
+
+    suspend()
+  } else {
+    contextSuspendTimer ??= setTimeout(suspend, 30e3)
+  }
 }
