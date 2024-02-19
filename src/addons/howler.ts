@@ -340,7 +340,7 @@ export class Howl<Sprite extends string | null = any>
 
       fadeOutStart = audioContext.currentTime
       gain.gain.setValueAtTime(gain.gain.value, fadeOutStart)
-      gain.gain.linearRampToValueAtTime(0, fadeOutStart + duration)
+      gain.gain.linearRampToValueAtTime(0, fadeOutStart + duration / 1000)
 
       setTimeout(() => {
         this.disconnect()
