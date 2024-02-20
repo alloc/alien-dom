@@ -231,6 +231,7 @@ export interface ArrayRef<T>
     Iterable<T> {
   [index: number]: T
   length: number
+  set value(newValue: readonly T[])
   /**
    * Observe a single index in the array. Any time the array is mutated, this
    * will check the given `index` to see if a new value exists there.
@@ -315,6 +316,14 @@ const arrayTraps: ProxyHandler<InternalRef<any[]>> = {
         }
         setValue.call(target, newArray)
         updateLengthRef(kLengthRef(target), oldArray, newArray)
+      }
+      return true
+    }
+    if (key === 'value') {
+      const oldArray = target._value
+      if (newValue !== oldArray) {
+        setValue.call(target, newValue)
+        updateLengthRef(kLengthRef(target), oldArray, newValue)
       }
       return true
     }
