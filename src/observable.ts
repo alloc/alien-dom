@@ -55,8 +55,6 @@ type InternalRef<T> = Ref<T> & {
 
 const unseenAccess = (ref: InternalRef<any>) => ref._value
 
-let currentVersion = 1
-let nextVersion = 1
 let nextDebugId = 1
 let access = unseenAccess
 
@@ -184,8 +182,7 @@ function setValue<T>(this: ReadonlyRef<T>, newValue: T) {
       updateHasSideEffects ||= !observer.isObservablyPure()
     })
 
-    if (nextVersion === currentVersion && updateQueue.size > 0) {
-      nextVersion++
+    if (updateQueue.size > 0) {
       scheduleUpdates()
     }
   }
@@ -501,7 +498,6 @@ export declare namespace Observer {
 export class Observer {
   readonly id = nextObserverId++
   refs = new Set<InternalRef<any>>()
-  version = 0
   depth = 0
 
   constructor(readonly queue: Observer.Queue = updateQueue) {
@@ -557,12 +553,11 @@ export class Observer {
    * When those refs change, the `compute` function will run again in the next
    * microtask (unless you call this method before then).
    */
-  update<T>(
-    compute: (oldRefs?: Set<InternalRef<any>>) => T = this.nextCompute
-  ): T {
+  update<T>(compute?: (oldRefs?: Set<InternalRef<any>>) => T): T {
     const oldRefs = new Set(this.refs)
-    this.nextCompute = compute
-
+    if (compute) {
+      this.nextCompute = compute
+    }
     const parentAccess = access
     access = ref => this._access(ref, oldRefs)
     try {
@@ -578,13 +573,10 @@ export class Observer {
       hooks.observe(this, ref, newValue, oldValue)
     }
     this.didObserve(ref, newValue, oldValue)
-    if (this.version !== currentVersion) {
-      this.scheduleUpdate(ref, newValue, oldValue)
-    }
+    this.scheduleUpdate(ref, newValue, oldValue)
   }
 
   scheduleUpdate(ref?: ReadonlyRef<any>, newValue?: any, oldValue?: any) {
-    this.version = currentVersion
     if (!this.queue.has(this)) {
       this.queue.add(this)
       if (ref) {
@@ -846,7 +838,6 @@ type InternalObserver = Observer & {
 
 function processUpdates() {
   updateScheduled = false
-  currentVersion = nextVersion
 
   // Capture the stack trace before the infinite loop.
   const devError = DEV && Error('Cycle detected')
