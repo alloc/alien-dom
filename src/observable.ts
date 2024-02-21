@@ -778,6 +778,41 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
 }
 
 //
+// Single ref observer
+//
+
+class TargetObserver<T = any> extends Observer {
+  private oldValue = emptySymbol
+  constructor(
+    readonly target: ReadonlyRef<T>,
+    readonly onChange: (newValue: T, oldValue: T, ref: ReadonlyRef<T>) => void
+  ) {
+    super()
+  }
+  nextCompute() {
+    return access(this.target as any)
+  }
+  willUpdate(_ref: ReadonlyRef, _newValue: any, oldValue: any) {
+    if (this.oldValue === emptySymbol) {
+      this.oldValue = oldValue
+    }
+  }
+  onUpdate(newValue: any) {
+    // Skip the reaction if triggered by the initial value.
+    if (this.oldValue !== emptySymbol) {
+      const { target, oldValue } = this
+      this.oldValue = emptySymbol
+
+      if (newValue !== oldValue) {
+        peek(() => {
+          this.onChange(target.peek(), oldValue, target)
+        })
+      }
+    }
+  }
+}
+
+//
 // Update loop
 //
 
@@ -897,20 +932,13 @@ export function observe(
   arg1: ReadonlyRef | (() => void),
   arg2?: (newValue: any, oldValue: any, ref: ReadonlyRef) => void
 ) {
-  const observer = new Observer()
+  let observer: Observer
   if (isFunction(arg1)) {
+    observer = new Observer()
     observer.update(arg1)
   } else {
-    const ref = arg1,
-      onChange = arg2!
-
-    observer.update(() => access(ref as any))
-
-    // Capture the old value for the onChange callback.
-    observer.willUpdate = (ref, _newValue, oldValue) => {
-      observer.onUpdate = newValue =>
-        newValue !== oldValue && peek(() => onChange(newValue, oldValue, ref))
-    }
+    observer = new TargetObserver(arg1, arg2!)
+    observer.update()
   }
   return observer
 }
