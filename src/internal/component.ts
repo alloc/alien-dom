@@ -173,7 +173,10 @@ class ComponentObserver extends Observer {
   constructor(private component: AlienComponent) {
     super()
   }
-  didObserve(ref: ReadonlyRef): void {
+  override isObservablyPure() {
+    return true
+  }
+  override didObserve(ref: ReadonlyRef): void {
     const { memos } = this.component
     memos?.forEach((memo, key) => {
       if (Memo.isMemo(memo) && memo.refs?.has(ref)) {
