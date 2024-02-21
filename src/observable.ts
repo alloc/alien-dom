@@ -178,9 +178,12 @@ function setValue<T>(this: ReadonlyRef<T>, newValue: T) {
   const oldValue = this._value
   if (newValue !== oldValue) {
     this._value = newValue
+
     this._observers.forEach(observer => {
       observer.observe(this, newValue, oldValue)
+      updateHasSideEffects ||= !observer.isObservablyPure()
     })
+
     if (nextVersion === currentVersion && updateQueue.size > 0) {
       nextVersion++
       scheduleUpdates()
@@ -477,6 +480,7 @@ export class RefMap<K, V> {
 //
 
 const passThrough = (result: any) => result
+const alwaysFalse = () => false
 
 let nextObserverId = 1
 
@@ -501,6 +505,7 @@ export class Observer {
   depth = 0
 
   constructor(readonly queue: Observer.Queue = updateQueue) {
+    this.isObservablyPure ||= alwaysFalse
     this.nextCompute ||= noop
     this.didObserve ||= noop
     this.willUpdate ||= noop
@@ -588,6 +593,7 @@ export class Observer {
       // If no ref is provided, this is a forced update, which means the update
       // queue may not be flushed unless we ask for it here.
       else if (this.queue === updateQueue) {
+        updateHasSideEffects ||= !this.isObservablyPure()
         scheduleUpdates()
       }
     }
@@ -612,6 +618,12 @@ export class Observer {
 
 // These methods can be implemented by a subclass or set directly.
 export interface Observer {
+  /**
+   * When true, this observer will run *after* all other observers in the queue.
+   * This is useful to ensure all side effects have been applied before this
+   * observer runs.
+   */
+  isObservablyPure(): boolean
   nextCompute(oldRefs?: Set<InternalRef<any>>): any
   /**
    * Called whenever an observed ref is changed.
@@ -771,6 +783,7 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
 
 const updateQueue = new Set<Observer>()
 let updateScheduled = false
+let updateHasSideEffects = false
 
 function scheduleUpdates() {
   if (!updateScheduled) {
@@ -803,6 +816,7 @@ function processUpdates() {
   // Capture the stack trace before the infinite loop.
   const devError = DEV && Error('Cycle detected')
 
+  let skipPureObservers = false
   let currentObserver: InternalObserver
   let oldRefs: Set<InternalRef<any>>
 
@@ -810,6 +824,9 @@ function processUpdates() {
   access = (ref: InternalRef<any>) => currentObserver._access(ref, oldRefs)
 
   const update = (observer: Observer) => {
+    if (skipPureObservers && observer.isObservablyPure()) {
+      return // Wait for observable side effects to complete.
+    }
     // Skip the update if the observer was disposed.
     if (updateQueue.delete(observer)) {
       oldRefs = new Set(observer.refs)
@@ -824,6 +841,10 @@ function processUpdates() {
     }
 
     if (updateQueue.size) {
+      // Run observers with side effects before all others.
+      skipPureObservers = updateHasSideEffects
+      updateHasSideEffects = false
+
       const updatedObservers = [...updateQueue].sort(sortObservers)
       updatedObservers.forEach(update)
     }
