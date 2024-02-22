@@ -58,7 +58,7 @@ const unseenAccess = (ref: InternalRef<any>) => ref._value
 let nextDebugId = 1
 let access = unseenAccess
 
-export class ReadonlyRef<T = any> {
+export abstract class ReadonlyRef<T = any> {
   readonly debugId: string | number | undefined
   protected _observers = new Set<Observer>()
   protected get _depth() {
