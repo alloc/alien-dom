@@ -78,7 +78,7 @@ export class ReadonlyRef<T = any> {
       return
     }
     if (DEV && hooks) {
-      hooks.isObserved(this, observer, isObserved)
+      peek(hooks.isObserved, this, observer, isObserved)
     }
     if (isObserved) {
       this._observers.add(observer)
@@ -538,7 +538,7 @@ export class Observer {
     }
 
     if (DEV && hooks) {
-      peek(() => (hooks as ObservableHooks).didUpdate(this, error, result))
+      peek(hooks.didUpdate, this, error, result)
     }
 
     if (sync) {
@@ -792,15 +792,16 @@ class TargetObserver<T = any> extends Observer {
   onUpdate(newValue: any) {
     // Skip the reaction if triggered by the initial value.
     if (this.oldValue !== emptySymbol) {
-      const { target, oldValue } = this
+      const { oldValue } = this
       this.oldValue = emptySymbol
 
       if (newValue !== oldValue) {
-        peek(() => {
-          this.onChange(target.peek(), oldValue, target)
-        })
+        peek(TargetObserver.onChange, this, newValue, oldValue)
       }
     }
+  }
+  static onChange(observer: TargetObserver, newValue: any, oldValue: any) {
+    observer.onChange(newValue, oldValue, observer.target)
   }
 }
 
@@ -946,11 +947,28 @@ export function isRef<T = any>(value: any): value is ReadonlyRef<T> {
  * Like `ref.peek()` but applies to all access within the given `compute`
  * callback.
  */
-export function peek<T>(compute: () => T) {
+export function peek<T, Args extends any[]>(
+  compute: (...args: Args) => T,
+  ...args: Args
+): T
+
+/**
+ * Like `ref.peek()` but for computed properties or custom properties (i.e.
+ * defined with `Object.defineProperty`).
+ */
+export function peek<T extends object, K extends keyof T>(
+  object: T,
+  key: K
+): T[K]
+
+export function peek(arg1: object | ((...args: any[]) => any), ...rest: any[]) {
   const parentAccess = access
   access = unseenAccess
   try {
-    return compute()
+    if (isFunction(arg1)) {
+      return arg1(...rest)
+    }
+    return (arg1 as any)[rest[0]]
   } finally {
     access = parentAccess
   }
