@@ -33,7 +33,7 @@ export function createGuid(
   if (key == null) {
     throw Error('A key must be provided when a container is provided')
   }
-  let guid: any = peek(() => container[key])
+  let guid: any = peek(container, key)
   if (!guid || force) {
     guid = generateId ? generateId() : (nextId += nextId === -1 ? 2 : 1)
     container[key] = guid
