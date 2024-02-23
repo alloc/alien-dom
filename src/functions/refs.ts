@@ -1,18 +1,20 @@
 import { ref } from '../observable'
 import { attachRef } from './attachRef'
 
+/**
+ * Mutates an object so its enumerable properties are observable.
+ */
 export const refs = <Props extends object>(
-  initialProps: Props,
+  object: Props,
   didSet?: (key: keyof Props, newValue: any, oldValue: any) => void
 ) => {
-  const props = {} as Props
-  for (const [key, value] of Object.entries(initialProps)) {
+  for (const [key, value] of Object.entries(object)) {
     attachRef(
-      props,
+      object,
       key,
       ref(value),
       didSet as (key: keyof any, newValue: any, oldValue: any) => void
     )
   }
-  return props
+  return object
 }
