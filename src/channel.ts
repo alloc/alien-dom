@@ -112,7 +112,7 @@ export function defineChannel<
 }: {
   isTarget?(node: any): node is Target
   parentKey?: Extract<keyof Target, string>
-} = {}): ChannelFunction<Data> {
+} = {}): AlienChannel<Data, Target> {
   let untargetedReceivers: Set<AlienReceiver> | undefined
   let targetedReceiverCaches: WeakMap<Target, Set<AlienReceiver>> | undefined
 
