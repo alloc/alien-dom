@@ -1,4 +1,4 @@
-import { createElementProxy } from '../elementProxy'
+import { createElementProxy } from '../addons/elementProxy'
 import type { EffectResult } from './useEffect'
 import { useState } from './useState'
 

@@ -1,4 +1,4 @@
-import type { AlienElementList, AlienSelect, AlienTag } from '../element'
+import type { AlienElementList, AlienSelect, AlienTag } from '../addons/element'
 import { canMatch, isIterable } from './duck'
 import { AnyElement, DefaultElement } from './types'
 

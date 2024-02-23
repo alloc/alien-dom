@@ -1,17 +1,7 @@
-export * from './animate'
-export * from './channel'
 export * from './context'
-export * from './disposable'
-export * from './domObserver'
 export * from './effects'
-export * from './element'
-export * from './elementProxy'
-export * from './elementRef'
 export * from './hooks'
-export * from './machine'
 export * from './observable'
-export * from './promises'
-export * from './selectors'
 
 /// Functions
 export * from './functions/attachRef'
@@ -31,6 +21,18 @@ export * from './functions/toElements'
 export * from './functions/typeChecking'
 export * from './functions/unmount'
 export * from './functions/updateProps'
+
+/// Addons
+export * from './addons/animate'
+export * from './addons/channel'
+export * from './addons/disposable'
+export * from './addons/domObserver'
+export * from './addons/element'
+export * from './addons/elementProxy'
+export * from './addons/elementRef'
+export * from './addons/machine'
+export * from './addons/promises'
+export * from './addons/selectors'
 
 /// Components
 export * from './components/Transition'

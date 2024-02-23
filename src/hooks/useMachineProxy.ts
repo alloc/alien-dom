@@ -7,7 +7,7 @@ import {
   MachineProxy,
   MachineType,
   toMachineProxy,
-} from '../machine'
+} from '../addons/machine'
 import { useCallbackProp } from './useCallbackProp'
 import { useState } from './useState'
 

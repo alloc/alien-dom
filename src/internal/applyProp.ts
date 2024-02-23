@@ -1,5 +1,5 @@
 import { isArray, isBoolean, isObject } from '@alloc/is'
-import { createDisposable } from '../disposable'
+import { createDisposable } from '../addons/disposable'
 import { appendChild } from '../jsx-dom/appendChild'
 import { AnyDeferredNode, isDeferredNode } from '../jsx-dom/node'
 import { ResolvedChild, resolveChildren } from '../jsx-dom/resolveChildren'

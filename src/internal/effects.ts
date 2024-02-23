@@ -1,5 +1,5 @@
 import { isFunction } from '@alloc/is'
-import { Disposable, attachDisposer } from '../disposable'
+import { Disposable, attachDisposer } from '../addons/disposable'
 import { AlienEffect, AlienEffects } from '../effects'
 import { ShadowRootContext } from '../jsx-dom/shadow'
 import { noop } from '../jsx-dom/util'

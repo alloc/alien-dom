@@ -1,27 +1,27 @@
-import { AnimationsParam, animate } from './animate'
-import { Disposable } from './disposable'
-import { AlienBoundEffect, AlienEffect, AlienEffects } from './effects'
-import { FromElementProxy } from './elementProxy'
-import { observeAs } from './functions/observeAs'
-import { applyProp } from './internal/applyProp'
-import { canMatch } from './internal/duck'
-import { EffectFlags, enableEffect, getEffects } from './internal/effects'
+import { AlienBoundEffect, AlienEffect, AlienEffects } from '../effects'
+import { observeAs } from '../functions/observeAs'
+import { applyProp } from '../internal/applyProp'
+import { canMatch } from '../internal/duck'
+import { EffectFlags, enableEffect, getEffects } from '../internal/effects'
 import type {
   AlienEventMethod,
   AlienEventMethods,
   AlienStyleMethods,
-} from './internal/element'
-import { unwrap } from './internal/element'
-import { AlienNodeList } from './internal/nodeList'
+} from '../internal/element'
+import { unwrap } from '../internal/element'
+import { AlienNodeList } from '../internal/nodeList'
 import type {
   AnyElement,
   AnyEvent,
   DefaultElement,
   StyleAttributes,
-} from './internal/types'
-import { UpdateStyle, keys, updateStyle } from './jsx-dom/util'
-import type { DetailedHTMLProps, HTMLAttributes } from './types/html'
-import type { SVGAttributes } from './types/svg'
+} from '../internal/types'
+import { UpdateStyle, keys, updateStyle } from '../jsx-dom/util'
+import type { DetailedHTMLProps, HTMLAttributes } from '../types/html'
+import type { SVGAttributes } from '../types/svg'
+import { AnimationsParam, animate } from './animate'
+import { Disposable } from './disposable'
+import { FromElementProxy } from './elementProxy'
 
 export interface AlienElementList<Element extends Node = DefaultElement>
   extends NodeListOf<Element>,

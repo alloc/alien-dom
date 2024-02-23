@@ -1,6 +1,6 @@
+import { defineEffectType } from '../effects'
+import type { EffectResult } from '../hooks/useEffect'
 import { Disposable } from './disposable'
-import { defineEffectType } from './effects'
-import type { EffectResult } from './hooks/useEffect'
 
 export type ElementProxy<T extends Element = Element> = T & {
   toElement(): T | null
