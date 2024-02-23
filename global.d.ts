@@ -1,4 +1,4 @@
-import { UnrefElement } from './dist'
+import { FromElementProxy } from './dist'
 import {
   AnimationsParam,
   HTMLAnimatedProps,
@@ -17,7 +17,7 @@ type AnyElement = Element
 declare global {
   interface Element {
     readonly childNodes: AlienElementList<Element>
-    cloneNode(deep?: boolean): UnrefElement<this>
+    cloneNode(deep?: boolean): FromElementProxy<this>
     matches(selectors: string): boolean
     matches<Element extends AlienTag>(
       selectors: string
@@ -28,7 +28,7 @@ declare global {
     readonly lastElementChild: HTMLElement | SVGElement | null
     readonly childNodes: AlienElementList
     spring(
-      animations: AnimationsParam<UnrefElement<this>, HTMLAnimatedProps>
+      animations: AnimationsParam<FromElementProxy<this>, HTMLAnimatedProps>
     ): this
   }
   interface SVGElement extends AlienElement<SVGElement> {
@@ -36,7 +36,7 @@ declare global {
     readonly lastElementChild: SVGElement | null
     readonly childNodes: AlienElementList<SVGElement>
     spring(
-      animations: AnimationsParam<UnrefElement<this>, SVGAnimatedProps>
+      animations: AnimationsParam<FromElementProxy<this>, SVGAnimatedProps>
     ): this
   }
   namespace JSX {
