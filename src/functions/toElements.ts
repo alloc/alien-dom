@@ -1,11 +1,11 @@
 import { isElement, isFragment } from '../internal/duck'
 import { kAlienFragmentNodes } from '../internal/symbols'
 import type { DefaultElement } from '../internal/types'
-import { isShadowRoot } from '../jsx-dom/node'
+import { AlienNode, isShadowRoot } from '../jsx-dom/node'
 import type { JSX } from '../types'
 
 export function toElements<Element extends DefaultElement>(
-  node: JSX.ElementOption
+  node: Exclude<JSX.ElementOption, AlienNode>
 ): Element[] {
   if (!node || isShadowRoot(node)) {
     return []
