@@ -13,7 +13,7 @@
     "dist"
   ],
   "dependencies": {
-    "@alien-dom/esbuild": "workspace:^0.3.0",
+    "@alien-dom/esbuild": "workspace:^0.8.0",
     "@htmelt/plugin": "^0.3.4"
   },
   "devDependencies": {
