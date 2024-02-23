@@ -306,12 +306,37 @@ export default function (
         }
       }
 
+      let hasForceDOM = false
+
       program.process({
         ArrowFunctionExpression: handleElementRefs,
         FunctionExpression: handleElementRefs,
         FunctionDeclaration: handleElementRefs,
         JSXElement(path) {
-          collectThunkParents(path, jsxThunkParents)
+          const isThunked = collectThunkParents(path, jsxThunkParents)
+
+          // If the JSX element is in a function that isn't a component, pass
+          // the FORCE_DOM symbol to the jsx function to force the runtime to
+          // return a DOM element.
+          if (!isThunked && !hasElementProp(path.openingElement, 'key')) {
+            const nearestFn = path.findParent(isFunctionNode) as
+              | FunctionNode
+              | undefined
+
+            if (nearestFn) {
+              const componentName = getComponentName(nearestFn)
+              if (!componentName) {
+                if (!hasForceDOM) {
+                  hasForceDOM = true
+                  program.unshift(
+                    'body',
+                    `import { FORCE_DOM } from '${helpersId}'\n`
+                  )
+                }
+                path.openingElement.push('attributes', ` key={FORCE_DOM}`)
+              }
+            }
+          }
         },
       })
 

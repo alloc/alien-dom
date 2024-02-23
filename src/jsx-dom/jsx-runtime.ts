@@ -18,6 +18,18 @@ import { compareNodeWithTag } from './util'
 export { Fragment }
 export type { JSX }
 
+/**
+ * When the JSX is compiled, this symbol gets passed as the `key` prop of any
+ * unkeyed JSX element that's created outside of a component. It forces the
+ * runtime to return a DOM element from the compiled `jsx` call.
+ *
+ * This was added to allow user-defined, "helper" functions that create JSX
+ * elements to be called by a component while rendering. Without this feature,
+ * the runtime would return a virtual node instead of a DOM element, which would
+ * prevent natural DOM manipulation.
+ */
+export const FORCE_DOM = Symbol.for('alien:force-dom')
+
 export const SVGNamespace = 'http://www.w3.org/2000/svg'
 
 export { jsx as jsxs }
@@ -27,7 +39,11 @@ type Props = {
   children?: JSX.ChildrenProp
 }
 
-export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
+export function jsx(
+  tag: any,
+  props: Props,
+  key?: JSX.ElementKey | typeof FORCE_DOM
+): any {
   if (!tag) {
     return null
   }
@@ -50,7 +66,7 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
   if (component) {
     // Use the JSX element's key to locate an existing DOM node. We will return
     // this node so the component can reference it without misdirection.
-    if (key != null && component.refs) {
+    if (isElementKey(key) && component.refs) {
       oldNode = component.refs.get(key)
       if (oldNode && !compareNodeWithTag(oldNode, tag)) {
         oldNode = undefined
@@ -59,7 +75,7 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
 
     // Defer the creation of any DOM nodes until the morphing phase, unless the
     // JSX element has a key without a DOM node.
-    shouldDefer = oldNode != null || key == null
+    shouldDefer = key !== FORCE_DOM && (oldNode != null || key == null)
   }
 
   if (isFunction(tag)) {
@@ -83,11 +99,15 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
     throw Error(`Invalid JSX element type: ${tag}`)
   }
 
-  if (key != null) {
+  if (isElementKey(key)) {
     applyKeyProp(node, key, oldNode, component)
   }
 
   return oldNode || node
+}
+
+function isElementKey(key: any): key is JSX.ElementKey {
+  return key != null && key !== FORCE_DOM
 }
 
 /** This is used by JSX SVG elements. */
