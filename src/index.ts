@@ -24,6 +24,7 @@ export * from './functions/updateProps'
 
 /// Addons
 export * from './addons/animate'
+export * from './addons/bounds'
 export * from './addons/channel'
 export * from './addons/disposable'
 export * from './addons/domObserver'
