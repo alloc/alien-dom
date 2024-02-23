@@ -135,7 +135,7 @@ function hmrRender(
 function clearMemoized(component: AlienComponent) {
   component.memos = null
   component.hooks.forEach((hook, index, hooks) => {
-    if (hook && hook.hasOwnProperty('dispose')) {
+    if (hook?.dispose) {
       if (isArray(hook.deps) && !hook.deps.length) {
         return // Skip mount effects.
       }

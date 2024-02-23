@@ -1,5 +1,4 @@
 import { depsHaveChanged } from '../functions/depsHaveChanged'
-import { noop } from '../jsx-dom/util'
 import { ComputedRef, computed } from '../observable'
 import { useState } from './useState'
 
@@ -24,10 +23,10 @@ const initialState = (
 ): {
   deps: readonly any[]
   ref: ComputedRef | null
-  dispose: (() => void) | void
+  dispose: true
 } => ({
   deps,
   ref: null,
-  // This is defined so HMR knows to rerun the ComputedRef.
-  dispose: noop,
+  // This tells the runtime to reset the state after an HMR update.
+  dispose: true,
 })

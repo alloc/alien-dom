@@ -1,6 +1,5 @@
 import { isFunction } from '@alloc/is'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
-import { noop } from '../jsx-dom/util'
 import { peek } from '../observable'
 import { useState } from './useState'
 
@@ -21,9 +20,10 @@ const initialState = (
 ): {
   deps: readonly any[]
   value: any
-  dispose: () => void
+  dispose: true
 } => ({
   deps,
   value: undefined,
-  dispose: noop,
+  // This tells the runtime to reset the state after an HMR update.
+  dispose: true,
 })
