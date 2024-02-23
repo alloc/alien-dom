@@ -379,7 +379,10 @@ function collectKeyedNodes(
   options: MorphChildrenOptions
 ) {
   const { getFromKey = getElementKey } = options
-  const fromNodesByKey = new Map<JSX.ElementKey, Element | DocumentFragment>()
+  const fromNodesByKey = new Map<
+    JSX.ElementKey,
+    Element | Comment | DocumentFragment
+  >()
   for (
     let fromChildNode = firstChildNode;
     fromChildNode;
@@ -395,7 +398,11 @@ function collectKeyedNodes(
       if (!fragment) {
         continue
       }
-      const position = kAlienElementPosition(fragment)
+      let position = kAlienElementPosition(fromChildNode)
+      if (position != null) {
+        fromNodesByKey.set(position, fragment)
+      }
+      position = kAlienElementPosition(fragment)
       if (position != null) {
         fromNodesByKey.set(position, fragment)
       }
