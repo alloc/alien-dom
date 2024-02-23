@@ -32,7 +32,6 @@ export * from './functions/unmount'
 export * from './functions/updateProps'
 
 /// Components
-export * from './components/ManualUpdates'
 export * from './components/Transition'
 
 /// Third Party
