@@ -6,7 +6,10 @@ import { kAlienThunkResult } from './symbols'
 
 type ThunkResult = JSX.Children | ReadonlyRef<JSX.Children>
 
-export function fromElementThunk(thunk: () => ThunkResult) {
+export function fromElementThunk(
+  thunk: () => ThunkResult,
+  keepDeferred?: boolean
+) {
   if (!kAlienThunkResult.in(thunk)) {
     // The first component to call the thunk owns it.
     const component = currentComponent.get()
@@ -24,6 +27,9 @@ export function fromElementThunk(thunk: () => ThunkResult) {
         if (result === undefined) {
           result = thunk()
           if (isDeferredNode(result)) {
+            if (keepDeferred) {
+              return result
+            }
             result = evaluateDeferredNode(result)
           }
           component.newMemos ||= new Map()
