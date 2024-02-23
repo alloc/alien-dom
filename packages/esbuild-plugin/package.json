@@ -17,7 +17,7 @@
     "esbuild": "^0.17.17"
   },
   "dependencies": {
-    "@alien-dom/nebu": "workspace:^0.3.0",
+    "@alien-dom/nebu": "workspace:^0.8.0",
     "esbuild-extra": "^0.3.0",
     "nebu": "^2.3.8"
   },
