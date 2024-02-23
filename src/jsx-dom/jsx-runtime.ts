@@ -2,13 +2,14 @@ import { isFunction, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
 import { selfUpdating } from '../functions/selfUpdating'
 import { applyKeyProp } from '../internal/applyProp'
+import { wrapWithFragment } from '../internal/fragment'
 import { currentComponent } from '../internal/global'
 import { kAlienPureComponent, kAlienSelfUpdating } from '../internal/symbols'
 import type { JSX } from '../types'
 import {
   AnyDeferredNode,
   createHostNode,
-  deferComponentNode,
+  deferCompositeNode,
   deferHostNode,
 } from './node'
 
@@ -28,7 +29,7 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
   const component = currentComponent.get()
 
   const hasImpureTag = typeof tag !== 'string' && !kAlienPureComponent.in(tag)
-  if (hasImpureTag) {
+  if (hasImpureTag && tag !== Fragment) {
     let selfUpdatingTag = kAlienSelfUpdating(tag)
     if (!selfUpdatingTag) {
       selfUpdatingTag = selfUpdating(tag)
@@ -53,10 +54,14 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
 
   if (isFunction(tag)) {
     // Pure components are never deferred.
-    if (isDeferred && hasImpureTag) {
-      node = deferComponentNode(tag, props)
+    if (hasImpureTag && isDeferred) {
+      if (tag !== Fragment) {
+        node = deferCompositeNode(tag, props)
+      } else {
+        node = wrapWithFragment(props.children, undefined, true)
+      }
     } else {
-      node = tag(props) as ChildNode | DocumentFragment
+      node = tag(props) as Exclude<typeof node, undefined>
     }
   } else if (isString(tag)) {
     if (isDeferred) {

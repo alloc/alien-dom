@@ -1,6 +1,6 @@
 import { addChildrenRef, applyRefProp } from '../internal/applyProp'
 import { AlienComponent } from '../internal/component'
-import { kAlienElementTags, kAlienHostProps } from '../internal/symbols'
+import { kAlienHostProps } from '../internal/symbols'
 import type { DefaultElement } from '../internal/types'
 import {
   AnyDeferredNode,
@@ -10,6 +10,7 @@ import {
 import { isRef } from '../observable'
 import { morphAttributes } from './morphAttributes'
 import { morphChildren } from './morphChildren'
+import { morphComposite } from './morphComposite'
 
 /**
  * This function assumes the two nodes are compatible.
@@ -37,15 +38,6 @@ export function morph(
       applyRefProp(fromParentNode, toParentNode.ref, fromProps)
     }
   } else {
-    const tags = kAlienElementTags(fromParentNode)!
-    const childComponent = tags.get(toParentNode.tag)!
-
-    childComponent.updateProps(toParentNode.props)
-    toParentNode.context?.forEach((ref, key) => {
-      const targetRef = childComponent.context.get(key)
-      if (targetRef) {
-        targetRef.value = ref.peek()
-      }
-    })
+    morphComposite(fromParentNode, toParentNode)
   }
 }

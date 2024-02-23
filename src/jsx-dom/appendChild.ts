@@ -10,7 +10,7 @@ import {
   isTextNode,
 } from '../internal/duck'
 import { currentComponent } from '../internal/global'
-import { kAlienElementTags, kAlienParentFragment } from '../internal/symbols'
+import { kAlienParentFragment } from '../internal/symbols'
 import { ref } from '../observable'
 import { evaluateDeferredNode, isDeferredNode, isShadowRoot } from './node'
 import type { ResolvedChild } from './resolveChildren'
@@ -56,16 +56,12 @@ export function appendChild(
         throw Error('Unsupported node type')
       }
 
-      const parentFragment = isFragment(parent)
-        ? (parent as DocumentFragment)
-        : undefined
-
       // Cache the parent fragment on the child element, in case the element is
       // a component's root node, which may be replaced with an incompatible
       // node in the future. If that happens, the parent fragment would need to
       // be updated.
-      if (kAlienElementTags.in(child)) {
-        kAlienParentFragment(child, parentFragment)
+      if (isFragment(parent) && !kAlienParentFragment(child)) {
+        kAlienParentFragment(child, parent)
       }
     }
 

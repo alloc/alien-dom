@@ -2,6 +2,7 @@ import { isFunction } from '@alloc/is'
 import { AlienContextMap, getContext } from '../internal/context'
 import { isArrayLike, isFragment, isNode } from '../internal/duck'
 import { fromElementThunk } from '../internal/fromElementThunk'
+import { currentComponent } from '../internal/global'
 import {
   kAlienElementKey,
   kAlienElementPosition,
@@ -43,6 +44,18 @@ export function resolveChildren(
   let children: ArrayLike<JSX.ChildrenProp | Node> | undefined
 
   if (child) {
+    // If a child fragment is being updated, we need to preserve the deferred node
+    // for the fragment instead of dissolving it into its children.
+    if (isFragment(child as Node)) {
+      const component = currentComponent.get()
+      if (component) {
+        const key = kAlienElementKey(child)
+        if (key != null) {
+          child = component.updates.get(key) || child
+        }
+      }
+    }
+
     if (isNode(child)) {
       if (isFragment(child)) {
         kAlienElementPosition(child, position)
@@ -87,10 +100,10 @@ export function resolveChildren(
   // If not a fragment...
   if (node !== undefined) {
     if (node !== null) {
-      kAlienElementPosition(node, position)
+      kAlienElementPosition(node, position ?? '*0')
     }
     nodes.push(node)
-    onChildNode(node, (node && kAlienElementKey(node)) ?? position)
+    onChildNode(node, (node && kAlienElementKey(node)) ?? position ?? '*0')
   }
 
   if (children) {

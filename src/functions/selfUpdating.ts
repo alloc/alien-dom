@@ -4,11 +4,7 @@ import { ContextStore } from '../context'
 import { AlienComponent, AlienRunningComponent } from '../internal/component'
 import { forwardContext, getContext } from '../internal/context'
 import { isComment, isElement, isFragment, isNode } from '../internal/duck'
-import {
-  prependFragmentHeader,
-  updateParentFragment,
-  wrapWithFragment,
-} from '../internal/fragment'
+import { updateParentFragment, wrapWithFragment } from '../internal/fragment'
 import { fromElementThunk } from '../internal/fromElementThunk'
 import {
   currentComponent,
@@ -232,8 +228,14 @@ export function selfUpdating<
             }
             // Fragments always have a component-specific comment node as
             // their first child, which is how a fragment can be replaced.
-            else if (rootNode !== newRootNode && isFragment(newRootNode)) {
-              prependFragmentHeader(newRootNode, DEV ? componentName() : '')
+            else if (
+              DEV &&
+              rootNode !== newRootNode &&
+              isFragment(newRootNode)
+            ) {
+              const newChildren =
+                kAlienFragmentNodes(newRootNode) || newRootNode.childNodes
+              newChildren[0].nodeValue = componentName()
             }
 
             // Replace the old root node if one exists and wasn't replaced by a
