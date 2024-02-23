@@ -1,5 +1,10 @@
+import { isFragment } from '../functions/typeChecking'
 import { AlienComponent } from '../internal/component'
-import { FragmentNodes, updateParentFragment } from '../internal/fragment'
+import {
+  FragmentNodes,
+  endOfFragment,
+  updateParentFragment,
+} from '../internal/fragment'
 import { currentComponent } from '../internal/global'
 import { kAlienFragmentKeys, kAlienFragmentNodes } from '../internal/symbols'
 import { AnyDeferredNode } from '../jsx-dom/node'
@@ -24,13 +29,16 @@ export function morphFragment(
     }
   }
 
-  const lastFromNode = fromNodes.at(-1)
-  const fromKeyLookup = new Map(
-    fromKeys.map((key, index) => [fromNodes[index], key])
-  )
+  const lastFromNode = endOfFragment(fromFragment)
+  const fromKeyLookup = new Map()
+  fromKeys.forEach((key, index) => {
+    if (key !== undefined) {
+      fromKeyLookup.set(fromNodes[index], key)
+    }
+  })
 
   const nodes: FragmentNodes = [fromNodes[0]]
-  const keys = kAlienFragmentKeys(toFragment)!
+  const keys = [...kAlienFragmentKeys(toFragment)!]
 
   const fragment = new ParentFragment(fromNodes)
   morphChildren(fragment, toFragment.children as ResolvedChild[], component, {
@@ -48,7 +56,17 @@ export function morphFragment(
     // This callback helps us preserve the positions of any undefined values in
     // the toFragment's children array, which is crucial for positional keys.
     onChildNode: node => {
-      nodes.push(node)
+      if (node && isFragment(node)) {
+        const childNodes = kAlienFragmentNodes(node)!
+        childNodes.forEach((childNode, i) => {
+          if (i !== 0) {
+            keys.splice(nodes.length, 0, undefined)
+          }
+          nodes.push(childNode)
+        })
+      } else {
+        nodes.push(node)
+      }
     },
   })
 

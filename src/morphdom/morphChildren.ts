@@ -4,7 +4,7 @@ import { getElementKey } from '../functions/getElementKey'
 import { unmount } from '../functions/unmount'
 import { AlienComponent } from '../internal/component'
 import { hasTagName, isComment, isElement, isFragment } from '../internal/duck'
-import { FragmentNodes } from '../internal/fragment'
+import { FragmentNodes, endOfFragment } from '../internal/fragment'
 import {
   kAlienElementKey,
   kAlienElementPosition,
@@ -40,7 +40,7 @@ type MorphChildrenOptions = {
   getFromKey?: (fromNode: ChildNode) => JSX.ElementKey | undefined
   getNextSibling?: (fromNode: ChildNode) => ChildNode | null
   /** When a child node is new, preserved, or undefined, this callback is invoked. */
-  onChildNode?: (node: ChildNode | undefined) => void
+  onChildNode?: (node: ChildNode | DocumentFragment | undefined) => void
 }
 
 /**
@@ -116,7 +116,7 @@ export function morphChildren(
             nextSibling = fromChildNode
           } else {
             // Jump to the end of the fragment.
-            const lastChildNode = childNodes.at(-1) as ChildNode
+            const lastChildNode = endOfFragment(matchingNode) as ChildNode
             fromChildNode = nextDiscardableNode(
               lastChildNode,
               component,
@@ -143,9 +143,9 @@ export function morphChildren(
               Array.from(resolvedNode.childNodes)
             : [resolvedNode]
 
-          for (const childNode of childNodes) {
-            onChildNode(childNode)
+          onChildNode(resolvedNode)
 
+          for (const childNode of childNodes) {
             if (childNode) {
               if (nextSibling) {
                 nextSibling.before(childNode)
@@ -413,8 +413,7 @@ function collectKeyedNodes(
         fromNodesByKey.set(key, fragment)
       }
       // Skip to the end of the fragment.
-      const childNodes = kAlienFragmentNodes(fragment)!
-      fromChildNode = childNodes.at(-1) as ChildNode
+      fromChildNode = endOfFragment(fragment) as ChildNode
     }
   }
   return fromNodesByKey
