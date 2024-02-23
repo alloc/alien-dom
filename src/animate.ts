@@ -531,7 +531,6 @@ const scaleKeys = ['scale', 'scaleX', 'scaleY']
 
 let loop: number | undefined
 let lastTime: number | undefined
-let nextElementId = 1
 
 function startLoop() {
   if (loop) return
