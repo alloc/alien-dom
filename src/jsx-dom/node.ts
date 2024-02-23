@@ -1,5 +1,6 @@
 import { isArray, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
+import { createOnceEffect } from '../effects'
 import {
   applyChildrenProp,
   applyProp,
@@ -7,6 +8,7 @@ import {
 } from '../internal/applyProp'
 import { AlienContextMap, setContext } from '../internal/context'
 import { FragmentKeys, FragmentNodes } from '../internal/fragment'
+import { currentEffects } from '../internal/global'
 import { HostProps } from '../internal/hostProps'
 import {
   kAlienElementKey,
@@ -166,7 +168,17 @@ export function createHostNode(
     applyChildrenProp(hostNode, children, hostProps)
   }
   if (ref) {
-    applyRefProp(hostNode, ref, hostProps)
+    // When an effects context is set, prefer to apply the ref prop when that
+    // context is enabled. In the context of a component, this means the ref prop
+    // will be applied after the component is mounted.
+    const effects = currentEffects.get()
+    if (effects) {
+      createOnceEffect(() => {
+        applyRefProp(hostNode, ref, hostProps)
+      }, effects)
+    } else {
+      applyRefProp(hostNode, ref, hostProps)
+    }
   }
 
   return hostNode
