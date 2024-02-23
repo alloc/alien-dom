@@ -4,6 +4,7 @@ import { getElementKey } from '../functions/getElementKey'
 import { unmount } from '../functions/unmount'
 import { AlienComponent } from '../internal/component'
 import { hasTagName, isComment, isElement, isFragment } from '../internal/duck'
+import { FragmentNodes } from '../internal/fragment'
 import {
   kAlienElementPosition,
   kAlienElementTags,
@@ -48,7 +49,7 @@ type MorphChildrenOptions = {
 export function morphChildren(
   fromParentNode: ParentNode,
   toChildNodes: ResolvedChild[] | Falsy,
-  component?: AlienComponent | null,
+  component: AlienComponent | null = null,
   options: MorphChildrenOptions = {}
 ): void {
   if (!fromParentNode.childNodes.length) {
@@ -106,8 +107,9 @@ export function morphChildren(
 
         if (isFragment(matchingNode)) {
           let nextSibling: ChildNode | null = null
+          let childNodes: (ChildNode | undefined)[] =
+            kAlienFragmentNodes(matchingNode)!
 
-          let childNodes = kAlienFragmentNodes(matchingNode)!
           if (childNodes[0] !== fromChildNode) {
             // Move the fragment before the current from node.
             nextSibling = fromChildNode
@@ -121,20 +123,35 @@ export function morphChildren(
             )
           }
 
+          let resolvedNode: DocumentFragment | Element | Comment = matchingNode
           if (isDeferredNode(toChildNode)) {
             if (toChildNode.tag === Fragment) {
               morphFragment(matchingNode, toChildNode as any, component)
             } else {
-              morphComposite(matchingNode, toChildNode as any)
+              resolvedNode = morphComposite(matchingNode, toChildNode as any)
             }
           }
 
-          childNodes = kAlienFragmentNodes(matchingNode)!
+          const oldChildNodes = childNodes as FragmentNodes
+          childNodes = isFragment(resolvedNode)
+            ? kAlienFragmentNodes(resolvedNode) ||
+              Array.from(resolvedNode.childNodes)
+            : [resolvedNode]
+
           for (const childNode of childNodes) {
-            if (childNode) {
-              nextSibling?.before(childNode)
-            }
             onChildNode(childNode)
+
+            if (childNode) {
+              if (nextSibling) {
+                nextSibling.before(childNode)
+              } else if (matchingNode !== resolvedNode) {
+                oldChildNodes[0].before(childNode)
+              }
+            }
+          }
+
+          if (matchingNode !== resolvedNode) {
+            unmount(matchingNode)
           }
 
           toChildIndex++
@@ -155,8 +172,12 @@ export function morphChildren(
             )
           }
 
-          onChildNode(
-            updateChild(matchingNode, toChildNode, component, nextSibling)
+          updateChild(
+            matchingNode,
+            toChildNode,
+            component,
+            nextSibling,
+            onChildNode
           )
 
           toChildIndex++
@@ -186,8 +207,7 @@ export function morphChildren(
         }
         // Unkeyed nodes are matched by nodeType and nodeName.
         else if (isCompatibleNode(fromChildNode, toChildNode)) {
-          updateChild(fromChildNode, toChildNode, component)
-          onChildNode(fromChildNode)
+          updateChild(fromChildNode, toChildNode, component, null, onChildNode)
 
           fromChildNode = fromNextSibling
           toChildIndex++
@@ -287,8 +307,9 @@ function insertChild(
 function updateChild(
   fromNode: ChildNode,
   toNode: ToNode,
-  component?: AlienComponent | null,
-  nextSibling?: ChildNode | null
+  component: AlienComponent | null,
+  nextSibling: ChildNode | null,
+  onChildNode: (node: ChildNode | undefined) => void
 ) {
   // Convert an element reference to its deferred node.
   if (component && fromNode === toNode) {
@@ -299,8 +320,9 @@ function updateChild(
     }
   }
 
+  let morphedNode: DocumentFragment | Element | Comment | undefined
   if (isDeferredNode(toNode)) {
-    morph(fromNode as any, toNode, component)
+    morphedNode = morph(fromNode as any, toNode, component)
   } else if (fromNode !== toNode) {
     if (!isElement(fromNode)) {
       fromNode.nodeValue = toNode.nodeValue
@@ -313,9 +335,28 @@ function updateChild(
     }
   }
 
-  // Reorder the node if necessary.
-  nextSibling?.before(fromNode)
-  return fromNode
+  if (morphedNode && morphedNode !== fromNode) {
+    const fromPosition = kAlienElementPosition(fromNode)
+    if (isFragment(morphedNode)) {
+      const childNodes = kAlienFragmentNodes(morphedNode)!
+      childNodes.forEach((node, i) => {
+        fromPosition && kAlienElementPosition(node, fromPosition + '*' + i)
+        onChildNode(node)
+      })
+    } else {
+      fromPosition && kAlienElementPosition(morphedNode, fromPosition)
+      onChildNode(morphedNode)
+    }
+    if (!nextSibling) {
+      fromNode.before(morphedNode)
+    }
+    unmount(fromNode)
+  } else {
+    onChildNode(fromNode)
+  }
+
+  // If a sibling is passed, nodes are being reordered.
+  nextSibling?.before(morphedNode || fromNode)
 }
 
 function nextDiscardableNode(
