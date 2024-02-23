@@ -12,6 +12,7 @@ import {
   deferCompositeNode,
   deferHostNode,
 } from './node'
+import { compareNodeWithTag } from './util'
 
 export { Fragment }
 export type { JSX }
@@ -45,6 +46,9 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
   // return this original node so an API like React's useRef isn't needed.
   if (key != null && component?.refs) {
     oldNode = component.refs.get(key)
+    if (oldNode && !compareNodeWithTag(oldNode, tag)) {
+      oldNode = undefined
+    }
   }
 
   // Defer DOM updates until the morphing phase. If a JSX element has a key but
