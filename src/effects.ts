@@ -293,7 +293,11 @@ export function createEffect<
   Effect extends
     | AlienEffect<void, [], false>
     | AlienBoundEffect<any, any, false>
->(effect: Effect, context?: AlienEffects): Disposable<typeof effect>
+>(
+  effect: Effect,
+  context?: AlienEffects,
+  flags?: EffectFlags.Once
+): Disposable<typeof effect>
 
 export function createEffect<
   Effect extends AlienEffect<void, [], true> | AlienBoundEffect<any, any, true>
@@ -317,6 +321,15 @@ export function createEffect(
   runEffect(effectFn, null, flags, effect.target, effect.args)
   return attachDisposer(effect, () => effectFn.disable?.())
 }
+
+export const createOnceEffect = <
+  Effect extends
+    | AlienEffect<void, [], false>
+    | AlienBoundEffect<any, any, false>
+>(
+  effect: Effect,
+  context?: AlienEffects
+): Disposable<Effect> => createEffect(effect, context, EffectFlags.Once)
 
 export const createAsyncEffect = <
   Effect extends AlienEffect<void, [], true> | AlienBoundEffect<any, any, true>
