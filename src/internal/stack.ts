@@ -4,7 +4,7 @@ export function createStack<T>(baseValue?: T) {
   const stack: (T | null)[] = [baseValue ?? null]
   return {
     is: (value: T) => at(stack, -1) === value,
-    get: () => at(stack, -1),
+    get: (): T | null => at(stack, -1),
     push: (value: T) => void stack.push(value),
     pop(value: T) {
       while (true) {
