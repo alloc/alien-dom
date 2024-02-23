@@ -1,8 +1,10 @@
-import { isArray, isNumber } from '@alloc/is'
+import { isArray, isNumber, isString } from '@alloc/is'
 import { isAnimatedStyleProp, stopAnimatingKey } from '../internal/animate'
-import { hasForEach } from '../internal/duck'
+import { hasForEach, isFragment } from '../internal/duck'
+import { kAlienElementTags } from '../internal/symbols'
 import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
 import type { DefaultElement } from '../internal/types'
+import { Fragment } from '../jsx-dom/jsx-runtime'
 import { isUnitlessNumber } from './css-props'
 import { isSvgChild } from './svg-tags'
 
@@ -194,4 +196,18 @@ export function compareNodeNames(
     return false
   }
   return true
+}
+
+export function compareNodeWithTag(
+  node: ChildNode | DocumentFragment,
+  tag: any
+): boolean {
+  if (tag === Fragment) {
+    return isFragment(node)
+  }
+  if (isString(tag)) {
+    return compareNodeNames(node.nodeName, tag)
+  }
+  const tags = kAlienElementTags(node)
+  return tags != null && tags.has(tag)
 }

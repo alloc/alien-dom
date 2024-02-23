@@ -1,5 +1,4 @@
-import { isFunction, isString } from '@alloc/is'
-import { Fragment } from '../components/Fragment'
+import { isFunction } from '@alloc/is'
 import { ContextStore } from '../context'
 import { AlienComponent, AlienRunningComponent } from '../internal/component'
 import { forwardContext, getContext } from '../internal/context'
@@ -26,7 +25,7 @@ import {
   isShadowRoot,
 } from '../jsx-dom/node'
 import { ShadowRootContext } from '../jsx-dom/shadow'
-import { compareNodeNames, noop } from '../jsx-dom/util'
+import { compareNodeWithTag, noop } from '../jsx-dom/util'
 import { morph } from '../morphdom/morph'
 import { morphFragment } from '../morphdom/morphFragment'
 import { ref } from '../observable'
@@ -169,35 +168,18 @@ export function selfUpdating<
             }
 
             // Update the root node if possible.
-            if (rootNode && isDeferredNode(newRootNode)) {
-              // Patch the old node if the new node is compatible.
-              let compatible: boolean | undefined
-
-              const key = kAlienElementKey(newRootNode)
-              if (key === self.rootKey) {
-                if (newRootNode.tag === Fragment) {
-                  compatible = isFragment(rootNode)
-                } else if (isString(newRootNode.tag)) {
-                  compatible = compareNodeNames(
-                    rootNode.nodeName,
-                    newRootNode.tag
-                  )
-                } else {
-                  const tags = kAlienElementTags(rootNode)
-                  if (tags) {
-                    compatible = tags.has(newRootNode.tag)
-                  }
-                }
-              }
-
-              if (compatible) {
-                if (isFragment(rootNode)) {
-                  morphFragment(rootNode, newRootNode, self)
-                  updated = true
-                } else if (isElement(rootNode)) {
-                  morph(rootNode, newRootNode, self)
-                  updated = true
-                }
+            if (
+              rootNode &&
+              isDeferredNode(newRootNode) &&
+              self.rootKey === kAlienElementKey(newRootNode) &&
+              compareNodeWithTag(rootNode, newRootNode.tag)
+            ) {
+              if (isFragment(rootNode)) {
+                morphFragment(rootNode, newRootNode, self)
+                updated = true
+              } else if (isElement(rootNode)) {
+                morph(rootNode, newRootNode, self)
+                updated = true
               }
             }
           }
