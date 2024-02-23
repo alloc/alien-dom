@@ -3,6 +3,7 @@ import { Disposable, attachDisposer } from '../addons/disposable'
 import { AlienEffect, AlienEffects } from '../effects'
 import { ShadowRootContext } from '../jsx-dom/shadow'
 import { currentEffects } from './global'
+import { popValue } from './stack'
 import { kAlienEffects } from './symbols'
 import { AnyElement } from './types'
 import { noop } from './util'
@@ -48,7 +49,7 @@ export function enableEffect<Effect extends AlienEffect<any, any>>(
       runEffect(effect, context)
     } finally {
       context.currentEffect = null
-      currentEffects.pop(context)
+      popValue(currentEffects, context)
     }
   }
 

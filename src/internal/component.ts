@@ -14,7 +14,7 @@ import {
 import { FunctionComponent, JSX } from '../types'
 import { deepEquals } from './deepEquals'
 import { isFragment } from './duck'
-import { currentComponent } from './global'
+import { currentComponent, expectCurrentComponent } from './global'
 import {
   kAlienElementKey,
   kAlienElementTags,
@@ -22,6 +22,7 @@ import {
   kAlienMemo,
   kAlienRenderFunc,
 } from './symbols'
+import { lastValue } from './util'
 
 export type ElementTags = Map<FunctionComponent, AlienComponent<any>>
 export type ElementRefs = Map<JSX.ElementKey, ChildNode | DocumentFragment>
@@ -209,7 +210,7 @@ export function registerMemo(
   value: any,
   deps?: readonly any[] | false
 ) {
-  const component = currentComponent.get()!
+  const component = expectCurrentComponent()
   if (component) {
     let memo: Memo | undefined
     if (component.memos?.has(key)) {
@@ -257,7 +258,7 @@ export function registerCallback(
   callback: Function,
   deps?: readonly any[] | false
 ) {
-  const component = currentComponent.get()!
+  const component = expectCurrentComponent()
   if (component) {
     let memo = component.memos?.get(key) as Memo | undefined
     if (deps) {
@@ -285,7 +286,7 @@ export function registerCallback(
  * issues.
  */
 export function registerNestedTag(key: string, tag: FunctionComponent) {
-  const component = currentComponent.get()
+  const component = lastValue(currentComponent)
   if (component) {
     const oldTag = component.memos?.get(key)
     if (oldTag) {

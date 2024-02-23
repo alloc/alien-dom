@@ -1,6 +1,7 @@
 import { markPureComponent } from './functions/markPureComponent'
 import { forwardContext, getContext, setContext } from './internal/context'
 import { currentComponent } from './internal/global'
+import { lastValue } from './internal/util'
 import { Fragment } from './jsx-dom/jsx-runtime'
 import { Ref, ref } from './observable'
 import type { JSX } from './types/jsx'
@@ -71,7 +72,7 @@ export function createContext<T>(initial?: T) {
       return initial!
     }
 
-    const component = currentComponent.get()
+    const component = lastValue(currentComponent)
     const current = component
       ? component.context.get(Provider as any)
       : getContext(Provider as any)

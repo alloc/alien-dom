@@ -1,8 +1,8 @@
 import { depsHaveChanged } from '../functions/depsHaveChanged'
-import { currentComponent } from '../internal/global'
+import { expectCurrentComponent } from '../internal/global'
 
 export function useDepsArray(deps: readonly any[] | undefined) {
-  const component = currentComponent.get()!
+  const component = expectCurrentComponent()
   const index = component.nextHookIndex++
   if (deps) {
     const lastDeps = component.hooks[index]

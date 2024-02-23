@@ -5,7 +5,7 @@ import {
   animate,
 } from '../addons/animate'
 import { getAnimatedKeys } from '../internal/animate'
-import { currentEffects } from '../internal/global'
+import { expectCurrentEffects } from '../internal/global'
 import { shallowEquals } from '../internal/shallowEquals'
 import type { DefaultElement } from '../internal/types'
 import { toArray } from '../internal/util'
@@ -26,7 +26,7 @@ export function useSpring<Element extends DefaultElement>(
   }
 
   if (shouldRun) {
-    const effects = currentEffects.get()!
+    const effects = expectCurrentEffects()
     effects.run(() => {
       state.to = to
       state.from = from

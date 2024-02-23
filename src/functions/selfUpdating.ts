@@ -5,11 +5,8 @@ import { forwardContext, getContext } from '../internal/context'
 import { isComment, isElement, isFragment, isNode } from '../internal/duck'
 import { updateParentFragment, wrapWithFragment } from '../internal/fragment'
 import { fromElementThunk } from '../internal/fromElementThunk'
-import {
-  currentComponent,
-  currentEffects,
-  currentMode,
-} from '../internal/global'
+import { currentComponent, currentEffects } from '../internal/global'
+import { popValue } from '../internal/stack'
 import {
   kAlienElementKey,
   kAlienElementTags,
@@ -19,7 +16,7 @@ import {
   kAlienSelfUpdating,
 } from '../internal/symbols'
 import type { AnyElement } from '../internal/types'
-import { compareNodeWithTag, noop } from '../internal/util'
+import { compareNodeWithTag, lastValue, noop } from '../internal/util'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import {
   evaluateDeferredNode,
@@ -83,7 +80,7 @@ export function selfUpdating<
     }
 
     const self = new AlienComponent(
-      currentComponent.get(),
+      lastValue(currentComponent),
       Component as any,
       props,
       context,
@@ -115,7 +112,6 @@ export function selfUpdating<
 
       let { rootNode, updates, newEffects } = self.startRender()
 
-      currentMode.push('ref')
       currentComponent.push(self)
       currentEffects.push(newEffects)
 
@@ -276,9 +272,8 @@ export function selfUpdating<
       } finally {
         restoreContext()
 
-        currentEffects.pop(newEffects)
-        currentComponent.pop(self)
-        currentMode.pop('ref')
+        popValue(currentEffects, newEffects)
+        popValue(currentComponent, self)
 
         self.endRender(threw)
         newPropAdded = false

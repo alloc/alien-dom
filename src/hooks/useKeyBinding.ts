@@ -2,7 +2,7 @@ import { isString } from '@alloc/is'
 import type { Key } from 'ts-key-enum'
 import { Disposable, createDisposable } from '../addons/disposable'
 import { isDocument } from '../internal/duck'
-import { currentComponent } from '../internal/global'
+import { expectCurrentComponent } from '../internal/global'
 import { kAlienHostProps } from '../internal/symbols'
 import { noop, toArray } from '../internal/util'
 import { ref } from '../observable'
@@ -38,7 +38,7 @@ export function useKeyBinding<Target extends Document | HTMLElement>(
   combo: KeyCombo,
   onKeyDown?: (event: KeyBindingEvent<Target>) => EffectResult
 ) {
-  const component = currentComponent.get()!
+  const component = expectCurrentComponent()
   const binding = useState(initKeyBinding, onKeyDown)
 
   binding.combo = prepareCombo(combo)

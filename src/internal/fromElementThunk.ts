@@ -3,7 +3,7 @@ import { ReadonlyRef } from '../observable'
 import type { JSX } from '../types/jsx'
 import { currentComponent } from './global'
 import { kAlienThunkResult } from './symbols'
-import { defineProperty } from './util'
+import { defineProperty, lastValue } from './util'
 
 type ThunkResult = JSX.Children | ReadonlyRef<JSX.Children>
 
@@ -13,7 +13,7 @@ export function fromElementThunk(
 ) {
   if (!kAlienThunkResult.in(thunk)) {
     // The first component to call the thunk owns it.
-    const component = currentComponent.get()
+    const component = lastValue(currentComponent)
     if (!component) {
       return thunk()
     }

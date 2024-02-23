@@ -1,8 +1,8 @@
-import { currentComponent } from '../internal/global'
+import { expectCurrentComponent } from '../internal/global'
 import { useState } from './useState'
 
 export function useMicrotask(effect: () => void, shouldRun = true) {
-  const component = currentComponent.get()!
+  const component = expectCurrentComponent()
   const state = useState(initialState)
   if (shouldRun) {
     const nextRun = () => {

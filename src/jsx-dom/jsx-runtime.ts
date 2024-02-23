@@ -5,6 +5,7 @@ import { applyKeyProp } from '../internal/applyProp'
 import { wrapWithFragment } from '../internal/fragment'
 import { currentComponent } from '../internal/global'
 import { kAlienPureComponent, kAlienSelfUpdating } from '../internal/symbols'
+import { lastValue } from '../internal/util'
 import type { JSX } from '../types'
 import {
   AnyDeferredNode,
@@ -45,7 +46,7 @@ export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
   let oldNode: ChildNode | DocumentFragment | undefined
   let node: ChildNode | DocumentFragment | AnyDeferredNode | undefined
 
-  const component = currentComponent.get()
+  const component = lastValue(currentComponent)
   if (component) {
     // Use the JSX element's key to locate an existing DOM node. We will return
     // this node so the component can reference it without misdirection.

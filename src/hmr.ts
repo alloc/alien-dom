@@ -2,7 +2,7 @@ import { isArray, isFunction } from '@alloc/is'
 import { attachRef } from './functions/attachRef'
 import { depsHaveChanged } from './functions/depsHaveChanged'
 import { selfUpdating } from './functions/selfUpdating'
-import { currentComponent } from './internal/global'
+import { expectCurrentComponent } from './internal/global'
 import { createSymbolProperty } from './internal/symbolProperty'
 import { kAlienRenderFunc } from './internal/symbols'
 import { Ref, ref } from './observable'
@@ -63,7 +63,7 @@ export function hmrSelfUpdating(render: (props: any) => JSX.Element) {
     const render = kAlienRenderFunc(Component) as (props: any) => JSX.Element
 
     // Track which render function was last used by each component instance.
-    const component = currentComponent.get()!
+    const component = expectCurrentComponent()
     const prevRender = kAlienRenderFunc(component)
 
     let isHotUpdate: boolean | undefined
@@ -95,7 +95,7 @@ export function hmrSelfUpdating(render: (props: any) => JSX.Element) {
       // If rendering fails, try clearing persistent hook state.
       if (isHotUpdate) {
         try {
-          const component = currentComponent.get()!
+          const component = expectCurrentComponent()
           component.truncate(0)
 
           return render(props)

@@ -1,6 +1,7 @@
 import { isArray, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
 import { hasForEach, isFragment } from './duck'
+import { Stack } from './stack'
 import { kAlienElementTags } from './symbols'
 
 export const set = /* @__PURE__ */ Reflect.set
@@ -14,6 +15,12 @@ export function decamelize(s: string, separator: string) {
 
 export function at<T>(arr: readonly T[], index: number): T {
   return index < 0 ? arr[arr.length + index] : arr[index]
+}
+
+export function lastValue<T>(stack: Stack<T>): T | null
+export function lastValue<T>(array: T[]): T | undefined
+export function lastValue(array: any[]) {
+  return array[array.length - 1]
 }
 
 export function toArray<T>(a: T): T extends readonly any[] ? T : T[] {
