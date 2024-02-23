@@ -242,7 +242,7 @@ export function selfUpdating<
                 unmount(rootNode, true, self)
               } else if (DEV) {
                 console.error(
-                  'Component was updated before its initial node could be added to the DOM, resulting in a failed update!'
+                  `Component "${self.name()}" was updated before its initial node could be added to the DOM, resulting in a failed update!`
                 )
               }
             }
