@@ -14,7 +14,7 @@
   ],
   "dependencies": {
     "@alien-dom/esbuild": "workspace:^0.8.0",
-    "@htmelt/plugin": "^0.3.4"
+    "@htmelt/plugin": "^0.4.0"
   },
   "devDependencies": {
     "@types/node": "^18.15.11"
