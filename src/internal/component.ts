@@ -101,7 +101,11 @@ export class AlienComponent<Props = any> {
   }
 
   update() {
-    this.enable(this.render!)
+    if (this.observer) {
+      this.observer.scheduleUpdate()
+    } else if (this.render) {
+      this.enable(this.render)
+    }
   }
 
   startRender() {
