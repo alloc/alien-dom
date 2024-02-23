@@ -38,7 +38,7 @@ export type SpringAnimation<
   immediate?: boolean | { [K in keyof Props]?: boolean }
   dilate?: number
   anchor?: [number, number]
-  onStart?: () => void
+  onStart?: (target: Element) => void
   onChange?: FrameCallback<Element, Props>
   onRest?: FrameCallback<Element, Props>
 }
@@ -576,7 +576,7 @@ function startLoop() {
       const { nodes, svgMode, style, onStart } = state
 
       if (onStart) {
-        onStart()
+        onStart(target)
         state.onStart = null
       }
 
