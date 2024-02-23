@@ -26,11 +26,29 @@ export function createDisposable<Args extends readonly any[]>(
   args: Args,
   dispose: (...args: Args) => void,
   thisArg?: any
-): Disposable<{ args: Args; thisArg?: any }> {
-  type Bind = (thisArg: any, ...args: Args) => () => void
+): Disposable<{ args: Args; thisArg?: any }>
+
+export function createDisposable(
+  args: any[],
+  dispose: (...args: any[]) => void,
+  thisArg?: any
+): Disposable<{ args: readonly any[]; thisArg?: any }> {
   return {
-    dispose: (dispose.bind as Bind)(thisArg, ...args),
+    dispose: dispose.bind(thisArg, ...args),
     args,
     thisArg,
+  }
+}
+
+export function mergeDisposables(
+  ...objects: Disposable[]
+): Disposable<{ objects: Disposable[] }> {
+  return {
+    objects,
+    dispose() {
+      for (const object of objects) {
+        object.dispose()
+      }
+    },
   }
 }
