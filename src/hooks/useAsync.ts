@@ -9,7 +9,7 @@ import { useState } from './useState'
 export type UseAsyncFn<T> = (state: UseAsync<T>) => PromiseLike<T> | T
 
 export function useAsync<T>(
-  get: ((state: UseAsync<any>) => T) | Falsy,
+  get: UseAsyncFn<UseAsyncAwaited<T>> | Falsy,
   deps: readonly any[]
 ) {
   const instance = useState(UseAsync<UseAsyncAwaited<T>>, deps)
