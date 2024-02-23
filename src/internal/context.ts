@@ -35,10 +35,9 @@ export function forwardContext(context: ContextStore, isRerender?: boolean) {
   }
 }
 
+/** @internal */
 export function getContext<T>(context: AlienContext<T>): Ref<T> | undefined
-
 export function getContext(): AlienContextMap
-
 export function getContext<T>(context?: AlienContext<T>): any {
   if (context) {
     return currentContext.get(context)
