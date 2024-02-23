@@ -28,6 +28,7 @@ export * from './functions/selfUpdating'
 export * from './functions/toElements'
 export * from './functions/typeChecking'
 export * from './functions/unmount'
+export * from './functions/updateProps'
 
 /// Components
 export * from './components/ManualUpdates'
