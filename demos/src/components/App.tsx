@@ -1,4 +1,4 @@
-import { ref, useAsync } from 'alien-dom'
+import { ref, useAsync, useEffect } from 'alien-dom'
 
 const activeTest = ref<() => Promise<{ Test?: () => JSX.Element }>>(null)
 
@@ -40,8 +40,17 @@ function TestList({
   tests: Record<string, () => Promise<{ Test: () => JSX.Element }>>
 }) {
   console.log(tests)
+
+  useEffect(() => {
+    const slug = location.hash.slice(1)
+    if (slug) {
+      const name = Object.keys(tests).find(name => toSlug(name) === slug)
+      activeTest.value = tests[name]
+    }
+  }, [])
+
   return (
-    <div class="w-400 h-full span:text-30 gap-30 border-r-1 border-r-gray300">
+    <div class="w-400 h-full shrink-0 span:text-30 gap-30 border-r-1 border-r-gray300">
       {Object.keys(tests).map(name => (
         <div
           class={[
@@ -52,9 +61,10 @@ function TestList({
           ]}
           role="button"
           onClick={() => {
+            location.hash = toSlug(name)
             activeTest.value = tests[name]
           }}>
-          <span>{toTitleCase(name.match(/\.\/tests\/(\w+)/)![1])}</span>
+          <span>{toTitleCase(name.match(/\.\/tests\/([\w-]+)/)![1])}</span>
         </div>
       ))}
     </div>
@@ -71,5 +81,11 @@ export function App({ tests }: { tests: Record<string, () => Promise<any>> }) {
 }
 
 function toTitleCase(str: string) {
-  return str.replace(/(\w)(\w*)/g, (_, c1, c2) => c1.toUpperCase() + c2)
+  return str
+    .replace(/(\w)(\w*)/g, (_, c1, c2) => c1.toUpperCase() + c2)
+    .replace(/-/g, ' ')
+}
+
+function toSlug(str: string) {
+  return str.match(/\/([\w-]+)\./)![1]
 }
