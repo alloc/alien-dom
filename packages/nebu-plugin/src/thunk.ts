@@ -1,5 +1,5 @@
 import type { Node } from 'nebu'
-import { isHostElement, isFunctionNode } from './helpers'
+import { isFunctionNode, isHostElement } from './helpers'
 
 export type JSXThunkParent = {
   attributes: Set<Node.JSXAttribute>
@@ -41,7 +41,10 @@ export function collectThunkParents(
     } else {
       thunkParent.children.add(jsxChildOrAttr)
     }
+
+    return true
   }
+  return false
 }
 
 function createJSXThunkParent(): JSXThunkParent {
