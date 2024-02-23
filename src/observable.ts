@@ -1,7 +1,9 @@
 import { isFunction, isString } from '@alloc/is'
 import { Falsy } from '@alloc/types'
+import { Disposable, attachDisposer } from './disposable'
 import { createSymbolProperty } from './internal/symbolProperty'
 import { noop } from './jsx-dom/util'
+import { Promisable } from './promises'
 
 const kRefType = Symbol.for('refType')
 
@@ -919,3 +921,54 @@ export type ComputedInput<T> = T | ReadonlyRef<T> | (() => T | ReadonlyRef<T>)
  */
 export const evaluateInput = <T>(arg: ComputedInput<T>) =>
   unref(isFunction(arg) ? arg() : arg)
+
+/**
+ * Observe the given `Ref` until it has a truthy value, then run the effect and
+ * return the result. If the ref is already truthy, the effect is run
+ * immediately.
+ */
+export function when<T, Result>(
+  condition: ReadonlyRef<T>
+): Disposable<Promise<Exclude<T, Falsy>>>
+
+export function when<T, Result = Exclude<T, Falsy>>(
+  condition: ReadonlyRef<T>,
+  effect: (value: Exclude<T, Falsy>) => Promisable<Result>
+): Disposable<Promise<Result>>
+
+export function when(
+  condition: ReadonlyRef<any>,
+  effect?: (value: any) => any
+) {
+  const value: any = condition.peek()
+  if (value) {
+    return attachDisposer(
+      effect
+        ? Promise.resolve().then(() => effect(value))
+        : Promise.resolve(value),
+      noop
+    )
+  }
+  let observer: Observer
+  return attachDisposer(
+    new Promise((resolve, reject) => {
+      observer = observe(condition, (value: any) => {
+        if (!value) return
+        observer.dispose()
+
+        if (effect) {
+          try {
+            resolve(effect(value))
+          } catch (error) {
+            reject(error)
+          }
+        } else {
+          resolve(value)
+        }
+      })
+    }),
+    () => {
+      observer.dispose()
+    }
+  )
+}
