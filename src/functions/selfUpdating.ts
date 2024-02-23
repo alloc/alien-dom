@@ -62,24 +62,21 @@ export function selfUpdating<
       attachRef(props, key, ref(initialValue))
     }
 
-    let oldPropChanged = false
     let newPropAdded = false
 
     const updateProps = (newProps: Partial<Props>) => {
       for (const key in newProps) {
         const newValue = newProps[key]
         if (props.hasOwnProperty(key)) {
-          const oldValue = props[key]
           props[key] = newValue as any
-          if (newValue !== oldValue) {
-            oldPropChanged = true
-          }
         } else {
           attachRef(props, key, ref(newValue))
           newPropAdded = true
         }
       }
-      if (oldPropChanged || newPropAdded) {
+      // When a prop has its initial value set, the component must be manually
+      // updated in case the prop's absence influenced the render result.
+      if (newPropAdded) {
         self.update()
       }
     }
@@ -296,7 +293,6 @@ export function selfUpdating<
         currentMode.pop('ref')
 
         self.endRender(threw)
-        oldPropChanged = false
         newPropAdded = false
       }
 
