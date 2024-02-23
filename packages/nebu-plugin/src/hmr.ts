@@ -1,6 +1,6 @@
 import type { Node, Plugin } from 'nebu'
 import { computeComponentHashes } from './hash'
-import { FunctionNode } from './helpers'
+import { FunctionNode, findExternalReferences } from './helpers'
 
 type State = { file: string; code: string }
 
@@ -37,13 +37,15 @@ export default (options: {
         }
       }
 
+      const { deps } = findExternalReferences(component.function)
+
       const nearestBlock = component.function.findParent(
         node => node.isBlockStatement() || node.isProgram()
       ) as Node.BlockStatement | Node.Program
 
       nearestBlock.push(
         'body',
-        `\nhmrRegister("${file}", "${component.id.name}", ${component.id.name}, "${component.hash}")`
+        `\nhmrRegister("${file}", "${component.id.name}", ${component.id.name}, "${component.hash}", [${deps}])`
       )
     }
 

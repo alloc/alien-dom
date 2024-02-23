@@ -80,11 +80,13 @@ export function findExternalReferences(
     },
     Identifier(path) {
       // Don't track property names as variable references.
-      if (
-        path.parent.isMemberExpression() &&
-        path.parent.property === path &&
-        !path.parent.computed
-      ) {
+      let isPropertyName = false
+      if (path.parent.isMemberExpression()) {
+        isPropertyName = path.parent.property === path && !path.parent.computed
+      } else if (path.parent.isMetaProperty()) {
+        isPropertyName = path.parent.property === path
+      }
+      if (isPropertyName) {
         const scope = findScope(path, scopes)
 
         // Skip tracking the property access if it's a method call.
@@ -116,6 +118,11 @@ export function findExternalReferences(
         path.parent.isContinueStatement() ||
         (path.parent.isLabeledStatement() && path.parent.label === path)
       ) {
+        return
+      }
+
+      // Ignore `import.meta` usage.
+      if (path.name === 'import') {
         return
       }
 
@@ -246,10 +253,13 @@ export function findScope(
   if (scope) {
     return scope
   }
-  if (
-    isFunctionNode(path.parent) ||
-    (includeBlocks && path.parent.isBlockStatement())
-  ) {
+  let stop: boolean | undefined
+  if (isFunctionNode(path.parent)) {
+    stop = path.parent.isArrowFunctionExpression() || path.parent.id !== path
+  } else {
+    stop = includeBlocks && path.parent.isBlockStatement()
+  }
+  if (stop) {
     const parentScope = findScope(path.parent, scopes, true)
     scope = createScope(path.parent, Object.create(parentScope.context))
     scopes.set(path.parent, scope)
