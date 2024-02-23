@@ -891,7 +891,7 @@ function ensureFromValues(
       }
 
       const to = node.to as ParsedValue
-      if (!from || from[1] == to[1]) {
+      if (!from || from[1] == to[1] || isNaN(node.v0)) {
         node.from = from || [cssTransformDefaults[node.transformFn] || 0, to[1]]
       } else {
         console.error(`Unit mismatch for "${key}": ${from[1]} != ${to[1]}`)
