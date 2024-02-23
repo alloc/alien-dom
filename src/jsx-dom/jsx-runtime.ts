@@ -29,7 +29,7 @@ type Props = {
 export function jsx(tag: any, props: Props, key?: JSX.ElementKey): any {
   const component = currentComponent.get()
 
-  const hasImpureTag = typeof tag !== 'string' && !kAlienPureComponent.in(tag)
+  const hasImpureTag = !isString(tag) && !kAlienPureComponent.in(tag)
   if (hasImpureTag && tag !== Fragment) {
     let selfUpdatingTag = kAlienSelfUpdating(tag)
     if (!selfUpdatingTag) {
