@@ -15,7 +15,7 @@ import {
   kAlienFragmentNodes,
   kAlienParentFragment,
 } from './symbols'
-import { at } from './util'
+import { at, lastValue } from './util'
 
 export type FragmentNodes = [Comment, ...(ChildNode | undefined)[]]
 export type FragmentKeys = (JSX.ElementKey | undefined)[]
@@ -50,7 +50,7 @@ function isDeferredChild(child: ResolvedChild) {
   if (child != null) {
     const key = kAlienElementKey(child)
     if (key != null) {
-      const component = currentComponent.get()
+      const component = lastValue(currentComponent)
       if (component) {
         return component.updates.has(key)
       }

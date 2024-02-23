@@ -1,4 +1,4 @@
-import { currentComponent } from '../internal/global'
+import { expectCurrentComponent } from '../internal/global'
 import { createGuid } from '../internal/guid'
 
 let nextId = Number.MIN_SAFE_INTEGER
@@ -26,7 +26,7 @@ export function useGlobalId(
   reset?: boolean | null,
   generateId?: () => string | number
 ) {
-  const component = currentComponent.get()!
+  const component = expectCurrentComponent()
   return createGuid(
     component.hooks,
     component.nextHookIndex++,

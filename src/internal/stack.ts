@@ -1,20 +1,28 @@
-import { at } from './util'
+/**
+ * The first value of a `Stack` is expected to be null.
+ */
+export type Stack<T> = [null, ...T[]]
 
-export function createStack<T>(baseValue?: T) {
-  const stack: (T | null)[] = [baseValue ?? null]
-  return {
-    is: (value: T) => at(stack, -1) === value,
-    get: (): T | null => at(stack, -1),
-    push: (value: T) => void stack.push(value),
-    pop(value: T) {
-      while (true) {
-        if (stack.length === 1) {
-          throw new Error('Stack is empty')
-        }
-        if (stack.pop() === value) {
-          return
-        }
-      }
-    },
+export const expectLastValue =
+  <T>(stack: Stack<T>, message: string) =>
+  (): T => {
+    const value = stack[stack.length - 1]
+    if (value === null) {
+      throw Error(message)
+    }
+    return value
+  }
+
+/**
+ * Pop the stack until the given value is popped.
+ */
+export function popValue<T>(stack: Stack<T>, value: T) {
+  while (true) {
+    if (stack.length === 1) {
+      throw Error('Stack is empty')
+    }
+    if (stack.pop() === value) {
+      return
+    }
   }
 }

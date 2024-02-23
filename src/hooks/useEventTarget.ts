@@ -1,5 +1,5 @@
 import { onMount } from '../addons/domObserver'
-import { currentComponent } from '../internal/global'
+import { expectCurrentComponent } from '../internal/global'
 import { ShadowRootContext } from '../jsx-dom/shadow'
 import { EffectResult, useEffect } from './useEffect'
 import { useState } from './useState'
@@ -19,7 +19,7 @@ export function useEventTarget<Target extends EventTarget>(
 ) {
   const self = useState(initEventTarget, effect)
 
-  const component = currentComponent.get()!
+  const component = expectCurrentComponent()
   useEffect(() => {
     if (!self.enabled) {
       return self.enable(component.ownerDocument!)

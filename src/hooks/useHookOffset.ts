@@ -1,5 +1,5 @@
 import { isFunction } from '@alloc/is'
-import { currentComponent } from '../internal/global'
+import { expectCurrentComponent } from '../internal/global'
 
 /**
  * For conditional hooks, the `useHookOffset` function can be used in the
@@ -17,7 +17,7 @@ import { currentComponent } from '../internal/global'
  * the required offset (see `useState` for an example).
  */
 export function useHookOffset(offset: number) {
-  const component = currentComponent.get()!
+  const component = expectCurrentComponent()
   for (let i = 0; i < offset; i++) {
     const index = component.nextHookIndex + i
     const hook = component.hooks[index]

@@ -11,6 +11,7 @@ import {
 } from '../internal/duck'
 import { currentComponent } from '../internal/global'
 import { kAlienParentFragment } from '../internal/symbols'
+import { lastValue } from '../internal/util'
 import { morph } from '../morphdom/morph'
 import { ref } from '../observable'
 import {
@@ -50,7 +51,7 @@ export function appendChild(
           // Find a pending update for the child node, if any. Give up if we
           // find a parent component isn't being updated.
           let update: AnyDeferredNode | undefined
-          let component: AlienComponent | null = currentComponent.get()
+          let component: AlienComponent | null = lastValue(currentComponent)
           for (; component; component = component.parent) {
             if ((update = component.updates?.get(key))) break
           }

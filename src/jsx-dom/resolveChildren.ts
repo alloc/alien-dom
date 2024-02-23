@@ -8,6 +8,7 @@ import {
   kAlienElementPosition,
   kAlienFragmentNodes,
 } from '../internal/symbols'
+import { lastValue } from '../internal/util'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import { isRef } from '../observable'
 import type { JSX } from '../types/jsx'
@@ -47,7 +48,7 @@ export function resolveChildren(
     // If a child fragment is being updated, we need to preserve the deferred node
     // for the fragment instead of dissolving it into its children.
     if (isFragment(child as Node)) {
-      const component = currentComponent.get()
+      const component = lastValue(currentComponent)
       if (component) {
         const key = kAlienElementKey(child)
         if (key != null) {

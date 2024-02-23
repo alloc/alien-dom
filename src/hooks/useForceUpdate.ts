@@ -1,9 +1,9 @@
 import { AlienComponent } from '../internal/component'
-import { currentComponent } from '../internal/global'
+import { expectCurrentComponent } from '../internal/global'
 import { useState } from './useState'
 
 export function useForceUpdate() {
-  const component = currentComponent.get()!
+  const component = expectCurrentComponent()
   return useState(getForceUpdate, component)
 }
 

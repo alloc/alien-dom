@@ -1,4 +1,4 @@
-import { currentComponent } from '../internal/global'
+import { expectCurrentComponent } from '../internal/global'
 
 export function useState<State extends object, Params extends any[]>(
   init: new (...args: Params) => State,
@@ -11,7 +11,7 @@ export function useState<State extends object, Params extends any[]>(
 ): State
 
 export function useState(init: StateInitializer, ...params: any[]) {
-  const component = currentComponent.get()!
+  const component = expectCurrentComponent()
   const index = component.nextHookIndex++
   return (component.hooks[index] ||= isClass(init)
     ? new init(...params)

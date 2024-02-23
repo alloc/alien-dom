@@ -1,4 +1,4 @@
-import { currentComponent } from '../internal/global'
+import { expectCurrentComponent } from '../internal/global'
 import { Ref, ref } from '../observable'
 import { useDepsArray } from './useDepsArray'
 
@@ -18,7 +18,7 @@ export function useRef<T>(
   init?: T | (() => T),
   deps?: readonly any[]
 ): Ref<any> {
-  const component = currentComponent.get()!
+  const component = expectCurrentComponent()
   const index = component.nextHookIndex++
   if (useDepsArray(deps)) {
     component.hooks[index] = null

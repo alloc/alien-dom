@@ -1,5 +1,5 @@
 import { AlienComponent } from '../internal/component'
-import { currentComponent } from '../internal/global'
+import { expectCurrentComponent } from '../internal/global'
 import { kAlienElementKey, kAlienFragmentNodes } from '../internal/symbols'
 import { isFragment, isTextNode } from './typeChecking'
 
@@ -13,11 +13,7 @@ import { isFragment, isTextNode } from './typeChecking'
  * DOM.
  */
 export function restoreComponentRefs(node: ChildNode | DocumentFragment) {
-  const component = currentComponent.get()
-  if (!component) {
-    throw Error('restoreComponentRefs must be called within a component')
-  }
-
+  const component = expectCurrentComponent()
   component.refs ??= new Map()
 
   if (isFragment(node)) {

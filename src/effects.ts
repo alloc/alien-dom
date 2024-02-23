@@ -11,8 +11,10 @@ import {
   runEffect,
 } from './internal/effects'
 import { currentEffects } from './internal/global'
+import { popValue } from './internal/stack'
 import { kAlienEffects } from './internal/symbols'
 import type { AnyElement } from './internal/types'
+import { lastValue } from './internal/util'
 
 export interface AlienEffect<
   Target = any,
@@ -98,7 +100,7 @@ export class AlienEffects<Element extends AnyElement = any> {
         this.state = AlienEffectState.Enabled
       } finally {
         this.currentEffect = null
-        currentEffects.pop(this)
+        popValue(currentEffects, this)
       }
       if (this.element) {
         this._mountEffect = onUnmount(this.element, () => {
@@ -309,7 +311,7 @@ export function createEffect<
 
 export function createEffect(
   effect: AlienEffect<void, [], boolean> | AlienBoundEffect<any, any, boolean>,
-  context = currentEffects.get(),
+  context = lastValue(currentEffects),
   flags: EffectFlags | 0 = 0
 ): Disposable<typeof effect> {
   if (context) {
@@ -360,8 +362,6 @@ export function defineEffectType<Args extends any[]>(
  * when setting itself up.
  */
 export function getCurrentEffect() {
-  const context = currentEffects.get()
-  if (context) {
-    return context.currentEffect
-  }
+  const context = lastValue(currentEffects)
+  return context?.currentEffect
 }
