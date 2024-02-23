@@ -1,26 +1,10 @@
-import { depsHaveChanged } from '../functions/depsHaveChanged'
-import { noop } from '../jsx-dom/util'
-import { ReadonlyRef, computed } from '../observable'
-import { useState } from './useState'
+import { useComputed } from './useComputed'
 
+/**
+ * Create a `ComputedRef` and access its value immediately. Any observable
+ * values used within the memoize function may cause the component to rerender
+ * when changed (as necessary).
+ */
 export function useMemo<T>(get: () => T, deps: readonly any[]): T {
-  const state = useState(initialState, deps)
-  if (depsHaveChanged(deps, state.deps)) {
-    state.ref = computed(get)
-    state.deps = deps
-  }
-  return state.ref!.value
+  return useComputed(get, deps).value
 }
-
-const initialState = (
-  deps: readonly any[]
-): {
-  deps: readonly any[]
-  ref: ReadonlyRef | null
-  dispose: (() => void) | void
-} => ({
-  deps,
-  ref: null,
-  // This is defined so HMR knows to clear the useMemo cache.
-  dispose: noop,
-})
