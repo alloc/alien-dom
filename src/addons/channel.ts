@@ -108,10 +108,10 @@ export function defineChannel<
   Target extends object = Node
 >({
   isTarget = isNode as any,
-  parentKey = 'parentNode' as any,
+  bubblingKey = isTarget === isNode ? ('parentNode' as any) : false,
 }: {
   isTarget?(node: any): node is Target
-  parentKey?: Extract<keyof Target, string>
+  bubblingKey?: Extract<keyof Target, string> | false
 } = {}): AlienChannel<Data, Target> {
   let untargetedReceivers: Set<AlienReceiver> | undefined
   let targetedReceiverCaches: WeakMap<Target, Set<AlienReceiver>> | undefined
@@ -133,8 +133,8 @@ export function defineChannel<
       }
     }
 
-    if (target[parentKey]) {
-      return bubble(target[parentKey] as any, message)
+    if (bubblingKey !== false && target[bubblingKey]) {
+      return bubble(target[bubblingKey] as any, message)
     }
 
     if (untargetedReceivers) {
