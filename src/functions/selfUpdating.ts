@@ -60,31 +60,11 @@ export function selfUpdating<
       attachRef(props, key, ref(initialValue))
     }
 
-    let newPropAdded = false
-
-    const updateProps = (newProps: Partial<Props>) => {
-      for (const key in newProps) {
-        const newValue = newProps[key]
-        if (props.hasOwnProperty(key)) {
-          props[key] = newValue as any
-        } else {
-          attachRef(props, key, ref(newValue))
-          newPropAdded = true
-        }
-      }
-      // When a prop has its initial value set, the component must be manually
-      // updated in case the prop's absence influenced the render result.
-      if (newPropAdded) {
-        self.update()
-      }
-    }
-
     const self = new AlienComponent(
       lastValue(currentComponent),
       Component as any,
       props,
       context,
-      updateProps,
       componentName
     ) as AlienRunningComponent
 
@@ -276,7 +256,6 @@ export function selfUpdating<
         popValue(currentComponent, self)
 
         self.endRender(threw)
-        newPropAdded = false
       }
 
       // When the root node is a fragment, use its first child to determine if

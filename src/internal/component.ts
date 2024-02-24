@@ -28,7 +28,7 @@ export type ElementTags = Map<FunctionComponent, AlienComponent<any>>
 export type ElementRefs = Map<JSX.ElementKey, ChildNode | DocumentFragment>
 
 /** Internal state for a component instance. */
-export class AlienComponent<Props = any> {
+export class AlienComponent<Props extends object = any> {
   rootNode: ChildNode | DocumentFragment | null = null
   rootKey: JSX.ElementKey | undefined = undefined
   hooks: any[] = []
@@ -53,7 +53,6 @@ export class AlienComponent<Props = any> {
     readonly tag: FunctionComponent,
     readonly props: Props,
     readonly context: Map<AlienContext, Ref>,
-    readonly updateProps: (props: Partial<Props>) => void,
     readonly name: () => string
   ) {}
 
@@ -110,6 +109,24 @@ export class AlienComponent<Props = any> {
     }
   }
 
+  updateProps(newProps: Partial<Props>) {
+    let newPropAdded = false
+    for (const key in newProps) {
+      const newValue = newProps[key]
+      if (this.props.hasOwnProperty(key)) {
+        this.props[key] = newValue as any
+      } else {
+        attachRef(this.props, key, ref(newValue))
+        newPropAdded = true
+      }
+    }
+    // When a prop has its initial value set, the component must be manually
+    // updated in case the prop's absence influenced the render result.
+    if (newPropAdded) {
+      this.update()
+    }
+  }
+
   startRender() {
     this.newEffects = new AlienEffects()
     this.newRefs = new Map()
@@ -163,7 +180,7 @@ export class AlienComponent<Props = any> {
 }
 
 export declare class AlienRunningComponent<
-  Props = any
+  Props extends object = any
 > extends AlienComponent<Props> {
   updates: Map<JSX.ElementKey, AnyDeferredNode>
   newRefs: ElementRefs
