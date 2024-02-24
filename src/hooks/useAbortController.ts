@@ -33,7 +33,7 @@ export function useAbortController(
   deps?: readonly any[]
 ) {
   const signal = isArray(arg) ? ((deps = arg), undefined) : arg
-  const state = useState(initialState, signal)
+  const state = useState(UseAbortController, signal)
 
   if (useDepsArray(deps)) {
     state.ctrl.abort()
@@ -43,20 +43,15 @@ export function useAbortController(
   return state.ctrl
 }
 
-function initialState(signal?: AbortSignal): {
-  ctrl: AbortController
-  dispose: () => void
-} {
-  let state: ReturnType<typeof initialState>
-
-  const abort = () => state.ctrl.abort()
-  signal?.addEventListener('abort', abort)
-
-  return (state = {
-    ctrl: new AbortController(),
-    dispose() {
-      this.ctrl.abort()
-      signal?.removeEventListener('abort', abort)
-    },
-  })
+class UseAbortController {
+  constructor(public signal: AbortSignal | undefined) {
+    this.abort = signal ? () => this.ctrl.abort() : undefined
+    signal?.addEventListener('abort', this.abort!)
+  }
+  ctrl = new AbortController()
+  abort?: () => void
+  dispose() {
+    this.ctrl.abort()
+    this.signal?.removeEventListener('abort', this.abort!)
+  }
 }

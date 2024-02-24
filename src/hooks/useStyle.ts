@@ -55,7 +55,7 @@ export function useStyle(
       }
     }
   } else if (deps) {
-    const state = useState(initialState, style, deps)
+    const state = useState(UseStyle, style, deps)
     if (state.dispose && depsHaveChanged(deps, state.deps)) {
       state.dispose()
       state.dispose = undefined
@@ -73,15 +73,10 @@ export function useStyle(
   }
 }
 
-const initialState = (
-  style: () => StyleAttributes | Falsy,
-  deps: readonly any[]
-): {
-  deps: readonly any[]
-  dispose: (() => void) | undefined
-  style: () => StyleAttributes | Falsy
-} => ({
-  deps,
-  dispose: undefined,
-  style,
-})
+class UseStyle {
+  constructor(
+    public style: () => StyleAttributes | Falsy,
+    public deps: readonly any[]
+  ) {}
+  dispose?: () => void = undefined
+}

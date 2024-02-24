@@ -18,7 +18,7 @@ export function useCallbackProp<T extends (...args: any[]) => void>(
 export function useCallbackProp<T extends (...args: any[]) => any>(
   callback: T | Falsy
 ) {
-  const state = useState(initialState)
+  const state = useState(UseCallbackProp<T>)
   state.callback = callback
 
   return function (this: any, ...args: any[]) {
@@ -28,8 +28,6 @@ export function useCallbackProp<T extends (...args: any[]) => any>(
   } as T
 }
 
-const initialState = <T extends (...args: any[]) => any>(): {
-  callback: T | Falsy
-} => ({
-  callback: false,
-})
+class UseCallbackProp<T extends (...args: any[]) => any> {
+  callback: T | Falsy = false
+}

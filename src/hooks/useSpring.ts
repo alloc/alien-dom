@@ -18,9 +18,12 @@ export function useSpring<Element extends DefaultElement>(
 ) {
   const { to, from } = Array.isArray(animations)
     ? mergeAnimations(animations)
-    : (animations as State)
+    : (animations as {
+        to?: Record<string, any>
+        from?: Record<string, any>
+      })
 
-  const state = useState(initialState)
+  const state = useState(UseSpring)
   if (shouldRun == null) {
     shouldRun = !!to && !shallowEquals(state.to, to)
   }
@@ -59,13 +62,9 @@ export function useSpring<Element extends DefaultElement>(
   }
 }
 
-type State = {
-  to?: Record<string, any>
-  from?: Record<string, any>
-}
-
-function initialState(): State {
-  return { to: undefined, from: undefined }
+class UseSpring {
+  to?: Record<string, any> = undefined
+  from?: Record<string, any> = undefined
 }
 
 function mergeAnimations(animations: readonly SpringAnimation[]) {

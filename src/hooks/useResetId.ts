@@ -1,3 +1,4 @@
+import { isFunction } from '@alloc/is'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { createGuid } from '../internal/guid'
 import { ReadonlyRef, ref } from '../observable'
@@ -35,7 +36,7 @@ export function useResetId(reset: any) {
     // Allow the caller to handle resets manually.
     return reset
   }
-  const state = useState(initialState, reset)
+  const state = useState(UseResetId, reset)
   if (typeof reset === 'function') {
     const compute: () => ResetOption = reset
     useObserver(() => {
@@ -47,18 +48,19 @@ export function useResetId(reset: any) {
   return createId(state, reset)
 }
 
-type State = ReturnType<typeof initialState>
-
-const initialState = (reset: ResetOption | (() => ResetOption)) => ({
-  prevReset: undefined as ResetOption | undefined,
-  value: undefined as number | undefined,
-  ref: typeof reset === 'function' ? ref(createGuid()) : undefined,
-})
+class UseResetId {
+  constructor(reset: ResetOption | (() => ResetOption)) {
+    this.ref = isFunction(reset) ? ref(createGuid()) : undefined
+  }
+  prevReset?: ResetOption = undefined
+  value?: number = undefined
+  ref?: ReadonlyRef<number>
+}
 
 type ResetOption = boolean | readonly any[]
 
 function createId(
-  state: State,
+  state: UseResetId,
   reset: ResetOption,
   defaultReset = true
 ): number {

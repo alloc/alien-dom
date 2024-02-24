@@ -5,7 +5,7 @@ import { useState } from './useState'
 export function usePrevious<T>(value: T): T | undefined
 export function usePrevious<T>(value: T, deps: readonly any[]): T | undefined
 export function usePrevious(value: any, deps?: readonly any[]) {
-  const state = useState(initialState, deps)
+  const state = useState(UsePrevious, deps)
 
   const { prev } = state
   state.prev = value
@@ -17,15 +17,11 @@ export function usePrevious(value: any, deps?: readonly any[]) {
   return prev
 }
 
-const initialState = (
-  deps: readonly any[] | undefined
-): {
-  deps: readonly any[] | undefined
-  prev: any
+class UsePrevious {
+  constructor(public deps: readonly any[] | undefined) {
+    // This is defined so HMR knows to clear the usePrevious cache.
+    this.dispose = deps ? noop : undefined
+  }
+  prev: any = undefined
   dispose: (() => void) | void
-} => ({
-  deps,
-  prev: undefined,
-  // This is defined so HMR knows to clear the usePrevious cache.
-  dispose: deps ? noop : undefined,
-})
+}

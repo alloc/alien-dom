@@ -10,7 +10,7 @@ export function useComputed<T>(
   deps: readonly any[] = [],
   debugId?: string | number
 ): ComputedRef<T> {
-  const state = useState(initialState, deps)
+  const state = useState(UseComputed, deps)
   if (depsHaveChanged(deps, state.deps)) {
     state.ref = computed(get, debugId)
     state.deps = deps
@@ -18,15 +18,9 @@ export function useComputed<T>(
   return state.ref!
 }
 
-const initialState = (
-  deps: readonly any[]
-): {
-  deps: readonly any[]
-  ref: ComputedRef | null
-  dispose: true
-} => ({
-  deps,
-  ref: null,
+class UseComputed {
+  constructor(public deps: readonly any[] = []) {}
+  ref: ComputedRef | null = null
   // This tells the runtime to reset the state after an HMR update.
-  dispose: true,
-})
+  dispose = true
+}

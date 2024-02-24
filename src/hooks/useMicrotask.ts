@@ -3,7 +3,7 @@ import { useState } from './useState'
 
 export function useMicrotask(effect: () => void, shouldRun = true) {
   const component = expectCurrentComponent()
-  const state = useState(initialState)
+  const state = useState(UseMicrotask)
   if (shouldRun) {
     const nextRun = () => {
       if (nextRun == state.nextRun) {
@@ -22,8 +22,6 @@ export function useMicrotask(effect: () => void, shouldRun = true) {
   }
 }
 
-const initialState = (): {
-  nextRun?: () => void
-} => ({
-  nextRun: undefined,
-})
+class UseMicrotask {
+  nextRun?: () => void = undefined
+}

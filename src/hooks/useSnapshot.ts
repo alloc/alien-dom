@@ -7,7 +7,7 @@ export function useSnapshot<T>(
   arg: T | (() => T),
   deps: readonly any[] = []
 ): T {
-  const state = useState(initialState, deps)
+  const state = useState(UseSnapshot, deps)
   if (depsHaveChanged(deps, state.deps)) {
     state.value = isFunction(arg) ? peek(arg) : arg
     state.deps = deps
@@ -15,15 +15,9 @@ export function useSnapshot<T>(
   return state.value
 }
 
-const initialState = (
-  deps: readonly any[]
-): {
-  deps: readonly any[]
-  value: any
-  dispose: true
-} => ({
-  deps,
-  value: undefined,
+class UseSnapshot {
+  constructor(public deps: readonly any[]) {}
+  value: any = undefined
   // This tells the runtime to reset the state after an HMR update.
-  dispose: true,
-})
+  dispose = true
+}

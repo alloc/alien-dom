@@ -65,7 +65,7 @@ export type TransitionProps<Id> = {
 }
 
 export function Transition<Id>(props: TransitionProps<Id>) {
-  const state = useState(initialState)
+  const state = useState(TransitionState)
 
   const previousId = state.currentId
   const leavingElements = Array.from(
@@ -283,17 +283,13 @@ export function Transition<Id>(props: TransitionProps<Id>) {
   )
 }
 
-const initialState = (): {
-  currentId: any
+class TransitionState {
+  currentId: any = nothing
   /** The most recent `children` prop for each `id` prop. */
-  children: Map<any, DocumentFragment>
+  children = new Map<any, DocumentFragment>()
   /** The animated elements of each `id` prop. */
-  elements: Map<any, AnyElement | AnyElement[]>
-} => ({
-  currentId: nothing,
-  children: new Map(),
-  elements: new Map(),
-})
+  elements = new Map<any, AnyElement | AnyElement[]>()
+}
 
 function isDependency(value: any): value is TransitionDependency {
   return (

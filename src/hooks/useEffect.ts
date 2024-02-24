@@ -6,7 +6,7 @@ export type EffectResult = (() => void) | void
 export type EffectCallback = () => EffectResult
 
 export function useEffect(effect: EffectCallback, deps: readonly any[]) {
-  const state = useState(initialState, deps)
+  const state = useState(UseEffect, deps)
   useMicrotask(() => {
     state.dispose?.()
     state.deps = deps
@@ -14,12 +14,7 @@ export function useEffect(effect: EffectCallback, deps: readonly any[]) {
   }, depsHaveChanged(deps, state.deps))
 }
 
-const initialState = (
-  deps: readonly any[]
-): {
-  deps: readonly any[]
-  dispose: (() => void) | void
-} => ({
-  deps,
-  dispose: undefined,
-})
+class UseEffect {
+  constructor(public deps: readonly any[]) {}
+  dispose: (() => void) | void = undefined
+}
