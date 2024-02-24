@@ -1,4 +1,4 @@
-import { Fragment } from '../jsx-dom/jsx-runtime'
+import { Fragment } from '../components/Fragment'
 import {
   createFragmentNode,
   deferCompositeNode,

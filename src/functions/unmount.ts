@@ -1,4 +1,4 @@
-import { AlienComponent } from '../internal/component'
+import type { AlienComponent } from '../internal/component'
 import {
   kAlienEffects,
   kAlienElementTags,
@@ -56,7 +56,7 @@ export function unmount(
         // component is disabled first.
         for (const component of tags.values()) {
           if (component === keepComponent) break
-          component.disable()
+          component.dispose()
         }
       }
     }

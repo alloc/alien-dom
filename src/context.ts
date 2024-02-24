@@ -74,8 +74,8 @@ export function createContext<T>(initial?: T) {
 
     const component = lastValue(currentComponent)
     const current = component
-      ? component.context.get(Provider as any)
-      : getContext(Provider as any)
+      ? component.context.get<T>(Provider as any)
+      : getContext<T>(Provider as any)
 
     if (current) {
       return current.value

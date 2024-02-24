@@ -1,9 +1,9 @@
 import { isFunction, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
-import { selfUpdating } from '../functions/selfUpdating'
 import { applyKeyProp } from '../internal/applyProp'
 import { wrapWithFragment } from '../internal/fragment'
 import { currentComponent } from '../internal/global'
+import { selfUpdating } from '../internal/selfUpdating'
 import { kAlienPureComponent, kAlienSelfUpdating } from '../internal/symbols'
 import { lastValue } from '../internal/util'
 import type { JSX } from '../types'
@@ -66,8 +66,8 @@ export function jsx(
   if (component) {
     // Use the JSX element's key to locate an existing DOM node. We will return
     // this node so the component can reference it without misdirection.
-    if (isElementKey(key) && component.refs) {
-      oldNode = component.refs.get(key)
+    if (isElementKey(key) && component.nodes) {
+      oldNode = component.nodes.get(key)
       if (oldNode && !compareNodeWithTag(oldNode, tag)) {
         oldNode = undefined
       }

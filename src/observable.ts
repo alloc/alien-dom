@@ -589,6 +589,9 @@ export class Observer {
     }
   }
 
+  /**
+   * Note: A disposed observer can still be reused.
+   */
   dispose() {
     updateQueue.delete(this)
     this.refs.forEach(ref => {

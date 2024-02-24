@@ -355,7 +355,7 @@ export function applyKeyProp(
   if (component) {
     const cachedNode = oldNode || (isNode(node) && node)
     if (cachedNode) {
-      component.setRef(key, cachedNode)
+      component.setNodeReference(key, cachedNode)
     }
 
     // Check for equivalence as the return value of a custom component

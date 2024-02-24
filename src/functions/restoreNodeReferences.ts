@@ -4,17 +4,16 @@ import { kAlienElementKey, kAlienFragmentNodes } from '../internal/symbols'
 import { isFragment, isTextNode } from './typeChecking'
 
 /**
- * Restore a previous HTML element within a component's element references, so a
- * JSX element using the same key will be reuse the HTML element instead of
+ * Restore a previous HTML element within a component's node references, so a
+ * JSX element using the same key will be reuse the DOM node instead of
  * generating a new one.
  *
- * This function is meant to support JSX updates of HTML elements that are
- * removed from or moved within the DOM, and then subsequently restored in the
- * DOM.
+ * This function is meant to support JSX updates of DOM nodes that are removed
+ * from or moved within the DOM tree, and then subsequently re-added to it.
  */
-export function restoreComponentRefs(node: ChildNode | DocumentFragment) {
+export function restoreNodeReferences(node: ChildNode | DocumentFragment) {
   const component = expectCurrentComponent()
-  component.refs ??= new Map()
+  component.nodes ??= new Map()
 
   if (isFragment(node)) {
     const childNodes = kAlienFragmentNodes(node)
@@ -31,7 +30,7 @@ export function restoreComponentRefs(node: ChildNode | DocumentFragment) {
 function restoreComponentRef(node: ChildNode, component: AlienComponent) {
   const key = kAlienElementKey(node)
   if (key != null) {
-    component.refs!.set(key, node)
+    component.nodes!.set(key, node)
   }
   node.childNodes.forEach(childNode => {
     if (!isTextNode(childNode)) {

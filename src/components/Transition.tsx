@@ -2,7 +2,7 @@ import { isFunction, isPromiseLike } from '@alloc/is'
 import type { Falsy } from '@alloc/types'
 import { AnimatedProps, SpringAnimation, animate } from '../addons/animate'
 import { Promisable } from '../addons/promises'
-import { restoreComponentRefs } from '../functions/restoreComponentRefs'
+import { restoreNodeReferences } from '../functions/restoreNodeReferences'
 import { toElements } from '../functions/toElements'
 import { isNode } from '../functions/typeChecking'
 import { useEffect } from '../hooks/useEffect'
@@ -83,16 +83,16 @@ export function Transition<Id>(props: TransitionProps<Id>) {
         childNodes[index + 1] = childNode
       })
     }
-    restoreComponentRefs(reusedChildren)
+    restoreNodeReferences(reusedChildren)
   }
 
   let newLeavingElements: AnyElement[] | undefined
   let newEnteredElements: AnyElement[] | undefined
   let initial = false
 
-  // We must wrap props.children in a fragment so that jsx-dom can
-  // replace any element references with their latest versions (or a
-  // placeholder if nothing changed).
+  // We must wrap props.children in a fragment so that jsx-dom can replace any
+  // node references with their latest versions (or a placeholder if nothing
+  // changed).
   let children = Fragment(props)
 
   if (isDeferredNode(children)) {
