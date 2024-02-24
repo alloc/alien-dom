@@ -2,11 +2,11 @@ import { ContextStore } from '../context'
 import { attachRef } from '../functions/attachRef'
 import { ref } from '../observable'
 import type { JSX } from '../types/jsx'
-import { AlienComponent, AlienRunningComponent } from './component'
+import { AlienComponent } from './component'
 import { getContext } from './context'
 import { currentComponent } from './global'
 import { kAlienRenderFunc, kAlienSelfUpdating } from './symbols'
-import { lastValue, noop } from './util'
+import { lastValue } from './util'
 
 /**
  * Create a self-updating component whose render function can mutate its
@@ -20,14 +20,13 @@ import { lastValue, noop } from './util'
 export function selfUpdating<
   Props extends object,
   Result extends JSX.ChildrenProp
->(render: (props: Readonly<Props>) => Result): (props: Props) => Result {
-  const componentName = DEV
-    ? () =>
-        (kAlienRenderFunc(render) || kAlienRenderFunc(Component) || render)
-          .name || (Component as any).displayName
-    : noop
+>(Component: (props: Readonly<Props>) => Result): (props: Props) => Result {
+  let SelfUpdating = kAlienSelfUpdating(Component)
+  if (SelfUpdating) {
+    return SelfUpdating
+  }
 
-  const Component = (initialProps: Props): any => {
+  SelfUpdating = (initialProps: Props): any => {
     const props = {} as Props
     const context = new ContextStore(getContext())
 
@@ -38,19 +37,20 @@ export function selfUpdating<
 
     const self = new AlienComponent(
       lastValue(currentComponent),
-      Component as any,
-      render,
+      SelfUpdating!,
+      Component,
       props,
-      context,
-      componentName
-    ) as AlienRunningComponent
+      context
+    )
 
+    // Trigger the initial render.
     self.update()
 
     return self.rootNode
   }
 
-  kAlienRenderFunc(Component, render)
-  kAlienSelfUpdating(Component, Component)
-  return Component
+  kAlienRenderFunc(SelfUpdating, Component)
+  kAlienSelfUpdating(Component, SelfUpdating)
+
+  return SelfUpdating
 }

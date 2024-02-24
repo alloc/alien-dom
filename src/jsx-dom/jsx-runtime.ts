@@ -4,7 +4,7 @@ import { applyKeyProp } from '../internal/applyProp'
 import { wrapWithFragment } from '../internal/fragment'
 import { currentComponent } from '../internal/global'
 import { selfUpdating } from '../internal/selfUpdating'
-import { kAlienPureComponent, kAlienSelfUpdating } from '../internal/symbols'
+import { kAlienPureComponent } from '../internal/symbols'
 import { lastValue } from '../internal/util'
 import type { JSX } from '../types'
 import {
@@ -50,12 +50,7 @@ export function jsx(
 
   const hasImpureTag = !isString(tag) && !kAlienPureComponent.in(tag)
   if (hasImpureTag && tag !== Fragment) {
-    let selfUpdatingTag = kAlienSelfUpdating(tag)
-    if (!selfUpdatingTag) {
-      selfUpdatingTag = selfUpdating(tag)
-      kAlienSelfUpdating(tag, selfUpdatingTag)
-    }
-    tag = selfUpdatingTag
+    tag = selfUpdating(tag)
   }
 
   let shouldDefer: boolean | undefined

@@ -24,19 +24,6 @@ export default (options: {
     }
 
     for (const component of components) {
-      if (component.selfUpdating) {
-        const selfUpdatingCall = component.function
-          .parent as Node.CallExpression
-        const callee = selfUpdatingCall.callee as Node.Identifier
-        callee.replace('hmrSelfUpdating')
-      } else {
-        component.function.before(`hmrSelfUpdating(`)
-        component.function.after(`)`)
-        if (component.function.isFunctionDeclaration()) {
-          component.function.before(`const ${component.id.name} = `)
-        }
-      }
-
       const { deps } = findExternalReferences(component.function)
 
       const nearestBlock = component.function.findParent(
@@ -45,13 +32,13 @@ export default (options: {
 
       nearestBlock.push(
         'body',
-        `\nhmrRegister("${file}", "${component.id.name}", ${component.id.name}, "${component.hash}", [${deps}])`
+        `\nhmrRegister("${file}:${component.id.name}", ${component.id.name}, "${component.hash}", [${deps}])`
       )
     }
 
     program.unshift(
       'body',
-      `import { hmrSelfUpdating, hmrRegister } from "alien-dom/dist/hmr.mjs"\n`
+      `import { hmrRegister } from "alien-dom/dist/hmr.mjs"\n`
     )
 
     options.onHmrAdded?.(file)

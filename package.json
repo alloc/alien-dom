@@ -16,7 +16,8 @@
     "*.js"
   ],
   "sideEffects": [
-    "global.js"
+    "global.js",
+    "dist/hmr.mjs"
   ],
   "keywords": [
     "jsx-dom",

@@ -45,6 +45,8 @@ import {
 import { AnyElement } from './types'
 import { compareNodeWithTag, lastValue, noop } from './util'
 
+let componentRenderHook = (component: AlienComponent) => component.render
+
 export type ElementTags = Map<FunctionComponent, AlienComponent<any>>
 export type ElementRefs = Map<JSX.ElementKey, ChildNode | DocumentFragment>
 
@@ -74,8 +76,7 @@ export class AlienComponent<Props extends object = any> extends Observer {
     readonly tag: FunctionComponent,
     readonly render: (props: Readonly<Props>) => JSX.ChildrenProp,
     readonly props: Props,
-    readonly context: ContextStore,
-    readonly name: () => string
+    readonly context: ContextStore
   ) {
     super()
   }
@@ -170,7 +171,7 @@ export class AlienComponent<Props extends object = any> extends Observer {
 
     let threw = true
     try {
-      let newRootNode: JSX.ChildrenProp = (0, this.render)(this.props)
+      let newRootNode: JSX.ChildrenProp = componentRenderHook(this)(this.props)
 
       if (isFunction(newRootNode)) {
         newRootNode = fromElementThunk(newRootNode)
@@ -251,7 +252,7 @@ export class AlienComponent<Props extends object = any> extends Observer {
 
           // Use a comment node as a placeholder if nothing was produced.
           if (!newRootNode) {
-            placeholder ||= document.createComment(DEV ? this.name() : '')
+            placeholder ||= document.createComment(DEV ? this.name : '')
             newRootNode = placeholder
           }
           // Fragments always have a component-specific comment node as
@@ -259,7 +260,7 @@ export class AlienComponent<Props extends object = any> extends Observer {
           else if (DEV && rootNode !== newRootNode && isFragment(newRootNode)) {
             const newChildren =
               kAlienFragmentNodes(newRootNode) || newRootNode.childNodes
-            newChildren[0].nodeValue = this.name()
+            newChildren[0].nodeValue = this.name
           }
 
           // Replace the old root node if one exists and wasn't replaced by a
@@ -281,7 +282,7 @@ export class AlienComponent<Props extends object = any> extends Observer {
               unmount(rootNode, true, this)
             } else if (DEV) {
               console.error(
-                `Component "${this.name()}" was updated before its initial node could be added to the DOM, resulting in a failed update!`
+                `Component "${this.name}" was updated before its initial node could be added to the DOM, resulting in a failed update!`
               )
             }
           }
@@ -301,7 +302,7 @@ export class AlienComponent<Props extends object = any> extends Observer {
           this.setRootNode((rootNode = newRootNode))
         }
       } else if (!rootNode) {
-        placeholder = document.createComment(DEV ? this.name() : '')
+        placeholder = document.createComment(DEV ? this.name : '')
         this.setRootNode((rootNode = placeholder))
       }
 
@@ -373,6 +374,20 @@ export class AlienComponent<Props extends object = any> extends Observer {
   }
 }
 
+export interface AlienComponent {
+  readonly name: string
+}
+
+if (DEV) {
+  Object.defineProperty(AlienComponent.prototype, 'name', {
+    get: function name(this: AlienComponent) {
+      return (
+        (this.render as any).displayName || this.render.name || '<anonymous>'
+      )
+    },
+  })
+}
+
 export declare class AlienRunningComponent<
   Props extends object = any
 > extends AlienComponent<Props> {
@@ -380,6 +395,10 @@ export declare class AlienRunningComponent<
   newNodes: ElementRefs
   newEffects: AlienEffects
 }
+
+export const setComponentRenderHook = (
+  hook: (component: AlienComponent) => (props: any) => JSX.ChildrenProp
+) => (componentRenderHook = hook)
 
 /**
  * If the current node and the new node are both returned by the
