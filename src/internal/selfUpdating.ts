@@ -49,6 +49,16 @@ export function selfUpdating<
     return self.rootNode
   }
 
+  if (DEV) {
+    Object.defineProperty(SelfUpdating, 'name', {
+      get: function name() {
+        return (
+          (Component as any).displayName || Component.name || 'SelfUpdating'
+        )
+      },
+    })
+  }
+
   kAlienRenderFunc(SelfUpdating, Component)
   kAlienSelfUpdating(Component, SelfUpdating)
 
