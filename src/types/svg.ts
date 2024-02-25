@@ -94,7 +94,6 @@ export interface SVGAttributes<T> extends AriaAttributes, DOMAttributes<T> {
   // Attributes which also defined in HTMLAttributes
   // See comment in SVGDOMPropertyConfig.js
   class?: DOMClassAttribute
-  className?: DOMClassAttribute
   color?: string
   height?: number | string
   id?: string

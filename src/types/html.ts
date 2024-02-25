@@ -67,7 +67,6 @@ export interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
 
   // Standard HTML Attributes
   accessKey?: string | undefined
-  className?: DOMClassAttribute | undefined
   contentEditable?: Booleanish | 'inherit' | undefined
   contextMenu?: string | undefined
   dir?: string | undefined
