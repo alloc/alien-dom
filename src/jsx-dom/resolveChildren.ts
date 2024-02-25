@@ -78,7 +78,7 @@ export function resolveChildren(
         children = child.children as ResolvedChild[]
       } else {
         node = child
-        child.context = context
+        child.context ||= context
       }
     } else if (isFunction(child)) {
       child = fromElementThunk(child, true)
