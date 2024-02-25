@@ -23,6 +23,7 @@ import type { JSX } from '../types/jsx'
 import { appendChild } from './appendChild'
 import { resolveChildren, type ResolvedChild } from './resolveChildren'
 import { svgTags } from './svg-tags'
+import { noop } from './util'
 
 export type AlienNode =
   | ShadowRootNode
@@ -70,6 +71,7 @@ export type DeferredChildren =
 export interface DeferredCompositeNode extends DeferredNode {
   tag: (props: any) => JSX.ChildrenProp
   children?: ResolvedChild[]
+  trace: () => void
 }
 
 export type AnyDeferredNode = DeferredHostNode | DeferredCompositeNode
@@ -109,6 +111,11 @@ export const deferCompositeNode = (
   props,
   children,
   context: undefined,
+  trace: DEV
+    ? (({ stack }: Error) => console.log.bind(console, stack))(
+        Error(tag.name + ' node was declared here ↓')
+      )
+    : noop,
 })
 
 export function evaluateDeferredNode(node: AnyDeferredNode) {
