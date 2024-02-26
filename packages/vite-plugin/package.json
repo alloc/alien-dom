@@ -14,7 +14,7 @@
     "dist"
   ],
   "dependencies": {
-    "@alien-dom/nebu": "workspace:^0.3.0",
+    "@alien-dom/nebu": "workspace:^",
     "nebu": "^2.3.8",
     "tsconfck": "^2.1.2"
   },
