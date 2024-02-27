@@ -89,14 +89,14 @@ importers:
   packages/esbuild-plugin:
     dependencies:
       '@alien-dom/nebu':
-        specifier: workspace:^0.3.0
+        specifier: workspace:^
         version: link:../nebu-plugin
       esbuild-extra:
         specifier: ^0.3.0
         version: 0.3.0(esbuild@0.17.17)(typescript@5.1.3)
       nebu:
-        specifier: ^2.3.8
-        version: 2.3.8
+        specifier: ^2.4.5
+        version: 2.4.5
     devDependencies:
       '@types/node':
         specifier: ^18.15.11
@@ -108,11 +108,11 @@ importers:
   packages/htmelt-plugin:
     dependencies:
       '@alien-dom/esbuild':
-        specifier: workspace:^0.3.0
+        specifier: workspace:^
         version: link:../esbuild-plugin
       '@htmelt/plugin':
-        specifier: ^0.3.4
-        version: 0.3.4(typescript@5.1.3)
+        specifier: ^0.4.0
+        version: 0.4.0(typescript@5.1.3)
     devDependencies:
       '@types/node':
         specifier: ^18.15.11
@@ -124,8 +124,8 @@ importers:
         specifier: ^4.1.5
         version: 4.1.5
       nebu:
-        specifier: ^2.4.0
-        version: 2.4.0
+        specifier: ^2.4.5
+        version: 2.4.5
       tsup:
         specifier: ^6.7.0
         version: 6.7.0(typescript@5.1.3)
@@ -164,7 +164,7 @@ importers:
   packages/vite-plugin:
     dependencies:
       '@alien-dom/nebu':
-        specifier: workspace:^0.3.0
+        specifier: workspace:^
         version: link:../nebu-plugin
       nebu:
         specifier: ^2.3.8
@@ -189,6 +189,7 @@ packages:
 
   /@alloc/is@3.1.2:
     resolution: {integrity: sha512-VgfKuuc45fpQRanNLYNnNWVwYBy19FSBGU5Y5q4CPuglv6KLhb+ipVy7lfn9CWM43lKRzkRPU+mt8eT+mPDhDA==}
+    dev: true
 
   /@alloc/prettier-config@1.0.0:
     resolution: {integrity: sha512-xm50V1qxSdTh1O1fKA+gqcU605YSnxfq6HwtYSFU3fRsKMFnUSuSOxqSAPI7y2sRxqPed2EIuGmNn107LVQM6g==}
@@ -821,13 +822,34 @@ packages:
     transitivePeerDependencies:
       - rollup
       - typescript
+    dev: true
+
+  /@htmelt/plugin@0.4.0(typescript@5.1.3):
+    resolution: {integrity: sha512-L8BrrwpiIqIwzFPQ7S4uMWiqh6RByl9R0/HwIX1Zc0NDwJf7EaLE4uPYrkibEtO+U3LHPqpBASzAKqyJ4DZkeA==}
+    dependencies:
+      '@rollup/pluginutils': 5.0.2
+      '@types/node': 20.2.5
+      '@types/parse5': 6.0.3
+      bundle-require: 4.0.1(esbuild@0.17.17)
+      cac: 6.7.14
+      esbuild: 0.17.17
+      esbuild-extra: 0.3.0(esbuild@0.17.17)(typescript@5.1.3)
+      escalade: 3.1.1
+      md5-hex: 4.0.0
+      mitt: 3.0.0
+      mrmime: 1.0.1
+      parse5: 6.0.1
+    transitivePeerDependencies:
+      - rollup
+      - typescript
+    dev: false
 
   /@htmelt/preval@0.1.0(typescript@5.1.3):
     resolution: {integrity: sha512-QsGrLkye8Ab3S6e4Qce9Zwth8ivV9vZ8batrmadEZRdq72eqazCxNrkW/xLu3D4WK1sMo/d9Tj/y3z0FmTI8sQ==}
     dependencies:
       '@htmelt/plugin': 0.3.4(typescript@5.1.3)
       meriyah: 4.3.5
-      nebu: 2.4.2
+      nebu: 2.4.5
       serialize-javascript: 6.0.2
     transitivePeerDependencies:
       - rollup
@@ -1178,7 +1200,6 @@ packages:
     dependencies:
       esbuild: 0.17.17
       load-tsconfig: 0.2.5
-    dev: true
 
   /cac@6.7.14:
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
@@ -1241,7 +1262,7 @@ packages:
       normalize-path: 3.0.0
       readdirp: 3.6.0
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /chunkd@2.0.1:
@@ -1574,6 +1595,7 @@ packages:
       tsconfck: 2.1.2(typescript@5.1.3)
     transitivePeerDependencies:
       - typescript
+    dev: true
 
   /esbuild-extra@0.3.0(esbuild@0.17.17)(typescript@5.1.3):
     resolution: {integrity: sha512-MeOfjQA1YRDG1saEsiLC7gCxwNz35jFv34UmqcSsjBNUa4j1nqZ+dxlzYBdR1L0ev4GdmgbPOM9ugkt7xLWxmg==}
@@ -1651,7 +1673,6 @@ packages:
   /escalade@3.1.1:
     resolution: {integrity: sha512-k0er2gUkLf8O0zKJiAhmkTnJlTvINGv7ygDNPbeIsX/TJjGJZHuh9B2UxbsaEkmlEo9MfhrSzmhIlhRlI2GXnw==}
     engines: {node: '>=6'}
-    dev: true
 
   /escape-string-regexp@1.0.5:
     resolution: {integrity: sha512-vbRorB5FUQWvla16U8R/qgaFIya2qGzwDrNmCZuYKrbdSUMG6I1ZCGQRefkRVhuOkIGVne7BQ35DSfo1qvJqFg==}
@@ -1767,8 +1788,8 @@ packages:
   /fs.realpath@1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
-  /fsevents@2.3.2:
-    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
+  /fsevents@2.3.3:
+    resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
     requiresBuild: true
@@ -1902,7 +1923,7 @@ packages:
       mini-svg-data-uri: 1.4.4
       mitt: 3.0.0
       mrmime: 1.0.1
-      nebu: 2.4.2
+      nebu: 2.4.5
       node-forge: 1.3.1
       ts-debounce: 4.0.0
       type-fest: 3.13.1
@@ -2236,7 +2257,6 @@ packages:
   /load-tsconfig@0.2.5:
     resolution: {integrity: sha512-IXO6OCs9yg8tMKzfPZ1YmheJbZCiEsnBdcB03l0OcfK9prKnJb96siuHCr5Fl37/yo9DnKU+TLpxzTUspw9shg==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
-    dev: true
 
   /locate-path@7.2.0:
     resolution: {integrity: sha512-gvVijfZvn7R+2qyPX8mAuKcFGDf6Nc61GdvGafQsHL0sBIxfKzA+usWn4GFC/bk+QdwPUD4kWFJLhElipq+0VA==}
@@ -2375,7 +2395,6 @@ packages:
   /mrmime@1.0.1:
     resolution: {integrity: sha512-hzzEagAgDyoU1Q6yg5uI+AorQgdvMCur3FcKf7NhMKWsaYg+RnbTyHRa/9IlLF9rf455MOCtcqqrQQ83pPP7Uw==}
     engines: {node: '>=10'}
-    dev: true
 
   /ms@2.1.2:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}
@@ -2403,17 +2422,6 @@ packages:
     engines: {node: ^8.0.0 || ^10.0.0 || ^12.0.0 || ^14.0.0 || ^16.0.0 || ^18.0.0 || >=20.0.0}
     dev: true
 
-  /nebu@2.3.8:
-    resolution: {integrity: sha512-dkQxMk8MFt8wK+Cc2J/IaAkBmOehLOEjiWa9ElRt1MXkHPNOgcJxw6XOnUWxpLB9v/xEiWLyeBymaBhMvV9AQw==}
-    engines: {node: '>= 7.6.0'}
-    dependencies:
-      '@alloc/is': 3.1.2
-      '@alloc/types': 2.3.0
-      eslint-visitor-keys: 3.4.0
-      magic-string: 0.24.1
-      meriyah: 4.3.5
-    dev: false
-
   /nebu@2.4.0:
     resolution: {integrity: sha512-FKWOc+b9uLocBzIiMg0zPiO+4oFtWslykywdESmjeavPWKfewLo5pdavAB2c1uPh+OIloB9A/pYl7d3CihXWEg==}
     engines: {node: '>= 7.6.0'}
@@ -2422,9 +2430,20 @@ packages:
       eslint-visitor-keys: 3.4.0
       magic-string: 0.24.1
       meriyah: 4.3.5
+    dev: false
 
   /nebu@2.4.2:
     resolution: {integrity: sha512-PovhX2svUwiTm0UNLQdXUQj4cRBhM0G8ze/5b03au3+fK+7a40LvevRU+50iBhpD0MnvjFzu579Wq0mhrk4YpA==}
+    engines: {node: '>= 7.6.0'}
+    dependencies:
+      '@alloc/types': 2.3.0
+      eslint-visitor-keys: 3.4.0
+      magic-string: 0.24.1
+      meriyah: 4.3.5
+    dev: false
+
+  /nebu@2.4.5:
+    resolution: {integrity: sha512-n+eba/B7gv9bB1qfhfKVnqdsuC/tlXaUYgJighPeXAKkarzS9LdT5xukndNt71uNBJQBIzg69EIAzpHnKBTM7w==}
     engines: {node: '>= 7.6.0'}
     dependencies:
       '@alloc/types': 2.3.0
@@ -2740,7 +2759,7 @@ packages:
     engines: {node: '>=14.18.0', npm: '>=8.0.0'}
     hasBin: true
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /run-parallel@1.2.0:
@@ -3072,7 +3091,7 @@ packages:
       '@esbuild-kit/core-utils': 3.1.0
       '@esbuild-kit/esm-loader': 2.5.5
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /type-fest@0.13.1:
@@ -3162,7 +3181,7 @@ packages:
       postcss: 8.4.27
       rollup: 3.27.0
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /webidl-conversions@4.0.2:
