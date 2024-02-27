@@ -14,7 +14,7 @@
   ],
   "devDependencies": {
     "kleur": "^4.1.5",
-    "nebu": "^2.4.0",
+    "nebu": "^2.4.5",
     "tsup": "^6.7.0"
   },
   "peerDependencies": {
