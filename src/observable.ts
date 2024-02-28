@@ -681,6 +681,10 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
     return this.peek()
   }
 
+  /**
+   * Get the current value without observing it. If the ref is empty, the
+   * `compute` function will run immediately.
+   */
   peek() {
     if (this._value === emptySymbol) {
       if (!this._observer) {
