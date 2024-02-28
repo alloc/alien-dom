@@ -695,6 +695,18 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
     return this._value
   }
 
+  /**
+   * Clear the current value. If the ref is observed, the `compute` function
+   * will run again in the next microtask.
+   */
+  clear() {
+    if (this._observer) {
+      this._observer.scheduleUpdate()
+    } else {
+      this._value = emptySymbol
+    }
+  }
+
   private static Observer = class extends Observer {
     oldValue = emptySymbol
     constructor(readonly ref: ComputedRef) {
