@@ -1,3 +1,6 @@
+import type { Node as NebuNode } from 'nebu'
+import { isFunctionNode } from './helpers'
+
 export interface ComponentHash<Identifier, FunctionNode> {
   id: Identifier
   function: FunctionNode
@@ -6,15 +9,21 @@ export interface ComponentHash<Identifier, FunctionNode> {
 }
 
 export function computeComponentHashes<Identifier, FunctionNode>(
-  ast: Program,
+  ast: NebuNode.Program,
   code: string,
   hash: (code: string) => string
 ) {
   const components: ComponentHash<Identifier, FunctionNode>[] = []
 
-  for (const node of ast.body) {
-    if (hasNodeType(node, 'FunctionDeclaration')) {
-      if (node.id && /^[A-Z]/.test(node.id.name)) {
+  function processNamedFunction(
+    node: NebuNode.FunctionDeclaration | NebuNode.FunctionExpression
+  ) {
+    if (node.id && /^[A-Z]/.test(node.id.name)) {
+      const nearestScope = node.findParent(
+        node => node.isProgram() || isFunctionNode(node)
+      )!
+
+      if (nearestScope.isProgram()) {
         components.push({
           id: node.id as Identifier,
           function: node as FunctionNode,
@@ -22,34 +31,51 @@ export function computeComponentHashes<Identifier, FunctionNode>(
           selfUpdating: false,
         })
       }
-    } else if (hasNodeType(node, 'VariableDeclaration')) {
-      node.declarations.forEach(decl => {
-        if (hasNodeType(decl.id, 'Identifier') && /^[A-Z]/.test(decl.id.name)) {
-          const expr = decl.init
-          const selfUpdating =
-            expr &&
-            hasNodeType(expr, 'CallExpression') &&
-            hasNodeType(expr.callee, 'Identifier') &&
-            expr.callee.name === 'selfUpdating'
+    }
 
-          if (selfUpdating) {
-            const fn = expr.arguments[0]
-            if (
-              fn.type === 'FunctionExpression' ||
-              fn.type === 'ArrowFunctionExpression'
-            ) {
+    // Trick nebu into not walking this subtree.
+    node.removed = true
+  }
+
+  ast.process({
+    FunctionDeclaration: processNamedFunction,
+    FunctionExpression: processNamedFunction,
+    VariableDeclaration(node) {
+      for (const decl of node.declarations) {
+        if (
+          hasNodeType(decl.id, 'Identifier') &&
+          /^[A-Z]/.test(decl.id.name) &&
+          decl.init
+        ) {
+          const id = decl.id
+          const processFunctionExpression = (
+            node: NebuNode.FunctionExpression | NebuNode.ArrowFunctionExpression
+          ) => {
+            const nearestScope = node.findParent(
+              node => node.isProgram() || isFunctionNode(node)
+            )!
+
+            if (nearestScope.isProgram()) {
               components.push({
-                id: decl.id as Identifier,
-                function: fn as FunctionNode,
-                hash: hash(code.slice(fn.start, fn.end)),
+                id: id as Identifier,
+                function: node as FunctionNode,
+                hash: hash(code.slice(node.start, node.end)),
                 selfUpdating: true,
               })
             }
+
+            // Trick nebu into not walking this subtree.
+            node.removed = true
           }
+
+          decl.init.process({
+            FunctionExpression: processFunctionExpression,
+            ArrowFunctionExpression: processFunctionExpression,
+          })
         }
-      })
-    }
-  }
+      }
+    },
+  })
 
   return components
 }

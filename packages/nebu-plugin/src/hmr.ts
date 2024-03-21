@@ -30,9 +30,34 @@ export default (options: {
         node => node.isBlockStatement() || node.isProgram()
       ) as Node.BlockStatement | Node.Program
 
+      let name = component.id.name
+
+      // If the component is declared as a property (often for type inference),
+      // declare a random variable to assign the component to.
+      const propertyParent = component.function.findParent(
+        node => node.isObjectExpression() || node.isClassBody()
+      )
+      if (propertyParent) {
+        const property = component.function.findParent(
+          node =>
+            node.parent === propertyParent &&
+            (node.isProperty() || (node.isPropertyDefinition() && node.static))
+        ) as Node.Property | Node.PropertyDefinition | undefined
+
+        if (property) {
+          const nearestStatement = propertyParent.findParent(
+            node => node.parent === nearestBlock
+          )!
+          name = name + '_'
+          nearestStatement.before('let ' + name + ';\n')
+          property.value.before('(' + name + ' = (')
+          property.value.after('))')
+        }
+      }
+
       nearestBlock.push(
         'body',
-        `\nhmrRegister("${file}:${component.id.name}", ${component.id.name}, "${component.hash}", [${deps}])`
+        `\nhmrRegister("${file}:${component.id.name}", ${name}, "${component.hash}", [${deps}])`
       )
     }
 
