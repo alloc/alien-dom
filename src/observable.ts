@@ -688,7 +688,7 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
   peek() {
     if (this._value === emptySymbol) {
       if (!this._observer) {
-        return this.compute()
+        return peek(this.compute)
       }
       this._observer.update()
     }
