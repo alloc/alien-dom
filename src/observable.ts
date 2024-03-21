@@ -650,20 +650,21 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
   }
 
   protected _isObserved(observer: Observer, isObserved: boolean) {
+    // Create our own observer once the ref is observed. This needs to happen
+    // before the super call, so the new observer isn't invalidated.
+    if (isObserved && !this._observer) {
+      this._observer = new ComputedRef.Observer(this)
+      this._observer.update()
+    }
+
     super._isObserved(observer, isObserved)
 
     // Destroy our own observer once the ref is no longer observed.
-    if (!isObserved) {
-      if (this._observers.size) return
+    if (!isObserved && !this._observers.size) {
       this._observer?.dispose()
       this._observer = null
       // Don't waste memory on a value that may not be needed.
       this._value = emptySymbol
-    }
-    // Create our own observer once the ref is observed.
-    else if (!this._observer) {
-      this._observer = new ComputedRef.Observer(this)
-      this._observer.update()
     }
   }
 
