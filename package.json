@@ -10,12 +10,6 @@
     "type": "git",
     "url": "git+https://github.com/alloc/alien-dom.git"
   },
-  "files": [
-    "dist",
-    "types",
-    "*.d.ts",
-    "*.js"
-  ],
   "sideEffects": [
     "global.mjs",
     "hmr.mjs"
