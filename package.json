@@ -31,6 +31,7 @@
   "license": "MIT",
   "prettier": "@alloc/prettier-config",
   "scripts": {
+    "prepublishOnly": "npm run build",
     "build": "cd src && tsup-node --treeshake smallest --clean",
     "dev": "concurrently -n tsup,tsc npm:dev:js npm:dev:types",
     "dev:js": "rimraf dist && cd src && tsup-node --watch --sourcemap",
