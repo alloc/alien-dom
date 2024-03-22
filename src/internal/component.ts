@@ -45,7 +45,7 @@ import {
 import { AnyElement } from './types'
 import { compareNodeWithTag, lastValue, noop } from './util'
 
-let componentRenderHook = (component: AlienComponent) => component.render
+let componentRenderHook = (component: AlienComponent) => component.tag
 
 export type ElementTags = Map<FunctionComponent, AlienComponent<any>>
 export type ElementRefs = Map<JSX.ElementKey, ChildNode | DocumentFragment>
@@ -72,11 +72,10 @@ export class AlienComponent<Props extends object = any> extends Observer {
   newMemos: Map<any, any> | null = null
 
   constructor(
-    readonly parent: AlienComponent | null,
     readonly tag: FunctionComponent,
-    readonly render: (props: Readonly<Props>) => JSX.ChildrenProp,
     readonly props: Props,
-    readonly context: ContextStore
+    readonly context: ContextStore,
+    readonly parent: AlienComponent | null
   ) {
     super()
   }
@@ -208,8 +207,8 @@ export class AlienComponent<Props extends object = any> extends Observer {
           if (!isNode(newRootNode) && !isDeferredNode(newRootNode)) {
             newRootNode = wrapWithFragment(
               newRootNode,
-              this.context,
-              /* isDeferred */ rootNode != null
+              rootNode != null,
+              this.context
             )
           }
 
@@ -381,9 +380,7 @@ export interface AlienComponent {
 if (DEV) {
   Object.defineProperty(AlienComponent.prototype, 'name', {
     get: function name(this: AlienComponent) {
-      return (
-        (this.render as any).displayName || this.render.name || '<anonymous>'
-      )
+      return (this.tag as any).displayName || this.tag.name || '<anonymous>'
     },
   })
 }

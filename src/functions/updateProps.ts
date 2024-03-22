@@ -1,5 +1,5 @@
 import { AlienComponent } from '../internal/component'
-import { kAlienElementTags, kAlienSelfUpdating } from '../internal/symbols'
+import { kAlienElementTags } from '../internal/symbols'
 import { AnyElement } from '../internal/types'
 import { FunctionComponent } from '../types'
 
@@ -14,7 +14,7 @@ export function updateProps(
   }
 
   const component: AlienComponent = tag
-    ? tags.get(kAlienSelfUpdating(tag) || tag)
+    ? tags.get(tag)
     : tags.values().next().value
 
   component?.updateProps(props)

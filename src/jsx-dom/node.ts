@@ -1,24 +1,29 @@
 import { isArray, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
+import { ContextStore } from '../context'
 import { createOnceEffect } from '../effects'
+import { attachRef } from '../functions/attachRef'
 import {
   applyChildrenProp,
   applyProp,
   applyRefProp,
 } from '../internal/applyProp'
-import { AlienContextMap, setContext } from '../internal/context'
+import { AlienComponent } from '../internal/component'
+import { AlienContextMap, getContext, setContext } from '../internal/context'
 import { FragmentKeys, FragmentNodes } from '../internal/fragment'
-import { currentEffects } from '../internal/global'
+import { currentComponent, currentEffects } from '../internal/global'
 import { HostProps } from '../internal/hostProps'
 import {
   kAlienElementKey,
   kAlienElementPosition,
   kAlienFragmentKeys,
   kAlienFragmentNodes,
+  kAlienStateless,
 } from '../internal/symbols'
 import { DefaultElement } from '../internal/types'
+import { lastValue } from '../internal/util'
 import { SVGNamespace } from '../jsx-dom/jsx-runtime'
-import { ReadonlyRef, isRef } from '../observable'
+import { ReadonlyRef, isRef, ref } from '../observable'
 import type { JSX } from '../types/jsx'
 import { appendChild } from './appendChild'
 import { resolveChildren, type ResolvedChild } from './resolveChildren'
@@ -122,19 +127,14 @@ export function evaluateDeferredNode(node: AnyDeferredNode) {
   const key = kAlienElementKey(node)
   const position = kAlienElementPosition(node)
 
-  let hostNode: Element | Comment | DocumentFragment
+  let hostNode: ChildNode | DocumentFragment
   if (isDeferredHostNode(node)) {
     hostNode = createHostNode(node)
   } else if (node.tag === Fragment) {
     hostNode = createFragmentNode(node.children!, kAlienFragmentKeys(node)!)
   } else {
-    // For consistency, the context used by a deferred component node must match
-    // the context that existed when the JSX element was declared.
     const oldContext = node.context && setContext(node.context)
-
-    // Self-updating components always return a single DOM node.
-    hostNode = node.tag(node.props) as any
-
+    hostNode = createCompositeNode(node.tag, node.props)
     if (oldContext) {
       setContext(oldContext)
     }
@@ -210,4 +210,33 @@ export function createFragmentNode(
   kAlienFragmentNodes(fragment, childNodes)
   kAlienFragmentKeys(fragment, childKeys)
   return fragment
+}
+
+export function createCompositeNode(
+  tag: (props: any) => JSX.ChildrenProp,
+  initialProps: any
+) {
+  if (kAlienStateless.in(tag)) {
+    return tag(initialProps) as ChildNode | DocumentFragment
+  }
+
+  const props: any = { ...initialProps }
+  const context = new ContextStore(getContext())
+
+  for (const key in initialProps) {
+    const initialValue = initialProps[key]
+    attachRef(props, key, ref(initialValue))
+  }
+
+  const self = new AlienComponent(
+    tag,
+    props,
+    context,
+    lastValue(currentComponent)
+  )
+
+  // Trigger the initial render.
+  self.update()
+
+  return self.rootNode!
 }

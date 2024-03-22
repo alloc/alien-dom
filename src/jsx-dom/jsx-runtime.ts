@@ -1,14 +1,15 @@
 import { isFunction, isString } from '@alloc/is'
+import { Falsy } from '@alloc/types'
 import { Fragment } from '../components/Fragment'
 import { applyKeyProp } from '../internal/applyProp'
 import { wrapWithFragment } from '../internal/fragment'
 import { currentComponent } from '../internal/global'
-import { selfUpdating } from '../internal/selfUpdating'
-import { kAlienPureComponent } from '../internal/symbols'
+import { kAlienStateless } from '../internal/symbols'
 import { lastValue } from '../internal/util'
 import type { JSX } from '../types'
 import {
   AnyDeferredNode,
+  createCompositeNode,
   createHostNode,
   deferCompositeNode,
   deferHostNode,
@@ -40,17 +41,12 @@ type Props = {
 }
 
 export function jsx(
-  tag: any,
+  tag: string | ((props: any) => JSX.ChildrenProp) | Falsy,
   props: Props,
   key?: JSX.ElementKey | typeof FORCE_DOM
 ): any {
   if (!tag) {
     return null
-  }
-
-  const hasImpureTag = !isString(tag) && !kAlienPureComponent.in(tag)
-  if (hasImpureTag && tag !== Fragment) {
-    tag = selfUpdating(tag)
   }
 
   let shouldDefer: boolean | undefined
@@ -74,15 +70,18 @@ export function jsx(
   }
 
   if (isFunction(tag)) {
-    // Pure components are never deferred.
-    if (hasImpureTag && shouldDefer) {
-      if (tag !== Fragment) {
-        node = deferCompositeNode(tag, props)
-      } else {
-        node = wrapWithFragment(props.children, undefined, true)
-      }
+    if (tag !== Fragment) {
+      // Stateless components (like context providers and shadow roots) are
+      // never deferred, since they operate under the assumption that they run
+      // immediately when they're declared.
+      node =
+        shouldDefer && !kAlienStateless.in(tag)
+          ? deferCompositeNode(tag, props)
+          : createCompositeNode(tag, props)
     } else {
-      node = tag(props) as Exclude<typeof node, undefined>
+      node = shouldDefer
+        ? wrapWithFragment(props.children, true)
+        : Fragment(props as any)
     }
   } else if (isString(tag)) {
     if (shouldDefer) {

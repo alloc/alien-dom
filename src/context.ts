@@ -1,6 +1,6 @@
-import { markPureComponent } from './functions/markPureComponent'
 import { forwardContext, getContext, setContext } from './internal/context'
 import { currentComponent } from './internal/global'
+import { kAlienStateless } from './internal/symbols'
 import { lastValue } from './internal/util'
 import { Fragment } from './jsx-dom/jsx-runtime'
 import { Ref, ref } from './observable'
@@ -65,7 +65,7 @@ export function createContext<T>(initial?: T) {
     return null
   }
 
-  markPureComponent(Provider)
+  kAlienStateless(Provider, true)
 
   Provider.get = (): T => {
     if (isForwardedContext) {

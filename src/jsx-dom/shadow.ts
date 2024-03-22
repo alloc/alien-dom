@@ -1,5 +1,5 @@
 import { createContext } from '../context'
-import { markPureComponent } from '../functions/markPureComponent'
+import { kAlienStateless } from '../internal/symbols'
 import type { JSX } from '../types/jsx'
 import {
   kAlienNodeType,
@@ -23,4 +23,4 @@ export function ShadowRoot({
   }
 }
 
-markPureComponent(ShadowRoot)
+kAlienStateless(ShadowRoot, true)

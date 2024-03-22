@@ -5,7 +5,6 @@ export interface ComponentHash<Identifier, FunctionNode> {
   id: Identifier
   function: FunctionNode
   hash: string
-  selfUpdating: boolean
 }
 
 export function computeComponentHashes<Identifier, FunctionNode>(
@@ -28,7 +27,6 @@ export function computeComponentHashes<Identifier, FunctionNode>(
           id: node.id as Identifier,
           function: node as FunctionNode,
           hash: hash(code.slice(node.start, node.end)),
-          selfUpdating: false,
         })
       }
     }
@@ -60,7 +58,6 @@ export function computeComponentHashes<Identifier, FunctionNode>(
                 id: id as Identifier,
                 function: node as FunctionNode,
                 hash: hash(code.slice(node.start, node.end)),
-                selfUpdating: true,
               })
             }
 

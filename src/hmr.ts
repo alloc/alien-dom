@@ -2,9 +2,8 @@ import { isArray, isFunction } from '@alloc/is'
 import { attachRef } from './functions/attachRef'
 import { depsHaveChanged } from './functions/depsHaveChanged'
 import { setComponentRenderHook } from './internal/component'
-import { selfUpdating } from './internal/selfUpdating'
 import { createSymbolProperty } from './internal/symbolProperty'
-import { kAlienPureComponent, kAlienRenderFunc } from './internal/symbols'
+import { kAlienRenderFunc } from './internal/symbols'
 import { Ref, ref } from './observable'
 import type { FunctionComponent } from './types/component'
 import type { JSX } from './types/jsx'
@@ -48,12 +47,6 @@ export function hmrRegister(
     renderRef = ref(tag)
   }
 
-  // Pre-emptively create the self-updating wrapper component, so we can attach
-  // the component key and the reference to the render function.
-  if (!kAlienPureComponent.in(tag)) {
-    tag = selfUpdating(tag)
-  }
-
   kAlienComponentKey(tag, key)
   componentRegistry[key] = [renderRef, hash, deps]
   attachRef(tag, kAlienRenderFunc.symbol, renderRef)
@@ -65,7 +58,7 @@ setComponentRenderHook(component => {
   // immediately used in the same module it was declared in.
   if (!kAlienComponentKey.in(component.tag)) {
     kAlienComponentKey(component.tag, '')
-    return component.render
+    return component.tag
   }
 
   // This access is what subscribes the component to hot updates.

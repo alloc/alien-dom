@@ -22,8 +22,8 @@ export type FragmentKeys = (JSX.ElementKey | undefined)[]
 
 export function wrapWithFragment(
   childrenProp: JSX.ChildrenProp,
-  context?: AlienContextMap,
-  isDeferred?: boolean
+  isDeferred?: boolean,
+  context?: AlienContextMap
 ) {
   const childKeys: FragmentKeys = [undefined]
   const children = resolveChildren(
