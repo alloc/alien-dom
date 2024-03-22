@@ -1,6 +1,6 @@
 import { isArray } from '@alloc/is'
 import { Disposable, createDisposable } from '../addons/disposable'
-import { ReadonlyRef, observe } from '../observable'
+import { ReadonlyRef, observe } from '../core/observable'
 import { JSX } from '../types/jsx'
 import { kAlienHostProps } from './symbols'
 import { DefaultElement } from './types'

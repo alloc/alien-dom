@@ -1,5 +1,5 @@
+import { Ref, ref } from '../core/observable'
 import { expectCurrentComponent } from '../internal/global'
-import { Ref, ref } from '../observable'
 import { useDepsArray } from './useDepsArray'
 
 export function useRef<T>(): Ref<T | undefined> &

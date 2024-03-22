@@ -1,7 +1,7 @@
 import { isArray } from '@alloc/is'
+import { ArrayRef, Ref, arrayRef, ref } from '../core/observable'
 import { attachRef } from '../functions/attachRef'
 import { defineProperty, keys } from '../internal/util'
-import { ArrayRef, Ref, arrayRef, ref } from '../observable'
 import { useState } from './useState'
 
 /**

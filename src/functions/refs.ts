@@ -1,4 +1,4 @@
-import { ref } from '../observable'
+import { ref } from '../core/observable'
 import { attachRef } from './attachRef'
 
 /**

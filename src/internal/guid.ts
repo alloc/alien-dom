@@ -1,4 +1,4 @@
-import { peek } from '../observable'
+import { peek } from '../core/observable'
 
 let nextId = Number.MIN_SAFE_INTEGER
 

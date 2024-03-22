@@ -1,4 +1,4 @@
-import { AlienBoundEffect, AlienEffect, AlienEffects } from '../effects'
+import { AlienBoundEffect, AlienEffect, AlienEffects } from '../core/effects'
 import { observeAs } from '../functions/observeAs'
 import type {
   AlienEventMethod,

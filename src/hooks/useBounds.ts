@@ -1,6 +1,6 @@
 import { isString } from '@alloc/is'
 import { ObservableBounds } from '../addons/bounds'
-import { ReadonlyRef, isRef } from '../observable'
+import { ReadonlyRef, isRef } from '../core/observable'
 import { useHookOffset } from './useHookOffset'
 import { useObserver } from './useObserver'
 import { useQuerySelector } from './useSelector'

@@ -1,3 +1,4 @@
+import { isRef } from '../core/observable'
 import { addChildrenRef, applyRefProp } from '../internal/applyProp'
 import { AlienComponent } from '../internal/component'
 import { kAlienHostProps } from '../internal/symbols'
@@ -7,7 +8,6 @@ import {
   DeferredChildren,
   isDeferredHostNode,
 } from '../jsx-dom/node'
-import { isRef } from '../observable'
 import { morphAttributes } from './morphAttributes'
 import { morphChildren } from './morphChildren'
 import { morphComposite } from './morphComposite'

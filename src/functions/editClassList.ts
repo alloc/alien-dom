@@ -1,5 +1,5 @@
+import { Ref } from '../core/observable'
 import { flattenClassProp } from '../internal/flattenClassProp'
-import { Ref } from '../observable'
 import { DOMClassAttribute } from '../types'
 
 export function editClassList(

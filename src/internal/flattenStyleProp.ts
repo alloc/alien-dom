@@ -1,6 +1,6 @@
 import { isArray } from '@alloc/is'
+import { isRef } from '../core/observable'
 import { morphAttributes } from '../morphdom/morphAttributes'
-import { isRef } from '../observable'
 import { HTMLStyleAttribute } from '../types'
 import { HostProps } from './hostProps'
 import { DefaultElement, StyleAttributes } from './types'

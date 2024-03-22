@@ -1,10 +1,11 @@
 {
   "name": "alien-dom",
-  "type": "module",
+  "description": "Next-generation JSX client renderer with observable data primitives, immediate DOM references, and more.",
   "version": "0.8.1",
-  "description": "Enhanced DOM APIs mixed with jsx-dom",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "type": "module",
+  "private": true,
+  "main": "./production/index.mjs",
+  "types": "./production/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/alloc/alien-dom.git"
@@ -16,8 +17,8 @@
     "*.js"
   ],
   "sideEffects": [
-    "global.js",
-    "dist/hmr.mjs"
+    "global.mjs",
+    "hmr.mjs"
   ],
   "keywords": [
     "jsx-dom",
@@ -30,8 +31,10 @@
   "license": "MIT",
   "prettier": "@alloc/prettier-config",
   "scripts": {
-    "build": "rimraf dist && cd src && tsup-node --treeshake smallest --define.DEV false",
-    "dev": "cd src && tsup-node --watch --sourcemap --define.DEV true --clean",
+    "build": "cd src && tsup-node --treeshake smallest --clean",
+    "dev": "concurrently -n tsup,tsc npm:dev:js npm:dev:types",
+    "dev:js": "rimraf dist && cd src && tsup-node --watch --sourcemap",
+    "dev:types": "cd src && tsc -p . --watch --emitDeclarationOnly --declarationMap --declarationDir ../dist/production --preserveWatchOutput",
     "test": "NODE_OPTIONS='--loader @alien-dom/node --no-warnings=ExperimentalWarnings' ava --watch --no-worker-threads",
     "debug": "NODE_OPTIONS='--loader @alien-dom/node --no-warnings=ExperimentalWarnings' ava debug"
   },
@@ -45,13 +48,13 @@
     "@alloc/fast-rimraf": "^1.0.8",
     "@alloc/is": "^3.1.2",
     "@alloc/prettier-config": "^1.0.0",
+    "@types/node": "^18.15.11",
     "alien-dom": "link:./src",
     "ava": "^5.2.0",
+    "concurrently": "^8.2.2",
     "dedent": "^1.5.1",
-    "flush-microtasks": "^1.0.1",
+    "fast-glob": "^3.3.2",
     "linear-color": "^1.2.0",
-    "linkedom": "^0.15.1",
-    "nanospy": "^1.0.0",
     "prettier": "^2.8.7",
     "tsup": "^6.7.0",
     "tsx": "^3.12.7",

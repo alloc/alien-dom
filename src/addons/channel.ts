@@ -1,5 +1,5 @@
 import { isFunction } from '@alloc/is'
-import { AlienBoundEffect, createEffect } from '../effects'
+import { AlienBoundEffect, createEffect } from '../core/effects'
 import { isNode } from '../internal/duck'
 import { makeIterable } from '../internal/iterable'
 import { noop } from '../internal/util'

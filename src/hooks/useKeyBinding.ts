@@ -1,11 +1,11 @@
 import { isString } from '@alloc/is'
 import type { Key } from 'ts-key-enum'
 import { Disposable, createDisposable } from '../addons/disposable'
+import { ref } from '../core/observable'
 import { isDocument } from '../internal/duck'
 import { expectCurrentComponent } from '../internal/global'
 import { kAlienHostProps } from '../internal/symbols'
 import { noop, toArray } from '../internal/util'
-import { ref } from '../observable'
 import { EffectResult, useEffect } from './useEffect'
 import { useState } from './useState'
 

@@ -1,5 +1,5 @@
 {
-  "include": ["*.d.ts", "dist"],
+  "include": ["dist", "static"],
   "compilerOptions": {
     "esModuleInterop": true,
     "jsx": "react-jsx",

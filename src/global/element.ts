@@ -1,7 +1,7 @@
 import { isNumber } from '@alloc/is'
 import { Disposable } from '../addons/disposable'
 import { AlienElement, AlienEvent } from '../addons/element'
-import { AlienBoundEffect } from '../effects'
+import { AlienBoundEffect } from '../core/effects'
 import { createEventEffect } from '../internal/eventEffect'
 import { AnyElement, AnyEvent } from '../internal/types'
 import { isUnitlessNumber } from '../jsx-dom/css-props'

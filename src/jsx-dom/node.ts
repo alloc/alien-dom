@@ -1,7 +1,8 @@
 import { isArray, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
-import { ContextStore } from '../context'
-import { createOnceEffect } from '../effects'
+import { ContextStore } from '../core/context'
+import { createOnceEffect } from '../core/effects'
+import { ReadonlyRef, isRef, ref } from '../core/observable'
 import { attachRef } from '../functions/attachRef'
 import {
   applyChildrenProp,
@@ -23,7 +24,6 @@ import {
 import { DefaultElement } from '../internal/types'
 import { lastValue } from '../internal/util'
 import { SVGNamespace } from '../jsx-dom/jsx-runtime'
-import { ReadonlyRef, isRef, ref } from '../observable'
 import type { JSX } from '../types/jsx'
 import { appendChild } from './appendChild'
 import { resolveChildren, type ResolvedChild } from './resolveChildren'

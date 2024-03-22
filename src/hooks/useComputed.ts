@@ -1,5 +1,5 @@
+import { ComputedRef, computed } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
-import { ComputedRef, computed } from '../observable'
 import { useState } from './useState'
 
 /**

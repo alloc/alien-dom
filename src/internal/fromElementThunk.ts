@@ -1,5 +1,5 @@
+import { ReadonlyRef } from '../core/observable'
 import { evaluateDeferredNode, isDeferredNode } from '../jsx-dom/node'
-import { ReadonlyRef } from '../observable'
 import type { JSX } from '../types/jsx'
 import { currentComponent } from './global'
 import { kAlienThunkResult } from './symbols'

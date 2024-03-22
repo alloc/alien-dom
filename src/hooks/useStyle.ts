@@ -1,10 +1,10 @@
 import type { Falsy } from '@alloc/types'
 import { isElementProxy } from '../addons/elementProxy'
+import { observe } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import type { DefaultElement, StyleAttributes } from '../internal/types'
 import { UpdateStyle, updateStyle } from '../internal/updateStyle'
 import { toArray } from '../internal/util'
-import { observe } from '../observable'
 import { usePrevious } from './usePrevious'
 import { useState } from './useState'
 

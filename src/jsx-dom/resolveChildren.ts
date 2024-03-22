@@ -1,4 +1,5 @@
 import { isFunction } from '@alloc/is'
+import { isRef } from '../core/observable'
 import { AlienContextMap, getContext } from '../internal/context'
 import { isArrayLike, isFragment, isNode } from '../internal/duck'
 import { fromElementThunk } from '../internal/fromElementThunk'
@@ -10,7 +11,6 @@ import {
 } from '../internal/symbols'
 import { lastValue } from '../internal/util'
 import { Fragment } from '../jsx-dom/jsx-runtime'
-import { isRef } from '../observable'
 import type { JSX } from '../types/jsx'
 import { AlienNode, createTextNode, isDeferredNode, isShadowRoot } from './node'
 import { noop } from './util'

@@ -1,10 +1,10 @@
-import { forwardContext, getContext, setContext } from './internal/context'
-import { currentComponent } from './internal/global'
-import { kAlienStateless } from './internal/symbols'
-import { lastValue } from './internal/util'
-import { Fragment } from './jsx-dom/jsx-runtime'
+import { forwardContext, getContext, setContext } from '../internal/context'
+import { currentComponent } from '../internal/global'
+import { kAlienStateless } from '../internal/symbols'
+import { lastValue } from '../internal/util'
+import { Fragment } from '../jsx-dom/jsx-runtime'
+import type { JSX } from '../types/jsx'
 import { Ref, ref } from './observable'
-import type { JSX } from './types/jsx'
 
 export type AlienContext<T = any> = {
   (props: { value: T; children: JSX.ChildrenProp }): JSX.Element

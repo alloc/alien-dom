@@ -1,9 +1,9 @@
 import { isFunction, isPlainObject } from '@alloc/is'
 import { Exclusive, Falsy } from '@alloc/types'
 import { Disposable } from '../addons/disposable'
+import { ref } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { keys } from '../internal/util'
-import { ref } from '../observable'
 import { useState } from './useState'
 
 export type UseAsyncFn<T> = (state: UseAsync<T>) => PromiseLike<T> | T

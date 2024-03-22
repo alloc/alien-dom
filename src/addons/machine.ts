@@ -1,7 +1,7 @@
 import { isArray, isString } from '@alloc/is'
 import { AllKeys, Intersect, Remap } from '@alloc/types'
+import { ReadonlyRef, ref } from '../core/observable'
 import { noop } from '../internal/util'
-import { ReadonlyRef, ref } from '../observable'
 
 export function defineMachine<T extends MachineType>(
   setup: (

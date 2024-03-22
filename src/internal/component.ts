@@ -1,7 +1,14 @@
 import { isArray, isFunction } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
-import { ContextStore } from '../context'
-import { AlienEffects } from '../effects'
+import { ContextStore } from '../core/context'
+import { AlienEffects } from '../core/effects'
+import {
+  Observer,
+  ReadonlyRef,
+  Ref,
+  collectAccessedRefs,
+  ref,
+} from '../core/observable'
 import { attachRef } from '../functions/attachRef'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { unmount } from '../functions/unmount'
@@ -11,17 +18,9 @@ import {
   isDeferredNode,
   isShadowRoot,
 } from '../jsx-dom/node'
-import { ShadowRootContext } from '../jsx-dom/shadow'
 import { morph } from '../morphdom/morph'
 import { morphComposite } from '../morphdom/morphComposite'
 import { morphFragment } from '../morphdom/morphFragment'
-import {
-  Observer,
-  ReadonlyRef,
-  Ref,
-  collectAccessedRefs,
-  ref,
-} from '../observable'
 import { FunctionComponent, JSX } from '../types'
 import { forwardContext } from './context'
 import { deepEquals } from './deepEquals'
@@ -33,6 +32,7 @@ import {
   currentEffects,
   expectCurrentComponent,
 } from './global'
+import { ShadowRootContext } from './shadow'
 import { popValue } from './stack'
 import {
   kAlienElementKey,

@@ -1,5 +1,5 @@
-import type { AlienContext, ContextStore } from '../context'
-import { Ref } from '../observable'
+import type { AlienContext, ContextStore } from '../core/context'
+import { Ref } from '../core/observable'
 
 /** @internal */
 export interface AlienContextMap extends Map<AlienContext, Ref> {

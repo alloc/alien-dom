@@ -1,5 +1,5 @@
+import { peek } from '../core/observable'
 import { expectCurrentComponent } from '../internal/global'
-import { peek } from '../observable'
 
 export function useState<State extends object, Params extends any[]>(
   init: new (...args: Params) => State,

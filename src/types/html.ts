@@ -1,5 +1,5 @@
+import type { ReadonlyRef } from '../core/observable'
 import type { AnyElement, StyleAttributes } from '../internal/types'
-import type { ReadonlyRef } from '../observable'
 import type { AriaAttributes, AriaRole } from './aria'
 import type { AttrWithRef, Booleanish } from './attr'
 import type {

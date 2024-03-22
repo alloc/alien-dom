@@ -2,9 +2,9 @@ import {
   observeNewDescendants,
   observeRemovedDescendants,
 } from '../addons/domObserver'
+import { ReadonlyRef, Ref } from '../core/observable'
 import { isElement } from '../functions/typeChecking'
 import { AnyElement } from '../internal/types'
-import { ReadonlyRef, Ref } from '../observable'
 import { useEffect } from './useEffect'
 import { useRef } from './useRef'
 

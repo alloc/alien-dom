@@ -1,20 +1,20 @@
 import { isArray, isFunction } from '@alloc/is'
-import { Disposable, attachDisposer } from './addons/disposable'
-import { onMount, onUnmount } from './addons/domObserver'
-import { Promisable } from './addons/promises'
-import { EffectResult } from './hooks'
+import { Disposable, attachDisposer } from '../addons/disposable'
+import { onMount, onUnmount } from '../addons/domObserver'
+import { Promisable } from '../addons/promises'
+import { EffectResult } from '../hooks'
 import {
   EffectFlags,
   disableEffect,
   disableEffects,
   enableEffect,
   runEffect,
-} from './internal/effects'
-import { currentEffects } from './internal/global'
-import { popValue } from './internal/stack'
-import { kAlienEffects } from './internal/symbols'
-import type { AnyElement } from './internal/types'
-import { lastValue } from './internal/util'
+} from '../internal/effects'
+import { currentEffects } from '../internal/global'
+import { popValue } from '../internal/stack'
+import { kAlienEffects } from '../internal/symbols'
+import type { AnyElement } from '../internal/types'
+import { lastValue } from '../internal/util'
 
 export interface AlienEffect<
   Target = any,

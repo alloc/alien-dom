@@ -2,9 +2,16 @@
 // Largely credited to James Simpson and GoldFire Studios, Inc
 
 import { isArray } from '@alloc/is'
+import {
+  Observer,
+  ReadonlyRef,
+  Ref,
+  isRef,
+  observe,
+  ref,
+} from '../core/observable'
 import { attachRef } from '../functions/attachRef'
 import { noop } from '../internal/util'
-import { Observer, ReadonlyRef, Ref, isRef, observe, ref } from '../observable'
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] }
 type Pluck<T extends object | null, K extends keyof T> = T extends null

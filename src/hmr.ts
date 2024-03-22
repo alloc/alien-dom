@@ -1,10 +1,10 @@
 import { isArray, isFunction } from '@alloc/is'
+import { Ref, ref } from './core/observable'
 import { attachRef } from './functions/attachRef'
 import { depsHaveChanged } from './functions/depsHaveChanged'
 import { setComponentRenderHook } from './internal/component'
 import { createSymbolProperty } from './internal/symbolProperty'
 import { kAlienRenderFunc } from './internal/symbols'
-import { Ref, ref } from './observable'
 import type { FunctionComponent } from './types/component'
 import type { JSX } from './types/jsx'
 

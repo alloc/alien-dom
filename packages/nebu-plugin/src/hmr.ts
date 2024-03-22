@@ -61,10 +61,7 @@ export default (options: {
       )
     }
 
-    program.unshift(
-      'body',
-      `import { hmrRegister } from "alien-dom/dist/hmr.mjs"\n`
-    )
+    program.unshift('body', `import { hmrRegister } from "alien-dom/hmr"\n`)
 
     options.onHmrAdded?.(file)
   },

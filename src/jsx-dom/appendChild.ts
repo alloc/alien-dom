@@ -1,3 +1,4 @@
+import { ref } from '../core/observable'
 import { getElementKey } from '../functions/getElementKey'
 import { AlienComponent } from '../internal/component'
 import { setContext } from '../internal/context'
@@ -10,10 +11,10 @@ import {
   isTextNode,
 } from '../internal/duck'
 import { currentComponent } from '../internal/global'
+import { ShadowRootContext } from '../internal/shadow'
 import { kAlienParentFragment } from '../internal/symbols'
 import { lastValue } from '../internal/util'
 import { morph } from '../morphdom/morph'
-import { ref } from '../observable'
 import {
   AnyDeferredNode,
   evaluateDeferredNode,
@@ -21,7 +22,6 @@ import {
   isShadowRoot,
 } from './node'
 import type { ResolvedChild } from './resolveChildren'
-import { ShadowRootContext } from './shadow'
 import { compareNodeWithTag } from './util'
 
 export function appendChild(

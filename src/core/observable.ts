@@ -1,9 +1,9 @@
 import { isFunction, isString } from '@alloc/is'
 import { Falsy } from '@alloc/types'
-import { Disposable, attachDisposer } from './addons/disposable'
-import { Promisable } from './addons/promises'
-import { createSymbolProperty } from './internal/symbolProperty'
-import { noop } from './internal/util'
+import { Disposable, attachDisposer } from '../addons/disposable'
+import { Promisable } from '../addons/promises'
+import { createSymbolProperty } from '../internal/symbolProperty'
+import { noop } from '../internal/util'
 
 const kRefType = Symbol.for('refType')
 
@@ -31,20 +31,17 @@ export type ObservableHooks = {
   didUpdate(observer: Observer | ComputedRef, error: any, result: any): void
 }
 
-declare module globalThis {
-  var __OBSERVABLE_HOOKS__: ObservableHooks | Falsy
-}
+let hooks: ObservableHooks | Falsy
 
-let hooks = DEV && globalThis.__OBSERVABLE_HOOKS__
-if (DEV) {
-  Object.defineProperty(globalThis, '__OBSERVABLE_HOOKS__', {
-    configurable: true,
-    get: () => hooks,
-    set(newHooks) {
+/**
+ * Observable hooks are only active in the development build. They provide a way
+ * for debugging tools to be notified of various useful events.
+ */
+export const setObservableHooks: (newHooks: ObservableHooks) => void = DEV
+  ? newHooks => {
       hooks = newHooks || false
-    },
-  })
-}
+    }
+  : noop
 
 type InternalRef<T> = Ref<T> & {
   _value: T

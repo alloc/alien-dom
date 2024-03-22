@@ -1,4 +1,4 @@
-import type { AlienEffects } from '../effects'
+import type { AlienEffects } from '../core/effects'
 import type { AnimatedElement } from './animate/types'
 import type { AlienRunningComponent } from './component'
 import { expectLastValue, type Stack } from './stack'

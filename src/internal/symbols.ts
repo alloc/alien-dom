@@ -1,4 +1,4 @@
-import type { AlienEffects } from '../effects'
+import type { AlienEffects } from '../core/effects'
 import type { JSX } from '../types/jsx'
 import type { ElementTags } from './component'
 import type { FragmentKeys, FragmentNodes } from './fragment'

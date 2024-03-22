@@ -1,4 +1,4 @@
-import { defineEffectType, getCurrentEffect } from '../effects'
+import { defineEffectType, getCurrentEffect } from '../core/effects'
 import { binaryInsert } from '../internal/binaryInsert'
 import { isComment, isElement } from '../internal/duck'
 import { DefaultElement } from '../internal/types'

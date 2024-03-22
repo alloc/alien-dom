@@ -1,7 +1,7 @@
-export * from './context'
-export * from './effects'
+export * from './core/context'
+export * from './core/effects'
+export * from './core/observable'
 export * from './hooks'
-export * from './observable'
 
 /// Functions
 export * from './functions/attachRef'
@@ -34,7 +34,28 @@ export * from './addons/promises'
 export * from './addons/selectors'
 
 /// Components
+export * from './components/Fragment'
+export * from './components/ShadowRoot'
 export * from './components/Transition'
 
 /// Third Party
 export { Color, mixColor, parseColor } from 'linear-color'
+
+/// Constants
+export { SVGNamespace } from './jsx-dom/jsx-runtime'
+
+/// Types
+export type {
+  CSSProperties,
+  DOMClassArray,
+  DOMClassAttribute,
+  FunctionComponent,
+  HTML,
+  HTMLAttributes,
+  HTMLStyleArray,
+  HTMLStyleAttribute,
+  JSX,
+  PropsWithChildren,
+  SVG,
+  SVGAttributes,
+} from './types'

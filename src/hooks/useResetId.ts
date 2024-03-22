@@ -1,7 +1,7 @@
 import { isFunction } from '@alloc/is'
+import { ReadonlyRef, ref } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { createGuid } from '../internal/guid'
-import { ReadonlyRef, ref } from '../observable'
 import { useObserver } from './useObserver'
 import { useState } from './useState'
 

@@ -1,4 +1,8 @@
-import { AlienForwardedContext, ContextStore, createContext } from '../context'
+import {
+  AlienForwardedContext,
+  ContextStore,
+  createContext,
+} from '../core/context'
 import { getContext } from '../internal/context'
 import { currentComponent } from '../internal/global'
 import { lastValue } from '../internal/util'

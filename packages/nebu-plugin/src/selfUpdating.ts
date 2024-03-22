@@ -29,7 +29,7 @@ export type SelfUpdatingPluginState = {
 export default function (
   state: SelfUpdatingPluginState = { globalNextId: 0 }
 ): Plugin {
-  const helpersId = state.helpersId ?? 'alien-dom/dist/helpers.mjs'
+  const helpersId = state.helpersId ?? 'alien-dom/helpers'
   const ensureComponentNames =
     state.ensureComponentNames ?? process.env.NODE_ENV !== 'production'
 

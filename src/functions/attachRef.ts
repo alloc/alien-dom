@@ -1,5 +1,5 @@
+import { ReadonlyRef, isReadonlyRef } from '../core/observable'
 import { defineProperty, set } from '../internal/util'
-import { ReadonlyRef, isReadonlyRef } from '../observable'
 
 export const attachRef = (
   props: object,

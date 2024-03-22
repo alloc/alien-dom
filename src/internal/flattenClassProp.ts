@@ -1,6 +1,6 @@
 import { isArray, isBoolean, isObject } from '@alloc/is'
+import { ReadonlyRef, isRef } from '../core/observable'
 import { morphAttributes } from '../morphdom/morphAttributes'
-import { ReadonlyRef, isRef } from '../observable'
 import { DOMClassAttribute } from '../types'
 import { HostProps } from './hostProps'
 import { keys } from './util'

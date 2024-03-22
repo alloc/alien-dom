@@ -1,6 +1,6 @@
 import { isFunction } from '@alloc/is'
 import { Falsy } from '@alloc/types'
-import { ReadonlyRef, observe } from '../observable'
+import { ReadonlyRef, observe } from '../core/observable'
 import { useCallbackProp } from './useCallbackProp'
 import { EffectCallback, useEffect } from './useEffect'
 import { useHookOffset } from './useHookOffset'

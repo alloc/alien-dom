@@ -1,7 +1,7 @@
+import { ComputedRef, computed, ref } from '../core/observable'
 import { kAlienHostProps } from '../internal/symbols'
 import { AnyElement } from '../internal/types'
 import { defineProperty } from '../internal/util'
-import { ComputedRef, computed, ref } from '../observable'
 import { Disposable, createDisposable } from './disposable'
 
 export class ObservableBounds {

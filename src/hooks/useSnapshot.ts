@@ -1,6 +1,6 @@
 import { isFunction } from '@alloc/is'
+import { peek } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
-import { peek } from '../observable'
 import { useState } from './useState'
 
 export function useSnapshot<T>(

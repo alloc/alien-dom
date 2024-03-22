@@ -1,5 +1,5 @@
-import { defineEffectType } from '../effects'
-import { observe } from '../observable'
+import { defineEffectType } from '../core/effects'
+import { observe } from '../core/observable'
 
 /**
  * Like `observe` but with a `target` argument that can be retargeted later.

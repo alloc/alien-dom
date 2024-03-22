@@ -1,4 +1,4 @@
-import { defineEffectType } from '../effects'
+import { defineEffectType } from '../core/effects'
 import type { EffectResult } from '../hooks/useEffect'
 import { Disposable } from './disposable'
 
@@ -9,7 +9,9 @@ export type ElementProxy<T extends Element = Element> = T & {
 }
 
 /** Coerce an `ElementProxy` to its original `Element` type. */
-export type FromElementProxy<T> = T extends ElementProxy<infer U> ? U : T
+export type FromElementProxy<T> = T extends ElementProxy<infer U>
+  ? U
+  : Extract<T, Element>
 
 export function createElementProxy<T extends Element>(
   effect?: (element: T) => EffectResult
