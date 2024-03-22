@@ -74,5 +74,9 @@
       "ts": "module",
       "tsx": "module"
     }
+  },
+  "publishConfig": {
+    "access": "public",
+    "directory": "dist"
   }
 }
