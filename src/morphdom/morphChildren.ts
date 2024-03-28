@@ -197,6 +197,10 @@ export function morphChildren(
       // Remove the incompatible from node.
       if (matchingNode) {
         unusedFromNodes.add(matchingNode)
+
+        if (matchingNode === fromChildNode) {
+          fromChildNode = nextDiscardableNode(fromChildNode, component, options)
+        }
       }
     } else {
       while (fromChildNode) {
