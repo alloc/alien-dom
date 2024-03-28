@@ -94,16 +94,9 @@ export default function (
       }
 
       const handleElementRefs = (path: FunctionNode) => {
-        const isSelfUpdating =
-          path.parent.isCallExpression() &&
-          path.parent.callee.isIdentifier() &&
-          path.parent.callee.name === 'selfUpdating'
-
-        if (!isSelfUpdating) {
-          const componentName = getComponentName(path)
-          if (!componentName) {
-            return
-          }
+        const componentName = getComponentName(path)
+        if (!componentName) {
+          return
         }
 
         const componentFn = path
@@ -274,11 +267,10 @@ export default function (
         const nearestBlock = path.findParent(p => p.isBlockStatement())
         if (nearestBlock?.parent && componentFns.has(nearestBlock.parent)) {
           helpers.set('registerNestedTag', '__nestedTag')
-          const wrappedNode = isSelfUpdating ? path.parent : path
-          wrappedNode.before(`__nestedTag("${globalId}#${moduleNextId++}", `)
-          wrappedNode.after(')')
-          if (wrappedNode.isFunctionDeclaration()) {
-            wrappedNode.before(`const ${wrappedNode.id!.name} = `)
+          path.before(`__nestedTag("${globalId}#${moduleNextId++}", `)
+          path.after(')')
+          if (path.isFunctionDeclaration()) {
+            path.before(`const ${path.id!.name} = `)
           }
         }
 
