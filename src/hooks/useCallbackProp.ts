@@ -6,6 +6,8 @@ import { useState } from './useState'
  * implementation is updated on every render.
  *
  * This is most beneficial for callbacks used in run-once effects.
+ *
+ * 🪝 This hook adds 1 to the hook offset.
  */
 export function useCallbackProp<T extends (...args: any[]) => any>(
   callback: T
