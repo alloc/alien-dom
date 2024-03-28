@@ -1,7 +1,7 @@
 {
   "name": "alien-dom",
   "description": "Next-generation JSX client renderer with observable data primitives, immediate DOM references, and more.",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "type": "module",
   "private": true,
   "main": "./production/index.mjs",
