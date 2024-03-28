@@ -5,6 +5,7 @@ import { depsHaveChanged } from '../functions/depsHaveChanged'
 import type { DefaultElement, StyleAttributes } from '../internal/types'
 import { UpdateStyle, updateStyle } from '../internal/updateStyle'
 import { toArray } from '../internal/util'
+import { useHookOffset } from './useHookOffset'
 import { usePrevious } from './usePrevious'
 import { useState } from './useState'
 
@@ -46,18 +47,18 @@ export function useStyle(
 
   if (typeof style !== 'function') {
     deps = deps ? [...elements, ...deps] : elements
-    const prevDeps = usePrevious(deps)
-    if (!style || !depsHaveChanged(deps, prevDeps)) return
 
-    for (const element of elements) {
-      if (isElementProxy(element)) {
-        element.onceElementExists(element => {
+    const prevDeps = usePrevious(deps)
+    if (style && depsHaveChanged(deps, prevDeps))
+      for (const element of elements) {
+        if (isElementProxy(element)) {
+          element.onceElementExists(element => {
+            updateStyle(element, style)
+          })
+        } else {
           updateStyle(element, style)
-        })
-      } else {
-        updateStyle(element, style)
+        }
       }
-    }
   } else if (deps) {
     const state = useState(UseStyle, style, deps)
     if (state.dispose && depsHaveChanged(deps, state.deps)) {
@@ -74,6 +75,8 @@ export function useStyle(
         updateStyle(element, style, UpdateStyle.NonAnimated)
       }
     }).destructor
+  } else {
+    useHookOffset(1)
   }
 }
 
