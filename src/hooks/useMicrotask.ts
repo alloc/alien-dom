@@ -1,6 +1,11 @@
 import { expectCurrentComponent } from '../internal/global'
 import { useState } from './useState'
 
+/**
+ * Run an effect in a microtask after the parent element is set.
+ *
+ * 🪝 This hook adds 1 to the hook offset.
+ */
 export function useMicrotask(effect: () => void, shouldRun = true) {
   const component = expectCurrentComponent()
   const state = useState(UseMicrotask)
