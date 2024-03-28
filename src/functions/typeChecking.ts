@@ -27,3 +27,5 @@ export {
   isNode,
   isTextNode,
 } from '../internal/duck'
+
+export { isShadowRoot } from '../jsx-dom/node'
