@@ -15,7 +15,7 @@ export function usePrevious(value: any, deps?: readonly any[]) {
   const { prev } = state
   state.prev = value
 
-  if (deps && depsHaveChanged(deps, state.deps!)) {
+  if (deps && depsHaveChanged(deps, state.deps)) {
     state.deps = deps
     return undefined
   }
