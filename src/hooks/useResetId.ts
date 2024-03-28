@@ -2,6 +2,7 @@ import { isFunction } from '@alloc/is'
 import { ReadonlyRef, ref } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { createGuid } from '../internal/guid'
+import { useHookOffset } from './useHookOffset'
 import { useObserver } from './useObserver'
 import { useState } from './useState'
 
@@ -14,6 +15,8 @@ import { useState } from './useState'
  * undefined state. This limitation allows the `useResetId` hook to
  * reduce its memory impact to zero when the `reset` argument is
  * undefined.
+ *
+ * 🪝 This hook adds 4 to the hook offset.
  */
 export function useResetId(reset: ResetOption): number
 export function useResetId(reset: ResetOption | undefined): number | false
@@ -28,15 +31,21 @@ export function useResetId(
 export function useResetId(compute: () => ResetOption): ReadonlyRef<number>
 
 export function useResetId(reset: any) {
+  // Allow the caller to disable resets.
   if (reset === undefined) {
-    // Allow the caller to disable resets.
+    useHookOffset(4)
     return false
   }
+
+  // Allow the caller to handle resets manually.
   if (typeof reset === 'string') {
-    // Allow the caller to handle resets manually.
+    useHookOffset(4)
     return reset
   }
+
   const state = useState(UseResetId, reset)
+
+  // Allow the caller to compute resets.
   if (typeof reset === 'function') {
     const compute: () => ResetOption = reset
     useObserver(() => {
@@ -45,6 +54,8 @@ export function useResetId(reset: any) {
 
     return state.ref as ReadonlyRef<number>
   }
+
+  useHookOffset(3)
   return createId(state, reset)
 }
 
