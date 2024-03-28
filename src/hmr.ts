@@ -6,7 +6,6 @@ import { setComponentRenderHook } from './internal/component'
 import { createSymbolProperty } from './internal/symbolProperty'
 import { kAlienRenderFunc } from './internal/symbols'
 import type { FunctionComponent } from './types/component'
-import type { JSX } from './types/jsx'
 
 const kAlienComponentKey = createSymbolProperty<string>('componentKey')
 
@@ -62,7 +61,7 @@ setComponentRenderHook(component => {
   }
 
   // This access is what subscribes the component to hot updates.
-  const render = kAlienRenderFunc(component.tag) as (props: any) => JSX.Element
+  const render = kAlienRenderFunc(component.tag)!
 
   // Track which render function was last used by each component instance.
   const prevRender = kAlienRenderFunc(component)
