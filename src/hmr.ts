@@ -56,7 +56,6 @@ setComponentRenderHook(component => {
   // updates, which means it's either not a top-level component or it was
   // immediately used in the same module it was declared in.
   if (!kAlienComponentKey.in(component.tag)) {
-    kAlienComponentKey(component.tag, '')
     return component.tag
   }
 
