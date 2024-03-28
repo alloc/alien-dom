@@ -35,6 +35,7 @@ export function useObserver(
     const effect = arg1,
       deps = arg2 as readonly any[]
     useEffect(() => observe(effect).destructor, deps)
+    useHookOffset(1)
   } else if (arg1) {
     const ref = arg1 as ReadonlyRef<any>,
       onChange = useCallbackProp(arg2 as (value: any, oldValue: any) => void)
@@ -44,7 +45,6 @@ export function useObserver(
       return observe(ref, onChange).destructor
     }, [ref])
   } else {
-    // This only handles the first overload: observing a single ref.
     useHookOffset(3)
   }
 }
