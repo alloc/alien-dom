@@ -283,7 +283,12 @@ export default function (
         }
 
         if (ensureComponentNames && !componentFn.isStatement()) {
-          const nearestStmt = componentFn.findParent(node => node.isStatement())
+          // Skip any component that is declared as a property.
+          const nearestStmt =
+            !componentFn.findParent(
+              node => node.isObjectExpression() || node.isClassBody()
+            ) && componentFn.findParent(node => node.isStatement())
+
           if (nearestStmt) {
             let componentName = getComponentName(path)
             if (!componentName) {

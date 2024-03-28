@@ -29,19 +29,25 @@ export function isBindingPattern(
 }
 
 export function getComponentName(fn: FunctionNode) {
-  let entity: Node.VariableDeclarator | Node.FunctionDeclaration | undefined
-
-  if (fn.isFunctionDeclaration()) {
-    entity = fn
-  } else if (fn.parent?.isVariableDeclarator()) {
-    entity = fn.parent
-  } else {
-    return
+  for (const id of yieldIdentifiers(fn)) {
+    if (/^[A-Z]/.test(id.name)) {
+      return id.name
+    }
   }
+}
 
-  const entityName = entity.id?.isIdentifier() && entity.id.name
-  if (entityName && /^[A-Z]/.test(entityName)) {
-    return entityName
+function* yieldIdentifiers(fn: FunctionNode) {
+  if (fn.isFunctionDeclaration()) {
+    if (fn.id) {
+      yield fn.id
+    }
+  } else {
+    if (fn.isFunctionExpression() && fn.id) {
+      yield fn.id
+    }
+    if (fn.parent?.isVariableDeclarator() && fn.parent.id.isIdentifier()) {
+      yield fn.parent.id
+    }
   }
 }
 
