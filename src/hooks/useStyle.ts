@@ -13,6 +13,8 @@ import { useState } from './useState'
  * to calling `element.css` directly, because it updates the newest
  * version of the `element`. The style is applied through morphdom,
  * which means it won't interfere with animations.
+ *
+ * 🪝 This hook adds 1 to the hook offset.
  */
 export function useStyle(
   element: DefaultElement | readonly DefaultElement[],
@@ -25,6 +27,8 @@ export function useStyle(
  * re-render. Instead, the element is updated directly. This is useful
  * for performance reasons when the style is updated frequently or the
  * component is expensive to re-render.
+ *
+ * 🪝 This hook adds 1 to the hook offset.
  */
 export function useStyle(
   element: DefaultElement | readonly DefaultElement[],
