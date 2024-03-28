@@ -14,6 +14,16 @@ export function computeComponentHashes<Identifier, FunctionNode>(
 ) {
   const components: ComponentHash<Identifier, FunctionNode>[] = []
 
+  const skipped = new Set<NebuNode>()
+  const skip = (node: NebuNode) => {
+    if (!node.removed) {
+      // Trick nebu into not walking this subtree. This will be undone before we
+      // return, so future `process` calls will still walk this subtree.
+      node.removed = true
+      skipped.add(node)
+    }
+  }
+
   function processNamedFunction(
     node: NebuNode.FunctionDeclaration | NebuNode.FunctionExpression
   ) {
@@ -31,8 +41,7 @@ export function computeComponentHashes<Identifier, FunctionNode>(
       }
     }
 
-    // Trick nebu into not walking this subtree.
-    node.removed = true
+    skip(node)
   }
 
   ast.process({
@@ -61,8 +70,7 @@ export function computeComponentHashes<Identifier, FunctionNode>(
               })
             }
 
-            // Trick nebu into not walking this subtree.
-            node.removed = true
+            skip(node)
           }
 
           decl.init.process({
@@ -73,6 +81,10 @@ export function computeComponentHashes<Identifier, FunctionNode>(
       }
     },
   })
+
+  for (const node of skipped) {
+    node.removed = false
+  }
 
   return components
 }
