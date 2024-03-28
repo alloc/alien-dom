@@ -5,14 +5,25 @@ import { useCallbackProp } from './useCallbackProp'
 import { EffectCallback, useEffect } from './useEffect'
 import { useHookOffset } from './useHookOffset'
 
-/** Observe a single ref. */
+/**
+ * Observe a single ref.
+ *
+ * 🪝 This hook adds 3 to the hook offset.
+ */
 export function useObserver<T>(
   ref: ReadonlyRef<T> | Falsy,
   onChange: (value: T, oldValue: T) => void
 ): void
 
-/** Observe any refs accessed by the effect. */
-export function useObserver(effect: EffectCallback, deps: readonly any[]): void
+/**
+ * Observe any refs accessed by the effect.
+ *
+ * 🪝 This hook adds 3 to the hook offset.
+ */
+export function useObserver(
+  effect: EffectCallback | Falsy,
+  deps: readonly any[]
+): void
 
 /** @internal */
 export function useObserver(
