@@ -44,6 +44,9 @@ export { Color, mixColor, parseColor } from 'linear-color'
 /// Constants
 export { SVGNamespace } from './jsx-dom/jsx-runtime'
 
+/// JSX Transform
+export { createElement } from './jsx-dom/jsx-runtime'
+
 /// Types
 export type {
   CSSProperties,
