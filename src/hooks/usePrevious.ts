@@ -2,6 +2,11 @@ import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { noop } from '../internal/util'
 import { useState } from './useState'
 
+/**
+ * Save the given `value` for the next render.
+ *
+ * 🪝 This hook adds 1 to the hook offset.
+ */
 export function usePrevious<T>(value: T): T | undefined
 export function usePrevious<T>(value: T, deps: readonly any[]): T | undefined
 export function usePrevious(value: any, deps?: readonly any[]) {
