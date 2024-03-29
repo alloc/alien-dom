@@ -53,6 +53,8 @@ export type ElementRefs = Map<JSX.ElementKey, ChildNode | DocumentFragment>
 /** Internal state for a component instance. */
 export class AlienComponent<Props extends object = any> extends Observer {
   rootNode: ChildNode | DocumentFragment | null = null
+  rootNodeCallbacks: Set<(node: ChildNode | DocumentFragment) => void> | null =
+    null
   rootKey: JSX.ElementKey | undefined = undefined
   hooks: any[] = []
   nextHookIndex = 0
@@ -131,6 +133,9 @@ export class AlienComponent<Props extends object = any> extends Observer {
       kAlienElementTags(rootNode, tags)
     }
     tags.set(this.tag, this)
+
+    this.rootNodeCallbacks?.forEach(callback => callback(rootNode))
+    this.rootNodeCallbacks = null
   }
 
   /**
