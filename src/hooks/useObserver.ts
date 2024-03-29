@@ -2,7 +2,7 @@ import { isFunction } from '@alloc/is'
 import { Falsy } from '@alloc/types'
 import { ReadonlyRef, observe } from '../core/observable'
 import { useCallbackProp } from './useCallbackProp'
-import { EffectCallback, useEffect } from './useEffect'
+import { EffectCallback, useEffect, useWrappedEffect } from './useEffect'
 import { useHookOffset } from './useHookOffset'
 
 /**
@@ -34,7 +34,7 @@ export function useObserver(
   if (isFunction(arg1)) {
     const effect = arg1,
       deps = arg2 as readonly any[]
-    useEffect(() => observe(effect).destructor, deps)
+    useWrappedEffect(effect, effect => observe(effect).destructor, deps)
     useHookOffset(1)
   } else if (arg1) {
     const ref = arg1 as ReadonlyRef<any>,

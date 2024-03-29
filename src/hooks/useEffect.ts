@@ -75,3 +75,24 @@ class UseEffect {
     this.dispose = effect(this.context!)
   }
 }
+
+/**
+ * Useful for hooks that wrap `useEffect`. It ensures the `EffectContext` is
+ * only created if the given `effect` needs it, while allowing the wrapper hook
+ * to do its thing.
+ *
+ * 🪝 This hook adds 2 to the hook offset.
+ */
+export function useWrappedEffect(
+  effect: EffectCallback | Falsy,
+  wrapper: (effect: () => EffectResult) => EffectResult,
+  deps: readonly any[]
+): void {
+  useEffect(
+    effect &&
+      (effect.length > 0
+        ? context => wrapper(() => effect(context))
+        : () => wrapper(effect as () => EffectResult)),
+    deps
+  )
+}

@@ -1,8 +1,9 @@
 import { isFunction, isNumber } from '@alloc/is'
+import { Falsy } from '@alloc/types'
 import { DisposablePromise } from '../addons/promises'
 import { toArray } from '../internal/util'
 import { VarArgs } from '../types'
-import { EffectCallback, useEffect } from './useEffect'
+import { EffectCallback, useWrappedEffect } from './useEffect'
 
 /**
  * Set a timeout to run an effect after a delay, with proper cleanup on unmount.
@@ -12,43 +13,47 @@ import { EffectCallback, useEffect } from './useEffect'
  */
 export function useDelayedEffect(
   delay: VarArgs<number | DisposablePromise<any>>,
-  effect: EffectCallback,
+  effect: EffectCallback | Falsy,
   deps: readonly any[] = []
 ) {
-  useEffect(() => {
-    let result: ReturnType<EffectCallback>
-    let numPending = 0
+  useWrappedEffect(
+    effect,
+    effect => {
+      let result: ReturnType<EffectCallback>
+      let numPending = 0
 
-    const finishOne = () => {
-      if (--numPending == 0) {
-        try {
-          result = effect()
-        } catch (error) {
-          console.error(error)
+      const finishOne = () => {
+        if (--numPending == 0) {
+          try {
+            result = effect()
+          } catch (error) {
+            console.error(error)
+          }
         }
       }
-    }
 
-    const disposers = toArray(delay).map(delay => {
-      numPending++
-      if (isNumber(delay)) {
-        const timerId = setTimeout(finishOne, delay)
-        return () => clearTimeout(timerId)
-      }
-      delay.then(finishOne)
-      return () => delay.dispose()
-    })
-
-    return () => {
-      if (isFunction(result)) {
-        try {
-          result()
-        } catch (error) {
-          console.error(error)
+      const disposers = toArray(delay).map(delay => {
+        numPending++
+        if (isNumber(delay)) {
+          const timerId = setTimeout(finishOne, delay)
+          return () => clearTimeout(timerId)
         }
-      } else {
-        disposers.forEach(dispose => dispose())
+        delay.then(finishOne)
+        return () => delay.dispose()
+      })
+
+      return () => {
+        if (isFunction(result)) {
+          try {
+            result()
+          } catch (error) {
+            console.error(error)
+          }
+        } else {
+          disposers.forEach(dispose => dispose())
+        }
       }
-    }
-  }, deps)
+    },
+    deps
+  )
 }
