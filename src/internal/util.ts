@@ -45,6 +45,18 @@ export function forEach<T>(
   }
 }
 
+export type StateInitializer<T extends object = object> =
+  | ((...params: any[]) => T)
+  | (new (...args: any[]) => T)
+
+export function createState(init: StateInitializer, params: any[]) {
+  return isClass(init) ? new init(...params) : init(...params)
+}
+
+function isClass(arg: StateInitializer): arg is new (...args: any[]) => any {
+  return /^(class[ {]|function [A-Z])/.test(arg.toString())
+}
+
 export function compareNodeWithTag(
   node: ChildNode | DocumentFragment,
   tag: any
