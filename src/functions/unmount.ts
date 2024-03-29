@@ -1,3 +1,4 @@
+import { isElementProxy } from '../addons/elementProxy'
 import type { AlienComponent } from '../internal/component'
 import {
   kAlienEffects,
@@ -18,9 +19,21 @@ export function unmount(
   skipRemove?: boolean,
   keepComponent?: AlienComponent | null
 ): void {
-  if (!node) {
-    return
+  if (isElementProxy(node)) {
+    node = node.toElement()
   }
+  if (node) {
+    unmountTree(node, skipRemove, keepComponent)
+  }
+}
+
+// The inner function is defined separately to avoid the overhead of the
+// `isElementProxy` check on every call.
+function unmountTree(
+  node: ChildNode | DocumentFragment,
+  skipRemove?: boolean,
+  keepComponent?: AlienComponent | null
+) {
   // Recurse through the last descendants first, so effects are disabled
   // bottom-up in reverse order.
   if (isFragment(node)) {
@@ -28,7 +41,7 @@ export function unmount(
     for (let i = childNodes.length - 1; i >= 0; i--) {
       const childNode = childNodes[i]
       if (childNode) {
-        unmount(childNode)
+        unmountTree(childNode)
       }
     }
   } else {
@@ -38,7 +51,7 @@ export function unmount(
         childNode;
         childNode = childNode.previousSibling
       ) {
-        unmount(childNode, true)
+        unmountTree(childNode, true)
       }
 
       // Disconnect any persistent effects or element refs.
