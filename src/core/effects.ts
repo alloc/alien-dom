@@ -11,6 +11,7 @@ import {
   runEffect,
 } from '../internal/effects'
 import { currentEffects } from '../internal/global'
+import { LinkedList } from '../internal/linkedList'
 import { popValue } from '../internal/stack'
 import { kAlienEffects } from '../internal/symbols'
 import type { AnyElement } from '../internal/types'
@@ -35,6 +36,8 @@ export interface AlienEffect<
   async?: Async
   disable?: () => void
   once?: boolean
+  next?: AlienEffect | null
+  prev?: AlienEffect | null
 }
 
 const enum AlienEffectState {
@@ -56,7 +59,7 @@ export class AlienEffects<Element extends AnyElement = any> {
   mounted = false
   rootNode?: Node = undefined
 
-  effects?: Set<AlienEffect> = undefined
+  effects?: LinkedList<AlienEffect> | null = null
   currentEffect: AlienEffect | null = null
   abortCtrl?: AbortController = undefined
 
@@ -152,7 +155,7 @@ export class AlienEffects<Element extends AnyElement = any> {
 
   /** @internal */
   remove(effect: AlienEffect) {
-    this.effects?.delete(effect)
+    this.effects?.remove(effect)
     disableEffect(effect)
   }
 
@@ -297,6 +300,7 @@ export function createEffect<
     | AlienBoundEffect<any, any, false>
 >(
   effect: Effect,
+  prepend?: boolean,
   context?: AlienEffects,
   flags?: EffectFlags.Once
 ): Disposable<typeof effect>
@@ -305,19 +309,28 @@ export function createEffect<
   Effect extends AlienEffect<void, [], true> | AlienBoundEffect<any, any, true>
 >(
   effect: Effect,
+  prepend: boolean | undefined,
   context: AlienEffects | undefined,
   flags: EffectFlags.Async
 ): Disposable<typeof effect>
 
 export function createEffect(
   effect: AlienEffect<void, [], boolean> | AlienBoundEffect<any, any, boolean>,
+  prepend?: boolean,
   context = lastValue(currentEffects),
   flags: EffectFlags | 0 = 0
 ): Disposable<typeof effect> {
   if (context) {
     return isFunction(effect)
-      ? enableEffect(context, effect, flags, effect.target, false)
-      : enableEffect(context, effect.enable, flags, effect.target, effect.args)
+      ? enableEffect(context, effect, flags, effect.target, false, prepend)
+      : enableEffect(
+          context,
+          effect.enable,
+          flags,
+          effect.target,
+          effect.args,
+          prepend
+        )
   }
   const effectFn = isFunction(effect) ? effect : effect.enable
   runEffect(effectFn, null, flags, effect.target, effect.args)
@@ -330,15 +343,19 @@ export const createOnceEffect = <
     | AlienBoundEffect<any, any, false>
 >(
   effect: Effect,
+  prepend?: boolean,
   context?: AlienEffects
-): Disposable<Effect> => createEffect(effect, context, EffectFlags.Once)
+): Disposable<Effect> =>
+  createEffect(effect, prepend, context, EffectFlags.Once)
 
 export const createAsyncEffect = <
   Effect extends AlienEffect<void, [], true> | AlienBoundEffect<any, any, true>
 >(
   effect: Effect,
+  prepend?: boolean,
   context?: AlienEffects
-): Disposable<Effect> => createEffect(effect, context, EffectFlags.Async)
+): Disposable<Effect> =>
+  createEffect(effect, prepend, context, EffectFlags.Async)
 
 export type AlienEffectType<Args extends any[]> = (
   ...args: Args

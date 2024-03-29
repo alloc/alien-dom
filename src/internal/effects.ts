@@ -2,6 +2,7 @@ import { isFunction } from '@alloc/is'
 import { Disposable, attachDisposer } from '../addons/disposable'
 import { AlienEffect, AlienEffects } from '../core/effects'
 import { currentEffects } from './global'
+import { LinkedList } from './linkedList'
 import { ShadowRootContext } from './shadow'
 import { popValue } from './stack'
 import { kAlienEffects } from './symbols'
@@ -25,7 +26,8 @@ export function enableEffect<Effect extends AlienEffect<any, any>>(
   effect: Effect,
   flags: EffectFlags | 0,
   target: any,
-  args: any[] | false
+  args: any[] | false,
+  prepend?: boolean
 ): Disposable<Effect> {
   effect.target = target
   if (args !== false) {
@@ -39,8 +41,9 @@ export function enableEffect<Effect extends AlienEffect<any, any>>(
     effect.async = true
   }
 
-  context.effects ||= new Set()
-  context.effects.add(effect)
+  context.effects ||= new LinkedList()
+  context.effects.add(effect, prepend)
+
   if (context.enabled) {
     // If the effect is being retargeted, this is needed.
     disableEffect(effect)
@@ -54,7 +57,7 @@ export function enableEffect<Effect extends AlienEffect<any, any>>(
   }
 
   return attachDisposer(effect, () => {
-    context.effects?.delete(effect)
+    context.effects?.remove(effect)
     disableEffect(effect)
   })
 }
@@ -118,7 +121,7 @@ export function disableEffects(context: AlienEffects, destroy?: boolean) {
   context.effects?.forEach(effect => {
     disableEffect(effect)
     if (effect.once) {
-      context.effects?.delete(effect)
+      context.effects?.remove(effect)
     }
   })
   context.abortCtrl = undefined

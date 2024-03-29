@@ -176,12 +176,13 @@ export function createHostNode(
   }
   if (ref) {
     // When an effects context is set, prefer to apply the ref prop when that
-    // context is enabled. In the context of a component, this means the ref prop
-    // will be applied after the component is mounted.
-    if (currentEffects.length > 0) {
+    // context is enabled. In the context of a component, this means the ref
+    // prop will be applied after the component is mounted. It needs to be
+    // applied before any other effects.
+    if (lastValue(currentEffects)) {
       createOnceEffect(() => {
         applyRefProp(hostNode, ref, hostProps)
-      })
+      }, true /* prepend */)
     } else {
       applyRefProp(hostNode, ref, hostProps)
     }
