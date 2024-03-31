@@ -40,39 +40,48 @@ export function useEffect<State = {}>(
 class UseEffect {
   constructor(public deps: readonly any[], public component: AlienComponent) {}
   effect: EffectCallback<any> | Falsy = undefined
-  context: EffectContext | undefined = undefined
   dispose: (() => void) | void = undefined
+  rerun: (() => void) | void = undefined
 
   run() {
-    const { effect, component } = this
-    if (!effect) {
-      return
-    }
-    if (effect.length > 0) {
-      const rerun = this.run.bind(this)
-      this.context ||= {
-        get rootNode(): any {
-          component.rootNodeCallbacks ||= new Set()
-          component.rootNodeCallbacks.add(rerun)
-
-          const node = component.rootNode!
-          return isFragment(node) ? node.firstChild : node
-        },
-        get rootElement() {
-          const { rootNode } = this
-          if (!isElement(rootNode)) {
-            throw Error('Expected rootNode to be an element')
-          }
-          return rootNode
-        },
-        // TODO: trigger effect on parentNode change
-        get parentNode() {
-          return component.rootNode!.parentNode as any
-        },
-      }
-    }
     this.dispose?.()
-    this.dispose = effect(this.context!)
+    this.dispose = this.effect ? (0, this.effect)(this) : undefined
+  }
+
+  /**
+   * Access the root node of the current component. If a fragment or primitive
+   * is returned by the component, this will be a `Comment` node. If the root
+   * node changes, your effect will rerun.
+   */
+  get rootNode(): JSX.Element | Comment {
+    this.component.rootNodeCallbacks ||= new Set()
+    this.component.rootNodeCallbacks.add((this.rerun ||= this.run.bind(this)))
+
+    const node = this.component.rootNode!
+    return (isFragment(node) ? node.firstChild : node) as any
+  }
+
+  /**
+   * Type cast the root node of the current component as a`JSX.Element` object.
+   * If the root node changes, your effect will rerun.
+   *
+   * Note: This accessor is unsafe if the component ever returns a fragment or
+   * primitive. In those cases, you'll want to either use `rootNode` instead or
+   * check for null.
+   */
+  get rootElement(): JSX.Element {
+    const { rootNode } = this
+    return isElement(rootNode) ? rootNode : null!
+  }
+
+  /**
+   * Access the parent node of the current component.
+   *
+   * Caveat: If the parent node changes, your effect will not rerun.
+   */
+  get parentNode(): JSX.Element {
+    // TODO: trigger effect on parentNode change
+    return this.component.rootNode!.parentNode as any
   }
 }
 
