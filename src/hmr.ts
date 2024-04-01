@@ -106,7 +106,7 @@ setComponentRenderHook(component => {
       // If rendering fails, try clearing persistent hook state.
       if (isHotUpdate) {
         component.truncate(0)
-        component.scheduleUpdate()
+        component.scheduleUpdate(null)
       }
       throw e
     }

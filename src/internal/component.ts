@@ -172,7 +172,7 @@ export class AlienComponent<Props extends object = any> extends Observer {
     // Schedule an update for the next microtask if the component
     // effects from the previous render are still being enabled.
     if (oldEffects?.partiallyEnabled) {
-      return this.scheduleUpdate()
+      return this.scheduleUpdate(null)
     }
 
     this.newEffects = new AlienEffects()

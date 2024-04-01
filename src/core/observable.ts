@@ -3,7 +3,7 @@ import { Falsy } from '@alloc/types'
 import { Disposable, attachDisposer } from '../addons/disposable'
 import { Promisable } from '../addons/promises'
 import { createSymbolProperty } from '../internal/symbolProperty'
-import { noop } from '../internal/util'
+import { Trace, noop, trace } from '../internal/util'
 
 const kRefType = Symbol.for('refType')
 
@@ -491,6 +491,11 @@ export class Observer {
   readonly id = nextObserverId++
   refs = new Set<InternalRef<any>>()
   depth = 0
+  /**
+   * When defined, this property provides information about why the observer is
+   * updating or why it last updated.
+   */
+  trace: Trace | undefined = undefined
 
   constructor() {
     this.isObservablyPure ||= alwaysFalse
@@ -571,19 +576,28 @@ export class Observer {
     this.scheduleUpdate(ref, newValue, oldValue)
   }
 
-  scheduleUpdate(ref?: ReadonlyRef<any>, newValue?: any, oldValue?: any) {
-    if (!updateQueue.has(this)) {
-      updateQueue.add(this)
-      if (ref) {
-        this.willUpdate(ref, newValue, oldValue)
-      }
-      // If no ref is provided, this is a forced update, which means the update
-      // queue may not be flushed unless we ask for it here.
-      else {
-        updateHasSideEffects ||= !this.isObservablyPure()
-        scheduleUpdates()
-      }
+  scheduleUpdate(
+    ref?: ReadonlyRef<any> | null,
+    newValue?: any,
+    oldValue?: any
+  ) {
+    if (updateQueue.has(this)) {
+      return false
     }
+    updateQueue.add(this)
+    if (ref !== null) {
+      this.trace = trace(ref)
+    }
+    if (ref) {
+      this.willUpdate(ref, newValue, oldValue)
+    }
+    // If no ref is provided, this is a forced update, which means the update
+    // queue may not be flushed unless we ask for it here.
+    else {
+      updateHasSideEffects ||= !this.isObservablyPure()
+      scheduleUpdates()
+    }
+    return true
   }
 
   /**
@@ -677,6 +691,14 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
       return super.value
     }
     return this.peek()
+  }
+
+  /**
+   * The `trace` property is only available when the ref is observed. It
+   * provides information about why the ref is updating or why it last updated.
+   */
+  get trace() {
+    return this._observer?.trace
   }
 
   /**

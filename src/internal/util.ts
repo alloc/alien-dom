@@ -94,3 +94,14 @@ export function compareNodeNames(
   }
   return true
 }
+
+export interface Trace {
+  cause?: any
+  stack: string
+}
+
+export function trace(cause?: any) {
+  const trace: any = Error()
+  trace.cause = cause
+  return trace
+}
