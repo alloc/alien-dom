@@ -57,9 +57,7 @@ export declare namespace JSX {
     | DocumentFragment
     | ShadowRootNode
     | AlienNode
-    | false
-    | null
-    | undefined
+    | Comment
 
   /**
    * If defining the type of a component prop that can be a JSX element, you
@@ -83,7 +81,9 @@ export declare namespace JSX {
    */
   type ElementsProp = Thunkable<ElementsOption>
 
-  type ElementType = keyof IntrinsicElements | ((props: any) => ElementOption)
+  type ElementType =
+    | keyof IntrinsicElements
+    | ((props: any) => ElementOption | null)
 
   type ElementAttributes<T> = keyof IntrinsicElements extends infer TagName
     ? TagName extends keyof IntrinsicElements
