@@ -1,5 +1,6 @@
 import { Fragment } from '../components/Fragment'
 import {
+  DeferredCompositeNode,
   createFragmentNode,
   deferCompositeNode,
   isDeferredNode,
@@ -19,6 +20,22 @@ import { at, lastValue } from './util'
 
 export type FragmentNodes = [Comment, ...(ChildNode | undefined)[]]
 export type FragmentKeys = (JSX.ElementKey | undefined)[]
+
+export function wrapWithFragment(
+  childrenProp: JSX.ChildrenProp
+): DocumentFragment
+
+export function wrapWithFragment(
+  childrenProp: JSX.ChildrenProp,
+  isDeferred: true,
+  context?: AlienContextMap
+): DeferredCompositeNode
+
+export function wrapWithFragment(
+  childrenProp: JSX.ChildrenProp,
+  isDeferred?: boolean,
+  context?: AlienContextMap
+): DocumentFragment | DeferredCompositeNode
 
 export function wrapWithFragment(
   childrenProp: JSX.ChildrenProp,
