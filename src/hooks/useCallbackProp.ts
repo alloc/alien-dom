@@ -22,14 +22,14 @@ export function useCallbackProp<T extends (...args: any[]) => any>(
 ) {
   const state = useState(UseCallbackProp<T>)
   state.callback = callback
-
-  return function (this: any, ...args: any[]) {
-    if (state.callback) {
-      return state.callback.apply(this, args)
-    }
-  } as T
+  return state.wrapper
 }
 
 class UseCallbackProp<T extends (...args: any[]) => any> {
   callback: T | Falsy = false
+  wrapper = (...args: any[]) => {
+    if (this.callback) {
+      return this.callback.apply(this, args)
+    }
+  }
 }
