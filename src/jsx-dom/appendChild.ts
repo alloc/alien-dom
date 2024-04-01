@@ -1,6 +1,4 @@
 import { ref } from '../core/observable'
-import { getElementKey } from '../functions/getElementKey'
-import { AlienComponent } from '../internal/component'
 import { setContext } from '../internal/context'
 import {
   hasTagName,
@@ -10,19 +8,11 @@ import {
   isNode,
   isTextNode,
 } from '../internal/duck'
-import { currentComponent } from '../internal/global'
 import { ShadowRootContext } from '../internal/shadow'
 import { kAlienParentFragment } from '../internal/symbols'
-import { lastValue } from '../internal/util'
-import { morph } from '../morphdom/morph'
-import {
-  AnyDeferredNode,
-  evaluateDeferredNode,
-  isDeferredNode,
-  isShadowRoot,
-} from './node'
+import { evaluateChild } from './evaluateChild'
+import { evaluateDeferredNode, isDeferredNode, isShadowRoot } from './node'
 import type { ResolvedChild } from './resolveChildren'
-import { compareNodeWithTag } from './util'
 
 export function appendChild(
   child: ResolvedChild,
@@ -45,28 +35,10 @@ export function appendChild(
   if (isNode(child)) {
     // Text nodes cannot have an element key.
     if (!isTextNode(child)) {
+      // Apply a pending update associated with the DOM node. Comment nodes
+      // could have an associated fragment update.
       if (isElement(child) || isComment(child)) {
-        const key = getElementKey(child)
-        if (key != null) {
-          // Find a pending update for the child node, if any. Give up if we
-          // find a parent component isn't being updated.
-          let update: AnyDeferredNode | undefined
-          let component: AlienComponent | null = lastValue(currentComponent)
-          for (; component; component = component.parent) {
-            if ((update = component.updates?.get(key))) break
-          }
-          if (update) {
-            // It's possible that the child node was created in an earlier
-            // render but never appended to the DOM (or it's being moved into a
-            // newly created node). In that case, let's morph the existing node
-            // instead of creating a new one.
-            if (isElement(child) && compareNodeWithTag(child, update.tag)) {
-              morph(child, update)
-            } else {
-              child = evaluateDeferredNode(update)
-            }
-          }
-        }
+        child = evaluateChild(child)
       } else if (!isFragment(child)) {
         throw Error('Unsupported node type')
       }
