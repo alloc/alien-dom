@@ -80,7 +80,7 @@ setComponentRenderHook(component => {
             return // Skip one-time effects.
           }
           if (isFunction(hook.dispose)) {
-            hook.dispose()
+            hook.dispose({ isHotReload: true })
           }
           hooks[index] = undefined
         }

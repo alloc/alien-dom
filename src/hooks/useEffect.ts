@@ -8,10 +8,12 @@ import { JSX } from '../types/jsx'
 import { useMicrotask } from './useMicrotask'
 import { useState } from './useState'
 
-export type EffectResult = (() => void) | void
+export type EffectResult = ((detail?: { isHotReload?: boolean }) => void) | void
+
 export type EffectCallback<State = {}> = (
   context: EffectContext<State>
 ) => EffectResult
+
 export type EffectContext<State = {}> = State & {
   get rootNode(): JSX.Element | Comment
   get rootElement(): JSX.Element
