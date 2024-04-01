@@ -327,7 +327,7 @@ function updateChild(
     }
   }
 
-  let morphedNode: DocumentFragment | Element | Comment | undefined
+  let morphedNode: ChildNode | DocumentFragment | undefined
   if (isDeferredNode(toNode)) {
     morphedNode = morph(fromNode as any, toNode, component)
   } else if (fromNode !== toNode) {
