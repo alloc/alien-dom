@@ -480,7 +480,8 @@ function updateAnimatedNode(
     v0: 0,
     done: false,
     to: parsedTo,
-    from: parsedFrom,
+    from: null,
+    nextFrom: null,
     lastPosition: null,
     lastVelocity: null,
     dilation: 1,
@@ -494,7 +495,8 @@ function updateAnimatedNode(
 
   node.done = false
   node.to = parsedTo
-  node.from = parsedFrom
+  node.from = null
+  node.nextFrom = parsedFrom || node.nextFrom
   node.spring = spring(key)
   node.frame = frame || null
   node.dilation = dilate ?? 1
@@ -882,7 +884,11 @@ function ensureFromValues(
   }
 
   for (const [key, node] of Object.entries(nodes)) {
-    if (node.done || node.from != null) {
+    if (node.nextFrom) {
+      node.from = node.nextFrom
+      node.nextFrom = null
+    }
+    if (node.done || node.from) {
       continue
     }
     if (node.transformFn) {

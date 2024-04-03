@@ -17,6 +17,7 @@ export type AnimatedType = Color | ParsedValue
 export type AnimatedNode<T extends AnimatedType = AnimatedType> = {
   to: T
   from: T | null
+  nextFrom: T | null
   done: boolean
   v0: number
   lastVelocity: number | null
