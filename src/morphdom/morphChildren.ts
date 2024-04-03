@@ -394,16 +394,9 @@ function collectKeyedNodes(
     fromChildNode;
     fromChildNode = nextDiscardableNode(fromChildNode, component, options)
   ) {
-    if (isElement(fromChildNode)) {
-      const key = getFromKey(fromChildNode)
-      if (key != null) {
-        fromNodesByKey.set(key, fromChildNode)
-      }
-    } else if (isComment(fromChildNode)) {
-      const fragment = kAlienParentFragment(fromChildNode)
-      if (!fragment) {
-        continue
-      }
+    const fragment =
+      isComment(fromChildNode) && kAlienParentFragment(fromChildNode)
+    if (fragment) {
       let position = kAlienElementPosition(fromChildNode)
       if (position != null) {
         fromNodesByKey.set(position, fragment)
@@ -417,7 +410,12 @@ function collectKeyedNodes(
         fromNodesByKey.set(key, fragment)
       }
       // Skip to the end of the fragment.
-      fromChildNode = endOfFragment(fragment) as ChildNode
+      fromChildNode = endOfFragment(fragment)!
+    } else {
+      const key = getFromKey(fromChildNode)
+      if (key != null) {
+        fromNodesByKey.set(key, fromChildNode as Element | Comment)
+      }
     }
   }
   return fromNodesByKey
