@@ -9,13 +9,13 @@ import type { FunctionComponent } from './types/component'
 
 const kAlienComponentKey = createSymbolProperty<string>('componentKey')
 
-type HotComponent = [
+type ComponentData = [
   component: Ref<(props: any) => any>,
   hash: string,
   deps: any[]
 ]
 
-const componentRegistry: { [key: string]: HotComponent } = {}
+const componentRegistry: { [key: string]: ComponentData } = {}
 const usedBeforeRegister = new WeakSet<FunctionComponent>()
 
 export function hmrRegister(
@@ -34,21 +34,30 @@ export function hmrRegister(
   // Keep the original component around, so it can be used by parent
   // components to update the new component instance.
   let [renderRef, oldHash, oldDeps] = componentRegistry[key] || []
+  const needsUpdateCheck = renderRef != null
+  renderRef ||= ref(tag)
 
-  if (renderRef) {
-    const needsHotUpdate =
-      (oldHash != null && oldHash !== hash) ||
-      (oldDeps != null && depsHaveChanged(deps, oldDeps))
+  // Hot-reloaded components in the `deps` list are mapped to their component
+  // key. Wait until the next microtask before mapping them, or else a
+  // hot-reloaded component declared in the same module may not have its
+  // component key yet.
+  const componentData: ComponentData = [renderRef, hash, deps]
+  queueMicrotask(() => {
+    componentData[2] = deps = deps.map(dep => kAlienComponentKey(dep) ?? dep)
 
-    if (needsHotUpdate) {
-      renderRef.value = tag
+    if (needsUpdateCheck) {
+      const needsHotUpdate =
+        (oldHash != null && oldHash !== hash) ||
+        (oldDeps != null && depsHaveChanged(deps, oldDeps))
+
+      if (needsHotUpdate) {
+        renderRef.value = tag
+      }
     }
-  } else {
-    renderRef = ref(tag)
-  }
+  })
 
   kAlienComponentKey(tag, key)
-  componentRegistry[key] = [renderRef, hash, deps]
+  componentRegistry[key] = componentData
   attachRef(tag, kAlienRenderFunc.symbol, renderRef)
 }
 
