@@ -154,8 +154,8 @@ export class Ref<T = any> extends ReadonlyRef<T> {
   }
 
   /** Use the negation operator on the current value. */
-  toggle() {
-    this.value = !this.value as any
+  toggle(): boolean {
+    return (this.value = !this.value as any)
   }
 }
 
