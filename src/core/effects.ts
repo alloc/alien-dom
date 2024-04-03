@@ -56,6 +56,7 @@ const enum AlienEffectState {
  */
 export class AlienEffects<Element extends AnyElement = any> {
   state = AlienEffectState.Disabled
+  readonly element: Element | Comment | null = null
   mounted = false
   rootNode?: Node = undefined
 
@@ -65,8 +66,17 @@ export class AlienEffects<Element extends AnyElement = any> {
 
   protected _mountEffect: Disposable | null = null
 
-  constructor(readonly element?: Element | Comment, rootNode?: Node) {
-    if (element) {
+  constructor(element?: Element | Comment | (() => void), rootNode?: Node) {
+    if (isFunction(element)) {
+      const callback = element
+      currentEffects.push(this)
+      try {
+        callback()
+      } finally {
+        popValue(currentEffects, this)
+      }
+    } else if (element) {
+      this.element = element
       kAlienEffects(element, this)
 
       if (!rootNode && element.isConnected) {
