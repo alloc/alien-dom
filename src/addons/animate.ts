@@ -33,6 +33,7 @@ import { AlienSelector } from './selectors'
 
 export type SpringAnimation<
   Element extends AnyElement = any,
+  EventTarget extends AnyElement = Element,
   Props extends object = AnimatedProps<Element>
 > = {
   to?: Props | Falsy
@@ -43,9 +44,9 @@ export type SpringAnimation<
   immediate?: boolean | { [K in keyof Props]?: boolean }
   dilate?: number
   anchor?: [number, number]
-  onStart?: (target: Element) => void
-  onChange?: FrameCallback<Element, Props>
-  onRest?: FrameCallback<Element, Props>
+  onStart?: (target: EventTarget) => void
+  onChange?: FrameCallback<EventTarget, Props>
+  onRest?: FrameCallback<EventTarget, Props>
 }
 
 export type SpringDelay = number | SpringDelayFn | Promise<unknown>
@@ -55,19 +56,18 @@ export type SpringDelayFn = (
 ) => Promise<unknown> | null | void
 
 export type FrameCallback<
-  T extends AnyElement,
-  Props extends object = AnimatedProps<T>
-> = (props: [T] extends [Any] ? any : Required<Props>, target: T) => void
+  EventTarget extends AnyElement,
+  Props extends object = AnimatedProps<EventTarget>
+> = (
+  props: [EventTarget] extends [Any] ? any : Required<Props>,
+  target: EventTarget
+) => void
 
-export type StepAnimationFn<
-  Element extends AnyElement = any,
-  Props extends object = AnimatedProps<Element>
-> = (frame: StepAnimation<Element, Props>) => Props | null
+export type StepAnimationFn<Element extends AnyElement = any> = (
+  frame: StepAnimation<Element>
+) => AnimatedProps<Element> | null
 
-export type StepAnimation<
-  Element extends AnyElement = any,
-  Props extends object = AnimatedProps<Element>
-> = {
+export type StepAnimation<Element extends AnyElement = any> = {
   target: Element
   /** When true, the animation ends. */
   done: boolean
@@ -80,7 +80,7 @@ export type StepAnimation<
   /** Milliseconds since the animation started. */
   duration: number
   /** An accumulation of frames since the animation started. */
-  current: Props
+  current: AnimatedProps<Element>
   /**
    * If multiple targets exist for the same animation, this is the
    * target index for the current `target`.
@@ -144,8 +144,8 @@ type OneOrMany<T> = T | readonly T[]
 
 export type AnimationsParam<
   Element extends AnyElement = any,
-  Props extends object = AnimatedProps<Element>
-> = OneOrMany<SpringAnimation<Element, Props>> | StepAnimationFn<Element, Props>
+  EventTarget extends AnyElement = Element
+> = OneOrMany<SpringAnimation<Element, EventTarget>> | StepAnimationFn<Element>
 
 export function animate(
   elements: OneOrMany<HTMLElement> | NodeListOf<HTMLElement>,

@@ -199,7 +199,7 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     }
     return this
   }
-  spring(animations: AnimationsParam<Element, any>) {
+  spring(animations: AnimationsParam<Element, ElementTarget<Element>>) {
     animate(this, animations as any)
     return this
   }

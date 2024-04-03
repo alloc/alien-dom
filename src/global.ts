@@ -1,8 +1,4 @@
-import {
-  AnimationsParam,
-  HTMLAnimatedProps,
-  SVGAnimatedProps,
-} from './addons/animate'
+import { AnimationsParam } from './addons/animate'
 import {
   AlienElement,
   AlienElementList,
@@ -51,7 +47,7 @@ declare global {
     readonly lastElementChild: HTMLElement | SVGElement | null
     readonly childNodes: AlienElementList
     spring(
-      animations: AnimationsParam<FromElementProxy<this>, HTMLAnimatedProps>
+      animations: AnimationsParam<FromElementProxy<this>, HTMLElement>
     ): this
   }
   interface SVGElement extends AlienElement<SVGElement> {
@@ -59,7 +55,7 @@ declare global {
     readonly lastElementChild: SVGElement | null
     readonly childNodes: AlienElementList<SVGElement>
     spring(
-      animations: AnimationsParam<FromElementProxy<this>, SVGAnimatedProps>
+      animations: AnimationsParam<FromElementProxy<this>, SVGElement>
     ): this
   }
   namespace JSX {
