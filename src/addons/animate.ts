@@ -33,7 +33,6 @@ import { AlienSelector } from './selectors'
 
 export type SpringAnimation<
   Element extends AnyElement = any,
-  EventTarget extends AnyElement = Element,
   Props extends object = AnimatedProps<Element>
 > = {
   to?: Props | Falsy
@@ -44,9 +43,9 @@ export type SpringAnimation<
   immediate?: boolean | { [K in keyof Props]?: boolean }
   dilate?: number
   anchor?: [number, number]
-  onStart?: (target: EventTarget) => void
-  onChange?: FrameCallback<EventTarget, Props>
-  onRest?: FrameCallback<EventTarget, Props>
+  onStart?: (target: Element) => void
+  onChange?: FrameCallback<Element, Props>
+  onRest?: FrameCallback<Element, Props>
 }
 
 export type SpringDelay = number | SpringDelayFn | Promise<unknown>
@@ -56,11 +55,11 @@ export type SpringDelayFn = (
 ) => Promise<unknown> | null | void
 
 export type FrameCallback<
-  EventTarget extends AnyElement,
-  Props extends object = AnimatedProps<EventTarget>
+  Element extends AnyElement,
+  Props extends object = AnimatedProps<Element>
 > = (
-  props: [EventTarget] extends [Any] ? any : Required<Props>,
-  target: EventTarget
+  props: [Element] extends [Any] ? any : Required<Props>,
+  target: Element
 ) => void
 
 export type StepAnimationFn<Element extends AnyElement = any> = (
@@ -142,10 +141,9 @@ type KeyArgument<T> = [T] extends [Any] ? any : keyof T
 
 type OneOrMany<T> = T | readonly T[]
 
-export type AnimationsParam<
-  Element extends AnyElement = any,
-  EventTarget extends AnyElement = Element
-> = OneOrMany<SpringAnimation<Element, EventTarget>> | StepAnimationFn<Element>
+export type AnimationsParam<Element extends AnyElement = any> =
+  | OneOrMany<SpringAnimation<Element>>
+  | StepAnimationFn<Element>
 
 export function animate(
   elements: OneOrMany<HTMLElement> | NodeListOf<HTMLElement>,

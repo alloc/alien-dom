@@ -46,17 +46,13 @@ declare global {
     readonly firstElementChild: HTMLElement | SVGElement | null
     readonly lastElementChild: HTMLElement | SVGElement | null
     readonly childNodes: AlienElementList
-    spring(
-      animations: AnimationsParam<FromElementProxy<this>, HTMLElement>
-    ): this
+    spring(animations: AnimationsParam<HTMLElement>): this
   }
   interface SVGElement extends AlienElement<SVGElement> {
     readonly firstElementChild: SVGElement | null
     readonly lastElementChild: SVGElement | null
     readonly childNodes: AlienElementList<SVGElement>
-    spring(
-      animations: AnimationsParam<FromElementProxy<this>, SVGElement>
-    ): this
+    spring(animations: AnimationsParam<SVGElement>): this
   }
   namespace JSX {
     type Element = JSXElement

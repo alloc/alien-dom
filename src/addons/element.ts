@@ -1,10 +1,6 @@
 import { AlienBoundEffect, AlienEffect, AlienEffects } from '../core/effects'
 import { observeAs } from '../functions/observeAs'
-import type {
-  AlienEventMethod,
-  AlienEventMethods,
-  AlienStyleMethods,
-} from '../global/element'
+import type { AlienEventMethods, AlienStyleMethods } from '../global/element'
 import type { AlienNodeList } from '../global/nodeList'
 import { applyProp } from '../internal/applyProp'
 import { canMatch } from '../internal/duck'
@@ -122,20 +118,18 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
 
     return iterable
   }
-  filter<SelectedElement extends AnyElement = FromElementProxy<this>>(
+  filter<SelectedElement extends AnyElement = Element>(
     selector: string
   ): AlienSelect<SelectedElement, this> | null {
     return this.matches(selector) ? (this as any) : null
   }
   replaceText(value: string): this
-  replaceText(
-    value: () => string
-  ): Disposable<AlienBoundEffect<FromElementProxy<this>>>
+  replaceText(value: () => string): Disposable<AlienBoundEffect<Element>>
   replaceText(value?: string | (() => string)) {
     if (typeof value == 'function') {
-      return observeAs(this as FromElementProxy<this>, target => {
+      return observeAs(this, target => {
         target.textContent = value()
-      })
+      }) as any
     } else {
       this.textContent = value!
     }
@@ -199,7 +193,7 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     }
     return this
   }
-  spring(animations: AnimationsParam<Element, ElementTarget<Element>>) {
+  spring(animations: AnimationsParam<Element>) {
     animate(this, animations as any)
     return this
   }
@@ -209,11 +203,6 @@ export interface AlienElement<Element extends AnyElement>
   extends AnyElement,
     AlienEventMethods<Element>,
     AlienStyleMethods<Element> {
-  onChange: AlienEventMethod<this>
-  onChangeCapture: AlienEventMethod<this>
-  oneChange: AlienEventMethod<this>
-  oneChangeCapture: AlienEventMethod<this>
-
   /**
    * Replace this node with its children.
    */
