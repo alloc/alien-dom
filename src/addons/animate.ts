@@ -1,6 +1,7 @@
-import { isBoolean, isFunction, isNumber, isPromise } from '@alloc/is'
+import { isBoolean, isFunction, isNumber, isPromise, isString } from '@alloc/is'
 import { Any, Falsy } from '@alloc/types'
 import { Color, mixColor, parseColor } from 'linear-color'
+import { isNode } from '../functions/typeChecking'
 import {
   applyAnimatedValue,
   deleteTimeline,
@@ -28,7 +29,7 @@ import {
 } from '../internal/types'
 import { keys, toArray } from '../internal/util'
 import { isSvgChild } from '../jsx-dom/svg-tags'
-import { $$, AlienSelector } from './selectors'
+import { AlienSelector } from './selectors'
 
 export type SpringAnimation<
   Element extends AnyElement = any,
@@ -165,7 +166,13 @@ export function animate(
   selector: AlienSelector | readonly AnyElement[],
   _animations: AnimationsParam<any>
 ) {
-  const targets = $$<HTMLElement>(selector)
+  const targets = (
+    isString(selector)
+      ? document.querySelectorAll(selector)
+      : isNode(selector)
+      ? [selector]
+      : selector
+  ) as DefaultElement[] | NodeListOf<DefaultElement>
 
   if (isFunction(_animations)) {
     const step = _animations
@@ -317,7 +324,7 @@ function ensureAnimatedElement(target: DefaultElement): AnimatedElement {
 
 function addTimelineTimeout(
   timelines: Record<string, SpringTimeline> | undefined,
-  target: HTMLElement,
+  target: DefaultElement,
   state: AnimatedElement,
   animation: SpringAnimation,
   spring: SpringResolver,
@@ -340,7 +347,7 @@ function addTimelineTimeout(
 
 function addTimelinePromise(
   timelines: Record<string, SpringTimeline> | undefined,
-  target: HTMLElement,
+  target: DefaultElement,
   state: AnimatedElement,
   animation: SpringAnimation,
   spring: SpringResolver,
@@ -373,7 +380,7 @@ function addTimelinePromise(
 }
 
 function applyAnimation(
-  target: HTMLElement,
+  target: DefaultElement,
   state: AnimatedElement,
   animation: SpringAnimation,
   spring: SpringResolver,
@@ -432,7 +439,7 @@ function applyAnimation(
 }
 
 function updateAnimatedNode(
-  target: HTMLElement,
+  target: DefaultElement,
   svgMode: boolean,
   key: string,
   to: any,
