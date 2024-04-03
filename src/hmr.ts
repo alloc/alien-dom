@@ -16,6 +16,7 @@ type HotComponent = [
 ]
 
 const componentRegistry: { [key: string]: HotComponent } = {}
+const usedBeforeRegister = new WeakSet<FunctionComponent>()
 
 export function hmrRegister(
   key: string,
@@ -23,7 +24,7 @@ export function hmrRegister(
   hash: string,
   deps: any[]
 ) {
-  if (kAlienComponentKey.in(tag)) {
+  if (usedBeforeRegister.has(tag)) {
     const name = (tag as any).displayName || tag.name || '<anonymous>'
     return console.error(
       `[HMR] Component "${name}" cannot be immediately used within the same module it was defined in. Either use "queueMicrotask" or import the component from another module.`
@@ -56,6 +57,7 @@ setComponentRenderHook(component => {
   // updates, which means it's either not a top-level component or it was
   // immediately used in the same module it was declared in.
   if (!kAlienComponentKey.in(component.tag)) {
+    usedBeforeRegister.add(component.tag)
     return component.tag
   }
 
