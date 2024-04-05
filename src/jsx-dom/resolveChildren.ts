@@ -1,5 +1,6 @@
 import { isFunction } from '@alloc/is'
 import { isRef } from '../core/observable'
+import { isChildrenFragment } from '../hooks/useChildren'
 import { AlienContextMap, getContext } from '../internal/context'
 import { isArrayLike, isFragment, isNode } from '../internal/duck'
 import { fromElementThunk } from '../internal/fromElementThunk'
@@ -45,9 +46,13 @@ export function resolveChildren(
   let children: ArrayLike<JSX.ChildrenProp | Node> | undefined
 
   if (child) {
-    // If a child fragment is being updated, we need to preserve the deferred node
-    // for the fragment instead of dissolving it into its children.
-    if (isFragment(child as Node)) {
+    // Note that a ChildrenFragment never has a deferred node, since its sole
+    // purpose for existing is to materialize any deferred children given to it.
+    if (isChildrenFragment(child)) {
+      child = child.fragment
+    } else if (isFragment(child as Node)) {
+      // Preserve the deferred node for the fragment instead of dissolving it
+      // into its children.
       const component = lastValue(currentComponent)
       if (component) {
         const key = kAlienElementKey(child)

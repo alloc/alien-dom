@@ -1,4 +1,5 @@
 import type { ReadonlyRef } from '../core/observable'
+import type { ChildrenFragment } from '../hooks/useChildren'
 import type { AnyElement } from '../internal/types'
 import type { AlienNode, ShadowRootNode } from '../jsx-dom/node'
 import type { Attributes } from './attr'
@@ -35,6 +36,7 @@ export declare namespace JSX {
     | HTMLCollection
     | ChildNode
     | DocumentFragment
+    | ChildrenFragment
     | AlienNode
     | string
     | number
@@ -57,6 +59,7 @@ export declare namespace JSX {
     | HTMLElement
     | SVGElement
     | DocumentFragment
+    | ChildrenFragment
     | ShadowRootNode
     | AlienNode
     | Comment
