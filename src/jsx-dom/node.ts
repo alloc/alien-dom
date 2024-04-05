@@ -1,18 +1,16 @@
 import { isArray, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
-import { ContextStore } from '../core/context'
 import { createOnceEffect } from '../core/effects'
-import { ReadonlyRef, isRef, ref } from '../core/observable'
-import { attachRef } from '../functions/attachRef'
+import { ReadonlyRef, isRef } from '../core/observable'
 import {
   applyChildrenProp,
   applyProp,
   applyRefProp,
 } from '../internal/applyProp'
 import { AlienComponent } from '../internal/component'
-import { AlienContextMap, getContext, setContext } from '../internal/context'
+import { AlienContextMap, setContext } from '../internal/context'
 import { FragmentKeys, FragmentNodes } from '../internal/fragment'
-import { currentComponent, currentEffects } from '../internal/global'
+import { currentEffects } from '../internal/global'
 import { HostProps } from '../internal/hostProps'
 import {
   kAlienElementKey,
@@ -220,24 +218,6 @@ export function createCompositeNode(
   if (kAlienStateless.in(tag)) {
     return tag(initialProps) as ChildNode | DocumentFragment
   }
-
-  const props: any = { ...initialProps }
-  const context = new ContextStore(getContext())
-
-  for (const key in initialProps) {
-    const initialValue = initialProps[key]
-    attachRef(props, key, ref(initialValue))
-  }
-
-  const self = new AlienComponent(
-    tag,
-    props,
-    context,
-    lastValue(currentComponent)
-  )
-
-  // Trigger the initial render.
-  self.update()
-
+  const self = new AlienComponent(tag, initialProps)
   return self.rootNode!
 }

@@ -22,7 +22,7 @@ import { morph } from '../morphdom/morph'
 import { morphComposite } from '../morphdom/morphComposite'
 import { morphFragment } from '../morphdom/morphFragment'
 import { FunctionComponent, JSX } from '../types'
-import { forwardContext } from './context'
+import { forwardContext, getContext } from './context'
 import { deepEquals } from './deepEquals'
 import { isComment, isElement, isFragment, isNode } from './duck'
 import { updateParentFragment, wrapWithFragment } from './fragment'
@@ -47,17 +47,23 @@ import { compareNodeWithTag, lastValue, noop } from './util'
 
 let componentRenderHook = (component: AlienComponent) => component.tag
 
-export type ElementTags = Map<FunctionComponent, AlienComponent<any>>
+export type ElementTags = Map<FunctionComponent<any>, AlienComponent<any>>
 export type ElementRefs = Map<JSX.ElementKey, ChildNode | DocumentFragment>
 
 /** Internal state for a component instance. */
 export class AlienComponent<Props extends object = any> extends Observer {
+  readonly parent: AlienComponent | null = lastValue(currentComponent)
+  readonly context = new ContextStore(getContext())
+  readonly props: Props
+
+  hooks: any[] = []
+  nextHookIndex = 0
+
   rootNode: ChildNode | DocumentFragment | null = null
   rootNodeCallbacks: Set<(node: ChildNode | DocumentFragment) => void> | null =
     null
   rootKey: JSX.ElementKey | undefined = undefined
-  hooks: any[] = []
-  nextHookIndex = 0
+
   /** Deferred nodes (by key) created in the current render pass. */
   updates: Map<JSX.ElementKey, AnyDeferredNode> | null = null
   /** Stable references to the nodes that are mounted. */
@@ -73,13 +79,16 @@ export class AlienComponent<Props extends object = any> extends Observer {
   /** Values memoized in the current render pass. */
   newMemos: Map<any, any> | null = null
 
-  constructor(
-    readonly tag: FunctionComponent,
-    readonly props: Props,
-    readonly context: ContextStore,
-    readonly parent: AlienComponent | null
-  ) {
+  constructor(readonly tag: FunctionComponent<Props>, initialProps: Props) {
     super()
+
+    this.props = { ...initialProps }
+    for (const key in initialProps) {
+      const initialValue = initialProps[key]
+      attachRef(this.props, key, ref(initialValue))
+    }
+
+    this.update()
   }
 
   get ownerDocument() {
