@@ -13,7 +13,7 @@ import { useState } from './useState'
 
 export function useSpring<Element extends DefaultElement>(
   element: Element,
-  animations: SpringAnimation<Element> | SpringAnimation<Element>[],
+  animations: SpringAnimation<Element> | readonly SpringAnimation<Element>[],
   shouldRun?: boolean | null
 ) {
   const { to, from } = Array.isArray(animations)
