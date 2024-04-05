@@ -2,13 +2,21 @@
 import { nebuSelfUpdating } from '@alien-dom/nebu'
 import * as fs from 'fs/promises'
 import { nebu } from 'nebu'
+import * as path from 'path'
 import nodeResolve from 'resolve'
 import * as sucrase from 'sucrase'
 import * as tsconfck from 'tsconfck'
+import { createMatchPath } from 'tsconfig-paths'
 
 const tsRegex = /\.[mc]?ts$/
 const jsxRegex = /\.(j|t)sx$/
 const urlRegex = /^\w+:\/\//
+
+const extensions = '.js .jsx .ts .tsx .cts .mts .cjs .mjs'.split(' ')
+
+const tsconfckOptions: tsconfck.TSConfckParseOptions = {
+  cache: new Map(),
+}
 
 export const resolve: resolve = async (url, context, nextResolve) => {
   try {
@@ -23,13 +31,38 @@ export const resolve: resolve = async (url, context, nextResolve) => {
     }
   }
 
-  const specifier = urlRegex.test(url) ? new URL(url).pathname : url
+  let specifier = urlRegex.test(url) ? new URL(url).pathname : url
+
   const fromDir = context.parentURL
     ? new URL('.', context.parentURL).pathname
     : process.cwd()
 
+  let baseUrl: string | undefined
+  let paths: Record<string, string[]> | undefined
+  try {
+    const { tsconfig, tsconfigFile } = await tsconfck.parse(
+      context.parentURL
+        ? new URL(context.parentURL).pathname
+        : path.resolve('index.ts'),
+      tsconfckOptions
+    )
+    // One of (or both of) `paths` and `baseUrl` must exist.
+    paths = tsconfig.compilerOptions.paths
+    baseUrl =
+      tsconfig.compilerOptions.baseUrl ?? (paths && path.dirname(tsconfigFile))
+    paths ??= baseUrl ? {} : undefined
+  } catch {}
+
+  if (baseUrl && paths) {
+    const matchPath = createMatchPath(baseUrl, paths)
+    const mapping = matchPath(specifier, undefined, undefined, extensions)
+    if (mapping) {
+      specifier = mapping
+    }
+  }
+
   const result = nodeResolve.sync(specifier, {
-    extensions: ['.js', '.jsx', '.ts', '.tsx', '.cts', '.mts', '.cjs', '.mjs'],
+    extensions,
     basedir: fromDir,
     preserveSymlinks: false,
   })
@@ -88,7 +121,7 @@ export const load: load = async (url, context, nextLoad) => {
     code = nebuResult.js
 
     try {
-      const { tsconfig } = await tsconfck.parse(filePath)
+      const { tsconfig } = await tsconfck.parse(filePath, tsconfckOptions)
       jsxRuntime = tsconfig.compilerOptions.jsx
       jsxImportSource = tsconfig.compilerOptions.jsxImportSource
       if (jsxRuntime === 'react-jsx' || jsxRuntime === 'react-jsxdev') {

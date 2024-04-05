@@ -17,7 +17,8 @@
     "nebu": "^2.4.2",
     "resolve": "^1.22.4",
     "sucrase": "^3.34.0",
-    "tsconfck": "^2.1.2"
+    "tsconfck": "^2.1.2",
+    "tsconfig-paths": "^4.2.0"
   },
   "devDependencies": {
     "@types/node": "^18.15.11",
