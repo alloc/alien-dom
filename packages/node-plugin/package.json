@@ -9,6 +9,11 @@
     "dev": "tsup-node src/index.ts --format esm --dts --watch --sourcemap",
     "prepublishOnly": "rimraf dist && tsup-node src/index.ts --format esm --dts"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alloc/alien-dom.git",
+    "directory": "packages/node-plugin"
+  },
   "files": [
     "dist"
   ],
