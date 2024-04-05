@@ -12,6 +12,7 @@ import {
 import { attachRef } from '../functions/attachRef'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { unmount } from '../functions/unmount'
+import { isChildrenFragment } from '../hooks'
 import {
   AnyDeferredNode,
   evaluateDeferredNode,
@@ -203,6 +204,10 @@ export class AlienComponent<Props extends object = any> extends Observer {
       // TODO: support ShadowRoot component roots
       if (isShadowRoot(newRootNode)) {
         throw Error('ShadowRoot cannot be returned by component')
+      }
+
+      if (isChildrenFragment(newRootNode)) {
+        newRootNode = newRootNode.fragment
       }
 
       // When this is true, a comment node will be used as a placeholder, so
