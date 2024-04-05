@@ -116,6 +116,10 @@ export const load: load = async (url, context, nextLoad) => {
       sourceMap: 'inline',
       sourceMapHiRes: true,
       filename: filePath,
+      state: {
+        file: '/' + path.relative(process.cwd(), filePath),
+        code,
+      },
     })
 
     code = nebuResult.js
