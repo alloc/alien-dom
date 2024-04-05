@@ -1,9 +1,6 @@
+import { kAlienNodeType, kShadowRootNodeType } from '../internal/constants'
 import { kAlienStateless } from '../internal/symbols'
-import {
-  kAlienNodeType,
-  kShadowRootNodeType,
-  type ShadowRootNode,
-} from '../jsx-dom/node'
+import type { ShadowRootNode } from '../jsx-dom/node'
 import { resolveChildren } from '../jsx-dom/resolveChildren'
 import type { JSX } from '../types/jsx'
 
