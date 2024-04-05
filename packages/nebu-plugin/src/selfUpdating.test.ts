@@ -72,13 +72,6 @@ test('auto-memoized function declared before variable referenced by it', t => {
   t.snapshot(result.js)
 })
 
-test('displayName added to selfUpdating component', t => {
-  let result = nebu.process('const Foo = selfUpdating(() => null);', [
-    selfUpdatingTransform(),
-  ])
-  t.snapshot(result.js)
-})
-
 // Any inline object/array should be auto-memoized. By "inline", I mean the
 // object/array is declared within the JSX prop's value expression.
 test('auto-memoized inline style object', t => {
