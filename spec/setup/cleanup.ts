@@ -1,5 +1,5 @@
 import test from 'ava'
-import { unmount } from '../../src/functions/unmount'
+import { unmount } from 'functions/unmount'
 
 test.afterEach(() => {
   document.body.childNodes.forEach(child => {

@@ -1,4 +1,5 @@
 packages:
   - './'
+  - './spec'
   - './demos'
   - './packages/*'

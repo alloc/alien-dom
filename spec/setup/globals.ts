@@ -3,9 +3,6 @@ import { DocumentFragment, Element, parseHTML } from 'linkedom'
 
 globalThis.DEV = true
 
-// TSX seems to emit React.createElement no matter what :|
-globalThis.React = {}
-
 const window = parseHTML('<html><body></body></html>')
 window.Element = Element
 

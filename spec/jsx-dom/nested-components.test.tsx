@@ -1,6 +1,6 @@
 import test from 'ava'
+import { ref } from 'core/observable'
 import { flushMicroTasks } from 'flush-microtasks'
-import { ref } from '../../src/observable'
 import '../setup/cleanup'
 
 let app: HTMLElement

@@ -57,8 +57,7 @@
   },
   "ava": {
     "require": [
-      "./spec/setup/globals.ts",
-      "./spec/setup/jsx.ts"
+      "./spec/setup/globals.ts"
     ],
     "files": [
       "src/**/*.test.*",

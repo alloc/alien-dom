@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "flush-microtasks": "^1.0.1",
+    "linkedom": "^0.16.11",
+    "nanospy": "^1.0.0"
+  }
+}
