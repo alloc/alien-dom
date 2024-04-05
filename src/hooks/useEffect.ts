@@ -88,9 +88,7 @@ class UseEffect {
 }
 
 /**
- * Useful for hooks that wrap `useEffect`. It ensures the `EffectContext` is
- * only created if the given `effect` needs it, while allowing the wrapper hook
- * to do its thing.
+ * Useful for hooks that wrap `useEffect`. It takes care of passing along the `EffectContext` to the wrapped effect.
  *
  * 🪝 This hook adds 2 to the hook offset.
  */
@@ -99,11 +97,5 @@ export function useWrappedEffect(
   wrapper: (effect: () => EffectResult) => EffectResult,
   deps: readonly any[]
 ): void {
-  useEffect(
-    effect &&
-      (effect.length > 0
-        ? context => wrapper(() => effect(context))
-        : () => wrapper(effect as () => EffectResult)),
-    deps
-  )
+  useEffect(effect && (context => wrapper(() => effect(context))), deps)
 }
