@@ -294,7 +294,7 @@ export default function (
                 componentName = nearestVariable.id.name
               }
             }
-            if (componentName) {
+            if (componentName && !nearestStmt.isReturnStatement()) {
               nearestStmt.after(
                 ` ${componentName}.displayName = "${componentName}";`
               )
