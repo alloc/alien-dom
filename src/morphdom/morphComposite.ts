@@ -1,9 +1,8 @@
 import { kAlienElementTags } from '../internal/symbols'
-import { DefaultElement } from '../internal/types'
 import { DeferredCompositeNode, evaluateDeferredNode } from '../jsx-dom/node'
 
-export function morphComposite(
-  fromParentNode: DefaultElement | DocumentFragment,
+export function morphComposite<T extends Node>(
+  fromParentNode: T,
   toParentNode: DeferredCompositeNode
 ) {
   const tags = kAlienElementTags(fromParentNode)

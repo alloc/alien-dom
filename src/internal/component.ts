@@ -224,9 +224,9 @@ export class AlienComponent<Props extends object = any> extends Observer {
             this.rootKey === kAlienElementKey(newRootNode) &&
             compareNodeWithTag(rootNode, newRootNode.tag)
           ) {
-            if (isFragment(rootNode)) {
+            if (isFunction(newRootNode.tag)) {
               if (newRootNode.tag === Fragment) {
-                morphFragment(rootNode, newRootNode, this)
+                morphFragment(rootNode as any, newRootNode, this)
               } else {
                 morphComposite(rootNode, newRootNode as any)
               }
