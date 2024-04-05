@@ -125,3 +125,10 @@ export function endOfFragment(fragment: DocumentFragment) {
     }
   }
 }
+
+export function fragmentToChildNodes<T extends ChildNode = ChildNode>(
+  fragment: DocumentFragment,
+  match: (child: ChildNode | undefined) => child is T = Boolean as any
+) {
+  return kAlienFragmentNodes(fragment)!.filter(match)
+}
