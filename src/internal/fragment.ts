@@ -22,7 +22,9 @@ export type FragmentNodes = [Comment, ...(ChildNode | undefined)[]]
 export type FragmentKeys = (JSX.ElementKey | undefined)[]
 
 export function wrapWithFragment(
-  childrenProp: JSX.ChildrenProp
+  childrenProp: JSX.ChildrenProp,
+  isDeferred: false,
+  context?: AlienContextMap
 ): DocumentFragment
 
 export function wrapWithFragment(
@@ -48,7 +50,9 @@ export function wrapWithFragment(
     undefined,
     context,
     (childNode, childKey) => {
-      isDeferred ||= isDeferredChild(childNode)
+      if (isDeferred == null && isDeferredChild(childNode)) {
+        isDeferred = true
+      }
       childKeys.push(childKey)
     }
   )
