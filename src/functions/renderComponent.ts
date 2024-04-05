@@ -1,8 +1,9 @@
 import { AlienComponent } from '../internal/component'
-import { endOfFragment } from '../internal/fragment'
-import { kAlienFragmentNodes, kAlienStateless } from '../internal/symbols'
+import { endOfFragment, fragmentToChildNodes } from '../internal/fragment'
+import { kAlienStateless } from '../internal/symbols'
+import { findFirstElement, findLastElement } from '../internal/traversal'
 import { FunctionComponent } from '../types'
-import { isElement, isFragment } from './typeChecking'
+import { isFragment } from './typeChecking'
 
 export interface ComponentNode<Props extends object = any> {
   get tag(): FunctionComponent<Props>
@@ -49,11 +50,7 @@ const Component = class ComponentNode<
   Props extends object = any
 > extends AlienComponent<Props> {
   get firstElementChild(): Element | null {
-    let node = this.firstChild
-    while (node && !isElement(node)) {
-      node = node.nextSibling
-    }
-    return node
+    return findFirstElement(this.firstChild, this.lastChild)
   }
 
   get lastChild(): ChildNode | null {
@@ -65,17 +62,13 @@ const Component = class ComponentNode<
   }
 
   get lastElementChild(): Element | null {
-    let node = this.lastChild
-    while (node && !isElement(node)) {
-      node = node.previousSibling
-    }
-    return node
+    return findLastElement(this.lastChild, this.firstChild)
   }
 
   get childNodes(): readonly ChildNode[] {
     const { rootNode } = this
     if (rootNode && isFragment(rootNode)) {
-      return kAlienFragmentNodes(rootNode)!.filter(Boolean) as ChildNode[]
+      return fragmentToChildNodes(rootNode)
     }
     return rootNode ? [rootNode] : []
   }
