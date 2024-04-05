@@ -1,4 +1,4 @@
-import { Refs, createRefs } from '../internal/createRefs'
+import { createRefs, type Refs } from '../internal/createRefs'
 import { useState } from './useState'
 
 export type { Refs }
