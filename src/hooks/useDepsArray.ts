@@ -1,6 +1,9 @@
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { expectCurrentComponent } from '../internal/global'
 
+/**
+ * 🪝 This hook adds 1 to the hook offset.
+ */
 export function useDepsArray(deps: readonly any[] | undefined) {
   const component = expectCurrentComponent()
   const index = component.nextHookIndex++

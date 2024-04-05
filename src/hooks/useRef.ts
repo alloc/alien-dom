@@ -2,6 +2,9 @@ import { Ref, ref } from '../core/observable'
 import { expectCurrentComponent } from '../internal/global'
 import { useDepsArray } from './useDepsArray'
 
+/**
+ * 🪝 This hook adds 2 to the hook offset.
+ */
 export function useRef<T>(): Ref<T | undefined> &
   [value: T | undefined, set: Ref<T | undefined>[1]]
 
