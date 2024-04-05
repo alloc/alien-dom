@@ -8,6 +8,11 @@ import {
   applyRefProp,
 } from '../internal/applyProp'
 import { AlienComponent } from '../internal/component'
+import {
+  kAlienNodeType,
+  kDeferredNodeType,
+  kShadowRootNodeType,
+} from '../internal/constants'
 import { AlienContextMap, setContext } from '../internal/context'
 import { FragmentKeys, FragmentNodes } from '../internal/fragment'
 import { currentEffects } from '../internal/global'
@@ -32,12 +37,6 @@ export type AlienNode =
   | ShadowRootNode
   | DeferredHostNode
   | DeferredCompositeNode
-
-/** Special nodes are distinguished by a numeric property of this symbol. */
-export const kAlienNodeType = Symbol.for('alien:nodeType')
-
-export const kShadowRootNodeType = 99
-export const kDeferredNodeType = 98
 
 export interface ShadowRootNode {
   [kAlienNodeType]: typeof kShadowRootNodeType
@@ -80,7 +79,7 @@ export interface DeferredCompositeNode extends DeferredNode {
 export type AnyDeferredNode = DeferredHostNode | DeferredCompositeNode
 
 export const isDeferredNode = (node: any): node is AnyDeferredNode =>
-  !!node && (node as any)[kAlienNodeType] === kDeferredNodeType
+  !!node && node[kAlienNodeType] === kDeferredNodeType
 
 export const isDeferredHostNode = (
   node: DeferredNode
