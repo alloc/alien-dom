@@ -18,7 +18,6 @@ export * from './functions/restoreNodeReferences'
 export * from './functions/toElements'
 export * from './functions/typeChecking'
 export * from './functions/unmount'
-export * from './functions/updateProps'
 
 /// Addons
 export * from './addons/animate'
