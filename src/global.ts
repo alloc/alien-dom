@@ -23,9 +23,8 @@ type JSXRefProp<Element extends AnyElement = AnyElement> = JSX.RefProp<Element>
 type JSXChild = JSX.Child
 type JSXChildren = JSX.Children
 type JSXChildrenProp = JSX.ChildrenProp
-type JSXElementOption = JSX.ElementOption
+type JSXElementLike = JSX.ElementLike
 type JSXElementProp = JSX.ElementProp
-type JSXElementsOption = JSX.ElementsOption
 type JSXElementsProp = JSX.ElementsProp
 type JSXElementType = JSX.ElementType
 type JSXIntrinsicAttributes = JSX.IntrinsicAttributes
@@ -63,9 +62,8 @@ declare global {
     type Child = JSXChild
     type Children = JSXChildren
     type ChildrenProp = JSXChildrenProp
-    type ElementOption = JSXElementOption
+    type ElementLike = JSXElementLike
     type ElementProp = JSXElementProp
-    type ElementsOption = JSXElementsOption
     type ElementsProp = JSXElementsProp
     type ElementType = JSXElementType
     type IntrinsicAttributes = JSXIntrinsicAttributes
