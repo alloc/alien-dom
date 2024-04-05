@@ -1,6 +1,6 @@
+import { useRef } from '../hooks'
 import { forwardContext, getContext, setContext } from '../internal/context'
 import { currentComponent } from '../internal/global'
-import { kAlienStateless } from '../internal/symbols'
 import { lastValue } from '../internal/util'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import type { JSX } from '../types/jsx'
@@ -49,7 +49,9 @@ export function createContext<T>(initial?: T) {
       if (isForwardedContext) {
         restoreContext = forwardContext(initial)
       } else {
-        oldValue = setContext(Provider as any, ref(value))
+        const ref = useRef(undefined as T | undefined)
+        oldValue = setContext(Provider as any, ref)
+        ref.value = value
       }
 
       try {
@@ -64,8 +66,6 @@ export function createContext<T>(initial?: T) {
     }
     return null
   }
-
-  kAlienStateless(Provider, true)
 
   Provider.get = (): T => {
     if (isForwardedContext) {
