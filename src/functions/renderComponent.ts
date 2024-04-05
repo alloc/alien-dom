@@ -1,6 +1,8 @@
 import { AlienComponent } from '../internal/component'
-import { kAlienStateless } from '../internal/symbols'
+import { endOfFragment } from '../internal/fragment'
+import { kAlienFragmentNodes, kAlienStateless } from '../internal/symbols'
 import { FunctionComponent } from '../types'
+import { isElement, isFragment } from './typeChecking'
 
 export interface ComponentNode<Props extends object = any> {
   get tag(): FunctionComponent<Props>
@@ -8,7 +10,9 @@ export interface ComponentNode<Props extends object = any> {
 
   get rootNode(): ChildNode | DocumentFragment
   get firstChild(): ChildNode
+  get firstElementChild(): JSX.Element | null
   get lastChild(): ChildNode
+  get lastElementChild(): JSX.Element | null
   get childNodes(): readonly ChildNode[]
   get ownerDocument(): Document | null
 
@@ -32,11 +36,47 @@ export interface ComponentNode<Props extends object = any> {
  * even if it gets replaced.
  */
 export function renderComponent<Props extends object = {}>(
-  component: FunctionComponent<Props>,
+  tag: FunctionComponent<Props>,
   initialProps = {} as Props
 ): ComponentNode<Props> {
-  if (kAlienStateless(component)) {
+  if (kAlienStateless(tag)) {
     throw Error('renderComponent doesn’t work with stateless components.')
   }
-  return new AlienComponent(component, initialProps) as ComponentNode
+  return new Component(tag, initialProps) as any
+}
+
+const Component = class ComponentNode<
+  Props extends object = any
+> extends AlienComponent<Props> {
+  get firstElementChild(): Element | null {
+    let node = this.firstChild
+    while (node && !isElement(node)) {
+      node = node.nextSibling
+    }
+    return node
+  }
+
+  get lastChild(): ChildNode | null {
+    const { rootNode } = this
+    if (rootNode && isFragment(rootNode)) {
+      return endOfFragment(rootNode)!
+    }
+    return rootNode
+  }
+
+  get lastElementChild(): Element | null {
+    let node = this.lastChild
+    while (node && !isElement(node)) {
+      node = node.previousSibling
+    }
+    return node
+  }
+
+  get childNodes(): readonly ChildNode[] {
+    const { rootNode } = this
+    if (rootNode && isFragment(rootNode)) {
+      return kAlienFragmentNodes(rootNode)!.filter(Boolean) as ChildNode[]
+    }
+    return rootNode ? [rootNode] : []
+  }
 }

@@ -25,11 +25,7 @@ import { FunctionComponent, JSX } from '../types'
 import { forwardContext, getContext } from './context'
 import { deepEquals } from './deepEquals'
 import { isComment, isElement, isFragment, isNode } from './duck'
-import {
-  endOfFragment,
-  updateParentFragment,
-  wrapWithFragment,
-} from './fragment'
+import { updateParentFragment, wrapWithFragment } from './fragment'
 import { fromElementThunk } from './fromElementThunk'
 import {
   currentComponent,
@@ -95,10 +91,6 @@ export class AlienComponent<Props extends object = any> extends Observer {
     this.update()
   }
 
-  get ownerDocument() {
-    return this.firstChild?.ownerDocument
-  }
-
   get firstChild(): ChildNode | null {
     const { rootNode } = this
     if (rootNode && isFragment(rootNode)) {
@@ -107,20 +99,8 @@ export class AlienComponent<Props extends object = any> extends Observer {
     return rootNode
   }
 
-  get lastChild(): ChildNode | null {
-    const { rootNode } = this
-    if (rootNode && isFragment(rootNode)) {
-      return endOfFragment(rootNode)!
-    }
-    return rootNode
-  }
-
-  get childNodes(): readonly ChildNode[] {
-    const { rootNode } = this
-    if (rootNode && isFragment(rootNode)) {
-      return kAlienFragmentNodes(rootNode)!.filter(Boolean) as ChildNode[]
-    }
-    return rootNode ? [rootNode] : []
+  get ownerDocument() {
+    return this.firstChild?.ownerDocument
   }
 
   patchProps(newProps: Partial<Props>) {
