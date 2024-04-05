@@ -50,8 +50,10 @@ export declare namespace JSX {
     children: ChildrenProp
   }
 
-  /** The result of a `JSX.ElementProp` being passed into `fromElementProp` */
-  type ElementOption =
+  /**
+   * This type represents a valid component result (except for null).
+   */
+  type ElementLike =
     | HTMLElement
     | SVGElement
     | DocumentFragment
@@ -60,30 +62,22 @@ export declare namespace JSX {
     | Comment
 
   /**
-   * If defining the type of a component prop that can be a JSX element, you
-   * should use this type instead of `JSX.Element` or `JSX.ElementOption` or
-   * else you'll be surprised when trying to use the element without passing it
-   * into `fromElementProp` first.
+   * Use this type if your component has a prop that can be a single JSX
+   * element. Your component should call `useChildren` on this prop to get the
+   * materialized DOM node.
    */
-  type ElementProp = Thunkable<ElementOption>
+  type ElementProp = Thunkable<ElementLike>
 
   /**
-   * The result of a `JSX.ElementsProp` (note the plurality) being passed into
-   * the `fromElementProp` function.
+   * Use this type if your component has a prop that can be a single JSX element
+   * or an array of JSX elements. Your component should call `useChildren` on
+   * this prop to get the materialized DOM nodes.
    */
-  type ElementsOption = ElementOption | ElementOption[]
-
-  /**
-   * If defining the type of a component prop that can be one or many JSX
-   * elements, you should use this type instead of `JSX.ElementsOption` or
-   * you'll be surprised when trying to use the element without passing it into
-   * `fromElementProp` first.
-   */
-  type ElementsProp = Thunkable<ElementsOption>
+  type ElementsProp = Thunkable<ElementLike | ElementLike[]>
 
   type ElementType =
     | keyof IntrinsicElements
-    | ((props: any) => ElementOption | null)
+    | ((props: any) => ElementLike | null)
 
   type ElementAttributes<T> = keyof IntrinsicElements extends infer TagName
     ? TagName extends keyof IntrinsicElements

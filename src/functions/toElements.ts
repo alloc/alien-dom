@@ -5,7 +5,7 @@ import { AlienNode, isShadowRoot } from '../jsx-dom/node'
 import type { JSX } from '../types'
 
 export function toElements<Element extends DefaultElement>(
-  node: Exclude<JSX.ElementOption, AlienNode>
+  node: Exclude<JSX.ElementLike, AlienNode>
 ): Element[] {
   if (!node || isShadowRoot(node)) {
     return []
