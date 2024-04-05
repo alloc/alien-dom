@@ -43,11 +43,11 @@ export type TransitionAnimation =
   | SpringAnimation<JSX.Element>
   | SpringAnimation<JSX.Element>[]
   | TransitionDependency
-  | Falsy
 
 export type TransitionProp<Id, Data = {}> =
-  | ((data: TransitionData<Id> & Data) => TransitionAnimation)
+  | ((data: TransitionData<Id> & Data) => TransitionAnimation | Falsy)
   | TransitionAnimation
+  | Falsy
 
 export type TransitionProps<Id> = {
   /** The unique identifier for the current entered element. */
