@@ -15,7 +15,7 @@ const urlRegex = /^\w+:\/\//
 const extensions = '.js .jsx .ts .tsx .cts .mts .cjs .mjs'.split(' ')
 
 const tsconfckOptions: tsconfck.TSConfckParseOptions = {
-  cache: new Map(),
+  cache: new tsconfck.TSConfckCache(),
 }
 
 export const resolve: resolve = async (url, context, nextResolve) => {
