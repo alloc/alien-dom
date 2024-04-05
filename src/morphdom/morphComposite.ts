@@ -9,7 +9,7 @@ export function morphComposite<T extends Node>(
   const childComponent = tags?.get(toParentNode.tag)
 
   if (childComponent) {
-    childComponent.updateProps(toParentNode.props)
+    childComponent.replaceProps(toParentNode.props)
     toParentNode.context?.forEach((ref, key) => {
       const targetRef = childComponent.context.get(key)
       if (targetRef) {

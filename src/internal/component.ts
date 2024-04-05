@@ -93,7 +93,7 @@ export class AlienComponent<Props extends object = any> extends Observer {
     return rootNode.ownerDocument
   }
 
-  updateProps(newProps: Partial<Props>) {
+  patchProps(newProps: Partial<Props>) {
     let newPropAdded = false
     for (const key in newProps) {
       const newValue = newProps[key]
@@ -109,6 +109,15 @@ export class AlienComponent<Props extends object = any> extends Observer {
     if (newPropAdded) {
       this.scheduleUpdate()
     }
+  }
+
+  replaceProps(newProps: Props) {
+    for (const key in this.props) {
+      if (!newProps.hasOwnProperty(key)) {
+        this.props[key] = undefined as any
+      }
+    }
+    this.patchProps(newProps)
   }
 
   truncate(length: number) {
