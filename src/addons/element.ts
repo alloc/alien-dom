@@ -150,14 +150,14 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     return this
   }
   hasClass(name: string) {
-    return this.classList.contains(name)
+    return name.split(/\s+/).some(name => this.classList.contains(name))
   }
   addClass(name: string) {
-    this.classList.add(name)
+    name.split(/\s+/).forEach(name => this.classList.add(name))
     return this
   }
   removeClass(name: string) {
-    this.classList.remove(name)
+    name.split(/\s+/).forEach(name => this.classList.remove(name))
     return this
   }
   toggleClass(name: string, value?: boolean) {
