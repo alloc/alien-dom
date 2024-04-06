@@ -1,3 +1,4 @@
+import { isFunction } from '@alloc/is'
 import { AlienBoundEffect, AlienEffect, AlienEffects } from '../core/effects'
 import { observeAs } from '../functions/observeAs'
 import type { AlienEventMethods, AlienStyleMethods } from '../global/element'
@@ -158,6 +159,16 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
   }
   removeClass(name: string) {
     name.split(/\s+/).forEach(name => this.classList.remove(name))
+    return this
+  }
+  removeMatchingClasses(pattern: RegExp | ((name: string) => boolean | void)) {
+    const test = isFunction(pattern) ? pattern : pattern.test.bind(pattern)
+    for (let i = 0; i < this.classList.length; i++) {
+      const token = this.classList.item(i)!
+      if (test(token)) {
+        this.classList.remove(token)
+      }
+    }
     return this
   }
   toggleClass(name: string, value?: boolean) {
