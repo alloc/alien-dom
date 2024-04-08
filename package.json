@@ -1,0 +1,21 @@
+{
+  "name": "docs-site",
+  "version": "1.0.0",
+  "description": "Documentation site powered by Astro and React",
+  "main": "index.js",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/react": "^1.2.2",
+    "astro": "^1.9.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.26",
+    "@types/react-dom": "^18.0.10"
+  }
+}

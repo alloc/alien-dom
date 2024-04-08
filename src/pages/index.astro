@@ -1,0 +1,19 @@
+---
+import { getMarkdownPosts } from '../utils/markdown';
+
+const posts = await getMarkdownPosts();
+---
+
+<html>
+  <head>
+    <title>Documentation Site</title>
+  </head>
+  <body>
+    <h1>Documentation</h1>
+    <ul>
+      {posts.map((post) => (
+        <li><a href={`/docs/${post.slug}`}>{post.title}</a></li>
+      ))}
+    </ul>
+  </body>
+</html>
