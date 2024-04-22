@@ -120,10 +120,6 @@ importers:
         version: 18.15.11
 
   packages/nebu-plugin:
-    dependencies:
-      md5-hex:
-        specifier: ^5.0.0
-        version: 5.0.0
     devDependencies:
       kleur:
         specifier: ^4.1.5
@@ -2379,13 +2375,6 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       blueimp-md5: 2.19.0
-
-  /md5-hex@5.0.0:
-    resolution: {integrity: sha512-18TKd0nxBzMLflLBSCM/I9n50izl7NQGuujgbKjVUs/9acY+a5uzpDUVd4wV130vaK67TzDnPin2gze88u+e4Q==}
-    engines: {node: '>=18'}
-    dependencies:
-      blueimp-md5: 2.19.0
-    dev: false
 
   /mem@9.0.2:
     resolution: {integrity: sha512-F2t4YIv9XQUBHt6AOJ0y7lSmP1+cY7Fm1DRh9GClTGzKST7UWLMx6ly9WZdLH/G/ppM5RL4MlQfRT71ri9t19A==}
