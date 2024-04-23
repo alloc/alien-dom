@@ -15,6 +15,7 @@ export type EffectCallback<State = {}> = (
 ) => EffectResult
 
 export type EffectContext<State = {}> = State & {
+  get isFirstRun(): boolean
   get rootNode(): JSX.Element | Comment
   get rootElement(): JSX.Element
   get parentNode(): JSX.Element
@@ -44,10 +45,16 @@ class UseEffect {
   effect: EffectCallback<any> | Falsy = undefined
   dispose: (() => void) | void = undefined
   rerun: (() => void) | void = undefined
+  runs = 0
 
   run() {
     this.dispose?.()
     this.dispose = this.effect ? (0, this.effect)(this) : undefined
+    this.runs++
+  }
+
+  get isFirstRun() {
+    return this.runs === 0
   }
 
   /**
