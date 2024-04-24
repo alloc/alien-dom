@@ -1,6 +1,6 @@
 {
   "name": "@alien-dom/htmelt",
-  "version": "0.8.2",
+  "version": "0.9.0",
   "type": "module",
   "main": "dist/plugin.js",
   "types": "dist/plugin.d.ts",
