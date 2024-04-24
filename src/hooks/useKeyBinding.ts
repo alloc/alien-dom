@@ -36,10 +36,11 @@ export type KeyCombo =
 
 export function useKeyBinding<Target extends Document | HTMLElement>(
   combo: KeyCombo,
-  onKeyDown?: (event: KeyBindingEvent<Target>) => EffectResult
+  onKeyDown?: (event: KeyBindingEvent<Target>) => EffectResult,
+  options?: AddEventListenerOptions
 ) {
   const component = expectCurrentComponent()
-  const binding = useState(initKeyBinding, onKeyDown)
+  const binding = useState(initKeyBinding, onKeyDown, options)
 
   binding.combo = prepareCombo(combo)
   binding.onKeyDown = onKeyDown
@@ -57,7 +58,8 @@ export function useKeyBinding<Target extends Document | HTMLElement>(
 export type KeyBinding = ReturnType<typeof initKeyBinding>
 
 const initKeyBinding = (
-  callback: ((event: KeyBindingEvent) => void) | undefined
+  callback: ((event: KeyBindingEvent) => void) | undefined,
+  options: AddEventListenerOptions | undefined
 ): {
   /**
    * Equals true when the key binding is activated.
@@ -94,9 +96,9 @@ const initKeyBinding = (
     onKeyDown: callback,
     onKeyUp: undefined,
     enable(target) {
-      enableKeyBinding(target, this)
+      enableKeyBinding(target, this, options)
       return () => {
-        disableKeyBinding(target, this)
+        disableKeyBinding(target, this, options)
       }
     },
     setElement(element) {
@@ -105,28 +107,60 @@ const initKeyBinding = (
         return
       }
       const hostProps = kAlienHostProps(element)!
-      enableKeyBinding(element, this)
+      enableKeyBinding(element, this, options)
       this.effect = hostProps.addEffect(
-        createDisposable([element, this], disableKeyBinding)
+        createDisposable([element, this, options], disableKeyBinding)
       )
     },
   }
 }
 
+function makeContextKey(options: AddEventListenerOptions | undefined) {
+  if (!options) {
+    return '{}'
+  }
+
+  const sortedOptions = Object.keys(options)
+    .filter(key => options[key as keyof AddEventListenerOptions])
+    .sort()
+    .reduce((obj, key) => {
+      obj[key as keyof AddEventListenerOptions] = options[
+        key as keyof AddEventListenerOptions
+      ] as any
+      return obj
+    }, {} as AddEventListenerOptions)
+
+  return JSON.stringify(sortedOptions)
+}
+
 function enableKeyBinding(
   target: Document | HTMLElement,
-  binding: KeyBinding
+  binding: KeyBinding,
+  options: AddEventListenerOptions | undefined
 ): void {
-  const context = contexts.get(target) || new KeyBindingContext(target)
+  const contexts =
+    contextsByTarget.get(target) || new Map<string, KeyBindingContext>()
+  contextsByTarget.set(target, contexts)
+
+  const contextKey = makeContextKey(options)
+  const context =
+    contexts.get(contextKey) || new KeyBindingContext(target, options)
+  contexts.set(contextKey, context)
+
   context.addBinding(binding)
 }
 
 function disableKeyBinding(
   target: Document | HTMLElement,
-  binding: KeyBinding
+  binding: KeyBinding,
+  options: AddEventListenerOptions | undefined
 ): void {
-  const context = contexts.get(target)
-  context?.removeBinding(binding)
+  const contexts = contextsByTarget.get(target)
+  if (contexts) {
+    const contextKey = makeContextKey(options)
+    const context = contexts.get(contextKey)
+    context?.removeBinding(binding)
+  }
 }
 
 const isWindows = /* @__PURE__ */ navigator.platform.includes('Win')
@@ -150,7 +184,10 @@ const shiftedKeys = '~!@#$%^&*()_+{}|:"<>?'
 const unshiftedKeys = "`1234567890-=[]\\;',./"
 const modifierKeys = ['shift', 'control', 'alt', 'meta', 'fn', 'hyper', 'super']
 
-const contexts = new Map<Document | HTMLElement, KeyBindingContext>()
+const contextsByTarget = new Map<
+  Document | HTMLElement,
+  Map<string, KeyBindingContext>
+>()
 
 class KeyBindingContext {
   readonly bindings: KeyBinding[] = []
@@ -158,7 +195,10 @@ class KeyBindingContext {
   readonly activeKeys = new Set<string>()
   readonly dispose: () => void
 
-  constructor(readonly target: Document | HTMLElement) {
+  constructor(
+    readonly target: Document | HTMLElement,
+    readonly options: AddEventListenerOptions | undefined
+  ) {
     if (!isDocument(target) && !supportsKeyDown(target)) {
       target.setAttribute('tabindex', '0')
     }
@@ -241,22 +281,24 @@ class KeyBindingContext {
       }
     }
 
-    contexts.set(target, this)
+    target.addEventListener('keydown', onKeyDown as any, options)
+    target.addEventListener('keyup', onKeyUp as any, options)
 
-    target.addEventListener('keydown', onKeyDown as any)
-    target.addEventListener('keyup', onKeyUp as any)
-
-    target.addEventListener('paste', clear)
-    window.addEventListener('blur', clear)
+    target.addEventListener('paste', clear, options)
+    window.addEventListener('blur', clear, options)
 
     this.dispose = () => {
-      contexts.delete(target)
+      const contextKey = makeContextKey(options)
+      const contexts = contextsByTarget.get(target)!
+      if (contexts.delete(contextKey) && contexts.size === 0) {
+        contextsByTarget.delete(target)
+      }
 
-      target.removeEventListener('keydown', onKeyDown as any)
-      target.removeEventListener('keyup', onKeyUp as any)
+      target.removeEventListener('keydown', onKeyDown as any, options)
+      target.removeEventListener('keyup', onKeyUp as any, options)
 
-      target.removeEventListener('paste', clear)
-      window.removeEventListener('blur', clear)
+      target.removeEventListener('paste', clear, options)
+      window.removeEventListener('blur', clear, options)
     }
   }
 
