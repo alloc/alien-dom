@@ -93,8 +93,8 @@ importers:
         specifier: workspace:^
         version: link:../nebu-plugin
       esbuild-extra:
-        specifier: ^0.3.0
-        version: 0.3.0(esbuild@0.17.17)(typescript@5.1.3)
+        specifier: ^0.4.0
+        version: 0.4.0(esbuild@0.17.17)(typescript@5.1.3)
       nebu:
         specifier: ^2.4.5
         version: 2.4.5
@@ -220,6 +220,7 @@ packages:
     dependencies:
       '@jridgewell/gen-mapping': 0.3.3
       '@jridgewell/trace-mapping': 0.3.18
+    dev: true
 
   /@ampproject/remapping@2.3.0:
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
@@ -1880,14 +1881,6 @@ packages:
     resolution: {integrity: sha512-L18DaJsXSUk2+42pv8mLs5jJT2hqFkFE4j21wOmgbUqsZ2hL72NsUU785g9RXgo3s0ZNgVl42TiHp3ZtOv/Vyg==}
     dev: true
 
-  /enhanced-resolve@5.15.0:
-    resolution: {integrity: sha512-LXYT42KJ7lpIKECr2mAXIaMldcNCh/7E0KBKOu4KSfkHmP+mZmSs+8V5gBAqisWBy0OO4W5Oyys0GO1Y8KtdKg==}
-    engines: {node: '>=10.13.0'}
-    dependencies:
-      graceful-fs: 4.2.11
-      tapable: 2.2.1
-    dev: false
-
   /enhanced-resolve@5.16.0:
     resolution: {integrity: sha512-O+QWCviPNSSLAD9Ucn8Awv+poAkqn3T1XY5/N7kR7rQO9yfSGWkYZDwpJ+iKF7B8rxaQKWngSqACpgzeapSyoA==}
     engines: {node: '>=10.13.0'}
@@ -1917,14 +1910,14 @@ packages:
       - typescript
     dev: true
 
-  /esbuild-extra@0.3.0(esbuild@0.17.17)(typescript@5.1.3):
-    resolution: {integrity: sha512-MeOfjQA1YRDG1saEsiLC7gCxwNz35jFv34UmqcSsjBNUa4j1nqZ+dxlzYBdR1L0ev4GdmgbPOM9ugkt7xLWxmg==}
+  /esbuild-extra@0.4.0(esbuild@0.17.17)(typescript@5.1.3):
+    resolution: {integrity: sha512-LI1hIKnExDdDSM0dkTrZ8J98cBOA+//T5MB2tM5xoBV6Kjz5LTVIZVqDA/W62xzeMjYZ71iWgMdeCHZTQ3CVIA==}
     peerDependencies:
       esbuild: '>=0.15'
     dependencies:
-      '@ampproject/remapping': 2.2.1
+      '@ampproject/remapping': 2.3.0
       convert-source-map: 2.0.0
-      enhanced-resolve: 5.15.0
+      enhanced-resolve: 5.16.0
       esbuild: 0.17.17
       tsconfck: 2.1.2(typescript@5.1.3)
     transitivePeerDependencies:
