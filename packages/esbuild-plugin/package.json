@@ -14,7 +14,7 @@
   ],
   "devDependencies": {
     "@types/node": "^18.15.11",
-    "esbuild": "^0.17.17"
+    "esbuild": "^0.17.19"
   },
   "dependencies": {
     "@alien-dom/nebu": "workspace:^",
