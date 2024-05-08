@@ -339,6 +339,9 @@ function updateChild(
     } else {
       fromNode.replaceWith(toNode)
       unmount(fromNode, true, component)
+
+      onChildNode(toNode)
+      return
     }
   }
 
