@@ -6,6 +6,8 @@ type State = { file: string; code: string }
 
 export default (options: {
   hash: (code: string) => string
+  /** Append a string of code to modules with hot-reloaded components. */
+  append?: string
   /**
    * Called when a file contains `alien-dom` components that are
    * compatible with hot reloading.
@@ -62,6 +64,10 @@ export default (options: {
     }
 
     program.unshift('body', `import { hmrRegister } from "alien-dom/hmr"\n`)
+
+    if (options.append) {
+      program.push('body', '\n' + options.append)
+    }
 
     options.onHmrAdded?.(file)
   },
