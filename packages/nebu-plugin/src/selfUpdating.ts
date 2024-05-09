@@ -12,7 +12,7 @@ import { JSXThunkParent, collectThunkParents } from './thunk'
 declare const process: any
 
 export type SelfUpdatingPluginState = {
-  /** @default "alien-dom/dist/helpers.mjs" */
+  /** @default "alien-dom/helpers" */
   helpersId?: string
   /**
    * This value is used to prevent key collisions across builds.
