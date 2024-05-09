@@ -1,19 +1,20 @@
 import type { SelfUpdatingPluginState } from '@alien-dom/nebu'
+import md5Hex from 'md5-hex'
 import { nebu } from 'nebu'
 import * as tsconfck from 'tsconfck'
+import { TSConfckCache, TSConfckParseResult } from 'tsconfck'
 import * as vite from 'vite'
 
-export default (): vite.Plugin => {
+export default (): vite.Plugin[] => {
   let rootDir: string
   let nebuPlugins: any[]
   let selfUpdating: SelfUpdatingPluginState
-  let tsConfigCache: Map<string, tsconfck.TSConfckParseResult>
-  let tsConfigPaths: Set<string>
+  let tsConfigCache: TSConfckCache<TSConfckParseResult>
 
   async function loadJsxImportSource(id: string) {
     const tsConfigPath = await tsconfck.find(id, {
       root: rootDir,
-      tsConfigPaths,
+      cache: tsConfigCache,
     })
     if (!tsConfigPath) {
       return
@@ -29,8 +30,13 @@ export default (): vite.Plugin => {
     return tsConfig.compilerOptions.jsxImportSource
   }
 
-  return {
-    name: 'vite-plugin-alien-dom',
+  const isAlienDomFile = (id: string) => {
+    // Virtual files not yet supported.
+    return /\.[jt]sx$/.test(id) && !id.includes('\0')
+  }
+
+  const mainPlugin: vite.Plugin = {
+    name: 'alien-dom',
     configResolved(config) {
       rootDir = config.root
       selfUpdating = {
@@ -39,40 +45,77 @@ export default (): vite.Plugin => {
       }
     },
     async buildStart() {
-      // TODO: hot module reloading
-      const { nebuSelfUpdating } = await import('@alien-dom/nebu')
-      nebuPlugins = [nebuSelfUpdating(selfUpdating)]
+      const { nebuSelfUpdating, nebuHMR } = await import('@alien-dom/nebu')
+      nebuPlugins = [
+        nebuSelfUpdating(selfUpdating),
+        nebuHMR({
+          hash: md5Hex,
+          append: 'import.meta.hot.accept()',
+        }),
+      ]
 
       // TODO: watch for tsconfig files in dev mode
-      tsConfigCache = new Map()
-      tsConfigPaths = new Set(
-        await tsconfck.findAll(rootDir, {
-          skip: dir => dir === 'node_modules' || dir === '.git',
-        })
-      )
+      tsConfigCache = new TSConfckCache()
     },
-    async transform(code, id) {
-      if (!/\.[jt]sx$/.test(id)) {
-        return
-      }
-      if (id.includes('node_modules')) {
-        return
-      }
-      const jsxImportSource = await loadJsxImportSource(id)
-      if (jsxImportSource !== 'alien-dom') {
-        return
-      }
-      const result = nebu.process(code, {
-        filename: id,
-        jsx: true,
-        sourceMap: true,
-        sourceMapHiRes: true,
-        plugins: nebuPlugins,
-      })
-      return {
-        code: result.js,
-        map: result.map as any,
-      }
+    transform: {
+      order: 'pre',
+      handler: async (code, id) => {
+        if (!isAlienDomFile(id)) {
+          return
+        }
+        const jsxImportSource = await loadJsxImportSource(id)
+        if (jsxImportSource !== 'alien-dom') {
+          return
+        }
+        // Remove any TypeScript syntax but preserve JSX.
+        if (id.endsWith('.tsx')) {
+          const transformed = await vite.transformWithEsbuild(code, id, {
+            jsx: 'preserve',
+            loader: 'tsx',
+          })
+          return {
+            code: transformed.code,
+            map: transformed.map,
+            meta: { alienDom: true },
+          }
+        }
+        return {
+          meta: { alienDom: true },
+        }
+      },
     },
   }
+
+  const jsxPlugin: vite.Plugin = {
+    name: 'alien-dom/jsx',
+    transform: {
+      order: 'pre',
+      async handler(code, id) {
+        if (!isAlienDomFile(id)) {
+          return
+        }
+        const moduleInfo = this.getModuleInfo(id)
+        if (!moduleInfo || !moduleInfo.meta.alienDom) {
+          return
+        }
+        const result = nebu.process(code, {
+          filename: id,
+          jsx: true,
+          sourceMap: true,
+          sourceMapHiRes: true,
+          plugins: nebuPlugins,
+          state: {
+            file: id,
+            code,
+          },
+        })
+        return {
+          code: result.js,
+          map: result.map as any,
+        }
+      },
+    },
+  }
+
+  return [mainPlugin, jsxPlugin]
 }

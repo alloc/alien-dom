@@ -3,23 +3,30 @@
   "version": "0.1.0",
   "type": "module",
   "main": "dist/plugin.cjs",
-  "module": "dist/plugin.js",
   "types": "dist/plugin.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/plugin.js",
+      "require": "./dist/plugin.cjs",
+      "types": "./dist/plugin.d.ts"
+    }
+  },
   "scripts": {
-    "build": "rimraf dist && tsup src/plugin.ts src/client.ts --format esm,cjs --dts",
-    "dev": "tsup src/plugin.ts src/client.ts --format esm,cjs --dts --watch --sourcemap",
-    "prepublishOnly": "rimraf dist && tsup src/plugin.ts src/client.ts --format esm,cjs --dts"
+    "build": "rimraf dist && tsup-node",
+    "dev": "rimraf dist && tsup-node --watch --sourcemap",
+    "prepublishOnly": "pnpm -s build"
   },
   "files": [
     "dist"
   ],
   "dependencies": {
     "@alien-dom/nebu": "workspace:^",
+    "md5-hex": "^5.0.0",
     "nebu": "^2.3.8",
-    "tsconfck": "^2.1.2"
+    "tsconfck": "^3.0.3"
   },
   "devDependencies": {
     "@types/node": "^18.15.11",
-    "vite": "^4.4.7"
+    "vite": "^5.2.11"
   }
 }
