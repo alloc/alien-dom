@@ -211,19 +211,20 @@ type HTMLObservableProps<T extends HTMLTagName> =
     ? { [K in keyof Props]: HTMLObservableProp<K, Props[K]> }
     : never
 
-type HTMLObservableProp<Key extends keyof any, Value> =
-  | Value
-  | (Key extends `on${string}`
-      ? never
-      : [HTMLClassAttribute | undefined] extends [Value]
-      ? JSX.HTMLClassProp
-      : [HTMLStyleAttribute | undefined] extends [Value]
-      ? JSX.HTMLStyleProp
-      : [HTMLDatasetAttribute | undefined] extends [Value]
-      ? JSX.HTMLDatasetProp
-      : [Value] extends [Record<string, any> | EventHandler | undefined]
-      ? never
-      : ReadonlyRef<Value>)
+type HTMLObservableProp<
+  Key extends keyof any,
+  Value
+> = Key extends `on${string}`
+  ? Value
+  : [HTMLClassAttribute | undefined] extends [Value]
+  ? JSX.HTMLClassProp
+  : [HTMLStyleAttribute | undefined] extends [Value]
+  ? JSX.HTMLStyleProp
+  : [HTMLDatasetAttribute | undefined] extends [Value]
+  ? JSX.HTMLDatasetProp
+  : [Value] extends [Record<string, any> | EventHandler | undefined]
+  ? Value
+  : Value | ReadonlyRef<Value>
 
 type SVGObservableProps<T extends SVGTagName> =
   SVGAttributesByTagName[T] extends infer Props extends object
