@@ -49,16 +49,14 @@ export { createElement } from './jsx-dom/jsx-runtime'
 
 /// Types
 export type {
-  CSSProperties,
-  DOMClassArray,
-  DOMClassAttribute,
+  CSSAttributes,
   FunctionComponent,
   HTML,
-  HTMLAttributes,
-  HTMLStyleArray,
+  HTMLClassArrayAttribute,
+  HTMLClassAttribute,
+  HTMLStyleArrayAttribute,
   HTMLStyleAttribute,
   JSX,
-  PropsWithChildren,
   SVG,
   SVGAttributes,
 } from './types'

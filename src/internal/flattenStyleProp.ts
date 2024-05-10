@@ -3,17 +3,17 @@ import { isRef } from '../core/observable'
 import { morphAttributes } from '../morphdom/morphAttributes'
 import { HTMLStyleAttribute } from '../types'
 import { HostProps } from './hostProps'
-import { DefaultElement, StyleAttributes } from './types'
+import { CSSProps, DefaultElement } from './types'
 
 export type MergeStylesFn = (
-  toStyle: StyleAttributes,
+  toStyle: CSSProps,
   fromStyle: Exclude<HTMLStyleAttribute & object, readonly any[]>
 ) => void
 
 export function flattenStyleProp(
   node: DefaultElement,
   value: HTMLStyleAttribute,
-  style: StyleAttributes,
+  style: CSSProps,
   merge: MergeStylesFn = Object.assign,
   hostProps?: HostProps,
   rootValue?: HTMLStyleAttribute

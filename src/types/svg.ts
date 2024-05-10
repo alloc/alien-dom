@@ -1,86 +1,7 @@
-import type { AnyElement } from '../internal/types'
 import type { AriaAttributes, AriaRole } from './aria'
-import type { AttrWithRef, Booleanish } from './attr'
-import type {
-  CSSProperties,
-  DOMAttributes,
-  DOMClassAttribute,
-  DOMFactory,
-} from './dom'
-import type { JSX } from './jsx'
-
-export interface SVGFactory
-  extends DOMFactory<SVGAttributes<SVGElement>, SVGElement> {
-  (
-    props?: (AttrWithRef<SVGElement> & SVGAttributes<SVGElement>) | null,
-    ...children: JSX.ChildrenProp[]
-  ): SVGElement
-  (...children: JSX.ChildrenProp[]): SVGElement
-}
-
-export type SVGElementTagName = keyof SVGElementTagNames
-
-export interface SVGElementTagNames {
-  animate: SVGFactory
-  circle: SVGFactory
-  clipPath: SVGFactory
-  defs: SVGFactory
-  desc: SVGFactory
-  ellipse: SVGFactory
-  feBlend: SVGFactory
-  feColorMatrix: SVGFactory
-  feComponentTransfer: SVGFactory
-  feComposite: SVGFactory
-  feConvolveMatrix: SVGFactory
-  feDiffuseLighting: SVGFactory
-  feDisplacementMap: SVGFactory
-  feDistantLight: SVGFactory
-  feDropShadow: SVGFactory
-  feFlood: SVGFactory
-  feFuncA: SVGFactory
-  feFuncB: SVGFactory
-  feFuncG: SVGFactory
-  feFuncR: SVGFactory
-  feGaussianBlur: SVGFactory
-  feImage: SVGFactory
-  feMerge: SVGFactory
-  feMergeNode: SVGFactory
-  feMorphology: SVGFactory
-  feOffset: SVGFactory
-  fePointLight: SVGFactory
-  feSpecularLighting: SVGFactory
-  feSpotLight: SVGFactory
-  feTile: SVGFactory
-  feTurbulence: SVGFactory
-  filter: SVGFactory
-  foreignObject: SVGFactory
-  g: SVGFactory
-  image: SVGFactory
-  line: SVGFactory
-  linearGradient: SVGFactory
-  marker: SVGFactory
-  mask: SVGFactory
-  metadata: SVGFactory
-  path: SVGFactory
-  pattern: SVGFactory
-  polygon: SVGFactory
-  polyline: SVGFactory
-  radialGradient: SVGFactory
-  rect: SVGFactory
-  stop: SVGFactory
-  svg: SVGFactory
-  switch: SVGFactory
-  symbol: SVGFactory
-  text: SVGFactory
-  textPath: SVGFactory
-  tspan: SVGFactory
-  use: SVGFactory
-  view: SVGFactory
-}
-
-export interface SVGProps<T>
-  extends SVGAttributes<T>,
-    AttrWithRef<Extract<T, AnyElement>> {}
+import type { Booleanish } from './attr'
+import type { DOMAttributes } from './dom'
+import { HTMLAttributes } from './html'
 
 // this list is "complete" in that it contains every SVG attribute
 // that React supports, but the types can be improved.
@@ -91,9 +12,7 @@ export interface SVGProps<T>
 //   - "string"
 //   - union of string literals
 export interface SVGAttributes<T> extends AriaAttributes, DOMAttributes<T> {
-  // Attributes which also defined in HTMLAttributes
-  // See comment in SVGDOMPropertyConfig.js
-  class?: DOMClassAttribute
+  // Attributes also defined in HTMLAttributes
   color?: string
   height?: number | string
   id?: string
@@ -103,7 +22,6 @@ export interface SVGAttributes<T> extends AriaAttributes, DOMAttributes<T> {
   method?: string
   min?: number | string
   name?: string
-  style?: CSSProperties
   target?: string
   type?: string
   width?: number | string
@@ -368,4 +286,83 @@ export interface SVGAttributes<T> extends AriaAttributes, DOMAttributes<T> {
   yChannelSelector?: string
   z?: number | string
   zoomAndPan?: string
+}
+
+/**
+ * Some SVGElement interfaces are not assignable to SVGElement, but are still
+ * technically SVG elements.
+ */
+export type SVGElementLike =
+  | SVGElement
+  | SVGFEDisplacementMapElement
+  | SVGFEDistantLightElement
+  | SVGFEFuncAElement
+  | SVGFEFuncBElement
+  | SVGFEFuncGElement
+  | SVGFEFuncRElement
+  | SVGStopElement
+  | SVGTextElement
+  | SVGTSpanElement
+
+export type SVGTagName = keyof SVGAttributesByTagName
+
+export interface SVGAttributesByTagName {
+  svg: SVGAttributes<SVGSVGElement> & HTMLAttributes<SVGSVGElement>
+  animate: SVGAttributes<SVGAnimateElement>
+  animateMotion: SVGAttributes<SVGAnimateMotionElement>
+  animateTransform: SVGAttributes<SVGAnimateTransformElement>
+  circle: SVGAttributes<SVGCircleElement>
+  clipPath: SVGAttributes<SVGClipPathElement>
+  defs: SVGAttributes<SVGDefsElement>
+  desc: SVGAttributes<SVGDescElement>
+  ellipse: SVGAttributes<SVGEllipseElement>
+  feBlend: SVGAttributes<SVGFEBlendElement>
+  feColorMatrix: SVGAttributes<SVGFEColorMatrixElement>
+  feComponentTransfer: SVGAttributes<SVGFEComponentTransferElement>
+  feComposite: SVGAttributes<SVGFECompositeElement>
+  feConvolveMatrix: SVGAttributes<SVGFEConvolveMatrixElement>
+  feDiffuseLighting: SVGAttributes<SVGFEDiffuseLightingElement>
+  feDisplacementMap: SVGAttributes<SVGFEDisplacementMapElement>
+  feDistantLight: SVGAttributes<SVGFEDistantLightElement>
+  feDropShadow: SVGAttributes<SVGFEDropShadowElement>
+  feFlood: SVGAttributes<SVGFEFloodElement>
+  feFuncA: SVGAttributes<SVGFEFuncAElement>
+  feFuncB: SVGAttributes<SVGFEFuncBElement>
+  feFuncG: SVGAttributes<SVGFEFuncGElement>
+  feFuncR: SVGAttributes<SVGFEFuncRElement>
+  feGaussianBlur: SVGAttributes<SVGFEGaussianBlurElement>
+  feImage: SVGAttributes<SVGFEImageElement>
+  feMerge: SVGAttributes<SVGFEMergeElement>
+  feMergeNode: SVGAttributes<SVGFEMergeNodeElement>
+  feMorphology: SVGAttributes<SVGFEMorphologyElement>
+  feOffset: SVGAttributes<SVGFEOffsetElement>
+  fePointLight: SVGAttributes<SVGFEPointLightElement>
+  feSpecularLighting: SVGAttributes<SVGFESpecularLightingElement>
+  feSpotLight: SVGAttributes<SVGFESpotLightElement>
+  feTile: SVGAttributes<SVGFETileElement>
+  feTurbulence: SVGAttributes<SVGFETurbulenceElement>
+  filter: SVGAttributes<SVGFilterElement>
+  foreignObject: SVGAttributes<SVGForeignObjectElement>
+  g: SVGAttributes<SVGGElement>
+  image: SVGAttributes<SVGImageElement>
+  line: SVGAttributes<SVGLineElement>
+  linearGradient: SVGAttributes<SVGLinearGradientElement>
+  marker: SVGAttributes<SVGMarkerElement>
+  mask: SVGAttributes<SVGMaskElement>
+  metadata: SVGAttributes<SVGMetadataElement>
+  mpath: SVGAttributes<SVGMPathElement>
+  path: SVGAttributes<SVGPathElement>
+  pattern: SVGAttributes<SVGPatternElement>
+  polygon: SVGAttributes<SVGPolygonElement>
+  polyline: SVGAttributes<SVGPolylineElement>
+  radialGradient: SVGAttributes<SVGRadialGradientElement>
+  rect: SVGAttributes<SVGRectElement>
+  stop: SVGAttributes<SVGStopElement>
+  switch: SVGAttributes<SVGSwitchElement>
+  symbol: SVGAttributes<SVGSymbolElement>
+  text: SVGAttributes<SVGTextElement>
+  textPath: SVGAttributes<SVGTextPathElement>
+  tspan: SVGAttributes<SVGTSpanElement>
+  use: SVGAttributes<SVGUseElement>
+  view: SVGAttributes<SVGViewElement>
 }

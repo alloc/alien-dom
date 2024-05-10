@@ -1,29 +1,6 @@
-import { CSSProperties } from '../types/dom'
-
 export type AnyElement = Element
 export type DefaultElement = HTMLElement | SVGElement
 export type AnyEvent = Event
-
-type StyleAttributeName = Exclude<keyof CSSProperties, 'scale' | 'rotate'>
-
-export type StyleAttributes = TransformAttributes & {
-  [Key in StyleAttributeName]?: CSSProperties[Key] | null
-}
-
-export type Length = number | string
-export type Angle = number | string
-
-export interface TransformAttributes {
-  rotate?: Angle | null
-  rotateX?: Angle | null
-  rotateY?: Angle | null
-  scale?: number | null
-  scaleX?: number | null
-  scaleY?: number | null
-  x?: Length | null
-  y?: Length | null
-  z?: Length | null
-}
 
 /**
  * The `currentMode` stack is mutated by self-updating components and

@@ -1,10 +1,6 @@
 import { JSX } from './jsx'
 
-export type PropsWithChildren<Props> = Props & {
-  children: JSX.ChildrenProp | undefined
-}
-
 export type FunctionComponent<
-  Props = {},
+  Props extends object = {},
   Result extends JSX.ChildrenProp = JSX.ChildrenProp
 > = (props: Props) => Result

@@ -1,222 +1,195 @@
-import type * as CSS from 'csstype'
 import type { AlienEvent } from '../addons/element'
-import type { ReadonlyRef } from '../core/observable'
-import type { AttrWithRef } from './attr'
-import type { JSX } from './jsx'
-
-export interface CSSProperties extends CSS.Properties<string | number> {}
-
-export type DOMFactory<P extends DOMAttributes<T>, T extends Element> = (
-  props?: (P & AttrWithRef<T>) | null,
-  ...children: JSX.ChildrenProp[]
-) => T
-
-export type DOMClassArray = (
-  | DOMClassAttribute
-  | ReadonlyRef<DOMClassAttribute>
-)[]
-
-export type DOMClassAttribute =
-  | readonly (DOMClassAttribute | ReadonlyRef<DOMClassAttribute>)[]
-  | string
-  | { [key: string]: boolean | ReadonlyRef<boolean> }
-  | DOMTokenList
-  | false
-  | null
-  | undefined
 
 export interface DOMAttributes<T> {
-  children?: JSX.ChildrenProp | undefined
-
   // Clipboard Events
-  onCopy?: ClipboardEventHandler<T> | undefined
-  onCopyCapture?: ClipboardEventHandler<T> | undefined
-  onCut?: ClipboardEventHandler<T> | undefined
-  onCutCapture?: ClipboardEventHandler<T> | undefined
-  onPaste?: ClipboardEventHandler<T> | undefined
-  onPasteCapture?: ClipboardEventHandler<T> | undefined
+  onCopy?: ClipboardEventHandler<T>
+  onCopyCapture?: ClipboardEventHandler<T>
+  onCut?: ClipboardEventHandler<T>
+  onCutCapture?: ClipboardEventHandler<T>
+  onPaste?: ClipboardEventHandler<T>
+  onPasteCapture?: ClipboardEventHandler<T>
 
   // Composition Events
-  onCompositionEnd?: CompositionEventHandler<T> | undefined
-  onCompositionEndCapture?: CompositionEventHandler<T> | undefined
-  onCompositionStart?: CompositionEventHandler<T> | undefined
-  onCompositionStartCapture?: CompositionEventHandler<T> | undefined
-  onCompositionUpdate?: CompositionEventHandler<T> | undefined
-  onCompositionUpdateCapture?: CompositionEventHandler<T> | undefined
+  onCompositionEnd?: CompositionEventHandler<T>
+  onCompositionEndCapture?: CompositionEventHandler<T>
+  onCompositionStart?: CompositionEventHandler<T>
+  onCompositionStartCapture?: CompositionEventHandler<T>
+  onCompositionUpdate?: CompositionEventHandler<T>
+  onCompositionUpdateCapture?: CompositionEventHandler<T>
 
   // Focus Events
-  onFocus?: FocusEventHandler<T> | undefined
-  onFocusCapture?: FocusEventHandler<T> | undefined
-  onBlur?: FocusEventHandler<T> | undefined
-  onBlurCapture?: FocusEventHandler<T> | undefined
+  onFocus?: FocusEventHandler<T>
+  onFocusCapture?: FocusEventHandler<T>
+  onBlur?: FocusEventHandler<T>
+  onBlurCapture?: FocusEventHandler<T>
 
   // Form Events
-  onChange?: FormEventHandler<T> | undefined
-  onChangeCapture?: FormEventHandler<T> | undefined
-  onBeforeInput?: FormEventHandler<T> | undefined
-  onBeforeInputCapture?: FormEventHandler<T> | undefined
-  onInput?: FormEventHandler<T> | undefined
-  onInputCapture?: FormEventHandler<T> | undefined
-  onReset?: FormEventHandler<T> | undefined
-  onResetCapture?: FormEventHandler<T> | undefined
-  onSubmit?: FormEventHandler<T> | undefined
-  onSubmitCapture?: FormEventHandler<T> | undefined
-  onInvalid?: FormEventHandler<T> | undefined
-  onInvalidCapture?: FormEventHandler<T> | undefined
+  onChange?: FormEventHandler<T>
+  onChangeCapture?: FormEventHandler<T>
+  onBeforeInput?: FormEventHandler<T>
+  onBeforeInputCapture?: FormEventHandler<T>
+  onInput?: FormEventHandler<T>
+  onInputCapture?: FormEventHandler<T>
+  onReset?: FormEventHandler<T>
+  onResetCapture?: FormEventHandler<T>
+  onSubmit?: FormEventHandler<T>
+  onSubmitCapture?: FormEventHandler<T>
+  onInvalid?: FormEventHandler<T>
+  onInvalidCapture?: FormEventHandler<T>
 
   // Image Events
-  onLoad?: EventHandler<Event, T> | undefined
-  onLoadCapture?: EventHandler<Event, T> | undefined
-  onError?: EventHandler<Event, T> | undefined // also a Media Event
-  onErrorCapture?: EventHandler<Event, T> | undefined // also a Media Event
+  onLoad?: EventHandler<Event, T>
+  onLoadCapture?: EventHandler<Event, T>
+  onError?: EventHandler<Event, T> // also a Media Event
+  onErrorCapture?: EventHandler<Event, T> // also a Media Event
 
   // Keyboard Events
-  onKeyDown?: KeyboardEventHandler<T> | undefined
-  onKeyDownCapture?: KeyboardEventHandler<T> | undefined
-  onKeyPress?: KeyboardEventHandler<T> | undefined
-  onKeyPressCapture?: KeyboardEventHandler<T> | undefined
-  onKeyUp?: KeyboardEventHandler<T> | undefined
-  onKeyUpCapture?: KeyboardEventHandler<T> | undefined
+  onKeyDown?: KeyboardEventHandler<T>
+  onKeyDownCapture?: KeyboardEventHandler<T>
+  onKeyPress?: KeyboardEventHandler<T>
+  onKeyPressCapture?: KeyboardEventHandler<T>
+  onKeyUp?: KeyboardEventHandler<T>
+  onKeyUpCapture?: KeyboardEventHandler<T>
 
   // Media Events
-  onAbort?: EventHandler<Event, T> | undefined
-  onAbortCapture?: EventHandler<Event, T> | undefined
-  onCanPlay?: EventHandler<Event, T> | undefined
-  onCanPlayCapture?: EventHandler<Event, T> | undefined
-  onCanPlayThrough?: EventHandler<Event, T> | undefined
-  onCanPlayThroughCapture?: EventHandler<Event, T> | undefined
-  onDurationChange?: EventHandler<Event, T> | undefined
-  onDurationChangeCapture?: EventHandler<Event, T> | undefined
-  onEmptied?: EventHandler<Event, T> | undefined
-  onEmptiedCapture?: EventHandler<Event, T> | undefined
-  onEncrypted?: EventHandler<Event, T> | undefined
-  onEncryptedCapture?: EventHandler<Event, T> | undefined
-  onEnded?: EventHandler<Event, T> | undefined
-  onEndedCapture?: EventHandler<Event, T> | undefined
-  onLoadedData?: EventHandler<Event, T> | undefined
-  onLoadedDataCapture?: EventHandler<Event, T> | undefined
-  onLoadedMetadata?: EventHandler<Event, T> | undefined
-  onLoadedMetadataCapture?: EventHandler<Event, T> | undefined
-  onLoadStart?: EventHandler<Event, T> | undefined
-  onLoadStartCapture?: EventHandler<Event, T> | undefined
-  onPause?: EventHandler<Event, T> | undefined
-  onPauseCapture?: EventHandler<Event, T> | undefined
-  onPlay?: EventHandler<Event, T> | undefined
-  onPlayCapture?: EventHandler<Event, T> | undefined
-  onPlaying?: EventHandler<Event, T> | undefined
-  onPlayingCapture?: EventHandler<Event, T> | undefined
-  onProgress?: EventHandler<Event, T> | undefined
-  onProgressCapture?: EventHandler<Event, T> | undefined
-  onRateChange?: EventHandler<Event, T> | undefined
-  onRateChangeCapture?: EventHandler<Event, T> | undefined
-  onSeeked?: EventHandler<Event, T> | undefined
-  onSeekedCapture?: EventHandler<Event, T> | undefined
-  onSeeking?: EventHandler<Event, T> | undefined
-  onSeekingCapture?: EventHandler<Event, T> | undefined
-  onStalled?: EventHandler<Event, T> | undefined
-  onStalledCapture?: EventHandler<Event, T> | undefined
-  onSuspend?: EventHandler<Event, T> | undefined
-  onSuspendCapture?: EventHandler<Event, T> | undefined
-  onTimeUpdate?: EventHandler<Event, T> | undefined
-  onTimeUpdateCapture?: EventHandler<Event, T> | undefined
-  onVolumeChange?: EventHandler<Event, T> | undefined
-  onVolumeChangeCapture?: EventHandler<Event, T> | undefined
-  onWaiting?: EventHandler<Event, T> | undefined
-  onWaitingCapture?: EventHandler<Event, T> | undefined
+  onAbort?: EventHandler<Event, T>
+  onAbortCapture?: EventHandler<Event, T>
+  onCanPlay?: EventHandler<Event, T>
+  onCanPlayCapture?: EventHandler<Event, T>
+  onCanPlayThrough?: EventHandler<Event, T>
+  onCanPlayThroughCapture?: EventHandler<Event, T>
+  onDurationChange?: EventHandler<Event, T>
+  onDurationChangeCapture?: EventHandler<Event, T>
+  onEmptied?: EventHandler<Event, T>
+  onEmptiedCapture?: EventHandler<Event, T>
+  onEncrypted?: EventHandler<Event, T>
+  onEncryptedCapture?: EventHandler<Event, T>
+  onEnded?: EventHandler<Event, T>
+  onEndedCapture?: EventHandler<Event, T>
+  onLoadedData?: EventHandler<Event, T>
+  onLoadedDataCapture?: EventHandler<Event, T>
+  onLoadedMetadata?: EventHandler<Event, T>
+  onLoadedMetadataCapture?: EventHandler<Event, T>
+  onLoadStart?: EventHandler<Event, T>
+  onLoadStartCapture?: EventHandler<Event, T>
+  onPause?: EventHandler<Event, T>
+  onPauseCapture?: EventHandler<Event, T>
+  onPlay?: EventHandler<Event, T>
+  onPlayCapture?: EventHandler<Event, T>
+  onPlaying?: EventHandler<Event, T>
+  onPlayingCapture?: EventHandler<Event, T>
+  onProgress?: EventHandler<Event, T>
+  onProgressCapture?: EventHandler<Event, T>
+  onRateChange?: EventHandler<Event, T>
+  onRateChangeCapture?: EventHandler<Event, T>
+  onSeeked?: EventHandler<Event, T>
+  onSeekedCapture?: EventHandler<Event, T>
+  onSeeking?: EventHandler<Event, T>
+  onSeekingCapture?: EventHandler<Event, T>
+  onStalled?: EventHandler<Event, T>
+  onStalledCapture?: EventHandler<Event, T>
+  onSuspend?: EventHandler<Event, T>
+  onSuspendCapture?: EventHandler<Event, T>
+  onTimeUpdate?: EventHandler<Event, T>
+  onTimeUpdateCapture?: EventHandler<Event, T>
+  onVolumeChange?: EventHandler<Event, T>
+  onVolumeChangeCapture?: EventHandler<Event, T>
+  onWaiting?: EventHandler<Event, T>
+  onWaitingCapture?: EventHandler<Event, T>
 
   // MouseEvents
-  onAuxClick?: MouseEventHandler<T> | undefined
-  onAuxClickCapture?: MouseEventHandler<T> | undefined
-  onClick?: MouseEventHandler<T> | undefined
-  onClickCapture?: MouseEventHandler<T> | undefined
-  onContextMenu?: MouseEventHandler<T> | undefined
-  onContextMenuCapture?: MouseEventHandler<T> | undefined
-  onDblClick?: MouseEventHandler<T> | undefined
-  onDblClickCapture?: MouseEventHandler<T> | undefined
-  onDrag?: DragEventHandler<T> | undefined
-  onDragCapture?: DragEventHandler<T> | undefined
-  onDragEnd?: DragEventHandler<T> | undefined
-  onDragEndCapture?: DragEventHandler<T> | undefined
-  onDragEnter?: DragEventHandler<T> | undefined
-  onDragEnterCapture?: DragEventHandler<T> | undefined
-  onDragExit?: DragEventHandler<T> | undefined
-  onDragExitCapture?: DragEventHandler<T> | undefined
-  onDragLeave?: DragEventHandler<T> | undefined
-  onDragLeaveCapture?: DragEventHandler<T> | undefined
-  onDragOver?: DragEventHandler<T> | undefined
-  onDragOverCapture?: DragEventHandler<T> | undefined
-  onDragStart?: DragEventHandler<T> | undefined
-  onDragStartCapture?: DragEventHandler<T> | undefined
-  onDrop?: DragEventHandler<T> | undefined
-  onDropCapture?: DragEventHandler<T> | undefined
-  onMouseDown?: MouseEventHandler<T> | undefined
-  onMouseDownCapture?: MouseEventHandler<T> | undefined
-  onMouseEnter?: MouseEventHandler<T> | undefined
-  onMouseLeave?: MouseEventHandler<T> | undefined
-  onMouseMove?: MouseEventHandler<T> | undefined
-  onMouseMoveCapture?: MouseEventHandler<T> | undefined
-  onMouseOut?: MouseEventHandler<T> | undefined
-  onMouseOutCapture?: MouseEventHandler<T> | undefined
-  onMouseOver?: MouseEventHandler<T> | undefined
-  onMouseOverCapture?: MouseEventHandler<T> | undefined
-  onMouseUp?: MouseEventHandler<T> | undefined
-  onMouseUpCapture?: MouseEventHandler<T> | undefined
+  onAuxClick?: MouseEventHandler<T>
+  onAuxClickCapture?: MouseEventHandler<T>
+  onClick?: MouseEventHandler<T>
+  onClickCapture?: MouseEventHandler<T>
+  onContextMenu?: MouseEventHandler<T>
+  onContextMenuCapture?: MouseEventHandler<T>
+  onDblClick?: MouseEventHandler<T>
+  onDblClickCapture?: MouseEventHandler<T>
+  onDrag?: DragEventHandler<T>
+  onDragCapture?: DragEventHandler<T>
+  onDragEnd?: DragEventHandler<T>
+  onDragEndCapture?: DragEventHandler<T>
+  onDragEnter?: DragEventHandler<T>
+  onDragEnterCapture?: DragEventHandler<T>
+  onDragExit?: DragEventHandler<T>
+  onDragExitCapture?: DragEventHandler<T>
+  onDragLeave?: DragEventHandler<T>
+  onDragLeaveCapture?: DragEventHandler<T>
+  onDragOver?: DragEventHandler<T>
+  onDragOverCapture?: DragEventHandler<T>
+  onDragStart?: DragEventHandler<T>
+  onDragStartCapture?: DragEventHandler<T>
+  onDrop?: DragEventHandler<T>
+  onDropCapture?: DragEventHandler<T>
+  onMouseDown?: MouseEventHandler<T>
+  onMouseDownCapture?: MouseEventHandler<T>
+  onMouseEnter?: MouseEventHandler<T>
+  onMouseLeave?: MouseEventHandler<T>
+  onMouseMove?: MouseEventHandler<T>
+  onMouseMoveCapture?: MouseEventHandler<T>
+  onMouseOut?: MouseEventHandler<T>
+  onMouseOutCapture?: MouseEventHandler<T>
+  onMouseOver?: MouseEventHandler<T>
+  onMouseOverCapture?: MouseEventHandler<T>
+  onMouseUp?: MouseEventHandler<T>
+  onMouseUpCapture?: MouseEventHandler<T>
 
   // Selection Events
-  onSelect?: EventHandler<Event, T> | undefined
-  onSelectCapture?: EventHandler<Event, T> | undefined
+  onSelect?: EventHandler<Event, T>
+  onSelectCapture?: EventHandler<Event, T>
 
   // Touch Events
-  onTouchCancel?: TouchEventHandler<T> | undefined
-  onTouchCancelCapture?: TouchEventHandler<T> | undefined
-  onTouchEnd?: TouchEventHandler<T> | undefined
-  onTouchEndCapture?: TouchEventHandler<T> | undefined
-  onTouchMove?: TouchEventHandler<T> | undefined
-  onTouchMoveCapture?: TouchEventHandler<T> | undefined
-  onTouchStart?: TouchEventHandler<T> | undefined
-  onTouchStartCapture?: TouchEventHandler<T> | undefined
+  onTouchCancel?: TouchEventHandler<T>
+  onTouchCancelCapture?: TouchEventHandler<T>
+  onTouchEnd?: TouchEventHandler<T>
+  onTouchEndCapture?: TouchEventHandler<T>
+  onTouchMove?: TouchEventHandler<T>
+  onTouchMoveCapture?: TouchEventHandler<T>
+  onTouchStart?: TouchEventHandler<T>
+  onTouchStartCapture?: TouchEventHandler<T>
 
   // Pointer Events
-  onPointerDown?: PointerEventHandler<T> | undefined
-  onPointerDownCapture?: PointerEventHandler<T> | undefined
-  onPointerMove?: PointerEventHandler<T> | undefined
-  onPointerMoveCapture?: PointerEventHandler<T> | undefined
-  onPointerUp?: PointerEventHandler<T> | undefined
-  onPointerUpCapture?: PointerEventHandler<T> | undefined
-  onPointerCancel?: PointerEventHandler<T> | undefined
-  onPointerCancelCapture?: PointerEventHandler<T> | undefined
-  onPointerEnter?: PointerEventHandler<T> | undefined
-  onPointerEnterCapture?: PointerEventHandler<T> | undefined
-  onPointerLeave?: PointerEventHandler<T> | undefined
-  onPointerLeaveCapture?: PointerEventHandler<T> | undefined
-  onPointerOver?: PointerEventHandler<T> | undefined
-  onPointerOverCapture?: PointerEventHandler<T> | undefined
-  onPointerOut?: PointerEventHandler<T> | undefined
-  onPointerOutCapture?: PointerEventHandler<T> | undefined
-  onGotPointerCapture?: PointerEventHandler<T> | undefined
-  onGotPointerCaptureCapture?: PointerEventHandler<T> | undefined
-  onLostPointerCapture?: PointerEventHandler<T> | undefined
-  onLostPointerCaptureCapture?: PointerEventHandler<T> | undefined
+  onPointerDown?: PointerEventHandler<T>
+  onPointerDownCapture?: PointerEventHandler<T>
+  onPointerMove?: PointerEventHandler<T>
+  onPointerMoveCapture?: PointerEventHandler<T>
+  onPointerUp?: PointerEventHandler<T>
+  onPointerUpCapture?: PointerEventHandler<T>
+  onPointerCancel?: PointerEventHandler<T>
+  onPointerCancelCapture?: PointerEventHandler<T>
+  onPointerEnter?: PointerEventHandler<T>
+  onPointerEnterCapture?: PointerEventHandler<T>
+  onPointerLeave?: PointerEventHandler<T>
+  onPointerLeaveCapture?: PointerEventHandler<T>
+  onPointerOver?: PointerEventHandler<T>
+  onPointerOverCapture?: PointerEventHandler<T>
+  onPointerOut?: PointerEventHandler<T>
+  onPointerOutCapture?: PointerEventHandler<T>
+  onGotPointerCapture?: PointerEventHandler<T>
+  onGotPointerCaptureCapture?: PointerEventHandler<T>
+  onLostPointerCapture?: PointerEventHandler<T>
+  onLostPointerCaptureCapture?: PointerEventHandler<T>
 
   // UI Events
-  onScroll?: UIEventHandler<T> | undefined
-  onScrollCapture?: UIEventHandler<T> | undefined
+  onScroll?: UIEventHandler<T>
+  onScrollCapture?: UIEventHandler<T>
 
   // Wheel Events
-  onWheel?: WheelEventHandler<T> | undefined
-  onWheelCapture?: WheelEventHandler<T> | undefined
+  onWheel?: WheelEventHandler<T>
+  onWheelCapture?: WheelEventHandler<T>
 
   // Animation Events
-  onAnimationStart?: AnimationEventHandler<T> | undefined
-  onAnimationStartCapture?: AnimationEventHandler<T> | undefined
-  onAnimationEnd?: AnimationEventHandler<T> | undefined
-  onAnimationEndCapture?: AnimationEventHandler<T> | undefined
-  onAnimationIteration?: AnimationEventHandler<T> | undefined
-  onAnimationIterationCapture?: AnimationEventHandler<T> | undefined
+  onAnimationStart?: AnimationEventHandler<T>
+  onAnimationStartCapture?: AnimationEventHandler<T>
+  onAnimationEnd?: AnimationEventHandler<T>
+  onAnimationEndCapture?: AnimationEventHandler<T>
+  onAnimationIteration?: AnimationEventHandler<T>
+  onAnimationIterationCapture?: AnimationEventHandler<T>
 
   // Transition Events
-  onTransitionEnd?: TransitionEventHandler<T> | undefined
-  onTransitionEndCapture?: TransitionEventHandler<T> | undefined
+  onTransitionEnd?: TransitionEventHandler<T>
+  onTransitionEndCapture?: TransitionEventHandler<T>
 }
 
 type FormEvent = Event

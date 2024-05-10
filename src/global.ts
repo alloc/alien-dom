@@ -29,7 +29,7 @@ type JSXElementsProp = JSX.ElementsProp
 type JSXElementType = JSX.ElementType
 type JSXIntrinsicAttributes = JSX.IntrinsicAttributes
 type JSXIntrinsicElements = JSX.IntrinsicElements
-type JSXElementAttributes<T> = JSX.ElementAttributes<T>
+type JSXElementAttributes<T> = JSX.InferProps<T>
 type JSXInstanceType<T extends string> = JSX.InstanceType<T>
 
 declare global {

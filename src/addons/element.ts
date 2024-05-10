@@ -9,8 +9,8 @@ import { EffectFlags, enableEffect, getEffects } from '../internal/effects'
 import type {
   AnyElement,
   AnyEvent,
+  CSSProps,
   DefaultElement,
-  StyleAttributes,
 } from '../internal/types'
 import { unwrap } from '../internal/unwrap'
 import { UpdateStyle, updateStyle } from '../internal/updateStyle'
@@ -192,7 +192,7 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     }
     return ''
   }
-  css(style: StyleAttributes) {
+  css(style: CSSProps) {
     updateStyle(this as any, style, UpdateStyle.Interrupt)
     return this
   }

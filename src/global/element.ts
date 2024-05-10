@@ -1,11 +1,11 @@
 import { isNumber } from '@alloc/is'
+import type * as CSS from 'csstype'
 import { Disposable } from '../addons/disposable'
 import { AlienElement, AlienEvent } from '../addons/element'
 import { AlienBoundEffect } from '../core/effects'
 import { createEventEffect } from '../internal/eventEffect'
-import { AnyElement, AnyEvent } from '../internal/types'
+import { AnyElement, AnyEvent, CSSLength } from '../internal/types'
 import { isUnitlessNumber } from '../jsx-dom/css-props'
-import { CSSProperties } from '../types/dom'
 
 export const AlienElementPrototype = new Proxy(AlienElement.prototype, {
   get(target, key, receiver) {
@@ -125,11 +125,11 @@ function reverseLookup<T extends object>(
 type AlienStyleDeconflict = typeof styleDeconflict
 
 export type AlienStyleMethods<Element extends AnyElement> = {
-  [P in keyof CSSProperties as P extends keyof AlienStyleDeconflict
+  [P in keyof CSS.Properties as P extends keyof AlienStyleDeconflict
     ? AlienStyleDeconflict[P]
     : P]: {
-    (): CSSProperties[P]
-    (value: CSSProperties[P] | null): Element
+    (): CSS.Properties<CSSLength>[P]
+    (value: CSS.Properties<CSSLength>[P] | null): Element
   }
 }
 

@@ -1,15 +1,15 @@
 import { isArray, isBoolean, isObject } from '@alloc/is'
 import { ReadonlyRef, isRef } from '../core/observable'
 import { morphAttributes } from '../morphdom/morphAttributes'
-import { DOMClassAttribute } from '../types'
+import { HTMLClassAttribute } from '../types'
 import { HostProps } from './hostProps'
 import { keys } from './util'
 
 export function flattenClassProp(
-  value: DOMClassAttribute | ReadonlyRef<DOMClassAttribute>,
+  value: HTMLClassAttribute | ReadonlyRef<HTMLClassAttribute>,
   hostProps?: HostProps,
   refs?: Set<ReadonlyRef>,
-  rootValue?: DOMClassAttribute
+  rootValue?: HTMLClassAttribute
 ) {
   let result: string | undefined
 
@@ -60,7 +60,7 @@ function addClassObserver(
   hostProps: HostProps,
   ref: ReadonlyRef,
   refs: Set<ReadonlyRef>,
-  rootValue: DOMClassAttribute
+  rootValue: HTMLClassAttribute
 ) {
   if (!refs.has(ref)) {
     refs.add(ref)

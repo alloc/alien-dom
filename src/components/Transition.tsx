@@ -8,17 +8,17 @@ import { isNode } from '../functions/typeChecking'
 import { useEffect } from '../hooks/useEffect'
 import { useState } from '../hooks/useState'
 import { kAlienFragmentNodes } from '../internal/symbols'
-import type { AnyElement, StyleAttributes } from '../internal/types'
+import type { AnyElement, CSSProps } from '../internal/types'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import { evaluateDeferredNode, isDeferredNode } from '../jsx-dom/node'
 import { morphFragment } from '../morphdom/morphFragment'
-import { DOMClassAttribute } from '../types'
+import { HTMLClassAttribute } from '../types'
 import type { JSX } from '../types/jsx'
 
 const nothing = Symbol('nothing')
 
 /** The style applied to the container that wraps leaving elements. */
-const leaveStyle: StyleAttributes = {
+const leaveStyle: CSSProps = {
   position: 'absolute',
   top: 0,
   left: 0,
@@ -58,7 +58,7 @@ export type TransitionProps<Id> = {
   initial?: AnimatedProps<JSX.Element> | boolean
   enter?: TransitionProp<Id, { initial: boolean }>
   leave?: TransitionProp<Id>
-  leaveClass?: DOMClassAttribute
+  leaveClass?: HTMLClassAttribute
   /** The element to be animated can be selected from the direct child. */
   selector?: string
   children: JSX.ChildrenProp

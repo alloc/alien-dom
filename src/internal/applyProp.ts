@@ -6,7 +6,7 @@ import { AnyDeferredNode, isDeferredNode } from '../jsx-dom/node'
 import { ResolvedChild, resolveChildren } from '../jsx-dom/resolveChildren'
 import { resolveSelected } from '../jsx-dom/resolveSelected'
 import { morphChildren } from '../morphdom/morphChildren'
-import { DOMClassAttribute, HTMLStyleAttribute, JSX } from '../types'
+import { HTMLClassAttribute, HTMLStyleAttribute, JSX } from '../types'
 import { AlienRunningComponent } from './component'
 import { hasTagName, isNode } from './duck'
 import { flattenClassProp } from './flattenClassProp'
@@ -100,7 +100,7 @@ export function applyChildrenProp(
 
 export function applyClassProp(
   node: DefaultElement,
-  value: DOMClassAttribute,
+  value: HTMLClassAttribute,
   hostProps?: HostProps
 ): void {
   const result = flattenClassProp(value, hostProps)

@@ -23,9 +23,9 @@ import { animatedElements } from '../internal/global'
 import { cssTransformDefaults, cssTransformUnits } from '../internal/transform'
 import {
   AnyElement,
+  CSSLength,
+  CSSTransformProps,
   DefaultElement,
-  Length,
-  TransformAttributes,
 } from '../internal/types'
 import { keys, toArray } from '../internal/util'
 import { isSvgChild } from '../jsx-dom/svg-tags'
@@ -103,28 +103,28 @@ export type SpringConfig = {
   restVelocity?: number
 }
 
-export interface HTMLAnimatedProps extends TransformAttributes {
+export interface HTMLAnimatedProps extends CSSTransformProps {
   backgroundColor?: string
-  borderRadius?: Length
+  borderRadius?: CSSLength
   color?: string
   opacity?: number
 }
 
-export interface SVGAnimatedProps extends TransformAttributes {
+export interface SVGAnimatedProps extends CSSTransformProps {
   fill?: string
   fillOpacity?: number
   stroke?: string
   strokeWidth?: number
   strokeOpacity?: number
   opacity?: number
-  rx?: Length
-  ry?: Length
-  width?: Length
-  height?: Length
+  rx?: CSSLength
+  ry?: CSSLength
+  width?: CSSLength
+  height?: CSSLength
   // Circle props
-  r?: Length
-  cx?: Length
-  cy?: Length
+  r?: CSSLength
+  cx?: CSSLength
+  cy?: CSSLength
 }
 
 export type AnimatedProps<T extends AnyElement> = [T] extends [Any]

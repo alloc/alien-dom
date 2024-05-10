@@ -1,6 +1,7 @@
 export * from './aria'
 export * from './attr'
 export * from './component'
+export * from './css'
 export * from './dom'
 export * from './extra'
 export * from './html'
