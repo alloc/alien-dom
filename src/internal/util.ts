@@ -1,5 +1,6 @@
 import { isArray, isString } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
+import { isTemplateNode } from '../jsx-dom/node'
 import { hasForEach, isFragment } from './duck'
 import { Stack } from './stack'
 import { kAlienElementTags } from './symbols'
@@ -66,6 +67,10 @@ export function compareNodeWithTag(
   }
   if (isString(tag)) {
     return compareNodeNames(node.nodeName, tag)
+  }
+  if (isTemplateNode(tag)) {
+    // TODO: do a more reliable check here
+    return node.nodeName === tag.template.nodeName
   }
   const tags = kAlienElementTags(node)
   return tags != null && tags.has(tag)

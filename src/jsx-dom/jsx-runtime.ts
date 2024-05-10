@@ -6,13 +6,15 @@ import { wrapWithFragment } from '../internal/fragment'
 import { currentComponent } from '../internal/global'
 import { kAlienStateless } from '../internal/symbols'
 import { lastValue } from '../internal/util'
-import type { JSX } from '../types'
+import type { FunctionComponent, JSX } from '../types'
 import {
   AnyDeferredNode,
+  HostNodeTag,
   createCompositeNode,
   createHostNode,
   deferCompositeNode,
   deferHostNode,
+  isTemplateNode,
 } from './node'
 import { compareNodeWithTag } from './util'
 
@@ -41,7 +43,7 @@ type Props = {
 }
 
 export function jsx(
-  tag: string | ((props: any) => JSX.ChildrenProp) | Falsy,
+  tag: HostNodeTag | FunctionComponent<any> | Falsy,
   props: Props,
   key?: JSX.ElementKey | typeof FORCE_DOM
 ): any {
@@ -83,7 +85,7 @@ export function jsx(
         ? wrapWithFragment(props.children, true)
         : Fragment(props as any)
     }
-  } else if (isString(tag)) {
+  } else if (isString(tag) || isTemplateNode(tag)) {
     if (shouldDefer) {
       node = deferHostNode(tag, props)
     } else {

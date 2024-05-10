@@ -9,3 +9,4 @@ export const kAlienNodeType = Symbol.for('alien:nodeType')
 export const kShadowRootNodeType = 99
 export const kDeferredNodeType = 98
 export const kChildrenNodeType = 97
+export const kTemplateNodeType = 96
