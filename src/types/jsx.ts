@@ -77,19 +77,20 @@ export declare namespace JSX {
 
   type ElementType = keyof IntrinsicElements | FunctionComponent<any>
 
-  type HTMLClassPropArray = readonly (
+  type HTMLClassArrayProp = readonly (
     | HTMLClassProp
     | ReadonlyRef<HTMLClassProp>
   )[]
 
-  type HTMLClassPropObject = {
+  type HTMLClassMapProp = {
     [key: string]: boolean | ReadonlyRef<boolean>
   }
 
   type HTMLClassProp =
-    | HTMLClassPropArray
-    | HTMLClassPropObject
+    | HTMLClassArrayProp
+    | HTMLClassMapProp
     | HTMLClassPrimitiveAttribute
+    | ReadonlyRef<HTMLClassPrimitiveAttribute>
 
   type CSSProps = ObservableProps<CSSAttributes>
 
@@ -122,8 +123,6 @@ export declare namespace JSX {
     IntrinsicAttributes & {
       ref?: RefProp<Element> | RefProp<SVGElement>
       children?: ChildrenProp
-      class?: T extends 'svg' ? HTMLClassProp : unknown
-      style?: T extends 'svg' ? CSSProps : unknown
     }
 
   type ObservableProps<Props extends object> = {

@@ -53,8 +53,8 @@ declare global {
     type Children = jsx.Children
     type ChildrenProp = jsx.ChildrenProp
 
-    type HTMLClassPropArray = jsx.HTMLClassPropArray
-    type HTMLClassPropObject = jsx.HTMLClassPropObject
+    type HTMLClassArrayProp = jsx.HTMLClassArrayProp
+    type HTMLClassMapProp = jsx.HTMLClassMapProp
     type HTMLClassProp = jsx.HTMLClassProp
     type HTMLStyleArrayProp = jsx.HTMLStyleArrayProp
     type HTMLStyleProp = jsx.HTMLStyleProp
