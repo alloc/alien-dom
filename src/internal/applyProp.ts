@@ -26,7 +26,7 @@ type ApplyFunction = (
   hostProps?: HostProps
 ) => void
 
-const applyFunctions: Record<string, ApplyFunction> = {
+const ApplyFunctionMap: Record<string, ApplyFunction> = {
   children: applyChildrenProp,
   class: applyClassProp,
   dataset: applyDatasetProp,
@@ -41,7 +41,7 @@ export function applyProp(
   hostProps?: HostProps
 ): void {
   const attr = prop === 'htmlFor' ? 'for' : prop
-  const apply = (applyFunctions[attr] ||= generateApplyFunction(attr))
+  const apply = (ApplyFunctionMap[attr] ||= generateApplyFunction(attr))
   if (apply !== noop) {
     if (prop !== 'children') {
       value = addHostProp(hostProps, prop, value)
