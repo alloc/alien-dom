@@ -2,9 +2,10 @@ import type { Falsy } from '@alloc/types'
 import { isElementProxy } from '../addons/elementProxy'
 import { observe } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
-import type { CSSProps, DefaultElement } from '../internal/types'
+import type { DefaultElement } from '../internal/types'
 import { UpdateStyle, updateStyle } from '../internal/updateStyle'
 import { toArray } from '../internal/util'
+import type { CSSAttributes } from '../types'
 import { useHookOffset } from './useHookOffset'
 import { usePrevious } from './usePrevious'
 import { useState } from './useState'
@@ -19,7 +20,7 @@ import { useState } from './useState'
  */
 export function useStyle(
   element: DefaultElement | readonly DefaultElement[],
-  style: CSSProps | Falsy,
+  style: CSSAttributes | Falsy,
   deps?: readonly any[]
 ): void
 
@@ -33,14 +34,14 @@ export function useStyle(
  */
 export function useStyle(
   element: DefaultElement | readonly DefaultElement[],
-  style: () => CSSProps | Falsy,
+  style: () => CSSAttributes | Falsy,
   deps: readonly any[]
 ): void
 
 /** @internal */
 export function useStyle(
   element: DefaultElement | readonly DefaultElement[],
-  style: CSSProps | (() => CSSProps | Falsy) | Falsy,
+  style: CSSAttributes | (() => CSSAttributes | Falsy) | Falsy,
   deps?: readonly any[]
 ) {
   const elements = toArray(element)
@@ -82,7 +83,7 @@ export function useStyle(
 
 class UseStyle {
   constructor(
-    public style: () => CSSProps | Falsy,
+    public style: () => CSSAttributes | Falsy,
     public deps: readonly any[]
   ) {}
   dispose?: () => void = undefined

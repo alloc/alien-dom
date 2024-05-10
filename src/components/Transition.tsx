@@ -8,17 +8,17 @@ import { isNode } from '../functions/typeChecking'
 import { useEffect } from '../hooks/useEffect'
 import { useState } from '../hooks/useState'
 import { kAlienFragmentNodes } from '../internal/symbols'
-import type { AnyElement, CSSProps } from '../internal/types'
+import type { AnyElement } from '../internal/types'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import { evaluateDeferredNode, isDeferredNode } from '../jsx-dom/node'
 import { morphFragment } from '../morphdom/morphFragment'
-import { HTMLClassAttribute } from '../types'
+import type { CSSAttributes, HTMLClassAttribute } from '../types'
 import type { JSX } from '../types/jsx'
 
 const nothing = Symbol('nothing')
 
 /** The style applied to the container that wraps leaving elements. */
-const leaveStyle: CSSProps = {
+const leaveStyle: CSSAttributes = {
   position: 'absolute',
   top: 0,
   left: 0,

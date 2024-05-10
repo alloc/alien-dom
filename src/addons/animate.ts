@@ -21,14 +21,10 @@ import {
 } from '../internal/animate/types'
 import { animatedElements } from '../internal/global'
 import { cssTransformDefaults, cssTransformUnits } from '../internal/transform'
-import {
-  AnyElement,
-  CSSLength,
-  CSSTransformProps,
-  DefaultElement,
-} from '../internal/types'
+import { AnyElement, DefaultElement } from '../internal/types'
 import { keys, toArray } from '../internal/util'
 import { isSvgChild } from '../jsx-dom/svg-tags'
+import { CSSLength, CSSTransformAttributes } from '../types'
 import { AlienSelectable } from './selectors'
 
 export type SpringAnimation<
@@ -103,14 +99,14 @@ export type SpringConfig = {
   restVelocity?: number
 }
 
-export interface HTMLAnimatedProps extends CSSTransformProps {
+export interface HTMLAnimatedProps extends CSSTransformAttributes {
   backgroundColor?: string
   borderRadius?: CSSLength
   color?: string
   opacity?: number
 }
 
-export interface SVGAnimatedProps extends CSSTransformProps {
+export interface SVGAnimatedProps extends CSSTransformAttributes {
   fill?: string
   fillOpacity?: number
   stroke?: string

@@ -1,4 +1,4 @@
-import type { AlienEvent } from '../addons/elementFunctions'
+import type { AlienEvent } from '../addons/elementExtensions'
 
 export interface DOMAttributes<T> {
   // Clipboard Events

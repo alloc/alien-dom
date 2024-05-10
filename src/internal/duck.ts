@@ -32,7 +32,7 @@ export function isArrayLike(obj: any): obj is object & ArrayLike<any> {
 export function hasTagName<Tag extends string>(
   node: any,
   tagName: Tag
-): node is JSX.InstanceType<Lowercase<Tag>> {
+): node is JSX.InferDOMElement<Lowercase<Tag>> {
   return node && node.tagName === tagName
 }
 
