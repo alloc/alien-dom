@@ -1,24 +1,29 @@
-import { isFunction } from '@alloc/is'
 import { AlienBoundEffect, AlienEffect, AlienEffects } from '../core/effects'
 import { observeAs } from '../functions/observeAs'
 import type { AlienEventMethods, AlienStyleMethods } from '../global/element'
 import type { AlienNodeList } from '../global/nodeList'
-import { applyProp } from '../internal/applyProp'
 import { canMatch } from '../internal/duck'
 import { EffectFlags, enableEffect, getEffects } from '../internal/effects'
 import type {
+  AlienSelect,
+  AlienTag,
   AnyElement,
   AnyEvent,
-  CSSProps,
   DefaultElement,
 } from '../internal/types'
 import { unwrap } from '../internal/unwrap'
 import { UpdateStyle, updateStyle } from '../internal/updateStyle'
-import { keys } from '../internal/util'
-import type { DetailedHTMLProps, HTMLAttributes } from '../types/html'
-import type { SVGAttributes } from '../types/svg'
+import { CSSAttributes, JSX } from '../types'
 import { AnimationsParam, animate } from './animate'
 import { Disposable } from './disposable'
+import { patchAttributes } from './element/attributes'
+import {
+  addClass,
+  hasSomeClass,
+  matchClass,
+  removeClass,
+  removeMatchingClass,
+} from './element/classList'
 import { FromElementProxy } from './elementProxy'
 
 export interface AlienElementList<Element extends Node = DefaultElement>
@@ -151,24 +156,18 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
     return this
   }
   hasClass(name: string) {
-    return name.split(/\s+/).some(name => this.classList.contains(name))
+    return hasSomeClass(this as any, name)
   }
   addClass(name: string) {
-    name.split(/\s+/).forEach(name => this.classList.add(name))
+    addClass(this as any, name)
     return this
   }
   removeClass(name: string) {
-    name.split(/\s+/).forEach(name => this.classList.remove(name))
+    removeClass(this as any, name)
     return this
   }
   removeMatchingClasses(pattern: RegExp | ((name: string) => boolean | void)) {
-    const test = isFunction(pattern) ? pattern : pattern.test.bind(pattern)
-    for (let i = 0; i < this.classList.length; i++) {
-      const token = this.classList.item(i)!
-      if (test(token)) {
-        this.classList.remove(token)
-      }
-    }
+    removeMatchingClass(this as any, pattern)
     return this
   }
   toggleClass(name: string, value?: boolean) {
@@ -183,25 +182,15 @@ export class AlienElement<Element extends AnyElement = DefaultElement> {
    * An empty string is returned if no match is found.
    */
   matchClass(pattern: RegExp) {
-    for (let i = 0; i < this.classList.length; i++) {
-      const token = this.classList.item(i)!
-      const match = pattern.exec(token)
-      if (match) {
-        return match[1] ?? match[0]
-      }
-    }
-    return ''
+    return matchClass(this as any, pattern)
   }
-  css(style: CSSProps) {
+  css(style: CSSAttributes) {
     updateStyle(this as any, style, UpdateStyle.Interrupt)
     return this
   }
   // TODO: update `props` type to allow ReadonlyRef values
-  set(props: Partial<Attributes<Element>>) {
-    for (const prop of keys(props)) {
-      // Note: Refs are unwrapped and not observed.
-      applyProp(this as any, prop, props[prop])
-    }
+  set(props: JSX.InferAttributes<Element>) {
+    patchAttributes(this as any, props)
     return this
   }
   spring(animations: AnimationsParam<Element>) {
@@ -305,45 +294,3 @@ for (const [suffix, flags] of [
     }
   )
 }
-
-/**
- * Allows type casting via tag name (eg: `"a"` → `HTMLAnchorElement`)
- */
-export type AlienTag<Element extends AnyElement = DefaultElement> =
-  | Element
-  | (Element extends HTMLElement
-      ? HTMLElement | keyof HTMLElementTagNameMap
-      : never)
-  | SVGElement
-  | keyof SVGElementTagNameMap
-
-type LooseAccess<T, K> = K extends keyof T ? T[K] : never
-
-type AlienTagNameMap<Element extends AnyElement> = Element extends any
-  ?
-      | SVGElementTagNameMap
-      | ([AnyElement] extends [Element]
-          ? HTMLElementTagNameMap
-          : Element extends HTMLElement
-          ? HTMLElementTagNameMap
-          : never)
-  : never
-
-/**
- * Coerce an `AlienTag<Element>` to an `Element`.
- */
-export type AlienSelect<
-  T extends string | AnyElement,
-  Context extends AnyElement = AnyElement
-> = T extends string
-  ? AlienTagNameMap<FromElementProxy<Context>> extends infer TagNameMap
-    ? TagNameMap extends any
-      ? Extract<LooseAccess<TagNameMap, T>, Node>
-      : never
-    : never
-  : T
-
-type Attributes<Element extends AnyElement> = (Element extends HTMLElement
-  ? DetailedHTMLProps<HTMLAttributes<Element>, Element>
-  : unknown) &
-  (Element extends SVGElement ? SVGAttributes<Element> : unknown)

@@ -1,34 +1,42 @@
+import type { FromElementProxy } from '../addons/elementProxy'
+
 export type AnyElement = Element
 export type DefaultElement = HTMLElement | SVGElement
 export type AnyEvent = Event
 
 /**
- * The `currentMode` stack is mutated by self-updating components and
- * the built-in `ManualUpdates` component.
- *
- * ⎯⎯⎯⎯⎯
- *
- * In `noop` mode, a JSX element is basically a `document.createElement`
- * call and a JSX child is basically a `parent.appendChild` call.
- *
- * **This is the initial mode.**
- *
- * ⎯⎯⎯⎯⎯
- *
- * In `ref` mode, a JSX element gets swapped for its cached DOM node, so
- * that callbacks have a stable reference to the DOM node that is
- * actually mounted. It also affects how JSX children are processed. For
- * example, it might replace a cached DOM node with a placeholder.
- *
- * This mode is enabled inside the render function of a self-updating
- * component.
- *
- * ⎯⎯⎯⎯⎯
- *
- * In `deref` mode, JSX children are always dereferenced to their cached
- * DOM nodes when possible. Before being appended, DOM nodes are crawled
- * to ensure any placeholders are replaced.
- *
- * This mode is enabled for descendants of a `<ManualUpdates>` element.
+ * Allows type casting via tag name (eg: `"a"` → `HTMLAnchorElement`)
  */
-export type ElementMode = 'deref' | 'ref' | 'noop'
+export type AlienTag<Element extends AnyElement = DefaultElement> =
+  | Element
+  | (Element extends HTMLElement
+      ? HTMLElement | keyof HTMLElementTagNameMap
+      : never)
+  | SVGElement
+  | keyof SVGElementTagNameMap
+
+type LooseAccess<T, K> = K extends keyof T ? T[K] : never
+
+type AlienTagNameMap<Element extends AnyElement> = Element extends any
+  ?
+      | SVGElementTagNameMap
+      | ([AnyElement] extends [Element]
+          ? HTMLElementTagNameMap
+          : Element extends HTMLElement
+          ? HTMLElementTagNameMap
+          : never)
+  : never
+
+/**
+ * Coerce an `AlienTag<Element>` to an `Element`.
+ */
+export type AlienSelect<
+  T extends string | AnyElement,
+  Context extends AnyElement = AnyElement
+> = T extends string
+  ? AlienTagNameMap<FromElementProxy<Context>> extends infer TagNameMap
+    ? TagNameMap extends any
+      ? Extract<LooseAccess<TagNameMap, T>, Node>
+      : never
+    : never
+  : T

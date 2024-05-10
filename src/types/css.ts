@@ -1,6 +1,6 @@
 import type * as CSS from 'csstype'
 
-export type CSSAttributes = CSSTransformProps & {
+export type CSSAttributes = CSSTransformAttributes & {
   [Key in Exclude<keyof CSS.Properties, 'scale' | 'rotate'>]?:
     | CSS.Properties<CSSLength>[Key]
     | null
@@ -9,7 +9,7 @@ export type CSSAttributes = CSSTransformProps & {
 export type CSSLength = number | string
 export type CSSAngle = number | string
 
-export interface CSSTransformProps {
+export interface CSSTransformAttributes {
   rotate?: CSSAngle | null
   rotateX?: CSSAngle | null
   rotateY?: CSSAngle | null

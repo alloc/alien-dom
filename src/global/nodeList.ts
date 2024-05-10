@@ -1,6 +1,11 @@
-import type { AlienElementList, AlienSelect, AlienTag } from '../addons/element'
+import type { AlienElementList } from '../addons/elementExtensions'
 import { canMatch, isIterable } from '../internal/duck'
-import { AnyElement, DefaultElement } from '../internal/types'
+import {
+  AlienSelect,
+  AlienTag,
+  AnyElement,
+  DefaultElement,
+} from '../internal/types'
 
 export interface AlienNodeList<Element extends Node>
   extends ReturnType<typeof defineAlienNodeList<Element>> {}

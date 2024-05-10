@@ -4,8 +4,9 @@ import type { AnyElement } from '../internal/types'
 import type { AlienNode, ShadowRootNode } from '../jsx-dom/node'
 import { FunctionComponent } from './component'
 import { CSSAttributes } from './css'
-import type { DragEventHandler, EventHandler } from './dom'
+import type { EventHandler } from './dom'
 import type {
+  HTMLAttributes,
   HTMLAttributesByTagName,
   HTMLClassAttribute,
   HTMLClassPrimitiveAttribute,
@@ -13,7 +14,7 @@ import type {
   HTMLStyleAttribute,
   HTMLTagName,
 } from './html'
-import { SVGAttributesByTagName, SVGTagName } from './svg'
+import { SVGAttributes, SVGAttributesByTagName, SVGTagName } from './svg'
 
 type Thunk<T = any> = () => T
 type Thunkable<T> = T | Thunk<T>
@@ -76,34 +77,6 @@ export declare namespace JSX {
 
   type ElementType = keyof IntrinsicElements | FunctionComponent<any>
 
-  /**
-   * Extract a DOM element type from a JSX element type.
-   */
-  type InferDOMElement<T> = T extends keyof HTMLElementTagNameMap
-    ? HTMLElementTagNameMap[T]
-    : T extends keyof SVGElementTagNameMap
-    ? SVGElementTagNameMap[T]
-    : T extends FunctionComponent
-    ? JSX.Element
-    : never
-
-  /**
-   * Infer the props of a JSX element from a JSX element type.
-   */
-  type InferProps<T> = T extends FunctionComponent<infer Props>
-    ? Props
-    : keyof IntrinsicElements extends infer TagName
-    ? TagName extends keyof IntrinsicElements
-      ? IntrinsicElements[TagName]['onDrag'] extends
-          | DragEventHandler<infer Element>
-          | undefined
-        ? Element extends T
-          ? IntrinsicElements[TagName]
-          : never
-        : never
-      : never
-    : never
-
   type HTMLClassPropArray = readonly (
     | HTMLClassProp
     | ReadonlyRef<HTMLClassProp>
@@ -159,6 +132,56 @@ export declare namespace JSX {
 
   /** One of the native HTML or SVG tags. */
   type TagName = HTMLTagName | SVGTagName
+
+  /**
+   * Infer the tag name of a DOM element.
+   */
+  type InferTagName<T extends AnyElement> = HTMLTagName extends any
+    ? HTMLElementTagNameMap[HTMLTagName & keyof HTMLElementTagNameMap] extends T
+      ? HTMLTagName
+      : SVGTagName extends any
+      ? SVGElementTagNameMap[SVGTagName & keyof SVGElementTagNameMap] extends T
+        ? SVGTagName
+        : never
+      : never
+    : never
+
+  /**
+   * Extract a DOM element type from a JSX element type.
+   */
+  type InferDOMElement<T> = T extends keyof HTMLElementTagNameMap
+    ? HTMLElementTagNameMap[T]
+    : T extends keyof SVGElementTagNameMap
+    ? SVGElementTagNameMap[T]
+    : T extends FunctionComponent
+    ? JSX.Element
+    : never
+
+  /**
+   * Infer DOM attributes from a DOM element or tag name.
+   */
+  type InferAttributes<T> = T extends HTMLTagName
+    ? HTMLAttributesByTagName[T]
+    : T extends SVGTagName
+    ? SVGAttributesByTagName[T]
+    : T extends AnyElement
+    ? [HTMLElement] extends [T]
+      ? HTMLAttributes<T>
+      : [SVGElement] extends [T]
+      ? SVGAttributes<T>
+      : InferAttributes<InferTagName<T>>
+    : never
+
+  /**
+   * Infer the JSX props from a JSX element type.
+   */
+  type InferProps<T> = T extends FunctionComponent<infer Props>
+    ? Props
+    : T extends HTMLTagName
+    ? HTMLProps<T>
+    : T extends SVGTagName
+    ? SVGProps<T>
+    : never
 
   /** @internal Required by TypeScript. It contains the prop types of every valid, host element. */
   type IntrinsicElements = { [T in HTMLTagName]: HTMLProps<T> } & {

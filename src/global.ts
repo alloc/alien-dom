@@ -1,36 +1,20 @@
 import { AnimationsParam } from './addons/animate'
-import {
-  AlienElement,
-  AlienElementList,
-  AlienSelect,
-  AlienTag,
-} from './addons/element'
+import { AlienElement, AlienElementList } from './addons/elementExtensions'
 import { FromElementProxy } from './addons/elementProxy'
 import { AlienElementPrototype } from './global/element'
 import { AlienNodeListPrototype } from './global/nodeList'
-import { JSX } from './types'
+import { AlienSelect, AlienTag } from './internal/types'
+import {
+  HTMLAttributesByTagName,
+  SVGAttributesByTagName,
+  JSX as jsx,
+} from './types'
 
 Object.setPrototypeOf(AlienElementPrototype, Node.prototype)
 Object.setPrototypeOf(Element.prototype, AlienElementPrototype)
 Object.assign(NodeList.prototype, AlienNodeListPrototype)
 
 type AnyElement = Element
-type JSXElement = JSX.Element
-type JSXElementKey = JSX.ElementKey
-type JSXElementRef<Element extends AnyElement = AnyElement> =
-  JSX.ElementRef<Element>
-type JSXRefProp<Element extends AnyElement = AnyElement> = JSX.RefProp<Element>
-type JSXChild = JSX.Child
-type JSXChildren = JSX.Children
-type JSXChildrenProp = JSX.ChildrenProp
-type JSXElementLike = JSX.ElementLike
-type JSXElementProp = JSX.ElementProp
-type JSXElementsProp = JSX.ElementsProp
-type JSXElementType = JSX.ElementType
-type JSXIntrinsicAttributes = JSX.IntrinsicAttributes
-type JSXIntrinsicElements = JSX.IntrinsicElements
-type JSXElementAttributes<T> = JSX.InferProps<T>
-type JSXInstanceType<T extends string> = JSX.InstanceType<T>
 
 declare global {
   interface Element {
@@ -54,21 +38,42 @@ declare global {
     spring(animations: AnimationsParam<SVGElement>): this
   }
   namespace JSX {
-    type Element = JSXElement
-    type ElementKey = JSXElementKey
+    type Element = jsx.Element
+    type ElementKey = jsx.ElementKey
     type ElementRef<Element extends AnyElement = AnyElement> =
-      JSXElementRef<Element>
-    type RefProp<Element extends AnyElement = AnyElement> = JSXRefProp<Element>
-    type Child = JSXChild
-    type Children = JSXChildren
-    type ChildrenProp = JSXChildrenProp
-    type ElementLike = JSXElementLike
-    type ElementProp = JSXElementProp
-    type ElementsProp = JSXElementsProp
-    type ElementType = JSXElementType
-    type IntrinsicAttributes = JSXIntrinsicAttributes
-    type IntrinsicElements = JSXIntrinsicElements
-    type ElementAttributes<T> = JSXElementAttributes<T>
-    type InstanceType<T extends string> = JSXInstanceType<T>
+      jsx.ElementRef<Element>
+    type ElementLike = jsx.ElementLike
+    type ElementProp = jsx.ElementProp
+    type ElementsProp = jsx.ElementsProp
+    type ElementType = jsx.ElementType
+
+    type RefProp<Element extends AnyElement = AnyElement> = jsx.RefProp<Element>
+
+    type Child = jsx.Child
+    type Children = jsx.Children
+    type ChildrenProp = jsx.ChildrenProp
+
+    type HTMLClassPropArray = jsx.HTMLClassPropArray
+    type HTMLClassPropObject = jsx.HTMLClassPropObject
+    type HTMLClassProp = jsx.HTMLClassProp
+    type HTMLStyleArrayProp = jsx.HTMLStyleArrayProp
+    type HTMLStyleProp = jsx.HTMLStyleProp
+    type HTMLDatasetProp = jsx.HTMLDatasetProp
+
+    type CSSProps = jsx.CSSProps
+    type HTMLProps<T extends keyof HTMLAttributesByTagName> = jsx.HTMLProps<T>
+    type SVGProps<T extends keyof SVGAttributesByTagName> = jsx.SVGProps<T>
+    type ObservableProps<Props extends object> = jsx.ObservableProps<Props>
+
+    type TagName = jsx.TagName
+    type InferTagName<T extends AnyElement> = jsx.InferTagName<T>
+
+    type InferDOMElement<T> = jsx.InferDOMElement<T>
+    type InferAttributes<T> = jsx.InferAttributes<T>
+    type InferProps<T> = jsx.InferProps<T>
+
+    type IntrinsicAttributes = jsx.IntrinsicAttributes
+    type IntrinsicElements = jsx.IntrinsicElements
+    type ElementChildrenAttribute = jsx.ElementChildrenAttribute
   }
 }

@@ -1,12 +1,12 @@
 import { createAlienElementList } from '../global/nodeList'
 import { hasForEach, isIterable } from '../internal/duck'
-import { AnyElement, DefaultElement } from '../internal/types'
-import type {
-  AlienElement,
-  AlienElementList,
+import {
   AlienSelect,
   AlienTag,
-} from './element'
+  AnyElement,
+  DefaultElement,
+} from '../internal/types'
+import type { AlienElement, AlienElementList } from './elementExtensions'
 
 export function $<Element extends AlienTag<DefaultElement>>(
   element: AnyElement
@@ -30,7 +30,7 @@ export function $(arg: any) {
   return typeof arg == 'string' ? document.querySelector(arg) : arg
 }
 
-export type AlienSelector =
+export type AlienSelectable =
   | string
   | AnyElement
   | readonly AnyElement[]
@@ -38,7 +38,7 @@ export type AlienSelector =
   | Iterable<AnyElement>
 
 export const $$ = <Element extends AlienTag<DefaultElement> = DefaultElement>(
-  ...selectors: (AlienSelector | false | null | undefined)[]
+  ...selectors: (AlienSelectable | false | null | undefined)[]
 ): AlienElementList<AlienSelect<Element>> => {
   if (selectors.length == 1) {
     if (typeof selectors[0] == 'string') {

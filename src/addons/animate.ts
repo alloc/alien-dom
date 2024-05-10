@@ -29,7 +29,7 @@ import {
 } from '../internal/types'
 import { keys, toArray } from '../internal/util'
 import { isSvgChild } from '../jsx-dom/svg-tags'
-import { AlienSelector } from './selectors'
+import { AlienSelectable } from './selectors'
 
 export type SpringAnimation<
   Element extends AnyElement = any,
@@ -156,12 +156,12 @@ export function animate(
 ): void
 
 export function animate(
-  selector: AlienSelector,
+  selector: AlienSelectable,
   animations: AnimationsParam<DefaultElement>
 ): void
 
 export function animate(
-  selector: AlienSelector | readonly AnyElement[],
+  selector: AlienSelectable | readonly AnyElement[],
   _animations: AnimationsParam<any>
 ) {
   const targets = (
