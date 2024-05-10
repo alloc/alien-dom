@@ -116,7 +116,7 @@ export const deferHostNode = (
 })
 
 export const deferCompositeNode = (
-  tag: (props: any) => JSX.ChildrenProp,
+  tag: FunctionComponent<any>,
   props: any,
   children?: ResolvedChild[]
 ): DeferredCompositeNode => ({

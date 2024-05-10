@@ -5,22 +5,18 @@ import { depsHaveChanged } from './functions/depsHaveChanged'
 import { setComponentRenderHook } from './internal/component'
 import { createSymbolProperty } from './internal/symbolProperty'
 import { kAlienRenderFunc } from './internal/symbols'
-import type { FunctionComponent } from './types/component'
 
 const kAlienComponentKey = createSymbolProperty<string>('componentKey')
 
-type ComponentData = [
-  component: Ref<(props: any) => any>,
-  hash: string,
-  deps: any[]
-]
+type Component = (props: any) => JSX.ChildrenProp
+type ComponentData = [component: Ref<Component>, hash: string, deps: any[]]
 
 const componentRegistry: { [key: string]: ComponentData } = {}
-const usedBeforeRegister = new WeakSet<FunctionComponent>()
+const usedBeforeRegister = new WeakSet<Component>()
 
 export function hmrRegister(
   key: string,
-  tag: FunctionComponent,
+  tag: Component,
   hash: string,
   deps: any[]
 ) {

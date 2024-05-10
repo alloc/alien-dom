@@ -14,6 +14,7 @@ import { evaluateDeferredNode, isDeferredNode } from '../jsx-dom/node'
 import { morphFragment } from '../morphdom/morphFragment'
 import type { CSSAttributes, HTMLClassAttribute } from '../types'
 import type { JSX } from '../types/jsx'
+import { createFragment } from './Fragment'
 
 const nothing = Symbol('nothing')
 
@@ -93,7 +94,7 @@ export function Transition<Id>(props: TransitionProps<Id>) {
   // We must wrap props.children in a fragment so that jsx-dom can replace any
   // node references with their latest versions (or a placeholder if nothing
   // changed).
-  let children = Fragment(props)
+  let children = createFragment(props.children)
 
   if (isDeferredNode(children)) {
     if (reusedChildren) {

@@ -1,8 +1,8 @@
+import { createFragment } from '../components/Fragment'
 import { useRef } from '../hooks'
 import { forwardContext, getContext, setContext } from '../internal/context'
 import { currentComponent } from '../internal/global'
 import { lastValue } from '../internal/util'
-import { Fragment } from '../jsx-dom/jsx-runtime'
 import type { JSX } from '../types/jsx'
 import { Ref, ref } from './observable'
 
@@ -55,7 +55,7 @@ export function createContext<T>(initial?: T) {
       }
 
       try {
-        return Fragment({ children }) as any
+        return createFragment(children) as any
       } finally {
         if (isForwardedContext) {
           restoreContext!()

@@ -48,7 +48,9 @@ import { compareNodeWithTag, lastValue, noop } from './util'
 
 let componentRenderHook = (component: AlienComponent) => component.tag
 
-export type ElementTags = Map<FunctionComponent<any>, AlienComponent<any>>
+type Component = (props: any) => JSX.ChildrenProp
+
+export type ElementTags = Map<Component, AlienComponent<any>>
 export type ElementRefs = Map<JSX.ElementKey, ChildNode | DocumentFragment>
 
 /** Internal state for a component instance. */
@@ -80,7 +82,10 @@ export class AlienComponent<Props extends object = any> extends Observer {
   /** Values memoized in the current render pass. */
   newMemos: Map<any, any> | null = null
 
-  constructor(readonly tag: FunctionComponent<Props>, initialProps: Props) {
+  constructor(
+    readonly tag: (props: Props) => JSX.ChildrenProp,
+    initialProps: Props
+  ) {
     super()
 
     this.props = { ...initialProps }
