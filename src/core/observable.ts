@@ -1004,3 +1004,13 @@ export function when(
     }
   )
 }
+
+/**
+ * A "flat" ref is one that cannot point to another ref.
+ */
+export type FlatReadonlyRef<T> = ReadonlyRef<Unref<T>>
+
+/**
+ * Exclude ref types from type `T`.
+ */
+export type Unref<T> = Exclude<T, ReadonlyRef>
