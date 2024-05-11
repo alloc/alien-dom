@@ -1,8 +1,8 @@
-import { createContext } from 'alien-dom'
+import { JSX, createContext } from 'alien-dom'
 
 export interface ShellConfig<
   Data = unknown,
-  State extends object | null = null,
+  State extends object | null = null
 > {
   shell?: Shell
   state?: () => State
@@ -27,8 +27,12 @@ export interface Shell<Data = any, State extends object | null = any>
 
 export const ShellProps = createContext<ShellProps<any, any> | null>(null)
 
-export type ToShellProps<T extends Shell> =
-  T extends Shell<infer Data, infer State> ? ShellProps<Data, State> : never
+export type ToShellProps<T extends Shell> = T extends Shell<
+  infer Data,
+  infer State
+>
+  ? ShellProps<Data, State>
+  : never
 
 export function useShellProps<T extends Shell>(): ToShellProps<T> {
   const shellProps = ShellProps.get()

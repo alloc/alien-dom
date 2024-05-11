@@ -1,3 +1,4 @@
+import { JSX } from 'alien-dom'
 import { MatchFunction } from 'path-to-regexp'
 import type { InferParams, PathTemplate } from 'path-types'
 import { App } from './App'
@@ -5,7 +6,7 @@ import { App } from './App'
 export interface RouteConfig<
   Path extends string,
   Data = unknown,
-  State extends object | null = null,
+  State extends object | null = null
 > {
   path: Path
   shell?: Route
@@ -20,7 +21,7 @@ export interface RouteConfig<
 export interface RouteProps<
   Path extends string,
   Data,
-  State extends object | null,
+  State extends object | null
 > {
   data: Awaited<Data>
   params: InferParams<Path>
@@ -30,7 +31,7 @@ export interface RouteProps<
 export interface Route<
   Path extends string = any,
   Data = any,
-  State extends object | null = any,
+  State extends object | null = any
 > extends RouteConfig<Path, Data, State> {
   match: MatchFunction<InferParams<Path>>
   load: PathTemplate<Path> extends Path

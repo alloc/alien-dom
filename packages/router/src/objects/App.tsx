@@ -1,6 +1,7 @@
 import { isFunction, isPromiseLike } from '@alloc/is'
 import {
   ComputedRef,
+  JSX,
   Ref,
   animate,
   arrayRef,
@@ -36,7 +37,7 @@ type Simplify<T> = {} & { [K in keyof T]: T[K] }
 
 export class App<
   Routes extends object = any,
-  Router extends ClientRouterType = ClientRouterType,
+  Router extends ClientRouterType = ClientRouterType
 > {
   private router: InstanceType<ClientRouterType>
   private stack: RouteInstance[] = []
@@ -371,7 +372,7 @@ export class App<
 
 export interface App<
   Routes extends object = any,
-  Router extends ClientRouterType = ClientRouterType,
+  Router extends ClientRouterType = ClientRouterType
 > {
   /**
    * An observable ref pointing to the current `location.pathname` value.
