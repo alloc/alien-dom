@@ -5,7 +5,8 @@
   "types": "dist/index.d.mts",
   "scripts": {
     "dev": "tsup --watch --sourcemap",
-    "build": "tsup"
+    "build": "tsup",
+    "prepublishOnly": "rm -rf dist && pnpm -s build"
   },
   "dependencies": {
     "@alloc/is": "^3.1.5",
