@@ -37,9 +37,9 @@ type Simplify<T> = {} & { [K in keyof T]: T[K] }
 
 export class App<
   Routes extends object = any,
-  Router extends ClientRouterType = ClientRouterType
+  RouterType extends ClientRouterType = ClientRouterType
 > {
-  private router: InstanceType<ClientRouterType>
+  private router: InstanceType<RouterType>
   private stack: RouteInstance[] = []
   private placeholder: JSX.Element | null = null
   private imports: Promise<any>[] = []
@@ -49,8 +49,8 @@ export class App<
   readonly routes = arrayRef<Route | LazyRoute>()
 
   constructor(
-    Router: ClientRouterType,
-    options?: ConstructorParameters<ClientRouterType>[1]
+    Router: RouterType,
+    options?: ConstructorParameters<RouterType>[1]
   ) {
     this.router = new Router(async path => {
       const { route, match } = await this.match(path)
@@ -372,7 +372,7 @@ export class App<
 
 export interface App<
   Routes extends object = any,
-  Router extends ClientRouterType = ClientRouterType
+  RouterType extends ClientRouterType = ClientRouterType
 > {
   /**
    * An observable ref pointing to the current `location.pathname` value.
@@ -382,7 +382,7 @@ export interface App<
   /**
    * An observable ref pointing to the current `location.hash` value.
    */
-  readonly hashRef: InstanceType<Router> extends PathRouter
+  readonly hashRef: InstanceType<RouterType> extends PathRouter
     ? Ref<string>
     : never
 
@@ -396,7 +396,7 @@ export interface App<
    * A shortcut for `this.hashRef.value`
    * @observable
    */
-  readonly hash: InstanceType<Router> extends PathRouter ? string : never
+  readonly hash: InstanceType<RouterType> extends PathRouter ? string : never
 
   readonly currentPage: Readonly<Page>
   readonly navigating: Promise<void> | null
