@@ -4,7 +4,7 @@ export type PageRecord = [
   session: number,
   time: number,
   state?: any,
-  scrollTops?: Record<string, number>,
+  scrollTops?: Record<string, number>
 ]
 
 export interface Page extends ResolvedPath {
@@ -47,7 +47,9 @@ export interface ClientRouterOptions {
   siteName?: string
 }
 
-export abstract class ClientRouter<Options extends object = {}> {
+export abstract class ClientRouter<
+  Options extends ClientRouterOptions = ClientRouterOptions
+> {
   readonly pathnameRef = ref('')
   session = Date.now()
   navigating: Promise<void> | null = null

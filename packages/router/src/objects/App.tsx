@@ -52,14 +52,14 @@ export class App<
     Router: RouterType,
     options?: ConstructorParameters<RouterType>[1]
   ) {
-    this.router = new Router(async path => {
+    const router = new Router(async path => {
       const { route, match } = await this.match(path)
       if (!route) {
-        throw Error(`No Route found for path: ${JSON.stringify(path)}`)
+        throw Error(`No route found for path: ${JSON.stringify(path)}`)
       }
 
       const instance: RouteInstance = {
-        route: route,
+        route,
         match,
         node: undefined!,
         enterEffects: undefined,
@@ -156,7 +156,8 @@ export class App<
       }
     }, options)
 
-    forwardRouterProperties(this.router, this)
+    forwardRouterProperties(router, this)
+    this.router = router as any
   }
 
   /**
