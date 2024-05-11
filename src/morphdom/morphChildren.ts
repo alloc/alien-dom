@@ -20,6 +20,7 @@ import {
   evaluateDeferredNode,
   isDeferredNode,
   isShadowRoot,
+  isTemplateNode,
 } from '../jsx-dom/node'
 import { ResolvedChild } from '../jsx-dom/resolveChildren'
 import { resolveSelected } from '../jsx-dom/resolveSelected'
@@ -266,7 +267,10 @@ function isCompatibleNode(fromNode: Node, toNode: ToNode) {
       return tags != null && tags.has(toNode.tag)
     }
     if (isElement(fromNode)) {
-      return compareNodeNames(fromNode.nodeName, toNode.tag)
+      return compareNodeNames(
+        fromNode.nodeName,
+        isTemplateNode(toNode.tag) ? toNode.tag.template.nodeName : toNode.tag
+      )
     }
     return false
   }
