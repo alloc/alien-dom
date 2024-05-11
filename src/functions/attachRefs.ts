@@ -4,7 +4,7 @@ import { attachRef } from './attachRef'
 /**
  * Mutates an object so its enumerable properties are observable.
  */
-export const refs = <Props extends object>(
+export const attachRefs = <Props extends object>(
   object: Props,
   didSet?: (key: keyof Props, newValue: any, oldValue: any) => void
 ) => {
