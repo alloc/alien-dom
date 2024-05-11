@@ -12,7 +12,7 @@ import type { AnyElement } from '../internal/types'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import { evaluateDeferredNode, isDeferredNode } from '../jsx-dom/node'
 import { morphFragment } from '../morphdom/morphFragment'
-import type { CSSAttributes, HTMLClassAttribute } from '../types'
+import type { CSSAttributes } from '../types'
 import type { JSX } from '../types/jsx'
 import { createFragment } from './Fragment'
 
@@ -59,7 +59,7 @@ export type TransitionProps<Id> = {
   initial?: AnimatedProps<JSX.Element> | boolean
   enter?: TransitionProp<Id, { initial: boolean }>
   leave?: TransitionProp<Id>
-  leaveClass?: HTMLClassAttribute
+  leaveClass?: JSX.HTMLClassProp
   /** The element to be animated can be selected from the direct child. */
   selector?: string
   children: JSX.ChildrenProp

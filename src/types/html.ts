@@ -5,7 +5,12 @@ import type { ChangeEventHandler, DOMAttributes, EventHandler } from './dom'
 
 export type HTMLClassArrayAttribute = readonly HTMLClassAttribute[]
 export type HTMLClassObjectAttribute = { [key: string]: boolean }
-export type HTMLClassPrimitiveAttribute = string | DOMTokenList | false | null
+export type HTMLClassPrimitiveAttribute =
+  | string
+  | DOMTokenList
+  | false
+  | null
+  | undefined
 
 export type HTMLClassAttribute =
   | HTMLClassArrayAttribute
@@ -19,6 +24,7 @@ export type HTMLStyleAttribute =
   | CSSAttributes
   | false
   | null
+  | undefined
 
 type HTMLDatasetData =
   | { toString(): string }

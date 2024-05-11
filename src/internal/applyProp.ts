@@ -1,12 +1,12 @@
 import { isArray, isBoolean, isObject } from '@alloc/is'
 import { createDisposable } from '../addons/disposable'
-import { ReadonlyRef, isRef } from '../core/observable'
+import { ReadonlyRef, Unref, isRef } from '../core/observable'
 import { appendChild } from '../jsx-dom/appendChild'
 import { AnyDeferredNode, isDeferredNode } from '../jsx-dom/node'
 import { ResolvedChild, resolveChildren } from '../jsx-dom/resolveChildren'
 import { resolveSelected } from '../jsx-dom/resolveSelected'
 import { morphChildren } from '../morphdom/morphChildren'
-import { HTMLClassAttribute, HTMLStyleAttribute, JSX } from '../types'
+import { JSX } from '../types'
 import { AlienRunningComponent } from './component'
 import { hasTagName, isNode } from './duck'
 import { flattenClassProp } from './flattenClassProp'
@@ -100,7 +100,7 @@ export function applyChildrenProp(
 
 export function applyClassProp(
   node: DefaultElement,
-  value: HTMLClassAttribute,
+  value: Unref<JSX.HTMLClassProp>,
   hostProps?: HostProps
 ): void {
   const result = flattenClassProp(value, hostProps)
@@ -113,7 +113,7 @@ export function applyClassProp(
 
 export function applyDatasetProp(
   node: DefaultElement,
-  value: any,
+  value: Unref<JSX.HTMLDatasetProp>,
   hostProps?: HostProps
 ): void {
   applyObjectProp(
@@ -129,7 +129,7 @@ export function applyDatasetProp(
 
 export function applyStyleProp(
   node: DefaultElement,
-  value: HTMLStyleAttribute,
+  value: Unref<JSX.HTMLStyleProp>,
   hostProps?: HostProps
 ): void {
   const merge: MergeStylesFn = (style, value) =>

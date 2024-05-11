@@ -1,9 +1,9 @@
 import { Ref } from '../core/observable'
 import { flattenClassProp } from '../internal/flattenClassProp'
-import { HTMLClassAttribute } from '../types'
+import { JSX } from '../types'
 
 export function editClassList(
-  ref: Ref<HTMLClassAttribute>,
+  ref: Ref<JSX.HTMLClassProp>,
   editor: (classList: DOMTokenList) => void
 ) {
   const str = flattenClassProp(ref.peek())

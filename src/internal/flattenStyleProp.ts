@@ -1,22 +1,23 @@
 import { isArray } from '@alloc/is'
-import { isRef } from '../core/observable'
+import { Falsy } from '@alloc/types'
+import { Unref, isRef } from '../core/observable'
 import { morphAttributes } from '../morphdom/morphAttributes'
-import { HTMLStyleAttribute } from '../types'
+import { CSSAttributes } from '../types'
 import { HostProps } from './hostProps'
-import { CSSProps, DefaultElement } from './types'
+import { DefaultElement } from './types'
 
 export type MergeStylesFn = (
-  toStyle: CSSProps,
-  fromStyle: Exclude<HTMLStyleAttribute & object, readonly any[]>
+  toStyle: CSSAttributes,
+  fromStyle: Unref<JSX.HTMLStyleProp>
 ) => void
 
 export function flattenStyleProp(
   node: DefaultElement,
-  value: HTMLStyleAttribute,
-  style: CSSProps,
+  value: Unref<JSX.HTMLStyleProp>,
+  style: CSSAttributes,
   merge: MergeStylesFn = Object.assign,
   hostProps?: HostProps,
-  rootValue?: HTMLStyleAttribute
+  rootValue?: Exclude<typeof value, Falsy>
 ) {
   if (value != null && value !== false) {
     if (isArray(value)) {

@@ -1,4 +1,4 @@
-import type { ReadonlyRef } from '../core/observable'
+import type { FlatReadonlyRef, ReadonlyRef } from '../core/observable'
 import type { ChildrenFragment } from '../hooks/useChildren'
 import type { AnyElement } from '../internal/types'
 import type { AlienNode, ShadowRootNode } from '../jsx-dom/node'
@@ -78,8 +78,8 @@ export declare namespace JSX {
   type ElementType = keyof IntrinsicElements | FunctionComponent<any>
 
   type HTMLClassArrayProp = readonly (
+    | FlatReadonlyRef<HTMLClassProp>
     | HTMLClassProp
-    | ReadonlyRef<HTMLClassProp>
   )[]
 
   type HTMLClassMapProp = {
@@ -89,27 +89,32 @@ export declare namespace JSX {
   type HTMLClassProp =
     | HTMLClassArrayProp
     | HTMLClassMapProp
-    | HTMLClassPrimitiveAttribute
-    | ReadonlyRef<HTMLClassPrimitiveAttribute>
+    | HTMLClassPrimitiveAttribute extends infer HTMLClassProp
+    ? ReadonlyRef<HTMLClassProp> | HTMLClassProp
+    : never
 
   type CSSProps = ObservableProps<CSSAttributes>
 
   type HTMLStyleArrayProp = readonly (
+    | FlatReadonlyRef<HTMLStyleProp>
     | HTMLStyleProp
-    | ReadonlyRef<HTMLStyleProp>
   )[]
 
   type HTMLStyleProp =
     | HTMLStyleArrayProp
-    | CSSAttributes
+    | CSSProps
     | false
     | null
-    | undefined
+    | undefined extends infer HTMLStyleProp
+    ? ReadonlyRef<HTMLStyleProp> | HTMLStyleProp
+    : never
 
   type HTMLDatasetProp = Record<
     string,
     HTMLDatasetAttribute[string] | ReadonlyRef<HTMLDatasetAttribute[string]>
-  >
+  > extends infer HTMLDatasetProp
+    ? ReadonlyRef<HTMLDatasetProp> | HTMLDatasetProp
+    : never
 
   type HTMLProps<T extends keyof HTMLAttributesByTagName> = unknown &
     HTMLObservableProps<T> &
