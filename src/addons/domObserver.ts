@@ -15,7 +15,7 @@ type RootNodeObserver = {
 
 const observersByRoot = new WeakMap<Node, RootNodeObserver>()
 
-function observe(rootNode: Node) {
+function observeDescendants(rootNode: Node) {
   let result = observersByRoot.get(rootNode)
   if (!result) {
     const onAdded = new Set<NodeCallback>()
@@ -116,7 +116,7 @@ export function observeRemovedChildren(
 
 export const observeNewDescendants = /* @__PURE__ */ defineEffectType(
   (target: Node, callback: NodeCallback) => {
-    const observer = observe(target)
+    const observer = observeDescendants(target)
     observer.onAdded.add(callback)
     return () => removeElementListener(observer, 'onAdded', callback)
   }
@@ -124,7 +124,7 @@ export const observeNewDescendants = /* @__PURE__ */ defineEffectType(
 
 export const observeRemovedDescendants = /* @__PURE__ */ defineEffectType(
   (target: Node, callback: NodeCallback) => {
-    const observer = observe(target)
+    const observer = observeDescendants(target)
     observer.onRemoved.add(callback)
     return () => removeElementListener(observer, 'onRemoved', callback)
   }
@@ -198,7 +198,7 @@ const createElementObserver = defineEffectType(
       }
     }
 
-    const observer = observe(rootNode)
+    const observer = observeDescendants(rootNode)
     observer[key].add(listener)
 
     function dispose() {
