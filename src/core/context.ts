@@ -8,13 +8,13 @@ import { Ref, ref } from './observable'
 
 export type AlienContext<T = any> = {
   (props: { value: T; children: JSX.ChildrenProp }): JSX.Element
-  get(): T
+  get value(): T
   with(value: T): [AlienContext<T>, Ref<T>]
 }
 
 export type AlienForwardedContext = {
   (props: { children: JSX.ChildrenProp }): JSX.Element
-  get(): ContextStore
+  get value(): ContextStore
   forward<Args extends any[], Result>(
     fn: (...args: Args) => Result,
     ...args: Args
@@ -35,7 +35,7 @@ export function createContext<T>(): AlienContext<T | undefined>
 export function createContext<T>(initial?: T) {
   const isForwardedContext = initial instanceof ContextStore
 
-  function Provider({
+  function Context({
     value,
     children,
   }: {
@@ -50,7 +50,7 @@ export function createContext<T>(initial?: T) {
         restoreContext = forwardContext(initial)
       } else {
         const ref = useRef(undefined as T | undefined)
-        oldValue = setContext(Provider as any, ref)
+        oldValue = setContext(Context as any, ref)
         ref.value = value
       }
 
@@ -60,31 +60,33 @@ export function createContext<T>(initial?: T) {
         if (isForwardedContext) {
           restoreContext!()
         } else {
-          setContext(Provider as any, oldValue)
+          setContext(Context as any, oldValue)
         }
       }
     }
     return null
   }
 
-  Provider.get = (): T => {
-    if (isForwardedContext) {
+  Object.defineProperty(Context, 'value', {
+    get: (): T => {
+      if (isForwardedContext) {
+        return initial!
+      }
+
+      const component = lastValue(currentComponent)
+      const current = component
+        ? component.context.get<T>(Context as any)
+        : getContext<T>(Context as any)
+
+      if (current) {
+        return current.value
+      }
       return initial!
-    }
-
-    const component = lastValue(currentComponent)
-    const current = component
-      ? component.context.get<T>(Provider as any)
-      : getContext<T>(Provider as any)
-
-    if (current) {
-      return current.value
-    }
-    return initial!
-  }
+    },
+  })
 
   if (isForwardedContext) {
-    Provider.forward = (fn: any, ...args: any[]) => {
+    Context.forward = (fn: any, ...args: any[]) => {
       const oldValues = new Map(getContext())
       initial.forEach((value, key) => {
         setContext(key, value)
@@ -98,10 +100,10 @@ export function createContext<T>(initial?: T) {
       }
     }
   } else {
-    Provider.with = withProvider
+    Context.with = withProvider
   }
 
-  return Provider as any
+  return Context as any
 }
 
 function withProvider<T>(this: AlienContext<T>, value: T) {
