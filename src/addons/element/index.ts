@@ -1,5 +1,7 @@
 export * from './attributes'
 export * from './classList'
+export * from './lastChildWhere'
+export * from './lastElementChildWhere'
 export * from './nodeFilter'
 export * from './removeChildren'
 export * from './siblings'
