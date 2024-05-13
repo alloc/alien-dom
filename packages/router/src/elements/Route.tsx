@@ -1,4 +1,4 @@
-import { refs, useAsync, useEffect, useMemo, useState } from 'alien-dom'
+import { attachRefs, useAsync, useEffect, useMemo, useState } from 'alien-dom'
 import { Route } from '../objects/Route'
 import { deepMerge } from '../util/deepMerge'
 import { RouteContext, RouteInstance } from './RouteContext'
@@ -87,7 +87,7 @@ function initRouteState(Route: Route, params: any) {
       setState(state)
     }
   }
-  return state ? refs(state, () => setState({ ...state })) : null
+  return state ? attachRefs(state, () => setState({ ...state })) : null
 }
 
 type Falsy = false | null | undefined | 0 | ''
