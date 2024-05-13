@@ -13,7 +13,8 @@ export type UseVisibilityOptions = {
 
 export function useVisibility(
   target: HTMLOrSVGElement | ElementProxy,
-  options: UseVisibilityOptions = {}
+  options: UseVisibilityOptions = {},
+  deps: readonly any[] = []
 ): ReadonlyRef<boolean> {
   const visibleRef = useRef(false)
 
@@ -37,7 +38,7 @@ export function useVisibility(
     return isElement(target)
       ? observe(target)
       : target.onceElementExists(observe).dispose
-  }, [target])
+  }, [target, ...deps])
 
   return visibleRef
 }
