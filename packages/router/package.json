@@ -14,12 +14,12 @@
     "path-types": "npm:@alloc/path-types@^0.1.0"
   },
   "devDependencies": {
-    "alien-dom": "^0.9.0",
+    "alien-dom": "workspace:^",
     "codegentool": "npm:@alloc/codegentool@^1.2.2",
     "tsup": "^8.0.2"
   },
   "peerDependencies": {
-    "alien-dom": ">=0.9.0",
+    "alien-dom": ">=0.10.5",
     "codegentool": "npm:@alloc/codegentool@>=1.2.0"
   },
   "license": "MIT",
