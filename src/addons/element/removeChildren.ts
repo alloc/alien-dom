@@ -1,3 +1,4 @@
+import { unmount } from '../../functions/unmount'
 import { nodeFilter } from './nodeFilter'
 import { AlienNodeFilter } from './types'
 
@@ -13,6 +14,7 @@ export function removeChildren(
     nextSibling = child.nextSibling
     if (!selector || nodeFilter(child, selector)) {
       context.removeChild(child)
+      unmount(child, true)
     }
   }
 }
