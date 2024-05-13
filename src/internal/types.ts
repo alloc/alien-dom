@@ -1,13 +1,18 @@
 import type { FromElementProxy } from '../addons/elementProxy'
 
 export type AnyElement = Element
-export type DefaultElement = HTMLElement | SVGElement
 export type AnyEvent = Event
+
+export type HTMLOrSVGElement = HTMLElement | SVGElement
+export type {
+  /** @deprecated Use HTMLOrSVGElement */
+  HTMLOrSVGElement as DefaultElement,
+}
 
 /**
  * Allows type casting via tag name (eg: `"a"` → `HTMLAnchorElement`)
  */
-export type AlienTag<Element extends AnyElement = DefaultElement> =
+export type AlienTag<Element extends AnyElement = HTMLOrSVGElement> =
   | Element
   | (Element extends HTMLElement
       ? HTMLElement | keyof HTMLElementTagNameMap

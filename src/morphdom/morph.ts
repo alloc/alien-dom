@@ -2,7 +2,7 @@ import { isRef } from '../core/observable'
 import { addChildrenRef, applyRefProp } from '../internal/applyProp'
 import { AlienComponent } from '../internal/component'
 import { kAlienHostProps } from '../internal/symbols'
-import type { DefaultElement } from '../internal/types'
+import type { HTMLOrSVGElement } from '../internal/types'
 import {
   AnyDeferredNode,
   DeferredChildren,
@@ -16,7 +16,7 @@ import { morphComposite } from './morphComposite'
  * This function assumes the two host nodes are compatible.
  */
 export function morph(
-  fromParentNode: DefaultElement,
+  fromParentNode: HTMLOrSVGElement,
   toParentNode: AnyDeferredNode,
   component?: AlienComponent | null
 ) {

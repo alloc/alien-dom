@@ -1,7 +1,7 @@
 import { isArray } from '@alloc/is'
 import { applyAnimatedValue } from '../animate'
 import { cssTransformAliases, cssTransformDefaults } from '../transform'
-import type { DefaultElement } from '../types'
+import type { HTMLOrSVGElement } from '../types'
 import { parseValue } from './parseValue'
 import type { AnimatedElement, ParsedTransform } from './types'
 
@@ -16,7 +16,7 @@ export class AnimatedTransform {
   newCalls: TransformCall[] | null = null
   isIdentity: boolean
 
-  constructor(readonly target: DefaultElement, readonly svgMode: boolean) {
+  constructor(readonly target: HTMLOrSVGElement, readonly svgMode: boolean) {
     this.isIdentity = !svgMode
   }
 

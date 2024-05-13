@@ -4,17 +4,17 @@ import {
   AlienSelect,
   AlienTag,
   AnyElement,
-  DefaultElement,
+  HTMLOrSVGElement,
 } from '../internal/types'
 import type { AlienElement, AlienElementList } from './elementExtensions'
 
-export function $<Element extends AlienTag<DefaultElement>>(
+export function $<Element extends AlienTag<HTMLOrSVGElement>>(
   element: AnyElement
 ): AlienSelect<Element>
 
 export function $(element: AnyElement): AlienElement & AnyElement
 
-export function $<Element extends AlienTag<DefaultElement>>(
+export function $<Element extends AlienTag<HTMLOrSVGElement>>(
   element: AnyElement | null
 ): AlienSelect<Element> | null
 
@@ -22,9 +22,9 @@ export function $(
   element: AnyElement | null
 ): (AlienElement & AnyElement) | null
 
-export function $<Element extends AlienTag<DefaultElement> = DefaultElement>(
-  selector: string
-): AlienSelect<Element> | null
+export function $<
+  Element extends AlienTag<HTMLOrSVGElement> = HTMLOrSVGElement
+>(selector: string): AlienSelect<Element> | null
 
 export function $(arg: any) {
   return typeof arg == 'string' ? document.querySelector(arg) : arg
@@ -37,7 +37,9 @@ export type AlienSelectable =
   | NodeListOf<AnyElement>
   | Iterable<AnyElement>
 
-export const $$ = <Element extends AlienTag<DefaultElement> = DefaultElement>(
+export const $$ = <
+  Element extends AlienTag<HTMLOrSVGElement> = HTMLOrSVGElement
+>(
   ...selectors: (AlienSelectable | false | null | undefined)[]
 ): AlienElementList<AlienSelect<Element>> => {
   if (selectors.length == 1) {

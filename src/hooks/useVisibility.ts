@@ -1,7 +1,7 @@
 import { ElementProxy, isElementProxy } from '../addons/elementProxy'
 import { ReadonlyRef } from '../core/observable'
 import { isElement } from '../functions/typeChecking'
-import { DefaultElement } from '../internal/types'
+import { HTMLOrSVGElement } from '../internal/types'
 import { useEffect } from './useEffect'
 import { useRef } from './useRef'
 
@@ -12,7 +12,7 @@ export type UseVisibilityOptions = {
 }
 
 export function useVisibility(
-  target: DefaultElement | ElementProxy,
+  target: HTMLOrSVGElement | ElementProxy,
   options: UseVisibilityOptions = {}
 ): ReadonlyRef<boolean> {
   const visibleRef = useRef(false)

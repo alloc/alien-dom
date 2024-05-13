@@ -3,7 +3,7 @@ import { isUnitlessNumber } from '../jsx-dom/css-props'
 import { isSvgChild } from '../jsx-dom/svg-tags'
 import { isAnimatedStyleProp, stopAnimatingKey } from './animate'
 import { cssTransformAliases, cssTransformUnits } from './transform'
-import { DefaultElement } from './types'
+import { HTMLOrSVGElement } from './types'
 import { set } from './util'
 
 export const enum UpdateStyle {
@@ -14,13 +14,13 @@ export const enum UpdateStyle {
 }
 
 export function updateStyle(
-  element: DefaultElement,
+  element: HTMLOrSVGElement,
   style: any,
   flags?: UpdateStyle | 0
 ): void
 
 export function updateStyle(
-  element: DefaultElement,
+  element: HTMLOrSVGElement,
   style: any,
   flags: UpdateStyle | 0 = 0
 ): any {

@@ -7,11 +7,11 @@ import {
 import { getAnimatedKeys } from '../internal/animate'
 import { expectCurrentEffects } from '../internal/global'
 import { shallowEquals } from '../internal/shallowEquals'
-import type { DefaultElement } from '../internal/types'
+import type { HTMLOrSVGElement } from '../internal/types'
 import { toArray } from '../internal/util'
 import { useState } from './useState'
 
-export function useSpring<Element extends DefaultElement>(
+export function useSpring<Element extends HTMLOrSVGElement>(
   element: Element,
   animations: SpringAnimation<Element> | readonly SpringAnimation<Element>[],
   shouldRun?: boolean | null

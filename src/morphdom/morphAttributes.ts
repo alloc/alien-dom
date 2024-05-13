@@ -14,13 +14,13 @@ import {
 import { flattenStyleProp } from '../internal/flattenStyleProp'
 import { kAlienHostProps } from '../internal/symbols'
 import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
-import { DefaultElement } from '../internal/types'
+import { HTMLOrSVGElement } from '../internal/types'
 import { UpdateStyle, updateStyle } from '../internal/updateStyle'
 import { forEach, keys, noop } from '../internal/util'
 import { isSvgChild } from '../jsx-dom/svg-tags'
 
 export function morphAttributes(
-  fromNode: DefaultElement,
+  fromNode: HTMLOrSVGElement,
   toProps: any,
   targetProp?: string
 ): void {

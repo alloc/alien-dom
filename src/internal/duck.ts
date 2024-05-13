@@ -6,7 +6,7 @@ import {
   kFragmentNodeType,
   kTextNodeType,
 } from './constants'
-import { DefaultElement } from './types'
+import { HTMLOrSVGElement } from './types'
 
 export function canMatch(node: any): node is { matches: Function } {
   return typeof (node as any).matches == 'function'
@@ -40,7 +40,7 @@ export function isNode(val: any): val is Node | ChildNode | ParentNode {
   return isObject(val) && isNumber((val as any).nodeType)
 }
 
-export function isElement(node: Node): node is DefaultElement {
+export function isElement(node: Node): node is HTMLOrSVGElement {
   return node.nodeType === kElementNodeType
 }
 

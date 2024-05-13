@@ -4,7 +4,7 @@ import { Unref, isRef } from '../core/observable'
 import { morphAttributes } from '../morphdom/morphAttributes'
 import { CSSAttributes } from '../types'
 import { HostProps } from './hostProps'
-import { DefaultElement } from './types'
+import { HTMLOrSVGElement } from './types'
 
 export type MergeStylesFn = (
   toStyle: CSSAttributes,
@@ -12,7 +12,7 @@ export type MergeStylesFn = (
 ) => void
 
 export function flattenStyleProp(
-  node: DefaultElement,
+  node: HTMLOrSVGElement,
   value: Unref<JSX.HTMLStyleProp>,
   style: CSSAttributes,
   merge: MergeStylesFn = Object.assign,

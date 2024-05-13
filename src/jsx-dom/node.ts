@@ -25,7 +25,7 @@ import {
   kAlienFragmentNodes,
   kAlienStateless,
 } from '../internal/symbols'
-import { DefaultElement } from '../internal/types'
+import { HTMLOrSVGElement } from '../internal/types'
 import { lastValue } from '../internal/util'
 import { SVGNamespace } from '../jsx-dom/jsx-runtime'
 import { FunctionComponent } from '../types'
@@ -51,7 +51,7 @@ export const isShadowRoot = (node: any): node is ShadowRootNode =>
 
 export interface TemplateNode {
   [kAlienNodeType]: typeof kTemplateNodeType
-  template: DefaultElement
+  template: HTMLOrSVGElement
 }
 
 export const isTemplateNode = (node: any): node is TemplateNode =>
@@ -175,7 +175,7 @@ export function createHostNode(
       : (namespaceURI ||= svgTags[tag] && SVGNamespace)
       ? document.createElementNS(namespaceURI, tag)
       : document.createElement(tag)
-  ) as DefaultElement
+  ) as HTMLOrSVGElement
 
   const hostProps = new HostProps(hostNode)
 

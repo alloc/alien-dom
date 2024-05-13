@@ -1,6 +1,6 @@
-import { DefaultElement } from '../internal/types'
+import { HTMLOrSVGElement } from '../internal/types'
 
-export function isSvgChild(element: DefaultElement) {
+export function isSvgChild(element: HTMLOrSVGElement) {
   return !!svgTags[element.tagName] && element.tagName !== 'svg'
 }
 

@@ -2,7 +2,7 @@ import type { Falsy } from '@alloc/types'
 import { isElementProxy } from '../addons/elementProxy'
 import { observe } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
-import type { DefaultElement } from '../internal/types'
+import type { HTMLOrSVGElement } from '../internal/types'
 import { UpdateStyle, updateStyle } from '../internal/updateStyle'
 import { toArray } from '../internal/util'
 import type { CSSAttributes } from '../types'
@@ -19,7 +19,7 @@ import { useState } from './useState'
  * 🪝 This hook adds 1 to the hook offset.
  */
 export function useStyle(
-  element: DefaultElement | readonly DefaultElement[],
+  element: HTMLOrSVGElement | readonly HTMLOrSVGElement[],
   style: CSSAttributes | Falsy,
   deps?: readonly any[]
 ): void
@@ -33,14 +33,14 @@ export function useStyle(
  * 🪝 This hook adds 1 to the hook offset.
  */
 export function useStyle(
-  element: DefaultElement | readonly DefaultElement[],
+  element: HTMLOrSVGElement | readonly HTMLOrSVGElement[],
   style: () => CSSAttributes | Falsy,
   deps: readonly any[]
 ): void
 
 /** @internal */
 export function useStyle(
-  element: DefaultElement | readonly DefaultElement[],
+  element: HTMLOrSVGElement | readonly HTMLOrSVGElement[],
   style: CSSAttributes | (() => CSSAttributes | Falsy) | Falsy,
   deps?: readonly any[]
 ) {

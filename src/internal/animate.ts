@@ -1,6 +1,6 @@
 import type { AnimatedElement, SpringTimeline } from './animate/types'
 import { createSymbolProperty } from './symbolProperty'
-import type { DefaultElement } from './types'
+import type { HTMLOrSVGElement } from './types'
 import { decamelize } from './util'
 
 export const kAlienAnimatedState =
@@ -23,7 +23,7 @@ export function deleteTimeline(
   }
 }
 
-export function getAnimatedKeys(element: DefaultElement) {
+export function getAnimatedKeys(element: HTMLOrSVGElement) {
   const state = kAlienAnimatedState(element)
   if (state) {
     const keys = Object.keys(state.style)
@@ -33,7 +33,7 @@ export function getAnimatedKeys(element: DefaultElement) {
   }
 }
 
-export function stopAnimatingKey(element: DefaultElement, key: string) {
+export function stopAnimatingKey(element: HTMLOrSVGElement, key: string) {
   const state = kAlienAnimatedState(element)
   if (state?.nodes) {
     const node = state.nodes[key]
@@ -49,7 +49,7 @@ export function stopAnimatingKey(element: DefaultElement, key: string) {
   }
 }
 
-export function isAnimatedStyleProp(element: DefaultElement, key: string) {
+export function isAnimatedStyleProp(element: HTMLOrSVGElement, key: string) {
   const state = kAlienAnimatedState(element)
   if (!state) {
     return false
@@ -61,7 +61,7 @@ export function isAnimatedStyleProp(element: DefaultElement, key: string) {
 }
 
 export function applyAnimatedValue(
-  target: DefaultElement,
+  target: HTMLOrSVGElement,
   style: Record<string, any> | null,
   svgMode: boolean,
   key: string,

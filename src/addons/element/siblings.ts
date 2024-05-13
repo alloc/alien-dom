@@ -1,5 +1,5 @@
 import { isNumber, isString } from '@alloc/is'
-import { DefaultElement } from '../../internal/types'
+import { HTMLOrSVGElement } from '../../internal/types'
 import { JSX } from '../../types'
 import { nodeFilter } from './nodeFilter'
 import { AlienNodeFilter, AlienSelect, AlienTag } from './types'
@@ -23,23 +23,23 @@ export enum SiblingPosition {
 
 export type SiblingPositionKey = keyof typeof SiblingPosition
 
-export function firstSibling<T extends AlienTag = DefaultElement>(
+export function firstSibling<T extends AlienTag = HTMLOrSVGElement>(
   context: JSX.Element,
   selector: AlienNodeFilter<JSX.Element | Comment | Text>
 ): AlienSelect<T> | undefined
 
-export function firstSibling<T extends AlienTag = DefaultElement>(
+export function firstSibling<T extends AlienTag = HTMLOrSVGElement>(
   context: Element,
   selector: AlienNodeFilter<Element | Comment | Text>
 ): AlienSelect<T> | undefined
 
-export function firstSibling<T extends AlienTag = DefaultElement>(
+export function firstSibling<T extends AlienTag = HTMLOrSVGElement>(
   context: JSX.Element,
   position: SiblingPosition | SiblingPositionKey,
   selector: AlienNodeFilter<JSX.Element | Comment | Text>
 ): AlienSelect<T> | undefined
 
-export function firstSibling<T extends AlienTag = DefaultElement>(
+export function firstSibling<T extends AlienTag = HTMLOrSVGElement>(
   context: Element,
   position: SiblingPosition | SiblingPositionKey,
   selector: AlienNodeFilter<Element | Comment | Text>

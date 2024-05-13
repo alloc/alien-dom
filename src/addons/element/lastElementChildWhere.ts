@@ -1,11 +1,11 @@
-import { AnyElement, DefaultElement } from '../../internal/types'
+import { AnyElement, HTMLOrSVGElement } from '../../internal/types'
 
 export function lastElementChildWhere<T extends SVGElement = SVGElement>(
   parentNode: SVGElement,
   filter: (child: T) => boolean
 ): T | null
 
-export function lastElementChildWhere<T extends AnyElement = DefaultElement>(
+export function lastElementChildWhere<T extends AnyElement = HTMLOrSVGElement>(
   parentNode: AnyElement,
   filter: (child: T) => boolean
 ): T | null

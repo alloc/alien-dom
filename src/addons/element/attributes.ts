@@ -1,9 +1,9 @@
 import { applyProp } from '../../internal/applyProp'
-import { DefaultElement } from '../../internal/types'
+import { HTMLOrSVGElement } from '../../internal/types'
 import { keys } from '../../jsx-dom/util'
 import { JSX } from '../../types'
 
-export function patchAttributes<T extends DefaultElement>(
+export function patchAttributes<T extends HTMLOrSVGElement>(
   context: T,
   attributes: JSX.InferAttributes<T>
 ) {

@@ -1,11 +1,11 @@
 import { isDocument } from '../functions/typeChecking'
-import { DefaultElement } from '../internal/types'
+import { HTMLOrSVGElement } from '../internal/types'
 import { useCallbackProp } from './useCallbackProp'
 import { useEventTarget } from './useEventTarget'
 
 export function useClickOutside(handler: () => void) {
   handler = useCallbackProp(handler)
-  return useEventTarget<DefaultElement>(target => {
+  return useEventTarget<HTMLOrSVGElement>(target => {
     if (isDocument(target)) {
       return
     }

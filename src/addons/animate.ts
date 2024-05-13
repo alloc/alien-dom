@@ -21,7 +21,7 @@ import {
 } from '../internal/animate/types'
 import { animatedElements } from '../internal/global'
 import { cssTransformDefaults, cssTransformUnits } from '../internal/transform'
-import { AnyElement, DefaultElement } from '../internal/types'
+import { AnyElement, HTMLOrSVGElement } from '../internal/types'
 import { keys, toArray } from '../internal/util'
 import { isSvgChild } from '../jsx-dom/svg-tags'
 import { CSSLength, CSSTransformAttributes } from '../types'
@@ -153,7 +153,7 @@ export function animate(
 
 export function animate(
   selector: AlienSelectable,
-  animations: AnimationsParam<DefaultElement>
+  animations: AnimationsParam<HTMLOrSVGElement>
 ): void
 
 export function animate(
@@ -166,7 +166,7 @@ export function animate(
       : isNode(selector)
       ? [selector]
       : selector
-  ) as DefaultElement[] | NodeListOf<DefaultElement>
+  ) as HTMLOrSVGElement[] | NodeListOf<HTMLOrSVGElement>
 
   if (isFunction(_animations)) {
     const step = _animations
@@ -297,7 +297,7 @@ export function animate(
   }
 }
 
-function ensureAnimatedElement(target: DefaultElement): AnimatedElement {
+function ensureAnimatedElement(target: HTMLOrSVGElement): AnimatedElement {
   let state = kAlienAnimatedState(target)
   if (!state) {
     state = {
@@ -318,7 +318,7 @@ function ensureAnimatedElement(target: DefaultElement): AnimatedElement {
 
 function addTimelineTimeout(
   timelines: Record<string, SpringTimeline> | undefined,
-  target: DefaultElement,
+  target: HTMLOrSVGElement,
   state: AnimatedElement,
   animation: SpringAnimation,
   spring: SpringResolver,
@@ -341,7 +341,7 @@ function addTimelineTimeout(
 
 function addTimelinePromise(
   timelines: Record<string, SpringTimeline> | undefined,
-  target: DefaultElement,
+  target: HTMLOrSVGElement,
   state: AnimatedElement,
   animation: SpringAnimation,
   spring: SpringResolver,
@@ -374,7 +374,7 @@ function addTimelinePromise(
 }
 
 function applyAnimation(
-  target: DefaultElement,
+  target: HTMLOrSVGElement,
   state: AnimatedElement,
   animation: SpringAnimation,
   spring: SpringResolver,
@@ -433,7 +433,7 @@ function applyAnimation(
 }
 
 function updateAnimatedNode(
-  target: DefaultElement,
+  target: HTMLOrSVGElement,
   svgMode: boolean,
   key: string,
   to: any,
@@ -550,7 +550,7 @@ function startLoop() {
     const dt = Math.min(64, now - (lastTime || now))
     lastTime = now
 
-    let stepResults: Map<DefaultElement, any> | undefined
+    let stepResults: Map<HTMLOrSVGElement, any> | undefined
 
     for (const [target, state] of animatedElements) {
       if (!target.isConnected) {

@@ -2,9 +2,9 @@ import type { AlienEffects } from '../core/effects'
 import type { AnimatedElement } from './animate/types'
 import type { AlienRunningComponent } from './component'
 import { expectLastValue, type Stack } from './stack'
-import type { DefaultElement } from './types'
+import type { HTMLOrSVGElement } from './types'
 
-export const animatedElements = new Map<DefaultElement, AnimatedElement>()
+export const animatedElements = new Map<HTMLOrSVGElement, AnimatedElement>()
 
 export const currentEffects: Stack<AlienEffects> = [null]
 export const expectCurrentEffects = expectLastValue(

@@ -3,7 +3,7 @@ import { Disposable, createDisposable } from '../addons/disposable'
 import { ReadonlyRef, observe } from '../core/observable'
 import { JSX } from '../types/jsx'
 import { kAlienHostProps } from './symbols'
-import { DefaultElement } from './types'
+import { HTMLOrSVGElement } from './types'
 import { forEach } from './util'
 
 type HostProp = Disposable | Disposable[] | null
@@ -12,7 +12,7 @@ export class HostProps extends Map<string, HostProp> {
   refs?: Set<JSX.ElementRef>
   unmappedEffects?: Set<Disposable>
 
-  constructor(readonly node: DefaultElement) {
+  constructor(readonly node: HTMLOrSVGElement) {
     super()
     kAlienHostProps(node, this)
   }

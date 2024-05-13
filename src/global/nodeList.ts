@@ -4,7 +4,7 @@ import {
   AlienSelect,
   AlienTag,
   AnyElement,
-  DefaultElement,
+  HTMLOrSVGElement,
 } from '../internal/types'
 
 export interface AlienNodeList<Element extends Node>
@@ -23,7 +23,7 @@ const AlienElementListPrototype = {
 }
 
 export function createAlienElementList<
-  Element extends AlienTag<DefaultElement> = DefaultElement
+  Element extends AlienTag<HTMLOrSVGElement> = HTMLOrSVGElement
 >(
   arg?:
     | AnyElement

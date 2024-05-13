@@ -1,9 +1,9 @@
 import { defineEffectType, getCurrentEffect } from '../core/effects'
 import { binaryInsert } from '../internal/binaryInsert'
 import { isComment, isElement } from '../internal/duck'
-import { DefaultElement } from '../internal/types'
+import { HTMLOrSVGElement } from '../internal/types'
 
-type ObservableNode = DefaultElement | Comment
+type ObservableNode = HTMLOrSVGElement | Comment
 type NodeCallback = (node: ObservableNode) => void
 
 type RootNodeObserver = {

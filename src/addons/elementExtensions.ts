@@ -9,7 +9,7 @@ import type {
   AlienTag,
   AnyElement,
   AnyEvent,
-  DefaultElement,
+  HTMLOrSVGElement,
 } from '../internal/types'
 import { unwrap } from '../internal/unwrap'
 import { UpdateStyle, updateStyle } from '../internal/updateStyle'
@@ -26,7 +26,7 @@ import {
 } from './element/classList'
 import { FromElementProxy } from './elementProxy'
 
-export interface AlienElementList<Element extends Node = DefaultElement>
+export interface AlienElementList<Element extends Node = HTMLOrSVGElement>
   extends NodeListOf<Element>,
     AlienNodeList<Element> {
   [index: number]: Element
@@ -56,7 +56,7 @@ export type AlienElementIterator<Element extends AnyElement> =
 
 export type AlienEvent<
   Event extends AnyEvent = AnyEvent,
-  Element extends AnyElement = DefaultElement
+  Element extends AnyElement = HTMLOrSVGElement
 > = Event & {
   currentTarget: Element
   target: AnyElement
@@ -69,7 +69,7 @@ type AlienParentElement<Element extends AnyElement> =
   | HTMLElement
   | Document
 
-export class AlienElement<Element extends AnyElement = DefaultElement> {
+export class AlienElement<Element extends AnyElement = HTMLOrSVGElement> {
   $<SelectedElement extends AlienTag<Element> = Element>(
     selector: string
   ): AlienSelect<SelectedElement, this> | null {

@@ -13,7 +13,7 @@ import { flattenClassProp } from './flattenClassProp'
 import { MergeStylesFn, flattenStyleProp } from './flattenStyleProp'
 import { HostProps } from './hostProps'
 import { kAlienElementKey } from './symbols'
-import { DefaultElement } from './types'
+import { HTMLOrSVGElement } from './types'
 import { UpdateStyle, updateStyle } from './updateStyle'
 import { decamelize, forEach, noop, set } from './util'
 
@@ -21,7 +21,7 @@ const nonPresentationSVGAttributes =
   /^(a(ll|t|u)|base[FP]|c(al|lipPathU|on)|di|ed|ex|filter[RU]|g(lyphR|r)|ke|l(en|im)|ma(rker[HUW]|s)|n|pat|pr|point[^e]|re[^n]|s[puy]|st[^or]|ta|textL|vi|xC|y|z)/
 
 type ApplyFunction = (
-  node: DefaultElement,
+  node: HTMLOrSVGElement,
   value: any,
   hostProps?: HostProps
 ) => void
@@ -35,7 +35,7 @@ const ApplyFunctionMap: Record<string, ApplyFunction> = {
 }
 
 export function applyProp(
-  node: DefaultElement,
+  node: HTMLOrSVGElement,
   prop: string,
   value: any,
   hostProps?: HostProps
@@ -82,7 +82,7 @@ export function addChildrenRef(
 }
 
 export function applyChildrenProp(
-  node: DefaultElement,
+  node: HTMLOrSVGElement,
   children: ResolvedChild[] | ReadonlyRef<any>,
   hostProps?: HostProps
 ): void {
@@ -99,7 +99,7 @@ export function applyChildrenProp(
 }
 
 export function applyClassProp(
-  node: DefaultElement,
+  node: HTMLOrSVGElement,
   value: Unref<JSX.HTMLClassProp>,
   hostProps?: HostProps
 ): void {
@@ -112,7 +112,7 @@ export function applyClassProp(
 }
 
 export function applyDatasetProp(
-  node: DefaultElement,
+  node: HTMLOrSVGElement,
   value: Unref<JSX.HTMLDatasetProp>,
   hostProps?: HostProps
 ): void {
@@ -128,7 +128,7 @@ export function applyDatasetProp(
 }
 
 export function applyStyleProp(
-  node: DefaultElement,
+  node: HTMLOrSVGElement,
   value: Unref<JSX.HTMLStyleProp>,
   hostProps?: HostProps
 ): void {
@@ -246,7 +246,7 @@ function generateApplyFunction(prop: string): ApplyFunction {
   }
 
   let namespace: string | null | undefined
-  let getAttributeName: (node: DefaultElement) => string
+  let getAttributeName: (node: HTMLOrSVGElement) => string
 
   if (prop[0] === 'x') {
     if (prop === 'xmlnsXlink') {
@@ -321,7 +321,7 @@ function generateApplyFunction(prop: string): ApplyFunction {
 }
 
 export function applyRefProp(
-  node: DefaultElement,
+  node: HTMLOrSVGElement,
   ref: JSX.RefProp,
   hostProps?: HostProps
 ): void {
