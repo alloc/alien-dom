@@ -1,5 +1,7 @@
 import { ElementProxy, isElementProxy } from '../addons/elementProxy'
 import { ReadonlyRef } from '../core/observable'
+import { isElement } from '../functions/typeChecking'
+import { DefaultElement } from '../internal/types'
 import { useEffect } from './useEffect'
 import { useRef } from './useRef'
 
@@ -10,13 +12,13 @@ export type UseVisibilityOptions = {
 }
 
 export function useVisibility(
-  target: ElementProxy,
+  target: DefaultElement | ElementProxy,
   options: UseVisibilityOptions = {}
 ): ReadonlyRef<boolean> {
   const visibleRef = useRef(false)
 
   useEffect(() => {
-    return target.onceElementExists(target => {
+    function observe(target: Element) {
       const init: IntersectionObserverInit = {
         ...options,
         root: isElementProxy(options.root)
@@ -30,7 +32,11 @@ export function useVisibility(
 
       observer.observe(target)
       return () => observer.disconnect()
-    }).dispose
+    }
+
+    return isElement(target)
+      ? observe(target)
+      : target.onceElementExists(observe).dispose
   }, [target])
 
   return visibleRef
