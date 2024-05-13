@@ -178,8 +178,8 @@ importers:
         version: '@alloc/path-types@0.1.0'
     devDependencies:
       alien-dom:
-        specifier: ^0.9.0
-        version: 0.9.1
+        specifier: workspace:^
+        version: link:../../dist
       codegentool:
         specifier: npm:@alloc/codegentool@^1.2.2
         version: '@alloc/codegentool@1.3.0'
@@ -1005,9 +1005,6 @@ packages:
   aggregate-error@4.0.1:
     resolution: {integrity: sha512-0poP0T7el6Vq3rstR8Mn4V/IQrpBLO6POkUSrN7RhyY+GF/InCFShQzsQ39T25gkHhLgSLByyAz+Kjb+c2L98w==}
     engines: {node: '>=12'}
-
-  alien-dom@0.9.1:
-    resolution: {integrity: sha512-VSjEpcy8geJ+ysXvVNPTRxdWkPULbPt+MkgTSAJjBTkMy5Mrokxx7AB4DDYRaOQwHOb6gJffxNS8s52sG3/qvA==}
 
   ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
@@ -3233,12 +3230,6 @@ snapshots:
     dependencies:
       clean-stack: 4.2.0
       indent-string: 5.0.0
-
-  alien-dom@0.9.1:
-    dependencies:
-      '@alloc/types': 2.3.0
-      csstype: 3.1.2
-      ts-key-enum: 2.0.12
 
   ansi-regex@5.0.1: {}
 
