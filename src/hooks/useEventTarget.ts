@@ -50,7 +50,7 @@ const initEventTarget = (
           this.dispose = result
         }
       } else {
-        const shadowRoot = ShadowRootContext.get()
+        const shadowRoot = ShadowRootContext.value
         this.dispose = onMount(
           element,
           () => this.setElement(element),

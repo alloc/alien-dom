@@ -39,7 +39,7 @@ export function useLeaveEffect(effect: RouteLeaveEffect) {
 }
 
 function assertRouteContext() {
-  const context = RouteContext.get()
+  const context = RouteContext.value
   if (!context) {
     throw new Error('Invalid use outside a Route context')
   }

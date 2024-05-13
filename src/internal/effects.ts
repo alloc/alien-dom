@@ -11,7 +11,7 @@ import { noop } from './util'
 
 export function getEffects<T extends AnyElement>(
   element: T,
-  rootNode: Node | undefined = ShadowRootContext.get()
+  rootNode: Node | undefined = ShadowRootContext.value
 ): AlienEffects<T> {
   return kAlienEffects(element) || new AlienEffects(element, rootNode)
 }
