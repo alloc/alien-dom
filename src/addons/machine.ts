@@ -3,6 +3,9 @@ import { AllKeys, Intersect, Remap } from '@alloc/types'
 import { ReadonlyRef, ref } from '../core/observable'
 import { noop } from '../internal/util'
 
+/**
+ * @experimental
+ */
 export function defineMachine<T extends MachineType>(
   setup: (
     params: Readonly<MachineParams<T>>,
