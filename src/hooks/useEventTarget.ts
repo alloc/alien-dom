@@ -1,6 +1,6 @@
 import { onMount } from '../addons/domObserver'
 import { expectCurrentComponent } from '../internal/global'
-import { ShadowRootContext } from '../internal/shadow'
+import { getShadowRoot } from '../internal/shadow'
 import { EffectResult, useEffect } from './useEffect'
 import { useState } from './useState'
 
@@ -50,7 +50,7 @@ const initEventTarget = (
           this.dispose = result
         }
       } else {
-        const shadowRoot = ShadowRootContext.value
+        const shadowRoot = getShadowRoot()
         this.dispose = onMount(
           element,
           () => this.setElement(element),

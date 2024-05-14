@@ -1,4 +1,4 @@
-import { JSX, createContext } from 'alien-dom'
+import { JSX, createContext, useContext } from 'alien-dom'
 
 export interface ShellConfig<
   Data = unknown,
@@ -35,7 +35,7 @@ export type ToShellProps<T extends Shell> = T extends Shell<
   : never
 
 export function useShellProps<T extends Shell>(): ToShellProps<T> {
-  const shellProps = ShellProps.get()
+  const shellProps = useContext(ShellProps)
   if (!shellProps) {
     throw new Error('ShellProps not found')
   }

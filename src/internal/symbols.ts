@@ -17,6 +17,7 @@ export const kAlienFragmentKeys =
 export const kAlienFragmentNodes =
   createSymbolProperty<FragmentNodes>('fragmentNodes')
 export const kAlienHostProps = createSymbolProperty<HostProps>('hostProps')
+export const kAlienInitialContext = createSymbolProperty<any>('initialContext')
 export const kAlienMemo = createSymbolProperty<boolean>('memo')
 export const kAlienParentFragment = createSymbolProperty<
   DocumentFragment | undefined

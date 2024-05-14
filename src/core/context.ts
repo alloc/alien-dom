@@ -1,8 +1,7 @@
 import { createFragment } from '../components/Fragment'
 import { useRef } from '../hooks'
 import { forwardContext, getContext, setContext } from '../internal/context'
-import { currentComponent } from '../internal/global'
-import { lastValue } from '../internal/util'
+import { kAlienInitialContext } from '../internal/symbols'
 import type { JSX } from '../types/jsx'
 import { Ref, ref } from './observable'
 
@@ -65,23 +64,7 @@ export function createContext<T>(initial?: T) {
     return null
   }
 
-  Object.defineProperty(Context, 'value', {
-    get: (): T => {
-      if (isForwardedContext) {
-        return initial!
-      }
-
-      const component = lastValue(currentComponent)
-      const current = component
-        ? component.context.get<T>(Context as any)
-        : getContext<T>(Context as any)
-
-      if (current) {
-        return current.value
-      }
-      return initial!
-    },
-  })
+  kAlienInitialContext(Context, initial)
 
   if (isForwardedContext) {
     Context.forward = (fn: any, ...args: any[]) => {

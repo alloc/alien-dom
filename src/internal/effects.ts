@@ -1,9 +1,9 @@
 import { isFunction } from '@alloc/is'
-import { Disposable, attachDisposer } from '../addons/disposable'
+import { attachDisposer, Disposable } from '../addons/disposable'
 import { AlienEffect, AlienEffects } from '../core/effects'
 import { currentEffects } from './global'
 import { LinkedList } from './linkedList'
-import { ShadowRootContext } from './shadow'
+import { getShadowRoot } from './shadow'
 import { popValue } from './stack'
 import { kAlienEffects } from './symbols'
 import { AnyElement } from './types'
@@ -11,7 +11,7 @@ import { noop } from './util'
 
 export function getEffects<T extends AnyElement>(
   element: T,
-  rootNode: Node | undefined = ShadowRootContext.value
+  rootNode: Node | undefined = getShadowRoot()
 ): AlienEffects<T> {
   return kAlienEffects(element) || new AlienEffects(element, rootNode)
 }

@@ -4,6 +4,7 @@ import {
   EffectContext,
   SpringAnimation,
   useCallbackProp,
+  useContext,
   useWrappedEffect,
 } from 'alien-dom'
 import { MatchResult } from 'path-to-regexp'
@@ -29,17 +30,17 @@ export interface RouteInstance {
 export const RouteContext = createContext<RouteInstance>()
 
 export function useEnterEffect(effect: RouteEnterEffect) {
-  const context = assertRouteContext()
+  const context = useRouteContext()
   useEffectArray((context.enterEffects ||= []), useCallbackProp(effect))
 }
 
 export function useLeaveEffect(effect: RouteLeaveEffect) {
-  const context = assertRouteContext()
+  const context = useRouteContext()
   useEffectArray((context.leaveEffects ||= []), useCallbackProp(effect))
 }
 
-function assertRouteContext() {
-  const context = RouteContext.value
+function useRouteContext() {
+  const context = useContext(RouteContext)
   if (!context) {
     throw new Error('Invalid use outside a Route context')
   }
