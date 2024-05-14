@@ -1,5 +1,5 @@
-import esbuildAlienDom, { SelfUpdatingPluginState } from '@alien-dom/esbuild'
-import { md5Hex, Plugin } from '@htmelt/plugin'
+import esbuildAlienDom, { MemoizerPluginState } from '@alien-dom/esbuild'
+import { Plugin } from '@htmelt/plugin'
 import path from 'path'
 
 export default (): Plugin => (config, flags) => {
@@ -8,9 +8,8 @@ export default (): Plugin => (config, flags) => {
     return {}
   }
 
-  const selfUpdating: SelfUpdatingPluginState = {
+  const memoizerState: MemoizerPluginState = {
     globalNextId: 0,
-    ensureComponentNames: config.mode === 'development',
   }
 
   const acceptableModules = new Set<string>()
@@ -18,8 +17,8 @@ export default (): Plugin => (config, flags) => {
 
   config.esbuild.plugins.push(
     esbuildAlienDom({
-      selfUpdating,
-      hmrHash: md5Hex,
+      dev: config.mode === 'development',
+      memoizerState,
       onHmrAdded(file) {
         acceptableModules.add(file)
       },
@@ -30,7 +29,7 @@ export default (): Plugin => (config, flags) => {
     fullReload() {
       // Reset the globalNextId only on full reload, so hot-reloaded
       // modules don't cause key collisions.
-      selfUpdating.globalNextId = 0
+      memoizerState.globalNextId = 0
 
       acceptableModules.clear()
       acceptedModules.clear()

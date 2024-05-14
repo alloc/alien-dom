@@ -1,22 +1,22 @@
+import { MemoizerPluginState, nebuHMR, nebuMemoizer } from '@alien-dom/nebu'
 import { Plugin } from 'esbuild'
 import { getBuildExtensions } from 'esbuild-extra'
-import {
-  nebuSelfUpdating,
-  nebuHMR,
-  SelfUpdatingPluginState,
-} from '@alien-dom/nebu'
 import { nebu } from 'nebu'
 import { relative } from 'path'
 
-export type { SelfUpdatingPluginState } from '@alien-dom/nebu'
+export type {
+  MemoizerPluginOptions,
+  MemoizerPluginState,
+} from '@alien-dom/nebu'
 
 export default function esbuildAlienDOM(
   options: {
-    /** Define this to enable hot module reloading. */
-    hmrHash?: (code: string) => string
+    dev?: boolean
+    /** By default, enabled when `dev` is true. */
+    hmr?: boolean
     onHmrAdded?: (file: string) => void
     /** Internal state for the `nebuSelfUpdating` plugin. */
-    selfUpdating?: SelfUpdatingPluginState
+    memoizerState?: MemoizerPluginState
   } = {}
 ) {
   const plugin: Plugin = {
@@ -25,12 +25,13 @@ export default function esbuildAlienDOM(
       // Instantiate the plugins once per build, since some project-wide
       // state is relied on.
       const plugins = [
-        options.hmrHash &&
+        (options.hmr ?? options.dev) &&
           nebuHMR({
-            hash: options.hmrHash,
             onHmrAdded: options.onHmrAdded,
           }),
-        nebuSelfUpdating(options.selfUpdating),
+        nebuMemoizer(options.memoizerState, {
+          dev: options.dev,
+        }),
       ]
 
       const { onTransform } = getBuildExtensions(build, plugin.name)

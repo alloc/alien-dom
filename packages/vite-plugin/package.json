@@ -21,7 +21,6 @@
   ],
   "dependencies": {
     "@alien-dom/nebu": "workspace:^",
-    "md5-hex": "^5.0.0",
     "nebu": "^2.3.8",
     "tsconfck": "^3.0.3"
   },

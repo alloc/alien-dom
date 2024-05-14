@@ -1,14 +1,14 @@
-import type { SelfUpdatingPluginState } from '@alien-dom/nebu'
-import md5Hex from 'md5-hex'
+import type { MemoizerPluginState } from '@alien-dom/nebu'
 import { nebu } from 'nebu'
 import * as tsconfck from 'tsconfck'
 import { TSConfckCache, TSConfckParseResult } from 'tsconfck'
 import * as vite from 'vite'
 
 export default (): vite.Plugin[] => {
+  let mode: string
   let rootDir: string
   let nebuPlugins: any[]
-  let selfUpdating: SelfUpdatingPluginState
+  let memoizerState: MemoizerPluginState
   let tsConfigCache: TSConfckCache<TSConfckParseResult>
 
   async function loadJsxImportSource(id: string) {
@@ -38,18 +38,19 @@ export default (): vite.Plugin[] => {
   const mainPlugin: vite.Plugin = {
     name: 'alien-dom',
     configResolved(config) {
+      mode = config.mode
       rootDir = config.root
-      selfUpdating = {
+      memoizerState = {
         globalNextId: 0,
-        ensureComponentNames: config.mode === 'development',
       }
     },
     async buildStart() {
-      const { nebuSelfUpdating, nebuHMR } = await import('@alien-dom/nebu')
+      const { nebuMemoizer, nebuHMR } = await import('@alien-dom/nebu')
       nebuPlugins = [
-        nebuSelfUpdating(selfUpdating),
+        nebuMemoizer(memoizerState, {
+          dev: mode === 'development',
+        }),
         nebuHMR({
-          hash: md5Hex,
           append: 'import.meta.hot.accept()',
         }),
       ]

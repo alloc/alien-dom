@@ -13,7 +13,7 @@ import { JSXThunkParent, collectThunkParents } from './thunk'
 
 declare const process: any
 
-export type SelfUpdatingPluginState = {
+export type MemoizerPluginState = {
   /** @default "alien-dom/helpers" */
   helpersId?: string
   /**
@@ -22,7 +22,7 @@ export type SelfUpdatingPluginState = {
   globalNextId: number
 }
 
-export type SelfUpdatingPluginOptions = {
+export type MemoizerPluginOptions = {
   /**
    * Enable certain features for hot reloading.
    */
@@ -36,12 +36,14 @@ export type SelfUpdatingPluginOptions = {
 }
 
 export default function (
-  state: SelfUpdatingPluginState = { globalNextId: 0 },
-  options: SelfUpdatingPluginOptions = {}
+  state: MemoizerPluginState = { globalNextId: 0 },
+  options: MemoizerPluginOptions = {}
 ): Plugin {
   const helpersId = state.helpersId ?? 'alien-dom/helpers'
   const ensureComponentNames =
-    options.ensureComponentNames ?? process.env.NODE_ENV !== 'production'
+    options.ensureComponentNames ??
+    options.dev ??
+    process.env.NODE_ENV !== 'production'
 
   return {
     Program(program) {

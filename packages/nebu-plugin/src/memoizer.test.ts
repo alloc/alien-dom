@@ -1,12 +1,12 @@
 import test from 'ava'
 import { nebu } from 'nebu'
-import selfUpdatingTransform from './selfUpdating'
+import memoizerPlugin from './memoizer'
 
 test('self-referencing variable with function value', t => {
   // Basic case
   let result = nebu.process(
     'function Input() { const x = () => x() }',
-    selfUpdatingTransform()
+    memoizerPlugin()
   )
   t.snapshot(result.js)
 
@@ -14,7 +14,7 @@ test('self-referencing variable with function value', t => {
   // assigned to a variable, but first it's wrapped with $().
   result = nebu.process(
     'function Outer() { const x = $(<Inner onClick={() => x.remove()} />) }',
-    { jsx: true, plugins: [selfUpdatingTransform()] }
+    { jsx: true, plugins: [memoizerPlugin()] }
   )
   t.snapshot(result.js)
 
@@ -23,7 +23,7 @@ test('self-referencing variable with function value', t => {
   // as the reference. This is not a self-referencing function.
   result = nebu.process(
     'function Input() { const x = () => { const x = () => {}; return x() } }',
-    selfUpdatingTransform()
+    memoizerPlugin()
   )
   t.snapshot(result.js)
 
@@ -32,7 +32,7 @@ test('self-referencing variable with function value', t => {
   // of the reference. This is still not a self-referencing function.
   result = nebu.process(
     'function Input() { const x = () => { const x = () => {}; return () => x() } }',
-    selfUpdatingTransform()
+    memoizerPlugin()
   )
   t.snapshot(result.js)
 })
@@ -43,21 +43,21 @@ test('constant referenced by auto-memoized function', t => {
   // Referenced constant exists at top level.
   let result = nebu.process(
     'const inner = () => {}; function NewInput() { const outer = () => inner() }',
-    selfUpdatingTransform()
+    memoizerPlugin()
   )
   t.snapshot(result.js)
 
   // Referenced constant exists in a component.
   result = nebu.process(
     'function Input() { const inner = () => {}; const outer = () => inner() }',
-    selfUpdatingTransform()
+    memoizerPlugin()
   )
   t.snapshot(result.js)
 
   // Referenced constant exists in a function outside the component.
   result = nebu.process(
     'function createInput() { const inner = () => {}; return function Input() { const outer = () => inner() } }',
-    selfUpdatingTransform()
+    memoizerPlugin()
   )
   t.snapshot(result.js)
 })
@@ -67,7 +67,7 @@ test('constant referenced by auto-memoized function', t => {
 test('auto-memoized function declared before variable referenced by it', t => {
   let result = nebu.process(
     'function Outer() { const Inner = () => <Input onChange={() => outer.remove()} />; const outer = <div><Inner /></div>; return outer }',
-    { jsx: true, plugins: [selfUpdatingTransform()] }
+    { jsx: true, plugins: [memoizerPlugin()] }
   )
   t.snapshot(result.js)
 })
@@ -77,35 +77,35 @@ test('auto-memoized function declared before variable referenced by it', t => {
 test('auto-memoized inline style object', t => {
   let result = nebu.process(
     'function RedInput() { return <Input style={{ color: "red" }} /> }',
-    { jsx: true, plugins: [selfUpdatingTransform()] }
+    { jsx: true, plugins: [memoizerPlugin()] }
   )
   t.snapshot(result.js)
 
   // Next, test a style array.
   result = nebu.process(
     'function RedInput() { return <Input style={[{ color: "red" }]} /> }',
-    { jsx: true, plugins: [selfUpdatingTransform()] }
+    { jsx: true, plugins: [memoizerPlugin()] }
   )
   t.snapshot(result.js)
 
   // Next, test a style object that references a constant.
   result = nebu.process(
     'function RedInput() { const red = "red"; return <Input style={{ color: red }} /> }',
-    { jsx: true, plugins: [selfUpdatingTransform()] }
+    { jsx: true, plugins: [memoizerPlugin()] }
   )
   t.snapshot(result.js)
 
   // Next, test a style object with a function call in it.
   result = nebu.process(
     'function RedInput() { return <Input style={{ color: getRed() }} /> }',
-    { jsx: true, plugins: [selfUpdatingTransform()] }
+    { jsx: true, plugins: [memoizerPlugin()] }
   )
   t.snapshot(result.js)
 
   // Next, test a style object with a method call in it.
   result = nebu.process(
     'function RedInput() { return <Input style={{ color: window.getRed() }} /> }',
-    { jsx: true, plugins: [selfUpdatingTransform()] }
+    { jsx: true, plugins: [memoizerPlugin()] }
   )
   t.snapshot(result.js)
 })
