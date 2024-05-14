@@ -120,6 +120,10 @@ importers:
         version: 18.15.11
 
   packages/nebu-plugin:
+    dependencies:
+      md5-hex:
+        specifier: ^5.0.0
+        version: 5.0.0
     devDependencies:
       kleur:
         specifier: ^4.1.5
@@ -192,9 +196,6 @@ importers:
       '@alien-dom/nebu':
         specifier: workspace:^
         version: link:../nebu-plugin
-      md5-hex:
-        specifier: ^5.0.0
-        version: 5.0.0
       nebu:
         specifier: ^2.3.8
         version: 2.4.0
