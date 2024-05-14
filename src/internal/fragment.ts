@@ -7,7 +7,7 @@ import {
 } from '../jsx-dom/node'
 import { ResolvedChild, resolveChildren } from '../jsx-dom/resolveChildren'
 import type { JSX } from '../types/jsx'
-import { AlienContextMap } from './context'
+import { ContextMap } from './context'
 import { currentComponent } from './global'
 import {
   kAlienElementKey,
@@ -24,25 +24,25 @@ export type FragmentKeys = (JSX.ElementKey | undefined)[]
 export function wrapWithFragment(
   childrenProp: JSX.ChildrenProp,
   isDeferred: false,
-  context?: AlienContextMap
+  context?: ContextMap
 ): DocumentFragment
 
 export function wrapWithFragment(
   childrenProp: JSX.ChildrenProp,
   isDeferred: true,
-  context?: AlienContextMap
+  context?: ContextMap
 ): DeferredCompositeNode
 
 export function wrapWithFragment(
   childrenProp: JSX.ChildrenProp,
   isDeferred?: boolean,
-  context?: AlienContextMap
+  context?: ContextMap
 ): DocumentFragment | DeferredCompositeNode
 
 export function wrapWithFragment(
   childrenProp: JSX.ChildrenProp,
   isDeferred?: boolean,
-  context?: AlienContextMap
+  context?: ContextMap
 ) {
   const childKeys: FragmentKeys = [undefined]
   const children = resolveChildren(

@@ -1,13 +1,13 @@
-import type { AlienContext, ContextStore } from '../core/context'
+import type { Context, ContextStore } from '../core/context'
 import { Ref } from '../core/observable'
 
 /** @internal */
-export interface AlienContextMap extends Map<AlienContext, Ref> {
-  get<T>(key: AlienContext<T>): Ref<T> | undefined
-  set<T>(key: AlienContext<T>, value: Ref<T>): this
+export interface ContextMap extends Map<Context, Ref> {
+  get<T>(key: Context<T>): Ref<T> | undefined
+  set<T>(key: Context<T>, value: Ref<T>): this
 }
 
-let currentContext: AlienContextMap = new Map()
+let currentContext: ContextMap = new Map()
 
 /** @internal */
 export function forwardContext(context: ContextStore, isRerender?: boolean) {
@@ -36,9 +36,9 @@ export function forwardContext(context: ContextStore, isRerender?: boolean) {
 }
 
 /** @internal */
-export function getContext<T>(context: AlienContext<T>): Ref<T> | undefined
-export function getContext(): AlienContextMap
-export function getContext<T>(context?: AlienContext<T>): any {
+export function getContext<T>(context: Context<T>): Ref<T> | undefined
+export function getContext(): ContextMap
+export function getContext<T>(context?: Context<T>): any {
   if (context) {
     return currentContext.get(context)
   }
@@ -51,7 +51,7 @@ export function getContext<T>(context?: AlienContext<T>): any {
  * The previous ref is returned, so you can restore it later.
  */
 export function setContext<T>(
-  context: AlienContext<T>,
+  context: Context<T>,
   value: Ref<T> | undefined
 ): Ref<T> | undefined
 
@@ -60,11 +60,11 @@ export function setContext<T>(
  *
  * The previous context is returned, so you can restore it later.
  */
-export function setContext(context: AlienContextMap): AlienContextMap
+export function setContext(context: ContextMap): ContextMap
 
 /** @internal */
 export function setContext<T>(
-  context: AlienContextMap | AlienContext<T>,
+  context: ContextMap | Context<T>,
   value?: Ref<T> | undefined
 ): any {
   if (context instanceof Map) {

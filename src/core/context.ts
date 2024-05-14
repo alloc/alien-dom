@@ -6,32 +6,30 @@ import { lastValue } from '../internal/util'
 import type { JSX } from '../types/jsx'
 import { Ref, ref } from './observable'
 
-export type AlienContext<T = any> = {
+export type Context<T = any> = {
   (props: { value: T; children: JSX.ChildrenProp }): JSX.Element
-  get value(): T
-  with(value: T): [AlienContext<T>, Ref<T>]
+  with(value: T): [Context<T>, Ref<T>]
 }
 
-export type AlienForwardedContext = {
+export type ForwardedContext = {
   (props: { children: JSX.ChildrenProp }): JSX.Element
-  get value(): ContextStore
   forward<Args extends any[], Result>(
     fn: (...args: Args) => Result,
     ...args: Args
   ): Result
 }
 
-export class ContextStore extends Map<AlienContext, Ref> {
+export class ContextStore extends Map<Context, Ref> {
   get Provider() {
     return createContext(this)
   }
-  declare get: <T>(key: AlienContext<T>) => Ref<T> | undefined
-  declare set: <T>(key: AlienContext<T>, value: Ref<T>) => this
+  declare get: <T>(key: Context<T>) => Ref<T> | undefined
+  declare set: <T>(key: Context<T>, value: Ref<T>) => this
 }
 
-export function createContext(context: ContextStore): AlienForwardedContext
-export function createContext<T>(initial: T): AlienContext<T>
-export function createContext<T>(): AlienContext<T | undefined>
+export function createContext(context: ContextStore): ForwardedContext
+export function createContext<T>(initial: T): Context<T>
+export function createContext<T>(): Context<T | undefined>
 export function createContext<T>(initial?: T) {
   const isForwardedContext = initial instanceof ContextStore
 
@@ -106,6 +104,6 @@ export function createContext<T>(initial?: T) {
   return Context as any
 }
 
-function withProvider<T>(this: AlienContext<T>, value: T) {
+function withProvider<T>(this: Context<T>, value: T) {
   return [this, ref(value)]
 }

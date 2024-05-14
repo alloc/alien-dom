@@ -14,7 +14,7 @@ import {
   kShadowRootNodeType,
   kTemplateNodeType,
 } from '../internal/constants'
-import { AlienContextMap, setContext } from '../internal/context'
+import { ContextMap, setContext } from '../internal/context'
 import { FragmentKeys, FragmentNodes } from '../internal/fragment'
 import { currentEffects } from '../internal/global'
 import { HostProps } from '../internal/hostProps'
@@ -64,7 +64,7 @@ export interface DeferredNode {
   [kAlienNodeType]: typeof kDeferredNodeType
   tag: HostNodeTag | FunctionComponent<any>
   props: any
-  context: AlienContextMap | undefined
+  context: ContextMap | undefined
 }
 
 export interface DeferredHostNode extends DeferredNode {

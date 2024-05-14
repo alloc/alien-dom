@@ -1,7 +1,7 @@
 import { isFunction } from '@alloc/is'
 import { isRef } from '../core/observable'
 import { isChildrenFragment } from '../hooks/useChildren'
-import { AlienContextMap, getContext } from '../internal/context'
+import { ContextMap, getContext } from '../internal/context'
 import { isArrayLike, isFragment, isNode } from '../internal/duck'
 import { fromElementThunk } from '../internal/fromElementThunk'
 import { currentComponent } from '../internal/global'
@@ -26,7 +26,7 @@ export type ResolvedChild = ChildNode | AlienNode | null
 export function resolveChildren(
   child: JSX.ChildrenProp,
   position?: string,
-  context = new Map(getContext()) as AlienContextMap,
+  context = new Map(getContext()) as ContextMap,
   onChildNode: (node: ResolvedChild, key?: string) => void = noop,
   nodes: ResolvedChild[] = []
 ): ResolvedChild[] {
