@@ -1,3 +1,4 @@
+import md5Hex from 'md5-hex'
 import type { Node, Plugin } from 'nebu'
 import {
   FunctionNode,
@@ -7,6 +8,7 @@ import {
   isFunctionNode,
   isHostElement,
 } from './helpers'
+import { createScopePlugin, createScopeTracker } from './scopePlugin'
 import { JSXThunkParent, collectThunkParents } from './thunk'
 
 declare const process: any
@@ -18,6 +20,13 @@ export type SelfUpdatingPluginState = {
    * This value is used to prevent key collisions across builds.
    */
   globalNextId: number
+}
+
+export type SelfUpdatingPluginOptions = {
+  /**
+   * Enable certain features for hot reloading.
+   */
+  dev?: boolean
   /**
    * Sets the `displayName` property of any higher-order component to
    * the component's variable name, so the component has a name for
@@ -27,11 +36,12 @@ export type SelfUpdatingPluginState = {
 }
 
 export default function (
-  state: SelfUpdatingPluginState = { globalNextId: 0 }
+  state: SelfUpdatingPluginState = { globalNextId: 0 },
+  options: SelfUpdatingPluginOptions = {}
 ): Plugin {
   const helpersId = state.helpersId ?? 'alien-dom/helpers'
   const ensureComponentNames =
-    state.ensureComponentNames ?? process.env.NODE_ENV !== 'production'
+    options.ensureComponentNames ?? process.env.NODE_ENV !== 'production'
 
   return {
     Program(program) {
@@ -264,16 +274,6 @@ export default function (
           AssignmentExpression: memoizeVariable,
         })
 
-        const nearestBlock = path.findParent(p => p.isBlockStatement())
-        if (nearestBlock?.parent && componentFns.has(nearestBlock.parent)) {
-          helpers.set('registerNestedTag', '__nestedTag')
-          path.before(`__nestedTag("${globalId}#${moduleNextId++}", `)
-          path.after(')')
-          if (path.isFunctionDeclaration()) {
-            path.before(`const ${path.id!.name} = `)
-          }
-        }
-
         if (ensureComponentNames && !componentFn.isStatement()) {
           // Skip any component that is declared as a property.
           const nearestStmt =
@@ -305,7 +305,10 @@ export default function (
 
       let hasForceDOM = false
 
-      program.process({
+      const scopes = createScopeTracker()
+      const scopePlugin = createScopePlugin(scopes)
+
+      const componentPlugin: Plugin = {
         ArrowFunctionExpression: handleElementRefs,
         FunctionExpression: handleElementRefs,
         FunctionDeclaration: handleElementRefs,
@@ -335,6 +338,58 @@ export default function (
             }
           }
         },
+      }
+
+      program.process([scopePlugin, componentPlugin])
+
+      // Register nested components with the parent component instance at runtime.
+      componentFns.forEach(componentFn => {
+        const nearestBlock = componentFn.findParent(p => p.isBlockStatement())
+        if (nearestBlock?.parent && componentFns.has(nearestBlock.parent)) {
+          let { deps } = findExternalReferences(componentFn)
+
+          const scope = scopes.getDeclarationScope(componentFn)
+          deps = deps.filter(dep => {
+            const declaration = scopes.findDeclaration(scope, dep)
+            if (!declaration) {
+              // Assume that globals never change.
+              return false
+            }
+
+            const value =
+              declaration.kind === 'function'
+                ? declaration.node
+                : declaration.kind === 'var' &&
+                  declaration.init !== null &&
+                  isFunctionNode(declaration.init)
+                ? declaration.init
+                : null
+
+            // If the reference is a component, assume it never changes. This
+            // logic allows for nested components to reference each other
+            // without worrying about declaration order.
+            return !(value && componentFns.has(value))
+          })
+
+          // Force update when the nested component's code changes, which is
+          // only possible with hot reloading.
+          if (options.dev) {
+            deps.push(JSON.stringify(md5Hex(componentFn.toString())))
+          }
+
+          helpers.set('registerNestedTag', '__nestedTag')
+
+          const prefix = `__nestedTag("${globalId}#${moduleNextId}", `
+          const suffix = `, [${deps}])`
+
+          if (componentFn.isFunctionDeclaration()) {
+            const { name } = componentFn.id!
+            componentFn.before(`const ${name} = ${prefix}`)
+          } else {
+            componentFn.before(prefix)
+          }
+          componentFn.after(suffix)
+        }
       })
 
       // Wrap the children of each thunk parent in a closure.

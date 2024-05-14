@@ -41,7 +41,6 @@ import {
   kAlienFragmentNodes,
   kAlienMemo,
   kAlienParentFragment,
-  kAlienRenderFunc,
 } from './symbols'
 import { AnyElement } from './types'
 import { compareNodeWithTag, lastValue, noop } from './util'
@@ -548,6 +547,16 @@ export function registerCallback(
   return callback
 }
 
+class NestedTag {
+  render: Ref<FunctionComponent>
+  constructor(render: FunctionComponent, public deps: readonly any[]) {
+    this.render = ref(render)
+  }
+  Component = (props: any) => {
+    return (void 0, this.render.value)(props)
+  }
+}
+
 /**
  * @internal
  * This swaps out nested components with a stable reference so that
@@ -556,23 +565,29 @@ export function registerCallback(
  * when the parent component re-renders, thereby avoiding stale closure
  * issues.
  */
-export function registerNestedTag(key: string, tag: FunctionComponent) {
+export function registerNestedTag(
+  key: string,
+  tag: FunctionComponent,
+  deps: readonly any[]
+) {
   const component = lastValue(currentComponent)
   if (component) {
-    const oldTag = component.memos?.get(key)
-    if (oldTag) {
-      oldTag[kAlienRenderFunc.symbol] = tag
-      tag = oldTag
-    } else {
-      const renderRef = ref(tag)
-      const Component = (props: any) => {
-        return (void 0, renderRef.value)(props)
-      }
-      attachRef(Component, kAlienRenderFunc.symbol, renderRef)
-      tag = Component
+    let state: NestedTag = component.memos?.get(key)
+    if (!state) {
+      state = new NestedTag(tag, deps)
     }
+    // Make the nested component rerender if deps have changed.
+    else if (depsHaveChanged(deps, state.deps)) {
+      state.deps = deps
+      state.render.value = tag
+    }
+
     component.newMemos ||= new Map()
-    component.newMemos.set(key, tag)
+    component.newMemos.set(key, state)
+
+    return state.Component
   }
+
+  // Probably a fluke in the compiler. Do nothing.
   return tag
 }
