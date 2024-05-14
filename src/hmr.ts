@@ -80,7 +80,12 @@ setComponentRenderHook(component => {
     // disposable hooks (except for initializer hooks).
     if (prevRender) {
       isHotUpdate = true
-      component.memos = null
+      component.memos?.forEach((memo, key, memos) => {
+        // Avoid resetting a nested component's state.
+        if (memo && memo.constructor.name === 'NestedTag') return
+        // Forget everything else.
+        memos.delete(key)
+      })
       component.hooks.forEach((hook, index, hooks) => {
         if (hook?.dispose) {
           if (isArray(hook.deps) && !hook.deps.length) {
