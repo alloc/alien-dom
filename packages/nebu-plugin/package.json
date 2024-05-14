@@ -12,6 +12,9 @@
   "files": [
     "dist"
   ],
+  "dependencies": {
+    "md5-hex": "^5.0.0"
+  },
   "devDependencies": {
     "kleur": "^4.1.5",
     "nebu": "^2.4.5",

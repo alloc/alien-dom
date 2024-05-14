@@ -1,3 +1,4 @@
+import md5Hex from 'md5-hex'
 import type { Node as NebuNode } from 'nebu'
 import { isFunctionNode } from './helpers'
 
@@ -9,8 +10,7 @@ export interface ComponentHash<Identifier, FunctionNode> {
 
 export function computeComponentHashes<Identifier, FunctionNode>(
   ast: NebuNode.Program,
-  code: string,
-  hash: (code: string) => string
+  code: string
 ) {
   const components: ComponentHash<Identifier, FunctionNode>[] = []
 
@@ -36,7 +36,7 @@ export function computeComponentHashes<Identifier, FunctionNode>(
         components.push({
           id: node.id as Identifier,
           function: node as FunctionNode,
-          hash: hash(code.slice(node.start, node.end)),
+          hash: md5Hex(code.slice(node.start, node.end)),
         })
       }
     }
@@ -66,7 +66,7 @@ export function computeComponentHashes<Identifier, FunctionNode>(
               components.push({
                 id: id as Identifier,
                 function: node as FunctionNode,
-                hash: hash(code.slice(node.start, node.end)),
+                hash: md5Hex(code.slice(node.start, node.end)),
               })
             }
 

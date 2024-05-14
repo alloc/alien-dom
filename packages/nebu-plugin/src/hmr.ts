@@ -4,8 +4,7 @@ import { FunctionNode, findExternalReferences } from './helpers'
 
 type State = { file: string; code: string }
 
-export default (options: {
-  hash: (code: string) => string
+export type HMRPluginOptions = {
   /** Append a string of code to modules with hot-reloaded components. */
   append?: string
   /**
@@ -13,12 +12,13 @@ export default (options: {
    * compatible with hot reloading.
    */
   onHmrAdded?: (file: string) => void
-}): Plugin<State> => ({
+}
+
+export default (options: HMRPluginOptions): Plugin<State> => ({
   Program(program, { file, code }) {
     const components = computeComponentHashes<Node.Identifier, FunctionNode>(
       program,
-      code,
-      options.hash
+      code
     )
 
     if (!components.length) {
