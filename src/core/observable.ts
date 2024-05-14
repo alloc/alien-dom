@@ -55,6 +55,17 @@ const unseenAccess = (ref: InternalRef<any>) => ref._value
 let nextDebugId = 1
 let access = unseenAccess
 
+/**
+ * A read-only version of `Ref` that doesn't allow mutation (i.e. its `value`
+ * property cannot be assigned to).
+ *
+ * This class cannot be constructed directly, but it can be useful for creating
+ * your own subclass where consumers should not be able to mutate the value. You
+ * may also want to use this as a return type of your custom hook that returns a
+ * ref but doesn't want to expose the mutation API.
+ *
+ * This is a superclass of Ref, ComputedRef, and ArrayRef.
+ */
 export abstract class ReadonlyRef<T = any> {
   readonly debugId: string | number | undefined
   protected _observers = new Set<Observer>()
