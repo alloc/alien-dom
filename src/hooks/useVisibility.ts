@@ -9,6 +9,7 @@ export type UseVisibilityOptions = {
   root?: Element | ElementProxy | Document | null
   rootMargin?: string
   threshold?: number | number[]
+  onChange?: (visible: boolean, entry: IntersectionObserverEntry) => void
 }
 
 export function useVisibility(
@@ -28,7 +29,11 @@ export function useVisibility(
       }
 
       const observer = new IntersectionObserver(entries => {
-        visibleRef.value = entries[0].isIntersecting
+        const visible = entries[0].isIntersecting
+        if (visible !== visibleRef.value) {
+          visibleRef.value = visible
+          options.onChange?.(visible, entries[0])
+        }
       }, init)
 
       observer.observe(target)
