@@ -1,5 +1,5 @@
 /// <reference types="typings-esm-loader" />
-import { nebuSelfUpdating } from '@alien-dom/nebu'
+import { nebuMemoizer } from '@alien-dom/nebu'
 import * as fs from 'fs/promises'
 import { nebu } from 'nebu'
 import * as path from 'path'
@@ -107,7 +107,7 @@ export const load: load = async (url, context, nextLoad) => {
 
     const nebuResult = nebu.process(code, {
       plugins: [
-        nebuSelfUpdating({
+        nebuMemoizer({
           globalNextId: 0,
           helpersId: 'alien-dom/helpers.ts',
         }),
