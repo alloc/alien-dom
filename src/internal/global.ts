@@ -15,5 +15,5 @@ export const expectCurrentEffects = expectLastValue(
 export const currentComponent: Stack<AlienRunningComponent> = [null]
 export const expectCurrentComponent = expectLastValue(
   currentComponent,
-  'Component context not found'
+  'Component instance not found'
 )
