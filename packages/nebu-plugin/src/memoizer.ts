@@ -381,7 +381,7 @@ export default function (
 
           helpers.set('registerNestedTag', '__nestedTag')
 
-          const prefix = `__nestedTag("${globalId}#${moduleNextId}", `
+          const prefix = `__nestedTag("${globalId}#${moduleNextId++}", `
           const suffix = `, [${deps}])`
 
           if (componentFn.isFunctionDeclaration()) {
