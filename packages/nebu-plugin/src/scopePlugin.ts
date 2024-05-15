@@ -1,5 +1,5 @@
 import type { Node, Plugin } from 'nebu'
-import { FunctionNode, toIdentifierSet } from './helpers'
+import { FunctionNode, isFunctionNode, toIdentifierSet } from './helpers'
 
 type BlockNode =
   | Node.Program
