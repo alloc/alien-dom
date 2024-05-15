@@ -20,16 +20,16 @@ export type ForwardedContext = {
 
 export class ContextStore extends Map<Context, Ref> {
   get Provider() {
-    return createContext(this)
+    return defineContext(this)
   }
   declare get: <T>(key: Context<T>) => Ref<T> | undefined
   declare set: <T>(key: Context<T>, value: Ref<T>) => this
 }
 
-export function createContext(context: ContextStore): ForwardedContext
-export function createContext<T>(initial: T): Context<T>
-export function createContext<T>(): Context<T | undefined>
-export function createContext<T>(initial?: T) {
+export function defineContext(context: ContextStore): ForwardedContext
+export function defineContext<T>(initial: T): Context<T>
+export function defineContext<T>(): Context<T | undefined>
+export function defineContext<T>(initial?: T) {
   const isForwardedContext = initial instanceof ContextStore
 
   function Context({

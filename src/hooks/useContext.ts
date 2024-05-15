@@ -1,4 +1,4 @@
-import { Context, createContext, ForwardedContext } from '../core/context'
+import { Context, defineContext, ForwardedContext } from '../core/context'
 import { expectCurrentComponent } from '../internal/global'
 import { kAlienInitialContext } from '../internal/symbols'
 
@@ -20,5 +20,5 @@ export function useContext(context?: Context): ForwardedContext {
     return current ? current.value : kAlienInitialContext(context)
   }
   const index = component.nextHookIndex++
-  return (component.hooks[index] ||= createContext(component.context))
+  return (component.hooks[index] ||= defineContext(component.context))
 }
