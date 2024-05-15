@@ -5,69 +5,6 @@ import { makeIterable } from '../internal/iterable'
 import { noop } from '../internal/util'
 import { Disposable } from './disposable'
 
-type ChannelTarget<T extends ChannelFunction> = //
-  T extends ChannelFunction<any, infer Target> ? Target : never
-type ChannelData<T extends ChannelFunction> = //
-  T extends ChannelFunction<infer Data> ? Data : never
-
-export interface AlienMessage<
-  T extends ChannelFunction = ChannelFunction,
-  Target extends ChannelTarget<T> = ChannelTarget<T>
-> {
-  readonly target?: Target
-  currentTarget?: ChannelTarget<T>
-  stopPropagation(): void
-  stopImmediatePropagation(): void
-}
-
-export interface AlienBubblingMessage<
-  T extends ChannelFunction = ChannelFunction,
-  Target extends ChannelTarget<T> = ChannelTarget<T>
-> extends AlienMessage<T, Target> {
-  readonly target: Target
-  currentTarget: ChannelTarget<T>
-}
-
-export type AlienReceiver<
-  T extends ChannelFunction = ChannelFunction,
-  Target extends ChannelTarget<T> = ChannelTarget<T>
-> = (
-  message: (ChannelTarget<T> extends void
-    ? AlienMessage<T, Target>
-    : AlienBubblingMessage<T, Target>) &
-    ChannelData<T>
-) => boolean | void
-
-type AlienChannelEffect<Target extends object | void> = Disposable<
-  AlienBoundEffect<Target>
->
-
-type ChannelAddReceiver<T extends ChannelFunction = ChannelFunction> = {
-  <Target extends ChannelTarget<T>>(
-    target: Target,
-    receiver: AlienReceiver<T>
-  ): AlienChannelEffect<Target>
-
-  (
-    receiver: AlienReceiver<ChannelFunction<ChannelData<T>, void>>
-  ): AlienChannelEffect<void>
-}
-
-type VoidIfEmpty<Data extends object> = Data extends any
-  ?
-      | ({} extends Data ? void : never)
-      | ({} extends Required<Data> ? never : Data)
-  : never
-
-type ChannelSend<T extends ChannelFunction = ChannelFunction> = {
-  <Target extends ChannelTarget<T>>(
-    target: Target,
-    message: VoidIfEmpty<ChannelData<T>>
-  ): boolean
-
-  (message: VoidIfEmpty<ChannelData<T>>): boolean
-}
-
 /**
  * Channels are strongly typed event buses.
  *
@@ -78,20 +15,101 @@ type ChannelSend<T extends ChannelFunction = ChannelFunction> = {
  * The `Data` type must be a plain object. Use the `{}` type to represent a
  * message with no custom metadata.
  */
-export type AlienChannel<
+export type Channel<
   Data extends object = Record<string, any>,
   Target extends object | void = any
-> = ChannelFunction<Data, Target> &
-  [
-    ChannelSend<ChannelFunction<Data, Target>>,
-    ChannelAddReceiver<ChannelFunction<Data, Target>>
+> = Channel.Signature<Data, Target> & Channel.FunctionTuple<Data, Target>
+
+export declare namespace Channel {
+  export interface Message<
+    T extends Signature = Signature,
+    Target extends InferTarget<T> = InferTarget<T>
+  > {
+    readonly target?: Target
+    currentTarget?: InferTarget<T>
+    stopPropagation(): void
+    stopImmediatePropagation(): void
+  }
+
+  /**
+   * A message that is sent to the target and its ancestors. This propagation
+   * can be interrupted by `stopPropagation` or `stopImmediatePropagation`.
+   */
+  interface BubblingMessage<
+    T extends Signature = Signature,
+    Target extends InferTarget<T> = InferTarget<T>
+  > extends Message<T, Target> {
+    readonly target: Target
+    currentTarget: InferTarget<T>
+  }
+
+  /** A receiver is a function that receives messages from a channel. */
+  type Receiver<
+    T extends Signature = Signature,
+    Target extends InferTarget<T> = InferTarget<T>
+  > = (
+    message: (InferTarget<T> extends void
+      ? Message<T, Target>
+      : BubblingMessage<T, Target>) &
+      InferData<T>
+  ) => boolean | void
+
+  /** The signature of a channel. */
+  interface Signature<
+    Data extends object = Record<string, any>,
+    Target extends object | void = any
+  > extends Send<Signature<Data, Target>>,
+      Connect<Signature<Data, Target>> {}
+
+  /**
+   * Every channel returned by `defineChannel` can be divided into two functions
+   * (`send` and `connect`) via array destructuring.
+   */
+  type FunctionTuple<
+    Data extends object = Record<string, any>,
+    Target extends object | void = any
+  > = [
+    send: Send<Signature<Data, Target>>,
+    connect: Connect<Signature<Data, Target>>
   ]
 
-interface ChannelFunction<
-  Data extends object = Record<string, any>,
-  Target extends object | void = any
-> extends ChannelAddReceiver<ChannelFunction<Data, Target>>,
-    ChannelSend<ChannelFunction<Data, Target>> {}
+  /** The function that sends a message to a channel. */
+  type Send<T extends Signature = Signature> = {
+    <Target extends InferTarget<T>>(
+      target: Target,
+      message: VoidIfEmpty<InferData<T>>
+    ): boolean
+
+    (message: VoidIfEmpty<InferData<T>>): boolean
+  }
+
+  /** The function that connects a receiver to a channel. */
+  type Connect<T extends Signature = Signature> = {
+    <Target extends InferTarget<T>>(
+      target: Target,
+      receiver: Receiver<T>
+    ): Connection<Target>
+
+    (receiver: Receiver<Signature<InferData<T>, void>>): Connection<void>
+  }
+
+  /** A disposable connection of a receiver to a channel. */
+  type Connection<Target extends object | void> = Disposable<
+    AlienBoundEffect<Target>
+  >
+}
+
+type InferData<T extends Channel.Signature> = //
+  T extends Channel.Signature<infer Data> ? Data : never
+
+type InferTarget<T extends Channel.Signature> = //
+  T extends Channel.Signature<any, infer Target> ? Target : never
+
+type VoidIfEmpty<Data extends object> = Data extends any
+  ?
+      | ({} extends Data ? void : never)
+      | ({} extends Required<Data> ? never : Data)
+  : never
 
 /**
  * Channels are strongly typed event buses.
@@ -112,11 +130,14 @@ export function defineChannel<
 }: {
   isTarget?(node: any): node is Target
   bubblingKey?: Extract<keyof Target, string> | false
-} = {}): AlienChannel<Data, Target> {
-  let untargetedReceivers: Set<AlienReceiver> | undefined
-  let targetedReceiverCaches: WeakMap<Target, Set<AlienReceiver>> | undefined
+} = {}): Channel<Data, Target> {
+  let untargetedReceivers: Set<Channel.Receiver> | undefined
+  let targetedReceiverCaches: WeakMap<Target, Set<Channel.Receiver>> | undefined
 
-  const bubble = (target: Target, message: AlienBubblingMessage): boolean => {
+  const bubble = (
+    target: Target,
+    message: Channel.BubblingMessage
+  ): boolean => {
     let received = false
 
     const receivers = targetedReceiverCaches!.get(target)
@@ -150,13 +171,13 @@ export function defineChannel<
     return received
   }
 
-  const addReceiver: ChannelAddReceiver = (arg1: any, arg2?: any): any => {
+  const connect: Channel.Connect = (arg1: any, arg2?: any): any => {
     if (isTarget(arg1)) {
       const receiversByTarget = (targetedReceiverCaches ||= new WeakMap())
       return createEffect({
         target: arg1,
         args: [arg2],
-        enable(target: Target, receiver: AlienReceiver) {
+        enable(target: Target, receiver: Channel.Receiver) {
           const receivers = receiversByTarget.get(target) || new Set()
           receiversByTarget.set(target, receivers)
 
@@ -177,7 +198,7 @@ export function defineChannel<
     const receivers = (untargetedReceivers ||= new Set())
     return createEffect({
       args: [arg1],
-      enable(_: void, receiver: AlienReceiver) {
+      enable(_: void, receiver: Channel.Receiver) {
         // Clone the receiver in case it was memoized by a component.
         const newReceiver = receiver.bind(null)
         receivers.add(newReceiver)
@@ -189,13 +210,13 @@ export function defineChannel<
     })
   }
 
-  const sendMessage: ChannelSend = (arg1: any, arg2?: any) => {
-    let message: AlienMessage | null
+  const send: Channel.Send = (arg1: any, arg2?: any) => {
+    let message: Channel.Message | null
 
     if (isTarget(arg1)) {
       if (targetedReceiverCaches) {
         message = {
-          ...(arg2 as AlienMessage),
+          ...(arg2 as Channel.Message),
           currentTarget: arg1,
           stopPropagation() {
             this.stopPropagation = noop
@@ -204,11 +225,11 @@ export function defineChannel<
             this.stopImmediatePropagation = noop
           },
         }
-        return bubble(arg1, message as AlienBubblingMessage)
+        return bubble(arg1, message as Channel.BubblingMessage)
       }
 
       message = {
-        ...(arg2 as AlienMessage),
+        ...(arg2 as Channel.Message),
         target: arg1,
         currentTarget: document,
       }
@@ -217,7 +238,7 @@ export function defineChannel<
     let received = false
 
     if (untargetedReceivers) {
-      message ||= { ...arg1 } as AlienMessage
+      message ||= { ...arg1 } as Channel.Message
       message.stopPropagation = noop
       message.stopImmediatePropagation = () => {
         message = null
@@ -236,16 +257,16 @@ export function defineChannel<
   return makeIterable(
     (arg1: any, arg2?: any): any => {
       if (isFunction(arg1)) {
-        return addReceiver(arg1)
+        return connect(arg1)
       }
       if (arg2 === undefined) {
-        return sendMessage(arg1)
+        return send(arg1)
       }
       if (isFunction(arg2)) {
-        return addReceiver(arg1, arg2)
+        return connect(arg1, arg2)
       }
-      return sendMessage(arg1, arg2)
+      return send(arg1, arg2)
     },
-    [sendMessage, addReceiver]
+    [send, connect]
   ) as any
 }
