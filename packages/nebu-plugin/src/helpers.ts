@@ -109,12 +109,17 @@ export function findExternalReferences(
         return
       }
 
-      // Ignore static object keys.
+      // Ignore static object keys and class property names.
       if (
-        path.parent.isProperty() &&
+        (path.parent.isProperty() || path.parent.isPropertyDefinition()) &&
         path.parent.key === path &&
         !path.parent.computed
       ) {
+        return
+      }
+
+      // Ignore class names.
+      if (path.parent.isClassDeclaration() || path.parent.isClassExpression()) {
         return
       }
 

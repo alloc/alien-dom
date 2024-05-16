@@ -4,6 +4,7 @@ import { FunctionNode, isFunctionNode, toIdentifierSet } from './helpers'
 type BlockNode =
   | Node.Program
   | Node.BlockStatement
+  | Node.ClassBody
   // These types can have implicit block scopes with declarations inside.
   | Node.ArrowFunctionExpression
   | Node.ForStatement
@@ -41,11 +42,18 @@ type FunctionDeclaration = {
   scope: BlockScope
 }
 
+type ClassDeclaration = {
+  kind: 'class'
+  node: Node.ClassDeclaration | Node.ClassExpression
+  scope: BlockScope
+}
+
 type Declaration =
   | ParamDeclaration
   | VariableDeclaration
   | ImportDeclaration
   | FunctionDeclaration
+  | ClassDeclaration
 
 export type ScopeTracker = ReturnType<typeof createScopeTracker>
 
@@ -119,6 +127,8 @@ export function createScopeTracker() {
   const registerDeclaration = (
     node:
       | Node.CatchClause
+      | Node.ClassDeclaration
+      | Node.ClassExpression
       | Node.VariableDeclarator
       | Node.ImportDeclaration
       | Node.FunctionDeclaration
@@ -126,16 +136,17 @@ export function createScopeTracker() {
   ) => {
     // A named function expression is declared within its own function body,
     // but that's all.
-    if (node.isFunctionExpression()) {
+    if (node.isFunctionExpression() || node.isClassExpression()) {
       if (!node.id) {
         return
       }
       const scope = getDeclarationScope(node.body!)
-      return scope.declarations.set(node.id.name, {
-        kind: 'function',
-        node: node,
-        scope,
-      })
+      return scope.declarations.set(
+        node.id.name,
+        node.isFunctionExpression()
+          ? { kind: 'function', node, scope }
+          : { kind: 'class', node, scope }
+      )
     }
 
     // A catch parameter is declared within the catch clause.
@@ -191,12 +202,13 @@ export function createScopeTracker() {
           scope,
         })
       }
-    } else if (node.isFunctionDeclaration()) {
-      scope.declarations.set(node.id!.name, {
-        kind: 'function',
-        node: node,
-        scope,
-      })
+    } else {
+      scope.declarations.set(
+        node.id!.name,
+        node.isFunctionDeclaration()
+          ? { kind: 'function', node, scope }
+          : { kind: 'class', node, scope }
+      )
     }
   }
 
@@ -230,6 +242,8 @@ export function createScopePlugin(scopes: ScopeTracker): Plugin {
 
   return {
     CatchClause: registerDeclaration,
+    ClassExpression: registerDeclaration,
+    ClassDeclaration: registerDeclaration,
     ImportDeclaration: registerDeclaration,
     VariableDeclarator: registerDeclaration,
     ArrowFunctionExpression: registerFunctionAndParameters,
