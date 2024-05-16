@@ -1,11 +1,11 @@
 import test from 'ava'
-import { createContext } from 'core/context'
+import { defineContext } from 'core/context'
 import { flushMicroTasks } from 'flush-microtasks'
 import { renderComponent } from 'functions/renderComponent'
 import { useContext } from 'hooks/useContext'
 
 test('context layering', t => {
-  const TestContext = createContext(1)
+  const TestContext = defineContext(1)
 
   function Test() {
     const value = useContext(TestContext)
@@ -33,7 +33,7 @@ test('context layering', t => {
 })
 
 test('component with context as its root node', async t => {
-  const TestContext = createContext(1)
+  const TestContext = defineContext(1)
 
   function Inner() {
     const value = useContext(TestContext)
