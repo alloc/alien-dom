@@ -230,14 +230,14 @@ export class App<
    */
   use<const Path extends string, Data>(
     route: Route<Path, Data> | Promise<{ default: Route<Path, Data> }>
-  ): App<Simplify<Routes & { [key in Path]: Data }>>
+  ): App<Simplify<Routes & { [key in Path]: Data }>, RouterType>
 
   use<const Path extends string, Data>(
     // Don't use `path: Path` so unsaved changes within the imported Route take
     // precedence over a generated `.use` call.
     path: string,
     route: () => Promise<{ default: Route<Path, Data> }>
-  ): App<Simplify<Routes & { [key in Path]: Data }>>
+  ): App<Simplify<Routes & { [key in Path]: Data }>, RouterType>
 
   use(
     arg1: Route | Promise<{ default: Route }> | string,
