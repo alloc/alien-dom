@@ -3,7 +3,7 @@ import { Falsy } from '@alloc/types'
 import { Disposable, attachDisposer } from '../addons/disposable'
 import { Promisable } from '../addons/promises'
 import { createSymbolProperty } from '../internal/symbolProperty'
-import { noop } from '../internal/util'
+import { forEach, noop } from '../internal/util'
 
 const kRefType = Symbol.for('refType')
 
@@ -43,7 +43,7 @@ export const setObservableHooks: (newHooks: ObservableHooks) => void = DEV
     }
   : noop
 
-type InternalRef<T> = Ref<T> & {
+type InternalRef<T = any> = Ref<T> & {
   _value: T
   _observers: Set<Observer>
   _depth: number
@@ -232,7 +232,11 @@ function assignPrototype(
 // Array refs
 //
 
-export class ArrayRef<T> extends ReadonlyRef<readonly T[]> {}
+export class ArrayRef<T> extends ReadonlyRef<readonly T[]> {
+  protected _arrayObservers: Set<InternalArrayObserver<T>> | null = null
+  protected _produceOperation: ArrayOperation.Producer = noop
+}
+
 export interface ArrayRef<T>
   extends ArrayMutators<T>,
     ArrayIterators<T>,
@@ -279,7 +283,7 @@ const updateLengthRef = (
   }
 }
 
-const arrayTraps: ProxyHandler<InternalRef<any[]>> = {
+const arrayTraps: ProxyHandler<InternalArrayRef> = {
   get(target, key) {
     if (key === Symbol.iterator) {
       return () => target.value[Symbol.iterator]()
@@ -312,18 +316,35 @@ const arrayTraps: ProxyHandler<InternalRef<any[]>> = {
         if (isExpanding) {
           updateLengthRef(kLengthRef(target), oldArray, newArray)
         }
+        if (target._arrayObservers) {
+          notifyArrayObservers(
+            target,
+            { type: 'replace', index, newValue },
+            oldArray
+          )
+        }
       }
       return true
     }
     if (key === 'length') {
       const oldArray = target._value
-      if (newValue !== oldArray.length) {
+      const delta = newValue - oldArray.length
+      if (delta) {
         const newArray = oldArray.slice(0, newValue)
-        if (newValue > oldArray.length) {
+        if (delta > 0) {
           newArray.length = newValue
         }
         setValue.call(target, newArray)
         updateLengthRef(kLengthRef(target), oldArray, newArray)
+        if (target._arrayObservers) {
+          notifyArrayObservers(
+            target,
+            newValue > oldArray.length
+              ? { type: 'add', index: oldArray.length, count: delta, newArray }
+              : { type: 'remove', index: newValue, count: -delta, oldArray },
+            oldArray
+          )
+        }
       }
       return true
     }
@@ -332,6 +353,13 @@ const arrayTraps: ProxyHandler<InternalRef<any[]>> = {
       if (newValue !== oldArray) {
         setValue.call(target, newValue)
         updateLengthRef(kLengthRef(target), oldArray, newValue)
+        if (target._arrayObservers) {
+          notifyArrayObservers(
+            target,
+            { type: 'rebase', newArray: newValue, oldArray },
+            oldArray
+          )
+        }
       }
       return true
     }
@@ -359,23 +387,29 @@ export let arrayRef = <T>(
     new Proxy(new ArrayRef(init || [], debugId), arrayTraps as any)
 
   const arrayMutator = (name: keyof ArrayMutators<any>) =>
-    function (this: InternalRef<any>, ...args: any[]) {
+    function (this: InternalArrayRef, ...args: any[]) {
       const oldArray = this._value
       const newArray = oldArray.slice()
-      const result = newArray[name](...args)
+      const result = (newArray[name] as any)(...args)
       setValue.call(this, newArray)
       updateLengthRef(kLengthRef(this), oldArray, newArray)
+      if (this._arrayObservers) {
+        const operation = this._produceOperation(name, args, oldArray, newArray)
+        if (operation) {
+          notifyArrayObservers(this, operation, oldArray)
+        }
+      }
       return result
     }
 
   const arrayEnumerator = (name: keyof ArrayIterators<any>) =>
-    function (this: InternalRef<any>, ...args: any[]) {
+    function (this: InternalRef, ...args: any[]) {
       return this.value[name](...args)
     }
 
   assignPrototype(ArrayRef.prototype, {
     [kRefType]: 'ArrayRef',
-    observe(this: InternalRef<any[]>, index: number) {
+    observe(this: InternalRef, index: number) {
       return computed(
         () => this.value[index],
         DEV && isString(this.debugId) ? `${this.debugId}[${index}]` : undefined
@@ -393,6 +427,11 @@ export let arrayRef = <T>(
   })
 
   return arrayRef(init, debugId)
+}
+
+type InternalArrayRef<T = any> = InternalRef<T[]> & {
+  _arrayObservers: Set<InternalArrayObserver<T>> | null
+  _produceOperation: ArrayOperation.Producer
 }
 
 // Ref maps
@@ -639,6 +678,225 @@ export interface Observer {
    * or return a new result.
    */
   onUpdate(result: any): any
+}
+
+//
+// Array observer
+//
+
+export declare namespace ArrayOperation {
+  /**
+   * A value has been added at the index.
+   */
+  type Add<T = any> = {
+    type: 'add'
+    index: number
+    count: number
+    newArray: readonly T[]
+  }
+  /**
+   * One or more values have been removed at the index.
+   */
+  type Remove<T = any> = {
+    type: 'remove'
+    index: number
+    count: number
+    oldArray: readonly T[]
+  }
+  /**
+   * The value at the index has been replaced.
+   */
+  type Replace<T = any> = {
+    type: 'replace'
+    index: number
+    newValue: T
+  }
+  /**
+   * The array has been sorted or replaced entirely.
+   */
+  type Rebase<T = any> = {
+    type: 'rebase'
+    newArray: readonly T[]
+    oldArray: readonly T[]
+  }
+  /**
+   * A function that is called with the fine-grained changes to the array.
+   */
+  type Handler<T = any> = (
+    operations: ArrayOperation<T>[],
+    arrayRef: ArrayRef<T>
+  ) => void
+  /**
+   * An "operation producer" is called by the `ArrayRef` to produce the
+   * `ArrayOperation` set for a given mutation.
+   */
+  type Producer = (
+    method: string,
+    args: any[],
+    oldArray: any[],
+    newArray: any[]
+  ) => ArrayOperation | ArrayOperation[] | false
+}
+
+/**
+ * An observed change to an `ArrayRef` for fine-grained reactivity.
+ */
+export type ArrayOperation<T = any> =
+  | ArrayOperation.Add<T>
+  | ArrayOperation.Remove<T>
+  | ArrayOperation.Replace<T>
+  | ArrayOperation.Rebase<T>
+
+/**
+ * While a normal observer can only observe an `ArrayRef` as a whole, an array
+ * observer can observe the fine-grained changes to the array (specified by the
+ * `ArrayOperation` type).
+ *
+ * Prefer using `observeArrayOperations` to create an array observer, instead of
+ * constructing one manually.
+ */
+export class ArrayObserver<T> extends Observer {
+  protected operations: ArrayOperation<T>[] = []
+
+  constructor(
+    readonly target: ArrayRef<T>,
+    protected compute: ArrayOperation.Handler<T>
+  ) {
+    super()
+    addArrayObserver(target as any, this)
+  }
+
+  protected onOperation(
+    operation: ArrayOperation<T> | ArrayOperation<T>[],
+    oldArray: any[]
+  ) {
+    forEach(operation, operation => {
+      if (operation.type === 'rebase') {
+        this.operations.length = 0
+      }
+      this.operations.push(operation)
+      this.scheduleUpdate(this.target, this.target.peek(), oldArray)
+    })
+  }
+
+  nextCompute() {
+    const operations = [...this.operations]
+    this.operations.length = 0
+    this.compute(operations, this.target as any)
+  }
+
+  dispose() {
+    super.dispose()
+    removeArrayObserver(this.target as any, this)
+  }
+
+  /**
+   * When an `ArrayRef` is observed by an `ArrayObserver` (not to be confused
+   * with a normal `Observer`), the `ArrayRef` will call this `produceOperation`
+   * static method to produce the `ArrayOperation` set for a given mutation.
+   */
+  static produceOperation: ArrayOperation.Producer = (
+    method,
+    args,
+    oldArray,
+    newArray
+  ) => {
+    switch (method) {
+      case 'push':
+        return (
+          args.length > 0 && {
+            type: 'add',
+            index: oldArray.length,
+            count: args.length,
+            newArray,
+          }
+        )
+      case 'pop':
+        return (
+          oldArray.length > 0 && {
+            type: 'remove',
+            index: oldArray.length - 1,
+            count: 1,
+            oldArray,
+          }
+        )
+      case 'shift':
+        return (
+          oldArray.length > 0 && {
+            type: 'remove',
+            index: 0,
+            count: 1,
+            oldArray,
+          }
+        )
+      case 'unshift':
+        return (
+          args.length > 0 && {
+            type: 'add',
+            index: 0,
+            count: args.length,
+            newArray,
+          }
+        )
+      case 'splice':
+        const [start, deleteCount] = args as [number, number]
+
+        const addOperation: ArrayOperation.Add | false = args.length > 2 && {
+          type: 'add',
+          index: start,
+          count: args.length - 2,
+          newArray,
+        }
+
+        const removeOperation: ArrayOperation.Remove | false = deleteCount >
+          0 && {
+          type: 'remove',
+          index: start,
+          count: deleteCount,
+          oldArray,
+        }
+
+        return addOperation && removeOperation
+          ? [removeOperation, addOperation]
+          : addOperation || removeOperation
+    }
+    throw Error('Unknown array method: ' + method)
+  }
+}
+
+type InternalArrayObserver<T = any> = ArrayObserver<T> & {
+  onOperation(operation: ArrayOperation<T>, oldArray: any[]): void
+}
+
+function addArrayObserver<T>(
+  ref: InternalArrayRef<T>,
+  observer: ArrayObserver<T>
+) {
+  ref._arrayObservers ||= new Set()
+  ref._arrayObservers.add(observer as any)
+  if (ref._produceOperation === noop) {
+    ref._produceOperation = ArrayObserver.produceOperation
+  }
+}
+
+function removeArrayObserver<T>(
+  ref: InternalArrayRef<T>,
+  observer: ArrayObserver<T>
+) {
+  ref._arrayObservers!.delete(observer as any)
+  if (ref._arrayObservers!.size === 0) {
+    ref._arrayObservers = null
+  }
+}
+
+function notifyArrayObservers<T>(
+  ref: InternalArrayRef<T>,
+  operation: ArrayOperation<T> | ArrayOperation<T>[],
+  oldArray: T[]
+) {
+  ref._arrayObservers!.forEach(observer =>
+    observer.onOperation(operation, oldArray)
+  )
 }
 
 //
@@ -906,6 +1164,19 @@ export function observe(
   }
   return observer
 }
+
+/**
+ * Observe fine-grained changes to an `ArrayRef`. Note that your handler isn't
+ * called immediately. It receives a batch of changes in the next microtask.
+ *
+ * The returned `ArrayObserver` must be manually disposed when no longer needed,
+ * or it will continue receiving changes until the associated `ArrayRef` is
+ * garbage collected.
+ */
+export const observeArrayOperations = <T>(
+  arrayRef: ArrayRef<T>,
+  handler: ArrayOperation.Handler<T>
+) => new ArrayObserver(arrayRef, handler)
 
 export function isReadonlyRef(value: any): boolean {
   return !!value && value[kRefType] === 'ReadonlyRef'
