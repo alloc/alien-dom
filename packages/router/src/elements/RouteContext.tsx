@@ -1,6 +1,6 @@
 import {
   ComponentNode,
-  createContext,
+  defineContext,
   EffectContext,
   SpringAnimation,
   useCallbackProp,
@@ -27,7 +27,7 @@ export interface RouteInstance {
   leaveEffects?: (() => SpringAnimation | PromiseLike<void> | void)[]
 }
 
-export const RouteContext = createContext<RouteInstance>()
+export const RouteContext = defineContext<RouteInstance>()
 
 export function useEnterEffect(effect: RouteEnterEffect) {
   const context = useRouteContext()

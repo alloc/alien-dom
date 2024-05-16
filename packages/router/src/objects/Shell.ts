@@ -1,4 +1,4 @@
-import { JSX, createContext, useContext } from 'alien-dom'
+import { JSX, defineContext, useContext } from 'alien-dom'
 
 export interface ShellConfig<
   Data = unknown,
@@ -25,7 +25,7 @@ export interface ShellProps<Data, State extends object | null> {
 export interface Shell<Data = any, State extends object | null = any>
   extends ShellConfig<Data, State> {}
 
-export const ShellProps = createContext<ShellProps<any, any> | null>(null)
+export const ShellProps = defineContext<ShellProps<any, any> | null>(null)
 
 export type ToShellProps<T extends Shell> = T extends Shell<
   infer Data,
