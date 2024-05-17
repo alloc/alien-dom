@@ -1,5 +1,4 @@
 import { isArray, isFunction } from '@alloc/is'
-import { Fragment } from '../components/Fragment'
 import { ContextStore } from '../core/context'
 import { AlienEffects } from '../core/effects'
 import {
@@ -12,23 +11,12 @@ import {
 import { onMount } from '../core/onMount'
 import { attachRef } from '../functions/attachRef'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
-import { unmount } from '../functions/unmount'
-import { isChildrenFragment } from '../hooks'
-import {
-  AnyDeferredNode,
-  evaluateDeferredNode,
-  isDeferredNode,
-  isShadowRoot,
-} from '../jsx-dom/node'
-import { morph } from '../morphdom/morph'
-import { morphComposite } from '../morphdom/morphComposite'
-import { morphFragment } from '../morphdom/morphFragment'
+import { morphRootNode } from '../functions/morphRootNode'
+import { AnyDeferredNode } from '../jsx-dom/node'
 import { FunctionComponent, JSX } from '../types'
 import { forwardContext, getContext } from './context'
 import { deepEquals } from './deepEquals'
-import { isComment, isElement, isFragment, isNode } from './duck'
-import { updateParentFragment, wrapWithFragment } from './fragment'
-import { fromElementThunk } from './fromElementThunk'
+import { isFragment } from './duck'
 import {
   currentComponent,
   currentEffects,
@@ -40,10 +28,8 @@ import {
   kAlienElementTags,
   kAlienFragmentNodes,
   kAlienMemo,
-  kAlienParentFragment,
 } from './symbols'
-import { AnyElement } from './types'
-import { compareNodeWithTag, lastValue, noop } from './util'
+import { lastValue, noop } from './util'
 
 let componentRenderHook = (component: AlienComponent) => component.tag
 
@@ -184,7 +170,7 @@ export class AlienComponent<Props extends object = any> extends Observer {
     this.nextHookIndex = 0
     this.updates = new Map()
 
-    let { rootNode, updates, newEffects } = this
+    let { rootNode, newEffects } = this
 
     currentComponent.push(this as AlienRunningComponent)
     currentEffects.push(newEffects)
@@ -199,151 +185,17 @@ export class AlienComponent<Props extends object = any> extends Observer {
 
     let threw = true
     try {
-      let newRootNode: JSX.ChildrenProp = componentRenderHook(this)(this.props)
-
-      if (isFunction(newRootNode)) {
-        newRootNode = fromElementThunk(newRootNode)
+      let newRootNode = componentRenderHook(this)(this.props)
+      newRootNode = morphRootNode(
+        rootNode,
+        newRootNode,
+        this.rootKey,
+        this.context,
+        this.updates
+      )
+      if (newRootNode !== rootNode) {
+        this.setRootNode((rootNode = newRootNode))
       }
-
-      // TODO: support ShadowRoot component roots
-      if (isShadowRoot(newRootNode)) {
-        throw Error('ShadowRoot cannot be returned by component')
-      }
-
-      if (isChildrenFragment(newRootNode)) {
-        newRootNode = newRootNode.fragment
-      }
-
-      // When this is true, a comment node will be used as a placeholder, so
-      // the component can insert a node later.
-      let placeholder: Comment | false
-
-      if (rootNode) {
-        placeholder = isComment(rootNode) && rootNode
-
-        // The render function might return an element reference.
-        if (rootNode === newRootNode) {
-          const key = kAlienElementKey(rootNode)!
-          const update = updates.get(key)
-          if (update) {
-            newRootNode = update
-          }
-        }
-      }
-
-      // When this is true, the root node has been updated in place.
-      let updated: boolean | undefined
-
-      if (rootNode !== newRootNode) {
-        if (newRootNode != null) {
-          // When a non-node is returned, wrap it in a fragment.
-          if (!isNode(newRootNode) && !isDeferredNode(newRootNode)) {
-            newRootNode = wrapWithFragment(
-              newRootNode,
-              rootNode != null,
-              this.context
-            )
-          }
-
-          // Update the root node if possible.
-          if (
-            rootNode &&
-            isDeferredNode(newRootNode) &&
-            this.rootKey === kAlienElementKey(newRootNode) &&
-            compareNodeWithTag(rootNode, newRootNode.tag)
-          ) {
-            if (isFunction(newRootNode.tag)) {
-              if (newRootNode.tag === Fragment) {
-                morphFragment(rootNode as any, newRootNode, this)
-              } else {
-                morphComposite(rootNode, newRootNode as any)
-              }
-              updated = true
-            } else if (isElement(rootNode)) {
-              morph(rootNode, newRootNode, this)
-              updated = true
-            }
-          }
-        }
-
-        // Initialize or replace the root node.
-        if (!updated) {
-          if (isDeferredNode(newRootNode)) {
-            // The next root node must be a DOM node.
-            newRootNode = evaluateDeferredNode(newRootNode)
-          }
-
-          if (
-            newRootNode &&
-            isFragment(newRootNode) &&
-            !newRootNode.childNodes.length
-          ) {
-            // Empty fragments disappear.
-            newRootNode = null
-          }
-
-          // Use a comment node as a placeholder if nothing was produced.
-          if (!newRootNode) {
-            placeholder ||= document.createComment(DEV ? this.name : '')
-            newRootNode = placeholder
-          }
-          // Fragments always have a component-specific comment node as
-          // their first child, which is how a fragment can be replaced.
-          else if (DEV && rootNode !== newRootNode && isFragment(newRootNode)) {
-            const newChildren =
-              kAlienFragmentNodes(newRootNode) || newRootNode.childNodes
-            newChildren[0].nodeValue = this.name
-          }
-
-          // Replace the old root node if one exists and wasn't replaced by a
-          // deeper component already.
-          if (rootNode && !fromSameDeeperComponent(rootNode, newRootNode)) {
-            let replacedNode = rootNode
-            if (isFragment(replacedNode)) {
-              // Remove any nodes owned by the old fragment.
-              const replacedNodes = kAlienFragmentNodes(replacedNode)!
-              if (replacedNodes[0].parentElement) {
-                replacedNodes.slice(1).forEach(node => unmount(node))
-              }
-              // Replace the fragment's header (which is always a comment).
-              replacedNode = replacedNodes[0] as Comment
-            }
-
-            // We can't logically replace a node with no parent.
-            if (replacedNode.parentElement) {
-              replacedNode.replaceWith(newRootNode)
-              unmount(replacedNode, true, this)
-            } else if (DEV) {
-              console.error(
-                `Component "${this.name}" was updated before its initial node could be added to the DOM, resulting in a failed update!`
-              )
-            }
-          }
-
-          if (rootNode) {
-            const parentFragment = kAlienParentFragment(rootNode)
-            if (parentFragment) {
-              kAlienParentFragment(newRootNode, parentFragment)
-              updateParentFragment(
-                parentFragment,
-                kAlienFragmentNodes(rootNode) || [rootNode as AnyElement],
-                kAlienFragmentNodes(newRootNode) || [newRootNode as AnyElement]
-              )
-            }
-          }
-
-          this.setRootNode((rootNode = newRootNode))
-        }
-      } else if (!rootNode) {
-        placeholder = document.createComment(DEV ? this.name : '')
-        this.setRootNode((rootNode = placeholder))
-      }
-
-      // Sanity check.
-      if (!rootNode) {
-        throw Error('Component failed to render a node')
-      }
-
       threw = false
     } finally {
       restoreContext()
@@ -366,21 +218,16 @@ export class AlienComponent<Props extends object = any> extends Observer {
     // When the root node is a fragment, use its first child to determine if
     // the fragment has been connected to the DOM.
     if (isFragment(rootNode)) {
-      const childNodes = kAlienFragmentNodes(rootNode)
-      if (!childNodes) {
-        throw Error(
-          'DocumentFragment nodes cannot be returned by a component unless created with JSX.'
-        )
-      }
-      rootNode = childNodes[0]
+      rootNode = kAlienFragmentNodes(rootNode)![0]
     }
 
     if (isMounted && rootNode.isConnected) {
       newEffects.enable()
       oldEffects.disable()
     } else {
-      // If the root node isn't connected to the DOM in the next microtask,
-      // use a mutation observer. Once connected, run any component effects.
+      // Wait for the root node to be connected to the DOM before running its
+      // side effects. Note that a memory leak occurs if the root node is never
+      // connected to the DOM.
       onMount(rootNode, () => {
         if (this.effects === newEffects) {
           newEffects.enable()
@@ -436,31 +283,6 @@ export declare class AlienRunningComponent<
 export const setComponentRenderHook = (
   hook: (component: AlienComponent) => (props: any) => JSX.ChildrenProp
 ) => (componentRenderHook = hook)
-
-/**
- * If the current node and the new node are both returned by the
- * same component instance, we should avoid any mutation, since
- * that's been handled by the deeper component.
- *
- * This function assumes `newRootNode` hasn't had the caller added
- * to its `kAlienElementTags` map yet.
- */
-function fromSameDeeperComponent(
-  rootNode: ChildNode | DocumentFragment,
-  newRootNode: ChildNode | DocumentFragment
-) {
-  if (rootNode === newRootNode) {
-    return true
-  }
-  const newInstances = kAlienElementTags(newRootNode)
-  if (newInstances) {
-    const instances = kAlienElementTags(rootNode)!
-    for (const [tag, instance] of instances) {
-      return newInstances.get(tag) === instance
-    }
-  }
-  return false
-}
 
 /** @internal */
 export class Memo {

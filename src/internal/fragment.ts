@@ -5,7 +5,11 @@ import {
   deferCompositeNode,
   isDeferredNode,
 } from '../jsx-dom/node'
-import { ResolvedChild, resolveChildren } from '../jsx-dom/resolveChildren'
+import {
+  ResolvedChild,
+  UnresolvedChild,
+  resolveChildren,
+} from '../jsx-dom/resolveChildren'
 import type { JSX } from '../types/jsx'
 import { ContextMap } from './context'
 import { currentComponent } from './global'
@@ -22,25 +26,25 @@ export type FragmentNodes = [Comment, ...(ChildNode | undefined)[]]
 export type FragmentKeys = (JSX.ElementKey | undefined)[]
 
 export function wrapWithFragment(
-  childrenProp: JSX.ChildrenProp,
+  childrenProp: UnresolvedChild,
   isDeferred: false,
   context?: ContextMap
 ): DocumentFragment
 
 export function wrapWithFragment(
-  childrenProp: JSX.ChildrenProp,
+  childrenProp: UnresolvedChild,
   isDeferred: true,
   context?: ContextMap
 ): DeferredCompositeNode
 
 export function wrapWithFragment(
-  childrenProp: JSX.ChildrenProp,
+  childrenProp: UnresolvedChild,
   isDeferred?: boolean,
   context?: ContextMap
 ): DocumentFragment | DeferredCompositeNode
 
 export function wrapWithFragment(
-  childrenProp: JSX.ChildrenProp,
+  childrenProp: UnresolvedChild,
   isDeferred?: boolean,
   context?: ContextMap
 ) {

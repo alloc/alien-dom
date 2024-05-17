@@ -1,8 +1,10 @@
 import { isRef } from '../core/observable'
 import { addChildrenRef, applyRefProp } from '../internal/applyProp'
 import { AlienComponent } from '../internal/component'
+import { currentComponent } from '../internal/global'
 import { kAlienHostProps } from '../internal/symbols'
 import type { HTMLOrSVGElement } from '../internal/types'
+import { lastValue } from '../internal/util'
 import {
   AnyDeferredNode,
   DeferredChildren,
@@ -18,7 +20,7 @@ import { morphComposite } from './morphComposite'
 export function morph(
   fromParentNode: HTMLOrSVGElement,
   toParentNode: AnyDeferredNode,
-  component?: AlienComponent | null
+  component: AlienComponent | null = lastValue(currentComponent)
 ) {
   // Check for a deferred component update.
   if (!isDeferredHostNode(toParentNode)) {
