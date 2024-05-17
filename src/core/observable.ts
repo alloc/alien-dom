@@ -1052,7 +1052,7 @@ let updateHasSideEffects = false
 function scheduleUpdates() {
   if (!updateScheduled) {
     updateScheduled = true
-    Promise.resolve().then(processUpdates)
+    queueMicrotask(processUpdates)
   }
 }
 
