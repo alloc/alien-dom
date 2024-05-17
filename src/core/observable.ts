@@ -781,7 +781,7 @@ export class ArrayObserver<T> extends Observer {
         this.operations.length = 0
       }
       this.operations.push(operation)
-      this.scheduleUpdate(this.target, this.target.peek(), oldArray)
+      this.scheduleUpdate()
     })
   }
 
