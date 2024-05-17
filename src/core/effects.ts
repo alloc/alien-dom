@@ -54,9 +54,8 @@ const enum AlienEffectState {
  * mounted or unmounted, respectively. If the element is already mounted,
  * any `enable` callbacks will be run immediately.
  */
-export class AlienEffects<Element extends AnyElement = any> {
+export class AlienEffects {
   state = AlienEffectState.Disabled
-  readonly element: Element | Comment | null = null
   mounted = false
   rootNode?: Node = undefined
 
@@ -64,31 +63,13 @@ export class AlienEffects<Element extends AnyElement = any> {
   currentEffect: AlienEffect | null = null
   abortCtrl?: AbortController = undefined
 
-  protected _mountEffect: Disposable | null = null
-
-  constructor(element?: Element | Comment | (() => void), rootNode?: Node) {
-    if (isFunction(element)) {
-      const callback = element
+  constructor(callback?: () => void) {
+    if (callback) {
       currentEffects.push(this)
       try {
         callback()
       } finally {
         popValue(currentEffects, this)
-      }
-    } else if (element) {
-      this.element = element
-      kAlienEffects(element, this)
-
-      if (!rootNode && element.isConnected) {
-        rootNode = element.getRootNode()
-      }
-
-      // Assume the element will be mounted soon, if it's not already.
-      this.mounted = true
-      this.rootNode = rootNode
-
-      if (element) {
-        this.enableOnceMounted(element, rootNode)
       }
     }
   }
@@ -115,50 +96,16 @@ export class AlienEffects<Element extends AnyElement = any> {
         this.currentEffect = null
         popValue(currentEffects, this)
       }
-      if (this.element) {
-        this._mountEffect = onUnmount(this.element, () => {
-          this.mounted = false
-          this.disable()
-        })
-      }
     }
-  }
-
-  /** @internal */
-  enableOnceMounted(element: Element | Comment, rootNode?: Node) {
-    if (element.isConnected) {
-      return this.enable()
-    }
-    // This assumes that the element will eventually be mounted. If
-    // it's not, a memory leak will occur.
-    this._mountEffect = onMount(
-      element,
-      () => {
-        this._mountEffect = null
-        this.mounted = true
-        this.enable()
-      },
-      // This is needed for within a ShadowRoot.
-      rootNode
-    )
   }
 
   /**
    * Disable all current effects and prevent future effects from running.
    */
   disable(destroy?: boolean) {
-    if (destroy && this._mountEffect) {
-      this._mountEffect.dispose()
-      this._mountEffect = null
-    }
     if (this.enabled) {
       this.state = AlienEffectState.Disabling
-
       disableEffects(this, destroy)
-      if (!destroy && this.element && !this.element.isConnected) {
-        this.enableOnceMounted(this.element, this.rootNode)
-      }
-
       this.state = AlienEffectState.Disabled
     }
   }
@@ -284,6 +231,74 @@ export class AlienEffects<Element extends AnyElement = any> {
 
   protected _runEffect(effect: AlienEffect) {
     runEffect(effect, this)
+  }
+}
+
+/**
+ * A special type of AlienEffects that is only enabled when the element is
+ * mounted. It relies on a `MutationObserver` attached to a document or shadow
+ * root, so it knows when the element is connected.
+ */
+export class AlienMountEffects<
+  Element extends AnyElement = any
+> extends AlienEffects {
+  protected _mountEffect: Disposable | null = null
+
+  constructor(readonly element: Element | Comment, rootNode?: Node) {
+    super()
+
+    kAlienEffects(element, this)
+
+    if (!rootNode && element.isConnected) {
+      rootNode = element.getRootNode()
+    }
+
+    // Assume the element will be mounted soon, if it's not already.
+    this.mounted = true
+    this.rootNode = rootNode
+
+    this.enableOnceMounted(element, rootNode)
+  }
+
+  enable() {
+    if (!this.enabled) {
+      super.enable()
+      this._mountEffect = onUnmount(this.element, () => {
+        this.mounted = false
+        this.disable()
+      })
+    }
+  }
+
+  disable(destroy?: boolean) {
+    if (destroy && this._mountEffect) {
+      this._mountEffect.dispose()
+      this._mountEffect = null
+    }
+    if (this.enabled) {
+      super.disable(destroy)
+      if (!destroy && this.element && !this.element.isConnected) {
+        this.enableOnceMounted(this.element, this.rootNode)
+      }
+    }
+  }
+
+  protected enableOnceMounted(element: Element | Comment, rootNode?: Node) {
+    if (element.isConnected) {
+      return this.enable()
+    }
+    // This assumes that the element will eventually be mounted. If
+    // it's not, a memory leak will occur.
+    this._mountEffect = onMount(
+      element,
+      () => {
+        this._mountEffect = null
+        this.mounted = true
+        this.enable()
+      },
+      // This is needed for within a ShadowRoot.
+      rootNode
+    )
   }
 }
 

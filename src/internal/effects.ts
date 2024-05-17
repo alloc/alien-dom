@@ -1,6 +1,6 @@
 import { isFunction } from '@alloc/is'
 import { attachDisposer, Disposable } from '../addons/disposable'
-import { AlienEffect, AlienEffects } from '../core/effects'
+import { AlienEffect, AlienEffects, AlienMountEffects } from '../core/effects'
 import { currentEffects } from './global'
 import { LinkedList } from './linkedList'
 import { getShadowRoot } from './shadow'
@@ -12,8 +12,8 @@ import { noop } from './util'
 export function getEffects<T extends AnyElement>(
   element: T,
   rootNode: Node | undefined = getShadowRoot()
-): AlienEffects<T> {
-  return kAlienEffects(element) || new AlienEffects(element, rootNode)
+): AlienMountEffects<T> {
+  return kAlienEffects(element) || new AlienMountEffects(element, rootNode)
 }
 
 export const enum EffectFlags {

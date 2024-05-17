@@ -9,6 +9,7 @@ import {
   collectAccessedRefs,
   ref,
 } from '../core/observable'
+import { onMount } from '../core/onMount'
 import { attachRef } from '../functions/attachRef'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { unmount } from '../functions/unmount'
@@ -33,7 +34,6 @@ import {
   currentEffects,
   expectCurrentComponent,
 } from './global'
-import { ShadowRootContext } from './shadow'
 import { popValue } from './stack'
 import {
   kAlienElementKey,
@@ -375,10 +375,9 @@ export class AlienComponent<Props extends object = any> extends Observer {
     } else {
       // If the root node isn't connected to the DOM in the next microtask,
       // use a mutation observer. Once connected, run any component effects.
-      const shadowRoot = this.context.get(ShadowRootContext)
-      queueMicrotask(() => {
+      onMount(rootNode, () => {
         if (this.effects === newEffects) {
-          newEffects.enableOnceMounted(rootNode, shadowRoot?.value)
+          newEffects.enable()
         }
       })
     }

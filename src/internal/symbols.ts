@@ -1,11 +1,11 @@
-import type { AlienEffects } from '../core/effects'
+import type { AlienMountEffects } from '../core/effects'
 import type { JSX } from '../types/jsx'
 import type { ElementTags } from './component'
 import type { FragmentKeys, FragmentNodes } from './fragment'
 import type { HostProps } from './hostProps'
 import { createSymbolProperty } from './symbolProperty'
 
-export const kAlienEffects = createSymbolProperty<AlienEffects>('effects')
+export const kAlienEffects = createSymbolProperty<AlienMountEffects>('effects')
 export const kAlienElementKey =
   createSymbolProperty<JSX.ElementKey>('elementKey')
 export const kAlienElementPosition =

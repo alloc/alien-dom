@@ -1,4 +1,8 @@
-import { AlienBoundEffect, AlienEffect, AlienEffects } from '../core/effects'
+import {
+  AlienBoundEffect,
+  AlienEffect,
+  AlienMountEffects,
+} from '../core/effects'
 import { observeAs } from '../functions/observeAs'
 import type { AlienEventMethods, AlienStyleMethods } from '../global/element'
 import type { AlienNodeList } from '../global/nodeList'
@@ -213,7 +217,7 @@ export interface AlienElement<Element extends AnyElement>
    * component's render function (if this element is returned by the
    * component).
    */
-  effects(): AlienEffects<FromElementProxy<this>>
+  effects(): AlienMountEffects<FromElementProxy<this>>
 
   effect(effect: AlienEffect<void, [], false>): Disposable<typeof effect>
   effect<Args extends any[]>(
