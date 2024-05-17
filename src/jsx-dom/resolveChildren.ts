@@ -13,8 +13,20 @@ import {
 import { lastValue } from '../internal/util'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import type { JSX } from '../types/jsx'
-import { AlienNode, createTextNode, isDeferredNode, isShadowRoot } from './node'
+import {
+  AlienNode,
+  DeferredChild,
+  DeferredChildren,
+  createTextNode,
+  isDeferredNode,
+  isShadowRoot,
+} from './node'
 import { noop } from './util'
+
+export type UnresolvedChild =
+  | JSX.ChildrenProp
+  | DeferredChildren
+  | DeferredChild
 
 export type ResolvedChild = ChildNode | AlienNode | null
 
@@ -24,7 +36,7 @@ export type ResolvedChild = ChildNode | AlienNode | null
  * Positional keys are assigned to elements and deferred nodes.
  */
 export function resolveChildren(
-  child: JSX.ChildrenProp,
+  child: UnresolvedChild,
   position?: string,
   context = new Map(getContext()) as ContextMap,
   onChildNode: (node: ResolvedChild, key?: string) => void = noop,
@@ -43,7 +55,7 @@ export function resolveChildren(
    * The children are resolved recursively with their own positions (relative to
    * the fragment `position` string).
    */
-  let children: ArrayLike<JSX.ChildrenProp | Node> | undefined
+  let children: ArrayLike<UnresolvedChild | Node> | undefined
 
   if (child) {
     // Note that a ChildrenFragment never has a deferred node, since its sole
@@ -115,7 +127,7 @@ export function resolveChildren(
   if (children) {
     const parentPosition = position ?? ''
     for (let i = 0; i < children.length; i++) {
-      const child = children[i] as JSX.ChildrenProp
+      const child = children[i] as UnresolvedChild
       const childPosition = parentPosition + '*' + i
       resolveChildren(child, childPosition, context, onChildNode, nodes)
     }
