@@ -366,7 +366,13 @@ export class AlienComponent<Props extends object = any> extends Observer {
     // When the root node is a fragment, use its first child to determine if
     // the fragment has been connected to the DOM.
     if (isFragment(rootNode)) {
-      rootNode = kAlienFragmentNodes(rootNode)![0]
+      const childNodes = kAlienFragmentNodes(rootNode)
+      if (!childNodes) {
+        throw Error(
+          'DocumentFragment nodes cannot be returned by a component unless created with JSX.'
+        )
+      }
+      rootNode = childNodes[0]
     }
 
     if (isMounted && rootNode.isConnected) {
