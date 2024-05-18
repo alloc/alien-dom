@@ -37,6 +37,7 @@ export declare namespace JSX {
     | ChildNode
     | DocumentFragment
     | ChildrenFragment
+    | ArrayLike<Children>
     | string
     | number
     | boolean
