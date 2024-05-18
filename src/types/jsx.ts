@@ -33,20 +33,16 @@ export declare namespace JSX {
     | null
     | undefined
 
-  type Child =
-    | NodeList
-    | HTMLCollection
+  type Children =
     | ChildNode
     | DocumentFragment
     | ChildrenFragment
-    | AlienNode
     | string
     | number
     | boolean
     | null
     | undefined
 
-  type Children = Child | Children[]
   type ChildrenProp = Thunkable<Children | ReadonlyRef<Children>>
 
   /**
