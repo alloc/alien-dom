@@ -6,6 +6,7 @@ import { isElement, isFragment, isNode, isTextNode } from '../internal/duck'
 import { updateParentFragment, wrapWithFragment } from '../internal/fragment'
 import { fromElementThunk } from '../internal/fromElementThunk'
 import { currentComponent } from '../internal/global'
+import { NodeStore } from '../internal/nodeStore'
 import {
   kAlienElementKey,
   kAlienElementTags,
@@ -15,7 +16,6 @@ import {
 import { AnyElement } from '../internal/types'
 import { compareNodeWithTag, lastValue } from '../internal/util'
 import {
-  AnyDeferredNode,
   evaluateDeferredNode,
   isDeferredNode,
   isShadowRoot,
@@ -36,7 +36,7 @@ export function morphRootNode(
   newRootNode: UnresolvedChild,
   rootKey: JSX.ElementKey | undefined,
   context?: ContextStore,
-  updates?: Map<JSX.ElementKey, AnyDeferredNode>
+  nodeStore?: NodeStore | null
 ): ChildNode | DocumentFragment {
   if (isFunction(newRootNode)) {
     newRootNode = fromElementThunk(newRootNode)
@@ -59,9 +59,9 @@ export function morphRootNode(
     placeholder = isTextNode(rootNode) && rootNode
 
     // The render function might return an element reference.
-    if (updates && rootNode === newRootNode) {
-      const key = kAlienElementKey(rootNode)!
-      const update = updates.get(key)
+    if (nodeStore && rootNode === newRootNode) {
+      const key = kAlienElementKey(rootNode)
+      const update = key != null && nodeStore.getNodeUpdateForKey(key)
       if (update) {
         newRootNode = update
       }
@@ -142,10 +142,13 @@ export function morphRootNode(
           if (replacedNodes[0].parentElement) {
             replacedNodes.slice(1).forEach(node => unmount(node))
           }
-          // Replace the fragment's header (which is always a comment).
-          replacedNode = replacedNodes[0] as Comment
+          // Replace the fragment's first node, which is always an empty text
+          // node called the "head node".
+          replacedNode = replacedNodes[0] as Text
         }
 
+        // If a component is currently rendering, assume it shouldn't be
+        // unmounted when the replacedNode is unmounted.
         const component = lastValue(currentComponent)
 
         // We can't logically replace a node with no parent.
@@ -161,6 +164,9 @@ export function morphRootNode(
         }
       }
 
+      // When a composite element is wrapped with a JSX fragment (the "parent
+      // fragment"), the fragment's bookkeeping must be updated whenever the
+      // component's root node is replaced.
       if (rootNode) {
         const parentFragment = kAlienParentFragment(rootNode)
         if (parentFragment) {
@@ -197,17 +203,19 @@ export function morphRootNode(
  * to its `kAlienElementTags` map yet.
  */
 function fromSameDeeperComponent(
-  rootNode: ChildNode | DocumentFragment,
-  newRootNode: ChildNode | DocumentFragment
+  prev: ChildNode | DocumentFragment,
+  next: ChildNode | DocumentFragment
 ) {
-  if (rootNode === newRootNode) {
+  if (prev === next) {
     return true
   }
-  const newInstances = kAlienElementTags(newRootNode)
-  if (newInstances) {
-    const instances = kAlienElementTags(rootNode)!
-    for (const [tag, instance] of instances) {
-      return newInstances.get(tag) === instance
+  const nextTags = kAlienElementTags(next)
+  if (nextTags) {
+    const prevTags = kAlienElementTags(prev)!
+    for (const [prevTag, prevInstance] of prevTags) {
+      for (const [nextTag, nextInstance] of nextTags) {
+        return nextTag === prevTag && nextInstance === prevInstance
+      }
     }
   }
   return false

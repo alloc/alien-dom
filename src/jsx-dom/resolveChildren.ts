@@ -4,7 +4,7 @@ import { isChildrenFragment } from '../hooks/useChildren'
 import { ContextMap, getContext } from '../internal/context'
 import { isArrayLike, isFragment, isNode } from '../internal/duck'
 import { fromElementThunk } from '../internal/fromElementThunk'
-import { currentComponent } from '../internal/global'
+import { currentNodeStore } from '../internal/global'
 import {
   kAlienElementKey,
   kAlienElementPosition,
@@ -62,14 +62,17 @@ export function resolveChildren(
     // purpose for existing is to materialize any deferred children given to it.
     if (isChildrenFragment(child)) {
       child = child.fragment
-    } else if (isFragment(child as Node)) {
-      // Preserve the deferred node for the fragment instead of dissolving it
-      // into its children.
-      const component = lastValue(currentComponent)
-      if (component) {
+    }
+    // Since fragment nodes are emptied upon first being mounted (an unavoidable
+    // quirk of the DOM API), it's important to replace the fragment at this
+    // point with its deferred update, since that allows us to easily enumerate
+    // the resolved children of the fragment's latest render.
+    else if (isFragment(child as Node)) {
+      const nodeStore = lastValue(currentNodeStore)
+      if (nodeStore) {
         const key = kAlienElementKey(child)
         if (key != null) {
-          child = component.updates.get(key) || child
+          child = nodeStore.getNodeUpdateForKey(key) || child
         }
       }
     }

@@ -21,8 +21,10 @@ import { endOfFragment } from './fragment'
 import {
   currentComponent,
   currentEffects,
+  currentNodeStore,
   expectCurrentComponent,
 } from './global'
+import { NodeStore } from './nodeStore'
 import { popValue } from './stack'
 import {
   kAlienElementKey,
@@ -40,7 +42,10 @@ export type ElementTags = Map<Component, AlienComponent<any>>
 export type ElementRefs = Map<JSX.ElementKey, ChildNode | DocumentFragment>
 
 /** Internal state for a component instance. */
-export class AlienComponent<Props extends object = any> extends Observer {
+export class AlienComponent<Props extends object = any>
+  extends Observer
+  implements NodeStore
+{
   readonly parent: AlienComponent | null = lastValue(currentComponent)
   readonly context = new ContextStore(getContext())
   readonly props: Props
@@ -157,12 +162,20 @@ export class AlienComponent<Props extends object = any> extends Observer {
     this.rootNodeCallbacks = null
   }
 
-  /**
-   * Node references are used for morphing and unmounting nodes.
-   */
-  setNodeReference(key: JSX.ElementKey, node: ChildNode | DocumentFragment) {
-    kAlienElementKey(node, key)
+  getNodeForKey(key: JSX.ElementKey) {
+    return this.nodes?.get(key)
+  }
+
+  setNodeForKey(key: JSX.ElementKey, node: ChildNode | DocumentFragment) {
     this.newNodes!.set(key, node)
+  }
+
+  getNodeUpdateForKey(key: JSX.ElementKey) {
+    return this.updates?.get(key)
+  }
+
+  setNodeUpdateForKey(key: JSX.ElementKey, update: AnyDeferredNode) {
+    this.updates!.set(key, update)
   }
 
   override nextCompute() {
@@ -183,6 +196,7 @@ export class AlienComponent<Props extends object = any> extends Observer {
 
     currentComponent.push(this as AlienRunningComponent)
     currentEffects.push(newEffects)
+    currentNodeStore.push(this)
 
     // Apply cached parent context if re-rendering.
     const restoreContext = oldEffects
@@ -209,6 +223,7 @@ export class AlienComponent<Props extends object = any> extends Observer {
     } finally {
       restoreContext()
 
+      popValue(currentNodeStore, this)
       popValue(currentEffects, newEffects)
       popValue(currentComponent, this as AlienRunningComponent)
 

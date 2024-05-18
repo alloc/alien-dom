@@ -12,7 +12,7 @@ import {
 } from '../jsx-dom/resolveChildren'
 import type { JSX } from '../types/jsx'
 import { ContextMap } from './context'
-import { currentComponent } from './global'
+import { currentNodeStore } from './global'
 import {
   kAlienElementKey,
   kAlienElementPosition,
@@ -75,9 +75,9 @@ function isDeferredChild(child: ResolvedChild) {
   if (child != null) {
     const key = kAlienElementKey(child)
     if (key != null) {
-      const component = lastValue(currentComponent)
-      if (component) {
-        return component.updates.has(key)
+      const nodeStore = lastValue(currentNodeStore)
+      if (nodeStore) {
+        return nodeStore.getNodeUpdateForKey(key) != null
       }
     }
   }

@@ -3,8 +3,9 @@ import { Falsy } from '@alloc/types'
 import { getElementKey } from '../functions/getElementKey'
 import { unmount } from '../functions/unmount'
 import { AlienComponent } from '../internal/component'
-import { hasTagName, isComment, isElement, isFragment } from '../internal/duck'
+import { hasTagName, isElement, isFragment, isTextNode } from '../internal/duck'
 import { FragmentNodes, endOfFragment } from '../internal/fragment'
+import { currentNodeStore } from '../internal/global'
 import {
   kAlienElementKey,
   kAlienElementPosition,
@@ -12,7 +13,7 @@ import {
   kAlienFragmentNodes,
   kAlienParentFragment,
 } from '../internal/symbols'
-import { compareNodeNames, noop } from '../internal/util'
+import { compareNodeNames, lastValue, noop } from '../internal/util'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import {
   DeferredCompositeNode,
@@ -322,10 +323,12 @@ function updateChild(
   nextSibling: ChildNode | null,
   onChildNode: (node: ChildNode | undefined) => void
 ) {
-  // Convert an element reference to its deferred node.
-  if (component && fromNode === toNode) {
-    const key = getElementKey(toNode)!
-    const update = component.updates?.get(key)
+  // If the child is an unchanged DOM node, there's a possibility of a deferred
+  // update stored by a JSX element key.
+  const nodeStore = lastValue(currentNodeStore) || component
+  if (nodeStore && fromNode === toNode) {
+    const key = getElementKey(toNode)
+    const update = key != null && nodeStore.getNodeUpdateForKey(key)
     if (update) {
       toNode = update
     }
@@ -396,26 +399,33 @@ function collectKeyedNodes(
     JSX.ElementKey,
     Element | Comment | DocumentFragment
   >()
+
   for (
     let fromChildNode = firstChildNode;
     fromChildNode;
     fromChildNode = nextDiscardableNode(fromChildNode, component, options)
   ) {
+    // Check if the child is the "head node" of a JSX fragment. If so, collect
+    // the DOM fragment node so it can be morphed.
     const fragment =
-      isComment(fromChildNode) && kAlienParentFragment(fromChildNode)
+      isTextNode(fromChildNode) && kAlienParentFragment(fromChildNode)
+
     if (fragment) {
       let position = kAlienElementPosition(fromChildNode)
       if (position != null) {
         fromNodesByKey.set(position, fragment)
       }
+
       position = kAlienElementPosition(fragment)
       if (position != null) {
         fromNodesByKey.set(position, fragment)
       }
+
       const key = kAlienElementKey(fragment)
       if (key != null) {
         fromNodesByKey.set(key, fragment)
       }
+
       // Skip to the end of the fragment.
       fromChildNode = endOfFragment(fragment)!
     } else {
@@ -425,5 +435,6 @@ function collectKeyedNodes(
       }
     }
   }
+
   return fromNodesByKey
 }

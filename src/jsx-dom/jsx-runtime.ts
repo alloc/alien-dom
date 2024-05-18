@@ -3,7 +3,7 @@ import { Falsy } from '@alloc/types'
 import { Fragment } from '../components/Fragment'
 import { applyKeyProp } from '../internal/applyProp'
 import { wrapWithFragment } from '../internal/fragment'
-import { currentComponent } from '../internal/global'
+import { currentNodeStore } from '../internal/global'
 import { kAlienStateless } from '../internal/symbols'
 import { lastValue } from '../internal/util'
 import type { FunctionComponent, JSX } from '../types'
@@ -55,12 +55,12 @@ export function jsx(
   let oldNode: ChildNode | DocumentFragment | undefined
   let node: ChildNode | DocumentFragment | AnyDeferredNode | undefined
 
-  const component = lastValue(currentComponent)
-  if (component) {
+  const nodeStore = lastValue(currentNodeStore)
+  if (nodeStore) {
     // Use the JSX element's key to locate an existing DOM node. We will return
     // this node so the component can reference it without misdirection.
-    if (isElementKey(key) && component.nodes) {
-      oldNode = component.nodes.get(key)
+    if (isElementKey(key)) {
+      oldNode = nodeStore.getNodeForKey(key)
       if (oldNode && !compareNodeWithTag(oldNode, tag)) {
         oldNode = undefined
       }
@@ -96,7 +96,7 @@ export function jsx(
   }
 
   if (isElementKey(key)) {
-    applyKeyProp(node, key, oldNode, component)
+    applyKeyProp(node, key, oldNode, nodeStore)
   }
 
   return oldNode || node

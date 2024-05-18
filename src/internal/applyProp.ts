@@ -7,11 +7,11 @@ import { ResolvedChild, resolveChildren } from '../jsx-dom/resolveChildren'
 import { resolveSelected } from '../jsx-dom/resolveSelected'
 import { morphChildren } from '../morphdom/morphChildren'
 import { JSX } from '../types'
-import { AlienRunningComponent } from './component'
 import { hasTagName, isNode } from './duck'
 import { flattenClassProp } from './flattenClassProp'
 import { MergeStylesFn, flattenStyleProp } from './flattenStyleProp'
 import { HostProps } from './hostProps'
+import { NodeStore } from './nodeStore'
 import { kAlienElementKey } from './symbols'
 import { HTMLOrSVGElement } from './types'
 import { UpdateStyle, updateStyle } from './updateStyle'
@@ -350,25 +350,27 @@ export function applyKeyProp(
   node: ChildNode | DocumentFragment | AnyDeferredNode,
   key: JSX.ElementKey,
   oldNode: ChildNode | DocumentFragment | undefined,
-  component: AlienRunningComponent | null
+  nodeStore: NodeStore | null
 ) {
-  if (component) {
-    const cachedNode = oldNode || (isNode(node) && node)
-    if (cachedNode) {
-      component.setNodeReference(key, cachedNode)
-    }
-
-    // Check for equivalence as the return value of a custom component
-    // might be the cached result of an element thunk.
-    if (node !== oldNode) {
-      if (isDeferredNode(node)) {
-        component.updates.set(key, node)
-      }
-      if (oldNode) {
-        kAlienElementKey(node, key)
-      }
-    }
-  } else {
+  if (!nodeStore) {
     kAlienElementKey(node, key)
+    return
+  }
+
+  const cachedNode = oldNode || (isNode(node) && node)
+  if (cachedNode) {
+    kAlienElementKey(cachedNode, key)
+    nodeStore.setNodeForKey(key, cachedNode)
+  }
+
+  // Check for equivalence as the return value of a custom component
+  // might be the cached result of an element thunk.
+  if (node !== oldNode) {
+    if (isDeferredNode(node)) {
+      nodeStore.setNodeUpdateForKey(key, node)
+    }
+    if (oldNode) {
+      kAlienElementKey(node, key)
+    }
   }
 }
