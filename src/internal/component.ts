@@ -214,7 +214,7 @@ export class AlienComponent<Props extends object = any>
         newRootNode,
         this.rootKey,
         this.context,
-        this.updates
+        this
       )
       if (newRootNode !== rootNode) {
         this.setRootNode((rootNode = newRootNode))
