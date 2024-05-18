@@ -211,10 +211,10 @@ export function createFragmentNode(
 ) {
   const fragment = document.createDocumentFragment()
 
-  const header = document.createComment(DEV ? 'Fragment' : '')
+  const head = document.createTextNode('')
   const childNodes = new Array(children.length + 1) as FragmentNodes
 
-  childNodes[0] = appendChild(header, fragment) as Comment
+  childNodes[0] = appendChild(head, fragment) as Comment
   for (let i = 0; i < children.length; i++) {
     childNodes[i + 1] = appendChild(children[i], fragment)
   }

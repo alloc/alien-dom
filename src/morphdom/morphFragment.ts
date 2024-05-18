@@ -79,17 +79,17 @@ export function morphFragment(
 }
 
 class ParentFragment implements ParentNode {
-  header: Comment
+  head: ChildNode
   childNodes: ChildNode[]
   constructor(childNodes: FragmentNodes) {
-    this.header = childNodes[0]
+    this.head = childNodes[0]
     this.childNodes = childNodes.slice(1).filter(Boolean) as ChildNode[]
   }
   get firstChild() {
     return this.childNodes[0] || null
   }
   appendChild(node: ChildNode) {
-    const lastChild = lastValue(this.childNodes) || this.header
+    const lastChild = lastValue(this.childNodes) || this.head
     if (lastChild !== node) {
       const previousIndex = this.childNodes.indexOf(node)
       if (previousIndex !== -1) {
