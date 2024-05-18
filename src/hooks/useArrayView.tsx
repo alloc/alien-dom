@@ -1,3 +1,4 @@
+import { Falsy } from '@alloc/types'
 import { ContextStore } from '../core/context'
 import {
   ArrayOperation,
@@ -19,6 +20,7 @@ import { UnresolvedChild } from '../jsx-dom/resolveChildren'
 import { JSX } from '../types'
 import { useCallbackProp } from './useCallbackProp'
 import { useEffect } from './useEffect'
+import { useHookOffset } from './useHookOffset'
 import { useSnapshot } from './useSnapshot'
 
 export type ArrayViewRenderFn<T = any> = (
@@ -27,11 +29,17 @@ export type ArrayViewRenderFn<T = any> = (
 ) => JSX.Children
 
 export function useArrayView<T>(
-  array: ArrayRef<T>,
+  array: ArrayRef<T> | Falsy,
   render: ArrayViewRenderFn<T>,
   deps?: readonly any[]
-): JSX.Element {
+): JSX.Element | null {
   const component = expectCurrentComponent()
+
+  if (!array) {
+    useHookOffset(6)
+    return null
+  }
+
   const view = useSnapshot(initArrayViewState<T>, [array])
   view.context = component.context
 
