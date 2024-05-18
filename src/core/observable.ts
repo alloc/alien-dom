@@ -590,7 +590,9 @@ export class Observer {
   }
 
   /**
-   * Run the `compute` function synchronously, observing any accessed refs.
+   * Run the `compute` function synchronously, observing any accessed refs. If
+   * no `compute` function is provided, the last used `compute` function will be
+   * reused.
    *
    * When those refs change, the `compute` function will run again in the next
    * microtask (unless you call this method before then).
@@ -664,6 +666,10 @@ export interface Observer {
    * observer runs.
    */
   isObservablyPure(): boolean
+  /**
+   * The next time this observer is updated, this method will be used to compute
+   * a new value or possibly trigger a side effect.
+   */
   nextCompute(oldRefs: Set<InternalRef<any>>): any
   /**
    * Called whenever an observed ref is changed.
@@ -1130,11 +1136,25 @@ export function collectAccessedRefs<T>(fn: () => T, accessedRefs: Set<Ref>) {
 // Convenience functions
 //
 
+/**
+ * Create a `Ref` object with an optional initial value.
+ *
+ * Its `value` property is observable. Its `peek` method lets you access the
+ * current value without risk of being observed. There are also convenience
+ * methods for creating "computeds" with less boilerplate; their method names
+ * all start with `computed` (i.e. `computedIf`, `computedMap`, etc).
+ */
 export const ref: {
   <T>(value: T, debugId?: string | number): Ref<T>
   <T>(value?: T, debugId?: string | number): Ref<T | undefined>
 } = (value, debugId) => new Ref(value, debugId)
 
+/**
+ * Create a `RefMap` object, optionally providing a set of initial entries.
+ *
+ * "Ref maps" are similar to `Map` objects, but accessing and iterating a
+ * `RefMap` can be observed. Its `size` property can also be observed.
+ */
 export const refMap = <K, V>(entries?: Iterable<[K, V]>) => new RefMap(entries)
 
 export const computed = <T>(compute: () => T, debugId?: string | number) =>
