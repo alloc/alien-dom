@@ -5,12 +5,16 @@ import { currentComponent } from './global'
 import { kAlienThunkResult } from './symbols'
 import { defineProperty, lastValue } from './util'
 
-type ThunkResult = JSX.Children | ReadonlyRef<JSX.Children>
+export type ElementThunkResult =
+  | ReadonlyRef<JSX.Children>
+  | JSX.Children
+  | JSX.ElementLike
+  | JSX.ElementLike[]
 
-export function fromElementThunk(
-  thunk: () => ThunkResult,
+export function fromElementThunk<Result extends ElementThunkResult>(
+  thunk: () => Result,
   keepDeferred?: boolean
-) {
+): Result {
   if (!kAlienThunkResult.in(thunk)) {
     // The first component to call the thunk owns it.
     const component = lastValue(currentComponent)
@@ -21,7 +25,7 @@ export function fromElementThunk(
     defineProperty(thunk, kAlienThunkResult.symbol, {
       get() {
         // Avoid evaluating an element thunk more than once per render.
-        let result: ThunkResult = component.newMemos
+        let result: ElementThunkResult = component.newMemos
           ? component.newMemos.get(thunk)
           : undefined
 
@@ -41,5 +45,5 @@ export function fromElementThunk(
     })
   }
 
-  return kAlienThunkResult(thunk)
+  return kAlienThunkResult(thunk) as any
 }

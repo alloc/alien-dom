@@ -13,6 +13,7 @@ import { createGuid } from '../internal/guid'
 import { kAlienElementKey, kAlienFragmentNodes } from '../internal/symbols'
 import { findFirstElement, findLastElement } from '../internal/traversal'
 import { AnyElement } from '../internal/types'
+import { UnresolvedChild } from '../jsx-dom/resolveChildren'
 import { morphFragment } from '../morphdom/morphFragment'
 import { JSX } from '../types/jsx'
 import { useState } from './useState'
@@ -42,7 +43,7 @@ export function useChildren(
 ): ChildrenFragment
 
 export function useChildren(
-  children: JSX.ChildrenProp,
+  children: UnresolvedChild,
   deps?: readonly any[]
 ): ChildrenFragment {
   const hook = useState(UseChildren, deps)
@@ -59,7 +60,7 @@ class UseChildren {
     return kChildrenNodeType
   }
 
-  update(children: JSX.ChildrenProp, deps: readonly any[] = [children]) {
+  update(children: UnresolvedChild, deps: readonly any[] = [children]) {
     if (depsHaveChanged(deps, this.deps)) {
       if (this.fragment) {
         morphFragment(this.fragment, wrapWithFragment(children, true))

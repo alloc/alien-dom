@@ -2,6 +2,7 @@ import type { AlienMountEffects } from '../core/effects'
 import type { JSX } from '../types/jsx'
 import type { ElementTags } from './component'
 import type { FragmentKeys, FragmentNodes } from './fragment'
+import { ElementThunkResult } from './fromElementThunk'
 import type { HostProps } from './hostProps'
 import { createSymbolProperty } from './symbolProperty'
 
@@ -26,4 +27,4 @@ export const kAlienRenderFunc =
   createSymbolProperty<(props: any) => any>('renderFunc')
 export const kAlienStateless = createSymbolProperty<boolean>('stateless')
 export const kAlienThunkResult =
-  createSymbolProperty<JSX.Children>('thunkResult')
+  createSymbolProperty<ElementThunkResult>('thunkResult')

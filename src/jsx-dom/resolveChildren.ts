@@ -1,5 +1,5 @@
 import { isFunction } from '@alloc/is'
-import { isRef } from '../core/observable'
+import { ReadonlyRef, isRef } from '../core/observable'
 import { isChildrenFragment } from '../hooks/useChildren'
 import { ContextMap, getContext } from '../internal/context'
 import { isArrayLike, isFragment, isNode } from '../internal/duck'
@@ -15,7 +15,6 @@ import { Fragment } from '../jsx-dom/jsx-runtime'
 import type { JSX } from '../types/jsx'
 import {
   AlienNode,
-  DeferredChild,
   DeferredChildren,
   createTextNode,
   isDeferredNode,
@@ -23,10 +22,16 @@ import {
 } from './node'
 import { noop } from './util'
 
+type Thunkable<T> = T | (() => T)
+
 export type UnresolvedChild =
-  | JSX.ChildrenProp
   | DeferredChildren
-  | DeferredChild
+  | Thunkable<
+      | JSX.Children
+      | ReadonlyRef<JSX.Children>
+      | JSX.ElementLike
+      | JSX.ElementLike[]
+    >
 
 export type ResolvedChild = ChildNode | AlienNode | null
 

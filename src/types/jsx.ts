@@ -1,7 +1,7 @@
 import type { FlatReadonlyRef, ReadonlyRef } from '../core/observable'
 import type { ChildrenFragment } from '../hooks/useChildren'
 import type { AnyElement } from '../internal/types'
-import type { AlienNode, ShadowRootNode } from '../jsx-dom/node'
+import type { AlienNode } from '../jsx-dom/node'
 import { FunctionComponent } from './component'
 import { CSSAttributes } from './css'
 import type { EventHandler } from './dom'
@@ -49,14 +49,7 @@ export declare namespace JSX {
   /**
    * This type represents a valid component result (except for null).
    */
-  type ElementLike =
-    | HTMLElement
-    | SVGElement
-    | DocumentFragment
-    | ChildrenFragment
-    | ShadowRootNode
-    | AlienNode
-    | Comment
+  type ElementLike = ChildNode | AlienNode | DocumentFragment | ChildrenFragment
 
   /**
    * Use this type if your component has a prop that can be a single JSX
