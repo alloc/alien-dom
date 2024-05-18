@@ -35,6 +35,7 @@ export * from './addons/promises'
 export * from './addons/selectors'
 
 /// Components
+export * from './components/ArrayView'
 export * from './components/Fragment'
 export * from './components/ShadowRoot'
 export * from './components/Transition'

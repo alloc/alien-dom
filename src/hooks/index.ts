@@ -1,5 +1,6 @@
 export * from './useAbortController'
 export * from './useArrayRef'
+export * from './useArrayView'
 export * from './useAsync'
 export * from './useAutoBind'
 export * from './useBounds'
