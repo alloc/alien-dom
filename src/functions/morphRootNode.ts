@@ -16,6 +16,7 @@ import {
 import { AnyElement } from '../internal/types'
 import { compareNodeWithTag, lastValue } from '../internal/util'
 import {
+  DeferredCompositeNode,
   evaluateDeferredNode,
   isDeferredNode,
   isShadowRoot,
@@ -98,9 +99,9 @@ export function morphRootNode(
       ) {
         if (isFunction(newRootNode.tag)) {
           if (newRootNode.tag === Fragment) {
-            morphFragment(rootNode as any, newRootNode)
+            morphFragment(rootNode as DocumentFragment, newRootNode)
           } else {
-            morphComposite(rootNode, newRootNode as any)
+            morphComposite(rootNode, newRootNode as DeferredCompositeNode)
           }
           updated = true
         } else if (isElement(rootNode)) {
