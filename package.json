@@ -30,8 +30,8 @@
     "dev": "concurrently -n tsup,tsc npm:dev:js npm:dev:types",
     "dev:js": "rimraf dist && cd src && tsup-node --watch --sourcemap",
     "dev:types": "cd src && tsc -p . --watch --emitDeclarationOnly --declarationMap --declarationDir ../dist/production --preserveWatchOutput",
-    "test": "NODE_OPTIONS='--loader @alien-dom/node --no-warnings=ExperimentalWarnings' ava --watch --no-worker-threads",
-    "debug": "NODE_OPTIONS='--loader @alien-dom/node --no-warnings=ExperimentalWarnings' ava debug"
+    "test": "NODE_OPTIONS='--loader @alien-dom/node --no-warnings=ExperimentalWarnings' ava --watch --no-worker-threads --serial",
+    "debug": "NODE_OPTIONS='--loader @alien-dom/node --no-warnings=ExperimentalWarnings' ava debug --serial"
   },
   "dependencies": {
     "@alloc/types": "^2.3.0",
