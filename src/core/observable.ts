@@ -233,7 +233,7 @@ function assignPrototype(
 //
 
 export class ArrayRef<T> extends ReadonlyRef<readonly T[]> {
-  protected _arrayObservers: Set<InternalArrayObserver<T>> | null = null
+  protected _arrayObservers: Set<InternalArrayObserver> | null = null
   protected _produceOperation: ArrayOperation.Producer = noop
 }
 
