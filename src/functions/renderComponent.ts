@@ -1,5 +1,5 @@
 import { AlienComponent } from '../internal/component'
-import { endOfFragment, fragmentToChildNodes } from '../internal/fragment'
+import { fragmentToChildNodes } from '../internal/fragment'
 import { kAlienStateless } from '../internal/symbols'
 import { findFirstElement, findLastElement } from '../internal/traversal'
 import { FunctionComponent } from '../types'
@@ -51,14 +51,6 @@ const Component = class ComponentNode<
 > extends AlienComponent<Props> {
   get firstElementChild(): Element | null {
     return findFirstElement(this.firstChild, this.lastChild)
-  }
-
-  get lastChild(): ChildNode | null {
-    const { rootNode } = this
-    if (rootNode && isFragment(rootNode)) {
-      return endOfFragment(rootNode)!
-    }
-    return rootNode
   }
 
   get lastElementChild(): Element | null {

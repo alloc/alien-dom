@@ -17,6 +17,7 @@ import { FunctionComponent, JSX } from '../types'
 import { forwardContext, getContext } from './context'
 import { deepEquals } from './deepEquals'
 import { isFragment } from './duck'
+import { endOfFragment } from './fragment'
 import {
   currentComponent,
   currentEffects,
@@ -86,6 +87,14 @@ export class AlienComponent<Props extends object = any> extends Observer {
     const { rootNode } = this
     if (rootNode && isFragment(rootNode)) {
       return kAlienFragmentNodes(rootNode)![0]
+    }
+    return rootNode
+  }
+
+  get lastChild(): ChildNode | null {
+    const { rootNode } = this
+    if (rootNode && isFragment(rootNode)) {
+      return endOfFragment(rootNode)!
     }
     return rootNode
   }
