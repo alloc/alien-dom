@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { DocumentFragment, Element, parseHTML } from 'linkedom'
+import { Comment, DocumentFragment, Element, Text, parseHTML } from 'linkedom'
 
 globalThis.DEV = true
 
@@ -34,4 +34,12 @@ defineToString(DocumentFragment.prototype, fragment => {
   const div = document.createElement('div')
   div.appendChild(fragment.cloneNode(true))
   return '<>' + div.innerHTML + '</>'
+})
+
+defineToString(Comment.prototype, (node: Text) => {
+  return '<!-- ' + node.nodeValue + ' -->'
+})
+
+defineToString(Text.prototype, (node: Text) => {
+  return node.nodeValue
 })
