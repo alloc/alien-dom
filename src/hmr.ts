@@ -39,7 +39,9 @@ export function hmrRegister(
   // component key yet.
   const componentData: ComponentData = [renderRef, hash, deps]
   queueMicrotask(() => {
-    componentData[2] = deps = deps.map(dep => kAlienComponentKey(dep) ?? dep)
+    componentData[2] = deps = deps.map(
+      dep => dep && (kAlienComponentKey(dep) ?? dep)
+    )
 
     if (needsUpdateCheck) {
       const needsHotUpdate =
