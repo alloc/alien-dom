@@ -1,13 +1,6 @@
 import { ref } from '../core/observable'
 import { setContext } from '../internal/context'
-import {
-  hasTagName,
-  isComment,
-  isElement,
-  isFragment,
-  isNode,
-  isTextNode,
-} from '../internal/duck'
+import { hasTagName, isFragment, isNode } from '../internal/duck'
 import { ShadowRootContext } from '../internal/shadow'
 import { kAlienParentFragment } from '../internal/symbols'
 import { evaluateChild } from './evaluateChild'
@@ -33,23 +26,16 @@ export function appendChild(
   }
 
   if (isNode(child)) {
-    // Text nodes cannot have an element key.
-    if (!isTextNode(child)) {
-      // Apply a pending update associated with the DOM node. Comment nodes
-      // could have an associated fragment update.
-      if (isElement(child) || isComment(child)) {
-        child = evaluateChild(child)
-      } else if (!isFragment(child)) {
-        throw Error('Unsupported node type')
-      }
+    // The child might have existed in a previous render, in which case it could
+    // have a deferred update that should be applied now.
+    child = evaluateChild(child)
 
-      // Cache the parent fragment on the child element, in case the element is
-      // a component's root node, which may be replaced with an incompatible
-      // node in the future. If that happens, the parent fragment would need to
-      // be updated.
-      if (isFragment(parent) && !kAlienParentFragment(child)) {
-        kAlienParentFragment(child, parent)
-      }
+    // Cache the parent fragment on the child element, in case the element is
+    // a component's root node, which may be replaced with an incompatible
+    // node in the future. If that happens, the parent fragment would need to
+    // be updated.
+    if (isFragment(parent) && !kAlienParentFragment(child)) {
+      kAlienParentFragment(child, parent)
     }
 
     if (hasTagName(parent, 'TEMPLATE')) {

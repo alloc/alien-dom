@@ -22,7 +22,7 @@ import {
 } from './symbols'
 import { at, lastValue } from './util'
 
-export type FragmentNodes = [Comment, ...(ChildNode | undefined)[]]
+export type FragmentNodes = [ChildNode, ...(ChildNode | undefined)[]]
 export type FragmentKeys = (JSX.ElementKey | undefined)[]
 
 export function wrapWithFragment(

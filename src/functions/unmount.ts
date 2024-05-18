@@ -6,7 +6,7 @@ import {
   kAlienFragmentNodes,
   kAlienHostProps,
 } from '../internal/symbols'
-import { isElement, isFragment, isTextNode } from './typeChecking'
+import { isElement, isFragment } from './typeChecking'
 
 /**
  * Any JSX element created outside of a component must be removed from the DOM
@@ -59,18 +59,16 @@ function unmountTree(
       hostProps?.unmount()
     }
 
-    if (!isTextNode(node)) {
-      const effects = kAlienEffects(node)
-      effects?.disable(true)
+    const effects = kAlienEffects(node)
+    effects?.disable(true)
 
-      const tags = kAlienElementTags(node)
-      if (tags) {
-        // If a node is the root node of multiple components, the deepest
-        // component is disabled first.
-        for (const component of tags.values()) {
-          if (component === keepComponent) break
-          component.dispose()
-        }
+    const tags = kAlienElementTags(node)
+    if (tags) {
+      // If a node is the root node of multiple components, the deepest
+      // component is disabled first.
+      for (const component of tags.values()) {
+        if (component === keepComponent) break
+        component.dispose()
       }
     }
 

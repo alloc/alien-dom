@@ -18,11 +18,11 @@ export function restoreNodeReferences(node: ChildNode | DocumentFragment) {
   if (isFragment(node)) {
     const childNodes = kAlienFragmentNodes(node)
     childNodes?.forEach(childNode => {
-      if (childNode && !isTextNode(childNode)) {
+      if (childNode) {
         restoreComponentRef(childNode, component)
       }
     })
-  } else if (!isTextNode(node)) {
+  } else {
     restoreComponentRef(node, component)
   }
 }
@@ -32,9 +32,9 @@ function restoreComponentRef(node: ChildNode, component: AlienComponent) {
   if (key != null) {
     component.nodes!.set(key, node)
   }
-  node.childNodes.forEach(childNode => {
-    if (!isTextNode(childNode)) {
+
+  if (!isTextNode(node))
+    node.childNodes.forEach(childNode => {
       restoreComponentRef(childNode, component)
-    }
-  })
+    })
 }

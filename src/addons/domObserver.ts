@@ -1,10 +1,9 @@
 import { defineEffectType, getCurrentEffect } from '../core/effects'
+import { getElementKey } from '../functions/getElementKey'
 import { binaryInsert } from '../internal/binaryInsert'
-import { isComment, isElement } from '../internal/duck'
-import { HTMLOrSVGElement } from '../internal/types'
+import { isElement } from '../internal/duck'
 
-type ObservableNode = HTMLOrSVGElement | Comment
-type NodeCallback = (node: ObservableNode) => void
+type NodeCallback = (node: ChildNode) => void
 
 type RootNodeObserver = {
   rootNode: Node
@@ -22,18 +21,18 @@ function observeDescendants(rootNode: Node) {
     const onRemoved = new Set<NodeCallback>()
 
     let queued = false
-    const added = new Set<ObservableNode>()
-    const removed = new Set<ObservableNode>()
+    const added = new Set<ChildNode>()
+    const removed = new Set<ChildNode>()
 
     const observer = new MutationObserver(mutations => {
       for (const mutation of mutations) {
-        for (const node of Array.from(mutation.addedNodes)) {
-          if (isElement(node) || isComment(node)) {
+        for (const node of Array.from(mutation.addedNodes) as ChildNode[]) {
+          if (isElement(node) || getElementKey(node)) {
             removed.delete(node) || added.add(node)
           }
         }
-        for (const node of Array.from(mutation.removedNodes)) {
-          if (isElement(node) || isComment(node)) {
+        for (const node of Array.from(mutation.removedNodes) as ChildNode[]) {
+          if (isElement(node) || getElementKey(node)) {
             added.delete(node) || removed.add(node)
           }
         }
@@ -94,7 +93,7 @@ export function matchDescendants<E extends Element>(
 
 export function observeNewChildren(
   target: Node,
-  listener: (childNode: ObservableNode) => void
+  listener: (childNode: ChildNode) => void
 ) {
   return observeNewDescendants(target, childNode => {
     if (childNode.parentElement == target) {
@@ -105,7 +104,7 @@ export function observeNewChildren(
 
 export function observeRemovedChildren(
   target: Node,
-  listener: (childNode: ObservableNode) => void
+  listener: (childNode: ChildNode) => void
 ) {
   return observeRemovedDescendants(target, childNode => {
     if (childNode.parentElement == target) {
@@ -174,7 +173,7 @@ const createElementObserver = defineEffectType(
 
     let depth = key == 'onRemoved' ? getElementDepth(target) : null
 
-    function listener(parentNode: ObservableNode) {
+    function listener(parentNode: ChildNode) {
       // The strict equals check if required for comment nodes.
       if (parentNode === target || parentNode.contains(target)) {
         if (self?.context) {
