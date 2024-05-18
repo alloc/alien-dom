@@ -1,4 +1,4 @@
-import { isFunction } from '@alloc/is'
+import { isBoolean, isFunction, isString } from '@alloc/is'
 import { ReadonlyRef, ref } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { createGuid } from '../internal/guid'
@@ -38,7 +38,7 @@ export function useResetId(reset: any) {
   }
 
   // Allow the caller to handle resets manually.
-  if (typeof reset === 'string') {
+  if (isString(reset)) {
     useHookOffset(4)
     return reset
   }
@@ -46,7 +46,7 @@ export function useResetId(reset: any) {
   const state = useState(UseResetId, reset)
 
   // Allow the caller to compute resets.
-  if (typeof reset === 'function') {
+  if (isFunction(reset)) {
     const compute: () => ResetOption = reset
     useObserver(() => {
       createId(state, compute(), false)
@@ -75,7 +75,7 @@ function createId(
   reset: ResetOption,
   defaultReset = true
 ): number {
-  if (typeof reset !== 'boolean') {
+  if (!isBoolean(reset)) {
     const deps = reset
     if (Array.isArray(state.prevReset)) {
       reset = deps !== state.prevReset && depsHaveChanged(deps, state.prevReset)
