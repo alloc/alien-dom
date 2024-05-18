@@ -35,6 +35,10 @@ function checkMount() {
 }
 
 export function onMount<T extends Node>(node: T, callback: (node: T) => void) {
+  if (node.isConnected) {
+    callback(node)
+    return
+  }
   const handler: MountHandler<T> = {
     node,
     callback,
