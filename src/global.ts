@@ -49,7 +49,6 @@ declare global {
 
     type RefProp<Element extends AnyElement = AnyElement> = jsx.RefProp<Element>
 
-    type Child = jsx.Child
     type Children = jsx.Children
     type ChildrenProp = jsx.ChildrenProp
 
