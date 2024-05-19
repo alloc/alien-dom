@@ -295,8 +295,10 @@ export function toIdentifierSet(
     return toIdentifierSet(param.left)
   }
   if (param.isArrayPattern()) {
-    return param.elements.flatMap(
-      toIdentifierSet as (param: any) => Node.Identifier[]
+    // Check for a null element, which can happen with unnamed indices (also
+    // called "holes") in array destructuring.
+    return param.elements.flatMap(element =>
+      element ? toIdentifierSet(element as typeof param) : []
     )
   }
   if (param.isObjectPattern()) {
