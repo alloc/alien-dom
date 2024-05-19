@@ -11,10 +11,8 @@ export const definePrivateSymbol = <T>(name: string): PrivateSymbol<T> =>
 /** Create a getter and setter for a private symbol. */
 export const bindPrivateSymbol = <T>(property: PrivateSymbol<T>) =>
   [
-    (target: any): T | undefined => target[property],
-    (target: any, value: T | undefined) => {
-      target[property] = value
-    },
+    (target: any): T | undefined => getPrivate(target, property),
+    (target: any, value: T | undefined) => setPrivate(target, property, value),
   ] as const
 
 /** Check if a private symbol is defined on a target object. */
