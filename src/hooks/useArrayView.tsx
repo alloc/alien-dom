@@ -38,7 +38,7 @@ export function useArrayView<T>(
   deps?: readonly any[]
 ): JSX.Element | null {
   if (!array) {
-    useHookOffset(9)
+    useHookOffset(7)
     return null
   }
 
@@ -47,8 +47,27 @@ export function useArrayView<T>(
   const view = useSnapshot(initArrayViewState<T>, [array])
   view.context = component.context
 
-  // Observe array operations and update the view accordingly.
+  // This effect is responsible for updating the items when the deps change. If
+  // a deps array isn't provided, the items will only be updated if the render
+  // function changes.
   useEffect(() => {
+    if (view.mounted) {
+      const items = array.peek()
+      renderArrayView(view, { type: 'update', items }, render)
+    }
+  }, deps || [render])
+
+  // Ensure the render function is always up-to-date for new items.
+  render = useCallbackProp(render)
+
+  // Handle mounting and unmounting side effects.
+  view.head = useView(() => {
+    // Mount the current items when the head is mounted.
+    const items = array.peek()
+    renderArrayView(view, { type: 'mount', items }, render)
+    view.mounted = true
+
+    // Observe array operations and update the view accordingly.
     const observer = observeArrayOperations(array, operations => {
       for (const operation of operations) {
         view[operation.type](operation as any, render)
@@ -62,35 +81,17 @@ export function useArrayView<T>(
 
     return () => {
       observer.dispose()
-    }
-  }, [array])
 
-  // This effect is responsible for updating the items when the deps change. If
-  // a deps array isn't provided, the items will only be updated if the render
-  // function changes.
-  useEffect(() => {
-    if (view.mounted) {
-      const items = array.peek()
-      renderArrayView(view, { type: 'update', items }, render)
-    } else {
-      view.mounted = true
-    }
-  }, deps || [render])
-
-  // Ensure the render function is always up-to-date for new items.
-  render = useCallbackProp(render)
-
-  // Handle mounting and unmounting side effects.
-  view.head = useView(() => {
-    // Mount the initial items when the head is mounted.
-    const items = array.peek()
-    renderArrayView(view, { type: 'mount', items }, render)
-
-    // Unmount all items when the head is unmounted.
-    return () => {
+      // Unmount all items when the head is unmounted.
       for (const node of view.itemNodes) {
         unmount(isNode(node) ? node : node.rootNode)
       }
+
+      // Clear all state. If remounted, the item nodes will be recreated.
+      view.itemNodes.length = 0
+      view.itemKeys.length = 0
+      view.nextItemKey = 1
+      view.mounted = false
     }
   }, [view])
 
