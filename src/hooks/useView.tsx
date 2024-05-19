@@ -1,9 +1,11 @@
 import { onMount } from '../core/onMount'
 import { unmount } from '../functions/unmount'
 import { setPrivate } from '../internal/privateSymbol'
-import { kAlienUnmountHandler } from '../internal/symbols'
+import { kAlienUnmountHandler, setElementKey } from '../internal/symbols'
 import { useEffect } from './useEffect'
 import { useSnapshot } from './useSnapshot'
+
+let nextViewId = 1
 
 /**
  * This hook is useful whenever you have an externally managed DOM node (or a
@@ -28,7 +30,7 @@ export function useView(
   view: (parentNode: ParentNode) => () => void,
   deps: readonly any[]
 ): ChildNode {
-  const node = useSnapshot(initTextNode, deps)
+  const node = useSnapshot(initViewNode, deps)
 
   useEffect(() => {
     const mountHandler = onMount(node, () => {
@@ -45,4 +47,8 @@ export function useView(
   return node
 }
 
-const initTextNode = () => document.createTextNode('')
+function initViewNode() {
+  const node = document.createTextNode('')
+  setElementKey(node, 'useView#' + nextViewId++)
+  return node
+}
