@@ -74,7 +74,7 @@ class UseChildren {
   }
 
   get firstChild() {
-    return getFragmentNodes(this.fragment)![0]
+    return getFragmentNodes(this.fragment!)![0]
   }
 
   get firstElementChild() {

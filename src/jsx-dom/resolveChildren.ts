@@ -72,7 +72,7 @@ export function resolveChildren(
     // quirk of the DOM API), it's important to replace the fragment at this
     // point with its deferred update, since that allows us to easily enumerate
     // the resolved children of the fragment's latest render.
-    else if (isFragment(child as Node)) {
+    else if (isNode(child) && isFragment(child)) {
       const nodeStore = lastValue(currentNodeStore)
       if (nodeStore) {
         const key = getElementKey(child)

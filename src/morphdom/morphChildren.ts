@@ -286,8 +286,8 @@ function isCompatibleNode(fromNode: Node, toNode: ToNode) {
 }
 
 function isDiscardableNode(node: Node) {
-  // Avoid removing nodes that were added to the DOM by a native API.
-  return !isElement(node) || getElementPosition(node) !== undefined
+  // Only nodes added to the DOM by JSX can be discarded by a morph.
+  return getElementPosition(node) !== undefined
 }
 
 function insertChild(
@@ -358,7 +358,9 @@ function updateChild(
     if (isFragment(morphedNode)) {
       const childNodes = getFragmentNodes(morphedNode)!
       childNodes.forEach((node, i) => {
-        fromPosition && setElementPosition(node, fromPosition + '*' + i)
+        if (node && fromPosition) {
+          setElementPosition(node, fromPosition + '*' + i)
+        }
         onChildNode(node)
       })
     } else {

@@ -1,3 +1,8 @@
+const hasOwn = Function.call.bind(Object.prototype.hasOwnProperty) as (
+  target: object,
+  property: keyof any
+) => boolean
+
 export type PrivateSymbol<T> = symbol & { __private: T }
 
 /**
@@ -11,26 +16,27 @@ export const definePrivateSymbol = <T>(name: string): PrivateSymbol<T> =>
 /** Create a getter and setter for a private symbol. */
 export const bindPrivateSymbol = <T>(property: PrivateSymbol<T>) =>
   [
-    (target: any): T | undefined => getPrivate(target, property),
-    (target: any, value: T | undefined) => setPrivate(target, property, value),
+    (target: object): T | undefined => getPrivate(target, property),
+    (target: object, value: T | undefined) =>
+      setPrivate(target, property, value),
   ] as const
 
 /** Check if a private symbol is defined on a target object. */
-export const hasPrivate = (target: any, property: PrivateSymbol<any>) =>
-  target.hasOwnProperty(property)
+export const hasPrivate = (target: object, property: PrivateSymbol<any>) =>
+  hasOwn(target, property)
 
 /** Access the current value of a private symbol on a target object. */
 export const getPrivate = <T>(
-  target: any,
+  target: object,
   property: PrivateSymbol<T>
 ): T | undefined =>
   // Ensure the property is defined on the target directly, so we can avoid a
   // prototype lookup when the property is undefined.
-  target.hasOwnProperty(property) ? target[property] : undefined
+  hasOwn(target, property) ? (target as any)[property] : undefined
 
 /** Set the value of a private symbol on a target object. */
 export const setPrivate = <T>(
-  target: any,
+  target: object,
   property: PrivateSymbol<T>,
   value: T | undefined
 ) =>
