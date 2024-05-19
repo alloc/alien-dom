@@ -25,7 +25,10 @@ export const hasPrivate = (target: any, property: PrivateSymbol<any>) =>
 export const getPrivate = <T>(
   target: any,
   property: PrivateSymbol<T>
-): T | undefined => target[property]
+): T | undefined =>
+  // Ensure the property is defined on the target directly, so we can avoid a
+  // prototype lookup when the property is undefined.
+  target.hasOwnProperty(property) ? target[property] : undefined
 
 /** Set the value of a private symbol on a target object. */
 export const setPrivate = <T>(
