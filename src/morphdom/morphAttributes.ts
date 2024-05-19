@@ -12,7 +12,7 @@ import {
   applyProp,
 } from '../internal/applyProp'
 import { flattenStyleProp } from '../internal/flattenStyleProp'
-import { kAlienHostProps } from '../internal/symbols'
+import { getHostProps } from '../internal/symbols'
 import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
 import { HTMLOrSVGElement } from '../internal/types'
 import { UpdateStyle, updateStyle } from '../internal/updateStyle'
@@ -24,7 +24,7 @@ export function morphAttributes(
   toProps: any,
   targetProp?: string
 ): void {
-  const fromProps = kAlienHostProps(fromNode)!
+  const fromProps = getHostProps(fromNode)!
 
   // Capture the keys that existed before the toProps were applied.
   const fromKeyPaths = new Set(fromProps.keys())

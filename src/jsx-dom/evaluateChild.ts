@@ -1,7 +1,7 @@
 import { isElement } from '../functions/typeChecking'
 import { AlienComponent } from '../internal/component'
 import { currentComponent, currentNodeStore } from '../internal/global'
-import { kAlienElementKey } from '../internal/symbols'
+import { getElementKey } from '../internal/symbols'
 import { compareNodeWithTag, lastValue } from '../internal/util'
 import { morph } from '../morphdom/morph'
 import {
@@ -26,7 +26,7 @@ export function evaluateChild(
   if (isDeferredNode(child)) {
     child = evaluateDeferredNode(child)
   } else {
-    const key = kAlienElementKey(child)
+    const key = getElementKey(child)
     if (key != null) {
       const update = findNodeUpdate(key)
       if (update) {

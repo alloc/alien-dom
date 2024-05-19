@@ -1,5 +1,6 @@
 import { Context, defineContext, ForwardedContext } from '../core/context'
 import { expectCurrentComponent } from '../internal/global'
+import { getPrivate } from '../internal/privateSymbol'
 import { kAlienInitialContext } from '../internal/symbols'
 
 /**
@@ -17,7 +18,7 @@ export function useContext(context?: Context): ForwardedContext {
   const component = expectCurrentComponent()
   if (context) {
     const current = component.context.get(context)
-    return current ? current.value : kAlienInitialContext(context)
+    return current ? current.value : getPrivate(context, kAlienInitialContext)
   }
   const index = component.nextHookIndex++
   return (component.hooks[index] ||= defineContext(component.context))

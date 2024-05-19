@@ -4,27 +4,42 @@ import type { ElementTags } from './component'
 import type { FragmentKeys, FragmentNodes } from './fragment'
 import { ElementThunkResult } from './fromElementThunk'
 import type { HostProps } from './hostProps'
-import { createSymbolProperty } from './symbolProperty'
+import { bindPrivateSymbol, definePrivateSymbol } from './privateSymbol'
 
-export const kAlienEffects = createSymbolProperty<AlienMountEffects>('effects')
+export const kAlienEffects = definePrivateSymbol<AlienMountEffects>('effects')
 export const kAlienElementKey =
-  createSymbolProperty<JSX.ElementKey>('elementKey')
+  definePrivateSymbol<JSX.ElementKey>('elementKey')
 export const kAlienElementPosition =
-  createSymbolProperty<JSX.ElementKey>('elementPosition')
-export const kAlienElementTags =
-  createSymbolProperty<ElementTags>('elementTags')
+  definePrivateSymbol<JSX.ElementKey>('elementPosition')
+export const kAlienElementTags = definePrivateSymbol<ElementTags>('elementTags')
 export const kAlienFragmentKeys =
-  createSymbolProperty<FragmentKeys>('fragmentKeys')
+  definePrivateSymbol<FragmentKeys>('fragmentKeys')
 export const kAlienFragmentNodes =
-  createSymbolProperty<FragmentNodes>('fragmentNodes')
-export const kAlienHostProps = createSymbolProperty<HostProps>('hostProps')
-export const kAlienInitialContext = createSymbolProperty<any>('initialContext')
-export const kAlienMemo = createSymbolProperty<boolean>('memo')
-export const kAlienParentFragment = createSymbolProperty<
+  definePrivateSymbol<FragmentNodes>('fragmentNodes')
+export const kAlienHostProps = definePrivateSymbol<HostProps>('hostProps')
+export const kAlienInitialContext = definePrivateSymbol<any>('initialContext')
+export const kAlienMemo = definePrivateSymbol<boolean>('memo')
+export const kAlienParentFragment = definePrivateSymbol<
   DocumentFragment | undefined
 >('parentFragment')
 export const kAlienRenderFunc =
-  createSymbolProperty<(props: any) => any>('renderFunc')
-export const kAlienStateless = createSymbolProperty<boolean>('stateless')
+  definePrivateSymbol<(props: any) => any>('renderFunc')
+export const kAlienStateless = definePrivateSymbol<boolean>('stateless')
 export const kAlienThunkResult =
-  createSymbolProperty<ElementThunkResult>('thunkResult')
+  definePrivateSymbol<ElementThunkResult>('thunkResult')
+
+// The most used symbols get their own accessors.
+export const [getElementKey, setElementKey] =
+  bindPrivateSymbol(kAlienElementKey)
+export const [getElementPosition, setElementPosition] = bindPrivateSymbol(
+  kAlienElementPosition
+)
+export const [getElementTags, setElementTags] =
+  bindPrivateSymbol(kAlienElementTags)
+export const [getFragmentKeys, setFragmentKeys] =
+  bindPrivateSymbol(kAlienFragmentKeys)
+export const [getFragmentNodes, setFragmentNodes] =
+  bindPrivateSymbol(kAlienFragmentNodes)
+export const [getHostProps, setHostProps] = bindPrivateSymbol(kAlienHostProps)
+export const [getParentFragment, setParentFragment] =
+  bindPrivateSymbol(kAlienParentFragment)

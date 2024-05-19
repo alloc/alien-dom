@@ -1,17 +1,18 @@
 import { isArray, isFunction } from '@alloc/is'
 import { Falsy } from '@alloc/types'
-import { getElementKey } from '../functions/getElementKey'
+import { getElementIdentity } from '../functions/getElementIdentity'
 import { unmount } from '../functions/unmount'
 import { AlienComponent } from '../internal/component'
 import { hasTagName, isElement, isFragment, isTextNode } from '../internal/duck'
 import { FragmentNodes, endOfFragment } from '../internal/fragment'
 import { currentNodeStore } from '../internal/global'
 import {
-  kAlienElementKey,
-  kAlienElementPosition,
-  kAlienElementTags,
-  kAlienFragmentNodes,
-  kAlienParentFragment,
+  getElementKey,
+  getElementPosition,
+  getElementTags,
+  getFragmentNodes,
+  getParentFragment,
+  setElementPosition,
 } from '../internal/symbols'
 import { compareNodeNames, lastValue, noop } from '../internal/util'
 import { Fragment } from '../jsx-dom/jsx-runtime'
@@ -63,7 +64,7 @@ export function morphChildren(
     toChildNodes ||= []
   }
 
-  const { getFromKey = getElementKey, onChildNode = noop } = options
+  const { getFromKey = getElementIdentity, onChildNode = noop } = options
 
   if (!isArray(toChildNodes)) {
     toChildNodes = Array.from(toChildNodes)
@@ -101,7 +102,7 @@ export function morphChildren(
       throw Error('ShadowRoot must be the only child')
     }
 
-    const toChildKey = getElementKey(toChildNode)
+    const toChildKey = getElementIdentity(toChildNode)
     if (toChildKey != null) {
       const matchingNode = fromNodesByKey.get(toChildKey)
       if (matchingNode) {
@@ -111,7 +112,7 @@ export function morphChildren(
         if (isFragment(matchingNode)) {
           let nextSibling: ChildNode | null = null
           let childNodes: (ChildNode | undefined)[] =
-            kAlienFragmentNodes(matchingNode)!
+            getFragmentNodes(matchingNode)!
 
           if (childNodes[0] !== fromChildNode) {
             // Move the fragment before the current from node.
@@ -135,13 +136,13 @@ export function morphChildren(
             }
           } else {
             resolvedNode =
-              (!isFragment(toChildNode) && kAlienParentFragment(toChildNode)) ||
+              (!isFragment(toChildNode) && getParentFragment(toChildNode)) ||
               toChildNode
           }
 
           const oldChildNodes = childNodes as FragmentNodes
           childNodes = isFragment(resolvedNode)
-            ? kAlienFragmentNodes(resolvedNode) ||
+            ? getFragmentNodes(resolvedNode) ||
               Array.from(resolvedNode.childNodes)
             : [resolvedNode]
 
@@ -264,7 +265,7 @@ function isCompatibleNode(fromNode: Node, toNode: ToNode) {
   }
   if (isDeferredNode(toNode)) {
     if (isFunction(toNode.tag)) {
-      const tags = kAlienElementTags(fromNode)
+      const tags = getElementTags(fromNode)
       return tags != null && tags.has(toNode.tag)
     }
     if (isElement(fromNode)) {
@@ -286,7 +287,7 @@ function isCompatibleNode(fromNode: Node, toNode: ToNode) {
 
 function isDiscardableNode(node: Node) {
   // Avoid removing nodes that were added to the DOM by a native API.
-  return !isElement(node) || kAlienElementPosition(node) !== undefined
+  return !isElement(node) || getElementPosition(node) !== undefined
 }
 
 function insertChild(
@@ -327,7 +328,7 @@ function updateChild(
   // update stored by a JSX element key.
   const nodeStore = lastValue(currentNodeStore) || component
   if (nodeStore && fromNode === toNode) {
-    const key = getElementKey(toNode)
+    const key = getElementIdentity(toNode)
     const update = key != null && nodeStore.getNodeUpdateForKey(key)
     if (update) {
       toNode = update
@@ -353,15 +354,15 @@ function updateChild(
   }
 
   if (morphedNode && morphedNode !== fromNode) {
-    const fromPosition = kAlienElementPosition(fromNode)
+    const fromPosition = getElementPosition(fromNode)
     if (isFragment(morphedNode)) {
-      const childNodes = kAlienFragmentNodes(morphedNode)!
+      const childNodes = getFragmentNodes(morphedNode)!
       childNodes.forEach((node, i) => {
-        fromPosition && kAlienElementPosition(node, fromPosition + '*' + i)
+        fromPosition && setElementPosition(node, fromPosition + '*' + i)
         onChildNode(node)
       })
     } else {
-      fromPosition && kAlienElementPosition(morphedNode, fromPosition)
+      fromPosition && setElementPosition(morphedNode, fromPosition)
       onChildNode(morphedNode)
     }
     if (!nextSibling) {
@@ -394,7 +395,7 @@ function collectKeyedNodes(
   component: AlienComponent | null | undefined,
   options: MorphChildrenOptions
 ) {
-  const { getFromKey = getElementKey } = options
+  const { getFromKey = getElementIdentity } = options
   const fromNodesByKey = new Map<
     JSX.ElementKey,
     Element | Comment | DocumentFragment
@@ -408,20 +409,20 @@ function collectKeyedNodes(
     // Check if the child is the "head node" of a JSX fragment. If so, collect
     // the DOM fragment node so it can be morphed.
     const fragment =
-      isTextNode(fromChildNode) && kAlienParentFragment(fromChildNode)
+      isTextNode(fromChildNode) && getParentFragment(fromChildNode)
 
     if (fragment) {
-      let position = kAlienElementPosition(fromChildNode)
+      let position = getElementPosition(fromChildNode)
       if (position != null) {
         fromNodesByKey.set(position, fragment)
       }
 
-      position = kAlienElementPosition(fragment)
+      position = getElementPosition(fragment)
       if (position != null) {
         fromNodesByKey.set(position, fragment)
       }
 
-      const key = kAlienElementKey(fragment)
+      const key = getElementKey(fragment)
       if (key != null) {
         fromNodesByKey.set(key, fragment)
       }

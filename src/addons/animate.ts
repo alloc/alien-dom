@@ -20,6 +20,7 @@ import {
   SpringTimeline,
 } from '../internal/animate/types'
 import { animatedElements } from '../internal/global'
+import { getPrivate, setPrivate } from '../internal/privateSymbol'
 import { cssTransformDefaults, cssTransformUnits } from '../internal/transform'
 import { AnyElement, HTMLOrSVGElement } from '../internal/types'
 import { keys, toArray } from '../internal/util'
@@ -298,7 +299,7 @@ export function animate(
 }
 
 function ensureAnimatedElement(target: HTMLOrSVGElement): AnimatedElement {
-  let state = kAlienAnimatedState(target)
+  let state = getPrivate(target, kAlienAnimatedState)
   if (!state) {
     state = {
       svgMode: isSvgChild(target),
@@ -311,7 +312,7 @@ function ensureAnimatedElement(target: HTMLOrSVGElement): AnimatedElement {
       style: {},
       onStart: null,
     }
-    kAlienAnimatedState(target, state)
+    setPrivate(target, kAlienAnimatedState, state)
   }
   return state
 }

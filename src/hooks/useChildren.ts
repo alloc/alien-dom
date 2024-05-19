@@ -10,7 +10,7 @@ import {
   wrapWithFragment,
 } from '../internal/fragment'
 import { createGuid } from '../internal/guid'
-import { kAlienElementKey, kAlienFragmentNodes } from '../internal/symbols'
+import { getFragmentNodes, setElementKey } from '../internal/symbols'
 import { findFirstElement, findLastElement } from '../internal/traversal'
 import { AnyElement } from '../internal/types'
 import { UnresolvedChild } from '../jsx-dom/resolveChildren'
@@ -66,7 +66,7 @@ class UseChildren {
         morphFragment(this.fragment, wrapWithFragment(children, true))
       } else {
         this.fragment = wrapWithFragment(children, false)
-        kAlienElementKey(this.fragment, this.key)
+        setElementKey(this.fragment, this.key)
       }
       this.deps = deps
     }
@@ -74,7 +74,7 @@ class UseChildren {
   }
 
   get firstChild() {
-    return kAlienFragmentNodes(this.fragment)![0]
+    return getFragmentNodes(this.fragment)![0]
   }
 
   get firstElementChild() {

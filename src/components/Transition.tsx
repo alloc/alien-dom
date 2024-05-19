@@ -7,7 +7,7 @@ import { toElements } from '../functions/toElements'
 import { isNode } from '../functions/typeChecking'
 import { useEffect } from '../hooks/useEffect'
 import { useState } from '../hooks/useState'
-import { kAlienFragmentNodes } from '../internal/symbols'
+import { getFragmentNodes } from '../internal/symbols'
 import type { AnyElement } from '../internal/types'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import { evaluateDeferredNode, isDeferredNode } from '../jsx-dom/node'
@@ -79,7 +79,7 @@ export function Transition<Id>(props: TransitionProps<Id>) {
     const elements = state.elements.get(props.id)
     if (isNode(elements)) {
       // Restore the nodes of the fragment.
-      const childNodes = kAlienFragmentNodes(reusedChildren)!
+      const childNodes = getFragmentNodes(reusedChildren)!
       elements.childNodes.forEach((childNode, index) => {
         childNodes[index + 1] = childNode
       })
@@ -147,7 +147,7 @@ export function Transition<Id>(props: TransitionProps<Id>) {
         const leaveContainer = (
           <div key={leaveKey} class={props.leaveClass} style={leaveStyle} />
         )
-        for (const leavingNode of kAlienFragmentNodes(previousChildren)!) {
+        for (const leavingNode of getFragmentNodes(previousChildren)!) {
           leavingNode && leaveContainer.append(leavingNode)
         }
 

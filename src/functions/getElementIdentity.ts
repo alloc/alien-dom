@@ -1,4 +1,4 @@
-import { kAlienElementKey, kAlienElementPosition } from '../internal/symbols'
+import { getElementKey, getElementPosition } from '../internal/symbols'
 
 /**
  * If no element key was explicitly defined by user code and the compiler
@@ -6,6 +6,8 @@ import { kAlienElementKey, kAlienElementPosition } from '../internal/symbols'
  * used, which might also be undefined if the element was added to the DOM
  * through a native DOM API.
  */
-export function getElementKey(element: object): string | undefined {
-  return kAlienElementKey(element) ?? kAlienElementPosition(element)
+export function getElementIdentity(
+  element: object
+): JSX.ElementKey | undefined {
+  return getElementKey(element) ?? getElementPosition(element)
 }

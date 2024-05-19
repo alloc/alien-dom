@@ -18,12 +18,16 @@ import { ContextMap, setContext } from '../internal/context'
 import { FragmentKeys, FragmentNodes } from '../internal/fragment'
 import { currentEffects } from '../internal/global'
 import { HostProps } from '../internal/hostProps'
+import { hasPrivate } from '../internal/privateSymbol'
 import {
-  kAlienElementKey,
-  kAlienElementPosition,
-  kAlienFragmentKeys,
-  kAlienFragmentNodes,
+  getElementKey,
+  getElementPosition,
+  getFragmentKeys,
   kAlienStateless,
+  setElementKey,
+  setElementPosition,
+  setFragmentKeys,
+  setFragmentNodes,
 } from '../internal/symbols'
 import { HTMLOrSVGElement } from '../internal/types'
 import { lastValue } from '../internal/util'
@@ -133,14 +137,14 @@ export const deferCompositeNode = (
 })
 
 export function evaluateDeferredNode(node: AnyDeferredNode) {
-  const key = kAlienElementKey(node)
-  const position = kAlienElementPosition(node)
+  const key = getElementKey(node)
+  const position = getElementPosition(node)
 
   let hostNode: ChildNode | DocumentFragment
   if (isDeferredHostNode(node)) {
     hostNode = createHostNode(node)
   } else if (node.tag === Fragment) {
-    hostNode = createFragmentNode(node.children!, kAlienFragmentKeys(node)!)
+    hostNode = createFragmentNode(node.children!, getFragmentKeys(node)!)
   } else {
     const oldContext = node.context && setContext(node.context)
     hostNode = createCompositeNode(node.tag, node.props)
@@ -149,8 +153,8 @@ export function evaluateDeferredNode(node: AnyDeferredNode) {
     }
   }
 
-  kAlienElementKey(hostNode, key)
-  kAlienElementPosition(hostNode, position)
+  setElementKey(hostNode, key)
+  setElementPosition(hostNode, position)
   return hostNode
 }
 
@@ -219,8 +223,8 @@ export function createFragmentNode(
     childNodes[i + 1] = appendChild(children[i], fragment)
   }
 
-  kAlienFragmentNodes(fragment, childNodes)
-  kAlienFragmentKeys(fragment, childKeys)
+  setFragmentNodes(fragment, childNodes)
+  setFragmentKeys(fragment, childKeys)
   return fragment
 }
 
@@ -228,7 +232,7 @@ export function createCompositeNode(
   tag: (props: any) => JSX.ChildrenProp,
   initialProps: any
 ) {
-  if (kAlienStateless.in(tag)) {
+  if (hasPrivate(tag, kAlienStateless)) {
     return tag(initialProps) as ChildNode | DocumentFragment
   }
   const self = new AlienComponent(tag, initialProps)

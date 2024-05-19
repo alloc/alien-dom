@@ -3,6 +3,7 @@ import { attachDisposer, Disposable } from '../addons/disposable'
 import { AlienEffect, AlienEffects, AlienMountEffects } from '../core/effects'
 import { currentEffects } from './global'
 import { LinkedList } from './linkedList'
+import { getPrivate } from './privateSymbol'
 import { getShadowRoot } from './shadow'
 import { popValue } from './stack'
 import { kAlienEffects } from './symbols'
@@ -13,7 +14,10 @@ export function getEffects<T extends AnyElement>(
   element: T,
   rootNode: Node | undefined = getShadowRoot()
 ): AlienMountEffects<T> {
-  return kAlienEffects(element) || new AlienMountEffects(element, rootNode)
+  return (
+    getPrivate(element, kAlienEffects) ||
+    new AlienMountEffects(element, rootNode)
+  )
 }
 
 export const enum EffectFlags {

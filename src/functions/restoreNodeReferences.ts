@@ -1,6 +1,6 @@
 import { AlienComponent } from '../internal/component'
 import { expectCurrentComponent } from '../internal/global'
-import { kAlienElementKey, kAlienFragmentNodes } from '../internal/symbols'
+import { getElementKey, getFragmentNodes } from '../internal/symbols'
 import { isFragment, isTextNode } from './typeChecking'
 
 /**
@@ -16,7 +16,7 @@ export function restoreNodeReferences(node: ChildNode | DocumentFragment) {
   component.nodes ??= new Map()
 
   if (isFragment(node)) {
-    const childNodes = kAlienFragmentNodes(node)
+    const childNodes = getFragmentNodes(node)
     childNodes?.forEach(childNode => {
       if (childNode) {
         restoreComponentRef(childNode, component)
@@ -28,7 +28,7 @@ export function restoreNodeReferences(node: ChildNode | DocumentFragment) {
 }
 
 function restoreComponentRef(node: ChildNode, component: AlienComponent) {
-  const key = kAlienElementKey(node)
+  const key = getElementKey(node)
   if (key != null) {
     component.nodes!.set(key, node)
   }

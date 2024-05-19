@@ -6,9 +6,9 @@ import { isArrayLike, isFragment, isNode } from '../internal/duck'
 import { fromElementThunk } from '../internal/fromElementThunk'
 import { currentNodeStore } from '../internal/global'
 import {
-  kAlienElementKey,
-  kAlienElementPosition,
-  kAlienFragmentNodes,
+  getElementKey,
+  getFragmentNodes,
+  setElementPosition,
 } from '../internal/symbols'
 import { lastValue } from '../internal/util'
 import { Fragment } from '../jsx-dom/jsx-runtime'
@@ -44,7 +44,7 @@ export function resolveChildren(
   child: UnresolvedChild,
   position?: string,
   context = new Map(getContext()) as ContextMap,
-  onChildNode: (node: ResolvedChild, key?: string) => void = noop,
+  onChildNode: (node: ResolvedChild, key?: JSX.ElementKey) => void = noop,
   nodes: ResolvedChild[] = []
 ): ResolvedChild[] {
   /**
@@ -75,7 +75,7 @@ export function resolveChildren(
     else if (isFragment(child as Node)) {
       const nodeStore = lastValue(currentNodeStore)
       if (nodeStore) {
-        const key = kAlienElementKey(child)
+        const key = getElementKey(child)
         if (key != null) {
           child = nodeStore.getNodeUpdateForKey(key) || child
         }
@@ -84,8 +84,8 @@ export function resolveChildren(
 
     if (isNode(child)) {
       if (isFragment(child)) {
-        kAlienElementPosition(child, position)
-        children = kAlienFragmentNodes(child)
+        setElementPosition(child, position)
+        children = getFragmentNodes(child)
         if (!children) {
           // The fragment wasn't created through JSX, so let's avoid setting
           // element keys and resolveChildren recursion.
@@ -99,7 +99,7 @@ export function resolveChildren(
       }
     } else if (isDeferredNode(child)) {
       if (child.tag === Fragment) {
-        kAlienElementPosition(child, position)
+        setElementPosition(child, position)
         children = child.children as ResolvedChild[]
       } else {
         node = child
@@ -126,10 +126,10 @@ export function resolveChildren(
   // If not a fragment...
   if (node !== undefined) {
     if (node !== null) {
-      kAlienElementPosition(node, position ?? '*0')
+      setElementPosition(node, position ?? '*0')
     }
     nodes.push(node)
-    onChildNode(node, (node && kAlienElementKey(node)) ?? position ?? '*0')
+    onChildNode(node, (node && getElementKey(node)) ?? position ?? '*0')
   }
 
   if (children) {

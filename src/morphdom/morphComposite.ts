@@ -1,11 +1,11 @@
-import { kAlienElementTags } from '../internal/symbols'
+import { getElementTags } from '../internal/symbols'
 import { DeferredCompositeNode, evaluateDeferredNode } from '../jsx-dom/node'
 
 export function morphComposite<T extends Node>(
   fromParentNode: T,
   toParentNode: DeferredCompositeNode
 ) {
-  const tags = kAlienElementTags(fromParentNode)
+  const tags = getElementTags(fromParentNode)
   const childComponent = tags?.get(toParentNode.tag)
 
   if (childComponent) {

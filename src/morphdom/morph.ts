@@ -2,7 +2,7 @@ import { isRef } from '../core/observable'
 import { addChildrenRef, applyRefProp } from '../internal/applyProp'
 import { AlienComponent } from '../internal/component'
 import { currentComponent } from '../internal/global'
-import { kAlienHostProps } from '../internal/symbols'
+import { getHostProps } from '../internal/symbols'
 import type { HTMLOrSVGElement } from '../internal/types'
 import { lastValue } from '../internal/util'
 import {
@@ -27,7 +27,7 @@ export function morph(
     return morphComposite(fromParentNode, toParentNode)
   }
 
-  const fromProps = kAlienHostProps(fromParentNode)
+  const fromProps = getHostProps(fromParentNode)
 
   let toChildNodes: DeferredChildren
   if (isRef(toParentNode.children)) {

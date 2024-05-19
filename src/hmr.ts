@@ -3,10 +3,15 @@ import { Ref, ref } from './core/observable'
 import { attachRef } from './functions/attachRef'
 import { depsHaveChanged } from './functions/depsHaveChanged'
 import { setComponentRenderHook } from './internal/component'
-import { createSymbolProperty } from './internal/symbolProperty'
+import {
+  definePrivateSymbol,
+  getPrivate,
+  hasPrivate,
+  setPrivate,
+} from './internal/privateSymbol'
 import { kAlienRenderFunc } from './internal/symbols'
 
-const kAlienComponentKey = createSymbolProperty<string>('componentKey')
+const kAlienComponentKey = definePrivateSymbol<string>('componentKey')
 
 type Component = (props: any) => JSX.ChildrenProp
 type ComponentData = [component: Ref<Component>, hash: string, deps: any[]]
@@ -40,7 +45,7 @@ export function hmrRegister(
   const componentData: ComponentData = [renderRef, hash, deps]
   queueMicrotask(() => {
     componentData[2] = deps = deps.map(
-      dep => dep && (kAlienComponentKey(dep) ?? dep)
+      dep => dep && (getPrivate(dep, kAlienComponentKey) ?? dep)
     )
 
     if (needsUpdateCheck) {
@@ -54,29 +59,29 @@ export function hmrRegister(
     }
   })
 
-  kAlienComponentKey(tag, key)
+  setPrivate(tag, kAlienComponentKey, key)
   componentRegistry[key] = componentData
-  attachRef(tag, kAlienRenderFunc.symbol, renderRef)
+  attachRef(tag, kAlienRenderFunc, renderRef)
 }
 
 setComponentRenderHook(component => {
   // If no component key exists, the component was never registered for hot
   // updates, which means it's either not a top-level component or it was
   // immediately used in the same module it was declared in.
-  if (!kAlienComponentKey.in(component.tag)) {
+  if (!hasPrivate(component.tag, kAlienComponentKey)) {
     usedBeforeRegister.add(component.tag)
     return component.tag
   }
 
   // This access is what subscribes the component to hot updates.
-  const render = kAlienRenderFunc(component.tag)!
+  const render = getPrivate(component.tag, kAlienRenderFunc)!
 
   // Track which render function was last used by each component instance.
-  const prevRender = kAlienRenderFunc(component)
+  const prevRender = getPrivate(component, kAlienRenderFunc)
 
   let isHotUpdate: boolean | undefined
   if (render !== prevRender) {
-    kAlienRenderFunc(component, render)
+    setPrivate(component, kAlienRenderFunc, render)
 
     // If the component is being hot-updated, clear any memoized values and
     // disposable hooks (except for initializer hooks).

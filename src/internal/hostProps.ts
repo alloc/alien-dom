@@ -2,7 +2,7 @@ import { isArray } from '@alloc/is'
 import { Disposable, createDisposable } from '../addons/disposable'
 import { ReadonlyRef, observe } from '../core/observable'
 import { JSX } from '../types/jsx'
-import { kAlienHostProps } from './symbols'
+import { setHostProps } from './symbols'
 import { HTMLOrSVGElement } from './types'
 import { forEach } from './util'
 
@@ -14,7 +14,7 @@ export class HostProps extends Map<string, HostProp> {
 
   constructor(readonly node: HTMLOrSVGElement) {
     super()
-    kAlienHostProps(node, this)
+    setHostProps(node, this)
   }
 
   /**

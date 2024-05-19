@@ -1,5 +1,5 @@
 import { defineEffectType, getCurrentEffect } from '../core/effects'
-import { getElementKey } from '../functions/getElementKey'
+import { getElementIdentity } from '../functions/getElementIdentity'
 import { binaryInsert } from '../internal/binaryInsert'
 import { isElement } from '../internal/duck'
 
@@ -27,12 +27,12 @@ function observeDescendants(rootNode: Node) {
     const observer = new MutationObserver(mutations => {
       for (const mutation of mutations) {
         for (const node of Array.from(mutation.addedNodes) as ChildNode[]) {
-          if (isElement(node) || getElementKey(node)) {
+          if (isElement(node) || getElementIdentity(node)) {
             removed.delete(node) || added.add(node)
           }
         }
         for (const node of Array.from(mutation.removedNodes) as ChildNode[]) {
-          if (isElement(node) || getElementKey(node)) {
+          if (isElement(node) || getElementIdentity(node)) {
             added.delete(node) || removed.add(node)
           }
         }

@@ -25,12 +25,14 @@ import {
   expectCurrentComponent,
 } from './global'
 import { NodeStore } from './nodeStore'
+import { hasPrivate, setPrivate } from './privateSymbol'
 import { popValue } from './stack'
 import {
-  kAlienElementKey,
-  kAlienElementTags,
-  kAlienFragmentNodes,
+  getElementKey,
+  getElementTags,
+  getFragmentNodes,
   kAlienMemo,
+  setElementTags,
 } from './symbols'
 import { lastValue, noop } from './util'
 
@@ -91,7 +93,7 @@ export class AlienComponent<Props extends object = any>
   get firstChild(): ChildNode | null {
     const { rootNode } = this
     if (rootNode && isFragment(rootNode)) {
-      return kAlienFragmentNodes(rootNode)![0]
+      return getFragmentNodes(rootNode)![0]
     }
     return rootNode
   }
@@ -147,14 +149,14 @@ export class AlienComponent<Props extends object = any>
 
   setRootNode(rootNode: ChildNode | DocumentFragment) {
     this.rootNode = rootNode
-    this.rootKey = kAlienElementKey(rootNode)
+    this.rootKey = getElementKey(rootNode)
 
     // Register this component instance with the root node, so the node can be
     // morphed by future renders.
-    let tags = kAlienElementTags(rootNode)
+    let tags = getElementTags(rootNode)
     if (!tags) {
       tags = new Map()
-      kAlienElementTags(rootNode, tags)
+      setElementTags(rootNode, tags)
     }
     tags.set(this.tag, this)
 
@@ -242,7 +244,7 @@ export class AlienComponent<Props extends object = any>
     // When the root node is a fragment, use its first child to determine if
     // the fragment has been connected to the DOM.
     if (isFragment(rootNode)) {
-      rootNode = kAlienFragmentNodes(rootNode)![0]
+      rootNode = getFragmentNodes(rootNode)![0]
     }
 
     if (isMounted && rootNode.isConnected) {
@@ -311,13 +313,13 @@ export const setComponentRenderHook = (
 /** @internal */
 export class Memo {
   static isMemo = (value: any): value is Memo =>
-    value != null && kAlienMemo.in(value)
+    value != null && hasPrivate(value, kAlienMemo)
   constructor(
     public value: any,
     public deps?: readonly any[],
     public refs?: Set<ReadonlyRef>
   ) {
-    kAlienMemo(this, true)
+    setPrivate(this, kAlienMemo, true)
   }
 }
 

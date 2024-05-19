@@ -6,7 +6,12 @@ import {
   updateParentFragment,
 } from '../internal/fragment'
 import { currentComponent } from '../internal/global'
-import { kAlienFragmentKeys, kAlienFragmentNodes } from '../internal/symbols'
+import {
+  getFragmentKeys,
+  getFragmentNodes,
+  setFragmentKeys,
+  setFragmentNodes,
+} from '../internal/symbols'
 import { lastValue } from '../internal/util'
 import { AnyDeferredNode } from '../jsx-dom/node'
 import { ResolvedChild } from '../jsx-dom/resolveChildren'
@@ -17,8 +22,8 @@ export function morphFragment(
   toFragment: AnyDeferredNode,
   component: AlienComponent | null = lastValue(currentComponent)
 ) {
-  const fromKeys = kAlienFragmentKeys(fromFragment)!
-  const fromNodes = kAlienFragmentNodes(fromFragment)!
+  const fromKeys = getFragmentKeys(fromFragment)!
+  const fromNodes = getFragmentNodes(fromFragment)!
 
   const parentElement = fromNodes[0].parentElement
   for (let i = 1; i < fromNodes.length; i++) {
@@ -39,7 +44,7 @@ export function morphFragment(
   })
 
   const nodes: FragmentNodes = [fromNodes[0]]
-  const keys = [...kAlienFragmentKeys(toFragment)!]
+  const keys = [...getFragmentKeys(toFragment)!]
 
   const fragment = new ParentFragment(fromNodes)
   morphChildren(fragment, toFragment.children as ResolvedChild[], component, {
@@ -58,7 +63,7 @@ export function morphFragment(
     // the toFragment's children array, which is crucial for positional keys.
     onChildNode: node => {
       if (node && isFragment(node)) {
-        const childNodes = kAlienFragmentNodes(node)!
+        const childNodes = getFragmentNodes(node)!
         childNodes.forEach((childNode, i) => {
           if (i !== 0) {
             keys.splice(nodes.length, 0, undefined)
@@ -71,8 +76,8 @@ export function morphFragment(
     },
   })
 
-  kAlienFragmentNodes(fromFragment, nodes)
-  kAlienFragmentKeys(fromFragment, keys)
+  setFragmentNodes(fromFragment, nodes)
+  setFragmentKeys(fromFragment, keys)
 
   updateParentFragment(fromFragment, fromNodes, nodes)
   return fromFragment

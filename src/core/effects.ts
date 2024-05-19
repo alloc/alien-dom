@@ -12,6 +12,7 @@ import {
 } from '../internal/effects'
 import { currentEffects } from '../internal/global'
 import { LinkedList } from '../internal/linkedList'
+import { setPrivate } from '../internal/privateSymbol'
 import { popValue } from '../internal/stack'
 import { kAlienEffects } from '../internal/symbols'
 import type { AnyElement } from '../internal/types'
@@ -247,7 +248,7 @@ export class AlienMountEffects<
   constructor(readonly element: Element | Comment, rootNode?: Node) {
     super()
 
-    kAlienEffects(element, this)
+    setPrivate(element, kAlienEffects, this)
 
     if (!rootNode && element.isConnected) {
       rootNode = element.getRootNode()

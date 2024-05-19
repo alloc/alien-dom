@@ -2,7 +2,11 @@ import { isFunction, isString } from '@alloc/is'
 import { Falsy } from '@alloc/types'
 import { Disposable, attachDisposer } from '../addons/disposable'
 import { Promisable } from '../addons/promises'
-import { createSymbolProperty } from '../internal/symbolProperty'
+import {
+  definePrivateSymbol,
+  getPrivate,
+  setPrivate,
+} from '../internal/privateSymbol'
 import { forEach, noop } from '../internal/util'
 
 const kRefType = Symbol.for('refType')
@@ -270,8 +274,7 @@ interface ArrayIterators<T> {
 }
 
 const numberRE = /^\d+$/
-const kLengthRef =
-  /* @__PURE__ */ createSymbolProperty<Ref<number>>('lengthRef')
+const kLengthRef = /* @__PURE__ */ definePrivateSymbol<Ref<number>>('lengthRef')
 
 const updateLengthRef = (
   ref: Ref<number> | undefined,
@@ -296,9 +299,13 @@ const arrayTraps: ProxyHandler<InternalArrayRef> = {
       if (access === unseenAccess) {
         return target._value.length
       }
-      let lengthRef = kLengthRef(target)
+      let lengthRef = getPrivate(target, kLengthRef)
       if (!lengthRef) {
-        kLengthRef(target, (lengthRef = new Ref(target._value.length)))
+        setPrivate(
+          target,
+          kLengthRef,
+          (lengthRef = new Ref(target._value.length))
+        )
       }
       return lengthRef.value
     }
@@ -314,7 +321,7 @@ const arrayTraps: ProxyHandler<InternalArrayRef> = {
         newArray[index] = newValue
         setValue.call(target, newArray)
         if (isExpanding) {
-          updateLengthRef(kLengthRef(target), oldArray, newArray)
+          updateLengthRef(getPrivate(target, kLengthRef), oldArray, newArray)
         }
         if (target._arrayObservers) {
           notifyArrayObservers(
@@ -335,7 +342,7 @@ const arrayTraps: ProxyHandler<InternalArrayRef> = {
           newArray.length = newValue
         }
         setValue.call(target, newArray)
-        updateLengthRef(kLengthRef(target), oldArray, newArray)
+        updateLengthRef(getPrivate(target, kLengthRef), oldArray, newArray)
         if (target._arrayObservers) {
           notifyArrayObservers(
             target,
@@ -352,7 +359,7 @@ const arrayTraps: ProxyHandler<InternalArrayRef> = {
       const oldArray = target._value
       if (newValue !== oldArray) {
         setValue.call(target, newValue)
-        updateLengthRef(kLengthRef(target), oldArray, newValue)
+        updateLengthRef(getPrivate(target, kLengthRef), oldArray, newValue)
         if (target._arrayObservers) {
           notifyArrayObservers(
             target,
@@ -392,7 +399,7 @@ export let arrayRef = <T>(
       const newArray = oldArray.slice()
       const result = (newArray[name] as any)(...args)
       setValue.call(this, newArray)
-      updateLengthRef(kLengthRef(this), oldArray, newArray)
+      updateLengthRef(getPrivate(this, kLengthRef), oldArray, newArray)
       if (this._arrayObservers) {
         const operation = this._produceOperation(name, args, oldArray, newArray)
         if (operation) {

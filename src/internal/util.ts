@@ -3,7 +3,7 @@ import { Fragment } from '../components/Fragment'
 import { isTemplateNode } from '../jsx-dom/node'
 import { hasForEach, isFragment } from './duck'
 import { Stack } from './stack'
-import { kAlienElementTags } from './symbols'
+import { getElementTags } from './symbols'
 
 export const set = /* @__PURE__ */ Reflect.set
 export const defineProperty = /* @__PURE__ */ Object.defineProperty
@@ -72,7 +72,7 @@ export function compareNodeWithTag(
     // TODO: do a more reliable check here
     return node.nodeName === tag.template.nodeName
   }
-  const tags = kAlienElementTags(node)
+  const tags = getElementTags(node)
   return tags != null && tags.has(tag)
 }
 

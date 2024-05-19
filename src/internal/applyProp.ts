@@ -12,7 +12,7 @@ import { flattenClassProp } from './flattenClassProp'
 import { MergeStylesFn, flattenStyleProp } from './flattenStyleProp'
 import { HostProps } from './hostProps'
 import { NodeStore } from './nodeStore'
-import { kAlienElementKey } from './symbols'
+import { setElementKey } from './symbols'
 import { HTMLOrSVGElement } from './types'
 import { UpdateStyle, updateStyle } from './updateStyle'
 import { decamelize, forEach, noop, set } from './util'
@@ -353,13 +353,13 @@ export function applyKeyProp(
   nodeStore: NodeStore | null
 ) {
   if (!nodeStore) {
-    kAlienElementKey(node, key)
+    setElementKey(node, key)
     return
   }
 
   const cachedNode = oldNode || (isNode(node) && node)
   if (cachedNode) {
-    kAlienElementKey(cachedNode, key)
+    setElementKey(cachedNode, key)
     nodeStore.setNodeForKey(key, cachedNode)
   }
 
@@ -370,7 +370,7 @@ export function applyKeyProp(
       nodeStore.setNodeUpdateForKey(key, node)
     }
     if (oldNode) {
-      kAlienElementKey(node, key)
+      setElementKey(node, key)
     }
   }
 }

@@ -8,10 +8,11 @@ import { fromElementThunk } from '../internal/fromElementThunk'
 import { currentComponent } from '../internal/global'
 import { NodeStore } from '../internal/nodeStore'
 import {
-  kAlienElementKey,
-  kAlienElementTags,
-  kAlienFragmentNodes,
-  kAlienParentFragment,
+  getElementKey,
+  getElementTags,
+  getFragmentNodes,
+  getParentFragment,
+  setParentFragment,
 } from '../internal/symbols'
 import { AnyElement } from '../internal/types'
 import { compareNodeWithTag, lastValue } from '../internal/util'
@@ -61,7 +62,7 @@ export function morphRootNode(
 
     // The render function might return an element reference.
     if (nodeStore && rootNode === newRootNode) {
-      const key = kAlienElementKey(rootNode)
+      const key = getElementKey(rootNode)
       const update = key != null && nodeStore.getNodeUpdateForKey(key)
       if (update) {
         newRootNode = update
@@ -75,11 +76,7 @@ export function morphRootNode(
   if (rootNode !== newRootNode) {
     if (newRootNode != null) {
       if (isNode(newRootNode)) {
-        if (
-          DEV &&
-          isFragment(newRootNode) &&
-          !kAlienFragmentNodes(newRootNode)
-        ) {
+        if (DEV && isFragment(newRootNode) && !getFragmentNodes(newRootNode)) {
           throw Error(
             'DocumentFragment must be created with JSX to be returned by a component.'
           )
@@ -94,7 +91,7 @@ export function morphRootNode(
       if (
         rootNode &&
         isDeferredNode(newRootNode) &&
-        rootKey === kAlienElementKey(newRootNode) &&
+        rootKey === getElementKey(newRootNode) &&
         compareNodeWithTag(rootNode, newRootNode.tag)
       ) {
         if (isFunction(newRootNode.tag)) {
@@ -139,7 +136,7 @@ export function morphRootNode(
         let replacedNode = rootNode
         if (isFragment(replacedNode)) {
           // Remove any nodes owned by the old fragment.
-          const replacedNodes = kAlienFragmentNodes(replacedNode)!
+          const replacedNodes = getFragmentNodes(replacedNode)!
           if (replacedNodes[0].parentElement) {
             replacedNodes.slice(1).forEach(node => unmount(node))
           }
@@ -169,13 +166,13 @@ export function morphRootNode(
       // fragment"), the fragment's bookkeeping must be updated whenever the
       // component's root node is replaced.
       if (rootNode) {
-        const parentFragment = kAlienParentFragment(rootNode)
+        const parentFragment = getParentFragment(rootNode)
         if (parentFragment) {
-          kAlienParentFragment(newRootNode, parentFragment)
+          setParentFragment(newRootNode, parentFragment)
           updateParentFragment(
             parentFragment,
-            kAlienFragmentNodes(rootNode) || [rootNode as AnyElement],
-            kAlienFragmentNodes(newRootNode) || [newRootNode as AnyElement]
+            getFragmentNodes(rootNode) || [rootNode as AnyElement],
+            getFragmentNodes(newRootNode) || [newRootNode as AnyElement]
           )
         }
       }
@@ -210,9 +207,9 @@ function fromSameDeeperComponent(
   if (prev === next) {
     return true
   }
-  const nextTags = kAlienElementTags(next)
+  const nextTags = getElementTags(next)
   if (nextTags) {
-    const prevTags = kAlienElementTags(prev)!
+    const prevTags = getElementTags(prev)!
     for (const [prevTag, prevInstance] of prevTags) {
       for (const [nextTag, nextInstance] of nextTags) {
         return nextTag === prevTag && nextInstance === prevInstance

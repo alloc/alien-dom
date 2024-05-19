@@ -14,7 +14,11 @@ import { forwardContext } from '../internal/context'
 import { endOfFragment } from '../internal/fragment'
 import { currentNodeStore, expectCurrentComponent } from '../internal/global'
 import { NodeStore } from '../internal/nodeStore'
-import { kAlienElementKey, kAlienElementTags } from '../internal/symbols'
+import {
+  getElementKey,
+  getElementTags,
+  setElementKey,
+} from '../internal/symbols'
 import { AnyDeferredNode } from '../jsx-dom/node'
 import { UnresolvedChild } from '../jsx-dom/resolveChildren'
 import { JSX } from '../types'
@@ -253,7 +257,7 @@ function getArrayViewItemKey(view: ArrayViewState<any>, itemKey: number) {
 function getArrayViewItemNode(rootNode: ChildNode | DocumentFragment) {
   // If a composite element is returned, keep track of its component
   // instance instead of the DOM node, since it may change without notice.
-  const tags = kAlienElementTags(rootNode)
+  const tags = getElementTags(rootNode)
   return (tags && Array.from(tags.values()).pop()) || rootNode
 }
 
@@ -262,10 +266,10 @@ function validateArrayViewItemResult(
   itemResult: UnresolvedChild,
   itemKey: JSX.ElementKey
 ) {
-  const rootKey = kAlienElementKey(rootNode)
+  const rootKey = getElementKey(rootNode)
 
   if (!itemResult) {
-    kAlienElementKey(rootNode, itemKey)
+    setElementKey(rootNode, itemKey)
   } else if (DEV && rootKey !== itemKey) {
     throw Error(
       `ArrayView item key mismatch. Expected ${JSON.stringify(

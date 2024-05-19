@@ -4,6 +4,7 @@ import { Fragment } from '../components/Fragment'
 import { applyKeyProp } from '../internal/applyProp'
 import { wrapWithFragment } from '../internal/fragment'
 import { currentNodeStore } from '../internal/global'
+import { hasPrivate } from '../internal/privateSymbol'
 import { kAlienStateless } from '../internal/symbols'
 import { lastValue } from '../internal/util'
 import type { FunctionComponent, JSX } from '../types'
@@ -77,7 +78,7 @@ export function jsx(
       // never deferred, since they operate under the assumption that they run
       // immediately when they're declared.
       node =
-        shouldDefer && !kAlienStateless.in(tag)
+        shouldDefer && !hasPrivate(tag, kAlienStateless)
           ? deferCompositeNode(tag, props)
           : createCompositeNode(tag, props)
     } else {

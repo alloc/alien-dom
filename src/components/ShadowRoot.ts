@@ -1,4 +1,5 @@
 import { kAlienNodeType, kShadowRootNodeType } from '../internal/constants'
+import { setPrivate } from '../internal/privateSymbol'
 import { kAlienStateless } from '../internal/symbols'
 import type { ShadowRootNode } from '../jsx-dom/node'
 import { resolveChildren } from '../jsx-dom/resolveChildren'
@@ -17,4 +18,4 @@ export function ShadowRoot({ children, ...props }: ShadowRootProps): any {
   } satisfies ShadowRootNode
 }
 
-kAlienStateless(ShadowRoot, true)
+setPrivate(ShadowRoot, kAlienStateless, true)

@@ -4,7 +4,7 @@ import { Disposable, createDisposable } from '../addons/disposable'
 import { ref } from '../core/observable'
 import { isDocument } from '../internal/duck'
 import { expectCurrentComponent } from '../internal/global'
-import { kAlienHostProps } from '../internal/symbols'
+import { getHostProps } from '../internal/symbols'
 import { noop, toArray } from '../internal/util'
 import { EffectResult, useEffect } from './useEffect'
 import { useState } from './useState'
@@ -106,7 +106,7 @@ const initKeyBinding = (
         this.effect?.dispose()
         return
       }
-      const hostProps = kAlienHostProps(element)!
+      const hostProps = getHostProps(element)!
       enableKeyBinding(element, this, options)
       this.effect = hostProps.addEffect(
         createDisposable([element, this, options], disableKeyBinding)

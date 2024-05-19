@@ -1,10 +1,11 @@
 import { isElementProxy } from '../addons/elementProxy'
 import type { AlienComponent } from '../internal/component'
+import { getPrivate } from '../internal/privateSymbol'
 import {
+  getElementTags,
+  getFragmentNodes,
+  getHostProps,
   kAlienEffects,
-  kAlienElementTags,
-  kAlienFragmentNodes,
-  kAlienHostProps,
 } from '../internal/symbols'
 import { isElement, isFragment } from './typeChecking'
 
@@ -37,7 +38,7 @@ function unmountTree(
   // Recurse through the last descendants first, so effects are disabled
   // bottom-up in reverse order.
   if (isFragment(node)) {
-    const childNodes = kAlienFragmentNodes(node) || Array.from(node.childNodes)
+    const childNodes = getFragmentNodes(node) || Array.from(node.childNodes)
     for (let i = childNodes.length - 1; i >= 0; i--) {
       const childNode = childNodes[i]
       if (childNode) {
@@ -55,14 +56,14 @@ function unmountTree(
       }
 
       // Disconnect any persistent effects or element refs.
-      const hostProps = kAlienHostProps(node)
+      const hostProps = getHostProps(node)
       hostProps?.unmount()
     }
 
-    const effects = kAlienEffects(node)
+    const effects = getPrivate(node, kAlienEffects)
     effects?.disable(true)
 
-    const tags = kAlienElementTags(node)
+    const tags = getElementTags(node)
     if (tags) {
       // If a node is the root node of multiple components, the deepest
       // component is disabled first.

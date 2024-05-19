@@ -1,6 +1,7 @@
 import { createFragment } from '../components/Fragment'
 import { useRef } from '../hooks'
 import { forwardContext, getContext, setContext } from '../internal/context'
+import { setPrivate } from '../internal/privateSymbol'
 import { kAlienInitialContext } from '../internal/symbols'
 import type { JSX } from '../types/jsx'
 import { Ref, ref } from './observable'
@@ -64,7 +65,7 @@ export function defineContext<T>(initial?: T) {
     return null
   }
 
-  kAlienInitialContext(Context, initial)
+  setPrivate(Context, kAlienInitialContext, initial)
 
   if (isForwardedContext) {
     Context.forward = (fn: any, ...args: any[]) => {

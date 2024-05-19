@@ -1,5 +1,6 @@
 import { AlienComponent } from '../internal/component'
 import { fragmentToChildNodes } from '../internal/fragment'
+import { getPrivate } from '../internal/privateSymbol'
 import { kAlienStateless } from '../internal/symbols'
 import { findFirstElement, findLastElement } from '../internal/traversal'
 import { FunctionComponent } from '../types'
@@ -40,7 +41,7 @@ export function renderComponent<Props extends object = {}>(
   tag: FunctionComponent<Props>,
   initialProps = {} as Props
 ): ComponentNode<Props> {
-  if (kAlienStateless(tag)) {
+  if (getPrivate(tag, kAlienStateless)) {
     throw Error('renderComponent doesn’t work with stateless components.')
   }
   return new Component(tag, initialProps) as any

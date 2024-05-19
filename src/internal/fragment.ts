@@ -14,11 +14,12 @@ import type { JSX } from '../types/jsx'
 import { ContextMap } from './context'
 import { currentNodeStore } from './global'
 import {
-  kAlienElementKey,
-  kAlienElementPosition,
-  kAlienFragmentKeys,
-  kAlienFragmentNodes,
-  kAlienParentFragment,
+  getElementKey,
+  getElementPosition,
+  getFragmentNodes,
+  getParentFragment,
+  setFragmentKeys,
+  setFragmentNodes,
 } from './symbols'
 import { at, lastValue } from './util'
 
@@ -62,7 +63,7 @@ export function wrapWithFragment(
   )
   if (isDeferred) {
     const node = deferCompositeNode(Fragment, null, children)
-    kAlienFragmentKeys(node, childKeys)
+    setFragmentKeys(node, childKeys)
     return node
   }
   return createFragmentNode(children, childKeys)
@@ -73,7 +74,7 @@ function isDeferredChild(child: ResolvedChild) {
     return true
   }
   if (child != null) {
-    const key = kAlienElementKey(child)
+    const key = getElementKey(child)
     if (key != null) {
       const nodeStore = lastValue(currentNodeStore)
       if (nodeStore) {
@@ -89,7 +90,7 @@ export function updateParentFragment(
   oldNodes: (ChildNode | undefined)[],
   newNodes: (ChildNode | undefined)[]
 ) {
-  const parentFragment = kAlienParentFragment(fragment)
+  const parentFragment = getParentFragment(fragment)
   if (parentFragment) {
     spliceFragment(parentFragment, oldNodes, newNodes)
   }
@@ -100,7 +101,7 @@ function spliceFragment(
   oldSlice: (ChildNode | undefined)[],
   newSlice: (ChildNode | undefined)[]
 ) {
-  const oldNodes = kAlienFragmentNodes(fragment)!
+  const oldNodes = getFragmentNodes(fragment)!
   const offset = oldNodes.indexOf(oldSlice[0])
   if (offset < 0) {
     return
@@ -109,23 +110,23 @@ function spliceFragment(
   const newNodes = [...oldNodes] as FragmentNodes
   newNodes.splice(offset, oldSlice.length, ...newSlice)
 
-  const parentPosition = kAlienElementPosition(fragment) ?? ''
+  const parentPosition = getElementPosition(fragment) ?? ''
   const newKeys = newNodes.map(
-    (node, i) => node && (kAlienElementKey(node) || parentPosition + '*' + i)
+    (node, i) => node && (getElementKey(node) || parentPosition + '*' + i)
   )
-  kAlienFragmentKeys(fragment, newKeys)
+  setFragmentKeys(fragment, newKeys)
 
   if (fragment.childNodes.length) {
     const replacements = newNodes.filter(Boolean) as ChildNode[]
     fragment.replaceChildren(...replacements)
   } else {
-    kAlienFragmentNodes(fragment, newNodes)
+    setFragmentNodes(fragment, newNodes)
     updateParentFragment(fragment, oldNodes, newNodes)
   }
 }
 
 export function endOfFragment(fragment: DocumentFragment) {
-  const childNodes = kAlienFragmentNodes(fragment)!
+  const childNodes = getFragmentNodes(fragment)!
   for (let i = -1; i >= -childNodes.length; i--) {
     const childNode = at(childNodes, i)
     if (childNode) {
@@ -138,5 +139,5 @@ export function fragmentToChildNodes<T extends ChildNode = ChildNode>(
   fragment: DocumentFragment,
   match: (child: ChildNode | undefined) => child is T = Boolean as any
 ) {
-  return kAlienFragmentNodes(fragment)!.filter(match)
+  return getFragmentNodes(fragment)!.filter(match)
 }

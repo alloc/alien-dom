@@ -2,6 +2,7 @@ import { ReadonlyRef } from '../core/observable'
 import { evaluateDeferredNode, isDeferredNode } from '../jsx-dom/node'
 import type { JSX } from '../types/jsx'
 import { currentComponent } from './global'
+import { getPrivate, hasPrivate } from './privateSymbol'
 import { kAlienThunkResult } from './symbols'
 import { defineProperty, lastValue } from './util'
 
@@ -15,14 +16,14 @@ export function fromElementThunk<Result extends ElementThunkResult>(
   thunk: () => Result,
   keepDeferred?: boolean
 ): Result {
-  if (!kAlienThunkResult.in(thunk)) {
+  if (!hasPrivate(thunk, kAlienThunkResult)) {
     // The first component to call the thunk owns it.
     const component = lastValue(currentComponent)
     if (!component) {
       return thunk()
     }
 
-    defineProperty(thunk, kAlienThunkResult.symbol, {
+    defineProperty(thunk, kAlienThunkResult, {
       get() {
         // Avoid evaluating an element thunk more than once per render.
         let result: ElementThunkResult = component.newMemos
@@ -45,5 +46,5 @@ export function fromElementThunk<Result extends ElementThunkResult>(
     })
   }
 
-  return kAlienThunkResult(thunk) as any
+  return getPrivate(thunk, kAlienThunkResult) as any
 }
