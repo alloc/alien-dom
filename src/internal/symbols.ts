@@ -27,6 +27,8 @@ export const kAlienRenderFunc =
 export const kAlienStateless = definePrivateSymbol<boolean>('stateless')
 export const kAlienThunkResult =
   definePrivateSymbol<ElementThunkResult>('thunkResult')
+export const kAlienUnmountHandler =
+  definePrivateSymbol<() => void>('unmountHandler')
 
 // The most used symbols get their own accessors.
 export const [getElementKey, setElementKey] =

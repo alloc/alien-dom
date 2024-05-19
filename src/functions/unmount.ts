@@ -6,6 +6,7 @@ import {
   getFragmentNodes,
   getHostProps,
   kAlienEffects,
+  kAlienUnmountHandler,
 } from '../internal/symbols'
 import { isElement, isFragment } from './typeChecking'
 
@@ -76,5 +77,8 @@ function unmountTree(
     if (!skipRemove) {
       node.remove()
     }
+
+    const unmountHandler = getPrivate(node, kAlienUnmountHandler)
+    unmountHandler?.()
   }
 }
