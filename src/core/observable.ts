@@ -1107,6 +1107,7 @@ function processUpdates() {
 
   for (let loops = 0; updateQueue.size > 0; loops++) {
     if (loops > 100) {
+      updateQueue.clear()
       throw (DEV && devError) || Error('Cycle detected')
     }
 
