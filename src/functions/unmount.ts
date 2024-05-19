@@ -24,7 +24,7 @@ export function unmount(
   if (isElementProxy(node)) {
     node = node.toElement()
   }
-  if (node) {
+  if (node?.isConnected) {
     unmountTree(node, skipRemove, keepComponent)
   }
 }
