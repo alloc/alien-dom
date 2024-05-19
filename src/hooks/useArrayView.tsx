@@ -5,7 +5,6 @@ import {
   ArrayRef,
   observeArrayOperations,
 } from '../core/observable'
-import { onMount } from '../core/onMount'
 import { morphRootNode } from '../functions/morphRootNode'
 import { isFragment, isNode } from '../functions/typeChecking'
 import { unmount } from '../functions/unmount'
@@ -26,6 +25,7 @@ import { useCallbackProp } from './useCallbackProp'
 import { useEffect } from './useEffect'
 import { useHookOffset } from './useHookOffset'
 import { useSnapshot } from './useSnapshot'
+import { useView } from './useView'
 
 export type ArrayViewRenderFn<T = any> = (
   item: T,
@@ -37,39 +37,18 @@ export function useArrayView<T>(
   render: ArrayViewRenderFn<T>,
   deps?: readonly any[]
 ): JSX.Element | null {
-  const component = expectCurrentComponent()
-
   if (!array) {
-    useHookOffset(6)
+    useHookOffset(9)
     return null
   }
+
+  const component = expectCurrentComponent()
 
   const view = useSnapshot(initArrayViewState<T>, [array])
   view.context = component.context
 
-  // This effect is responsible for updating the items when the deps change. If
-  // a deps array isn't provided, the items will only be updated if the render
-  // function changes.
+  // Observe array operations and update the view accordingly.
   useEffect(() => {
-    if (view.mounted) {
-      const items = array.peek()
-      renderArrayView(view, { type: 'update', items }, render)
-    }
-  }, deps || [render])
-
-  // Ensure the render function is always up-to-date for new items.
-  render = useCallbackProp(render)
-
-  // This effect is responsible for the initial mount and array observer setup.
-  useEffect(() => {
-    view.mounted = true
-
-    // Mount the initial items when the head is mounted.
-    const mountHandler = onMount(view.head, () => {
-      const items = array.peek()
-      renderArrayView(view, { type: 'mount', items }, render)
-    })
-
     const observer = observeArrayOperations(array, operations => {
       for (const operation of operations) {
         view[operation.type](operation as any, render)
@@ -83,7 +62,32 @@ export function useArrayView<T>(
 
     return () => {
       observer.dispose()
-      mountHandler?.dispose()
+    }
+  }, [array])
+
+  // This effect is responsible for updating the items when the deps change. If
+  // a deps array isn't provided, the items will only be updated if the render
+  // function changes.
+  useEffect(() => {
+    if (view.mounted) {
+      const items = array.peek()
+      renderArrayView(view, { type: 'update', items }, render)
+    } else {
+      view.mounted = true
+    }
+  }, deps || [render])
+
+  // Ensure the render function is always up-to-date for new items.
+  render = useCallbackProp(render)
+
+  // Handle mounting and unmounting side effects.
+  view.head = useView(() => {
+    // Mount the initial items when the head is mounted.
+    const items = array.peek()
+    renderArrayView(view, { type: 'mount', items }, render)
+
+    // Unmount all items when the head is unmounted.
+    return () => {
       for (const node of view.itemNodes) {
         unmount(isNode(node) ? node : node.rootNode)
       }
@@ -99,7 +103,7 @@ let nextViewKey = 1
 
 class ArrayViewState<T = any> implements NodeStore {
   readonly key = nextViewKey++
-  readonly head = document.createTextNode('')
+  head!: ChildNode
   context!: ContextStore
   mounted = false
 
