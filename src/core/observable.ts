@@ -255,23 +255,20 @@ export interface ArrayRef<T>
   observe(index: number): ComputedRef<T>
 }
 
-interface ArrayMutators<T> {
-  push(...items: T[]): number
-  pop(): T | undefined
-  shift(): T | undefined
-  unshift(...items: T[]): number
-  splice(start: number, deleteCount?: number, ...items: T[]): T[]
-}
+interface ArrayMutators<T>
+  extends Pick<
+    Array<T>,
+    'copyWithin' | 'fill' | 'pop' | 'push' | 'reverse' | 'shift' | 'sort' | 'splice' |
+    'unshift' /* prettier-ignore */
+  > {}
 
-interface ArrayIterators<T> {
-  at(index: number): T | undefined
-  indexOf(searchElement: T, fromIndex?: number): number
-  includes(searchElement: T, fromIndex?: number): boolean
-  map<U>(
-    callbackfn: (value: T, index: number, array: T[]) => U,
-    thisArg?: any
-  ): U[]
-}
+interface ArrayIterators<T>
+  extends Pick<
+    Array<T>,
+    'at' | 'concat' | 'entries' | 'every' | 'filter' | 'find' | 'findIndex' | 'flat' | 'flatMap' |
+    'forEach' | 'includes' | 'indexOf' | 'join' | 'keys' | 'lastIndexOf' | 'map' | 'reduce' |
+    'reduceRight' | 'slice' | 'some' | 'values' /* prettier-ignore */
+  > {}
 
 const numberRE = /^\d+$/
 const kLengthRef = /* @__PURE__ */ definePrivateSymbol<Ref<number>>('lengthRef')
@@ -414,6 +411,13 @@ export let arrayRef = <T>(
       return this.value[name](...args)
     }
 
+  const createMethodReducer =
+    <Key>(createMethod: (key: Key) => Function) =>
+    (methods: any, key: Key) => {
+      methods[key] = createMethod(key)
+      return methods
+    }
+
   assignPrototype(ArrayRef.prototype, {
     [kRefType]: 'ArrayRef',
     observe(this: InternalRef, index: number) {
@@ -422,15 +426,15 @@ export let arrayRef = <T>(
         DEV && isString(this.debugId) ? `${this.debugId}[${index}]` : undefined
       )
     },
-    push: arrayMutator('push'),
-    pop: arrayMutator('pop'),
-    shift: arrayMutator('shift'),
-    unshift: arrayMutator('unshift'),
-    splice: arrayMutator('splice'),
-    at: arrayEnumerator('at'),
-    indexOf: arrayEnumerator('indexOf'),
-    includes: arrayEnumerator('includes'),
-    map: arrayEnumerator('map'),
+    ...(
+      ['copyWithin', 'fill', 'pop', 'push', 'reverse', 'shift', 'sort', 'splice',
+       'unshift'] /* prettier-ignore */ as const
+    ).reduce(createMethodReducer(arrayMutator), {}),
+    ...(
+      ['at', 'concat', 'entries', 'every', 'filter', 'find', 'findIndex', 'flat', 'flatMap',
+       'forEach', 'includes', 'indexOf', 'join', 'keys', 'lastIndexOf', 'map', 'reduce',
+       'reduceRight', 'slice', 'some', 'values'] /* prettier-ignore */ as const
+    ).reduce(createMethodReducer(arrayEnumerator), {}),
   })
 
   return arrayRef(init, debugId)
@@ -872,6 +876,17 @@ export class ArrayObserver<T> extends Observer {
         return addOperation && removeOperation
           ? [removeOperation, addOperation]
           : addOperation || removeOperation
+
+      // TODO: These should produce more specific operations.
+      case 'copyWithin':
+      case 'fill':
+      case 'reverse':
+      case 'sort':
+        return {
+          type: 'rebase',
+          oldArray,
+          newArray,
+        }
     }
     throw Error('Unknown array method: ' + method)
   }
