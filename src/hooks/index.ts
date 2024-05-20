@@ -1,4 +1,5 @@
 export * from './useAbortController'
+export * from './useArrayObserver'
 export * from './useArrayRef'
 export * from './useArrayView'
 export * from './useAsync'
