@@ -11,11 +11,6 @@ import { useState } from './useState'
  * where a particular condition is true or a dependency array has
  * changed.
  *
- * ⚠️ The `reset` argument must never switch between a defined and
- * undefined state. This limitation allows the `useResetId` hook to
- * reduce its memory impact to zero when the `reset` argument is
- * undefined.
- *
  * 🪝 This hook adds 4 to the hook offset.
  */
 export function useResetId(reset: ResetOption): number
