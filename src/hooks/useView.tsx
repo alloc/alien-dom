@@ -33,9 +33,15 @@ export function useView(
   const node = useSnapshot(initViewNode, deps)
 
   useEffect(() => {
-    const mountHandler = onMount(node, () => {
+    let mountHandler = onMount(node, function mountEffect(): void {
       const dispose = view(node.parentNode!)
-      setPrivate(node, kAlienUnmountHandler, dispose)
+      setPrivate(node, kAlienUnmountHandler, () => {
+        dispose()
+
+        // Re-attach the mount handler to the node, so that it can be called
+        // again if the node is mounted again.
+        mountHandler = onMount(node, mountEffect)
+      })
     })
 
     return () => {
