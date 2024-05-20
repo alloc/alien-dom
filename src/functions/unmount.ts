@@ -49,6 +49,10 @@ function unmountTree(
   skipRemove?: boolean,
   keepComponent?: AlienComponent | null
 ) {
+  if (!skipRemove) {
+    node.remove()
+  }
+
   if (isElement(node)) {
     // Recurse through the last descendants first, so effects are disabled
     // bottom-up in reverse order.
@@ -76,10 +80,6 @@ function unmountTree(
       if (component === keepComponent) break
       component.dispose()
     }
-  }
-
-  if (!skipRemove) {
-    node.remove()
   }
 
   const unmountHandler = getPrivate(node, kAlienUnmountHandler)
