@@ -1,5 +1,5 @@
-import { onMount } from '../core/onMount'
-import { unmount } from '../functions/unmount'
+import { unmount } from '../core/unmount'
+import { onceMounted } from '../internal/onceMounted'
 import { setPrivate } from '../internal/privateSymbol'
 import { kAlienUnmountHandler, setElementKey } from '../internal/symbols'
 import { useEffect } from './useEffect'
@@ -33,14 +33,14 @@ export function useView(
   const node = useSnapshot(initViewNode, deps)
 
   useEffect(() => {
-    let mountHandler = onMount(node, function mountEffect(): void {
+    let mountHandler = onceMounted(node, function mountEffect(): void {
       const dispose = view(node.parentNode!)
       setPrivate(node, kAlienUnmountHandler, () => {
         dispose()
 
         // Re-attach the mount handler to the node, so that it can be called
         // again if the node is mounted again.
-        mountHandler = onMount(node, mountEffect)
+        mountHandler = onceMounted(node, mountEffect)
       })
     })
 

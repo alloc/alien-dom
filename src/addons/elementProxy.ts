@@ -1,6 +1,6 @@
+import { Disposable } from '../core/disposable'
 import { defineEffectType } from '../core/effects'
 import type { EffectResult } from '../hooks/useEffect'
-import { Disposable } from './disposable'
 
 export type ElementProxy<T extends Element = Element> = T & {
   toElement(): T | null
@@ -87,7 +87,7 @@ class InternalElementProxy<T extends Element = any> {
   }
 }
 
-const onceElementExists = defineEffectType(
+const onceElementExists = /* @__PURE__ */ defineEffectType(
   (ref: InternalElementProxy<any>, effect: (element: any) => EffectResult) => {
     let dispose: EffectResult | undefined
     if (ref._element) {

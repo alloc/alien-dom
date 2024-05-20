@@ -3,7 +3,7 @@ import {
   AnimatedProps,
   SpringAnimation,
   animate,
-} from '../addons/animate'
+} from '../core/animate'
 import { getAnimatedKeys } from '../internal/animate'
 import { expectCurrentEffects } from '../internal/global'
 import { shallowEquals } from '../internal/shallowEquals'

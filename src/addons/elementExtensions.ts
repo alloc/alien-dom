@@ -1,11 +1,11 @@
+import { AnimationsParam, animate } from '../core/animate'
+import { Disposable } from '../core/disposable'
 import {
   AlienBoundEffect,
   AlienEffect,
   AlienMountEffects,
 } from '../core/effects'
 import { observeAs } from '../functions/observeAs'
-import type { AlienEventMethods, AlienStyleMethods } from '../global/element'
-import type { AlienNodeList } from '../global/nodeList'
 import { canMatch } from '../internal/duck'
 import { EffectFlags, enableEffect, getEffects } from '../internal/effects'
 import type {
@@ -18,8 +18,6 @@ import type {
 import { unwrap } from '../internal/unwrap'
 import { UpdateStyle, updateStyle } from '../internal/updateStyle'
 import { CSSAttributes, JSX } from '../types'
-import { AnimationsParam, animate } from './animate'
-import { Disposable } from './disposable'
 import { patchAttributes } from './element/attributes'
 import {
   addClass,
@@ -29,6 +27,8 @@ import {
   removeMatchingClass,
 } from './element/classList'
 import { FromElementProxy } from './elementProxy'
+import type { AlienEventMethods, AlienStyleMethods } from './global/element'
+import type { AlienNodeList } from './global/nodeList'
 
 export interface AlienElementList<Element extends Node = HTMLOrSVGElement>
   extends NodeListOf<Element>,

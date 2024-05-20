@@ -1,5 +1,5 @@
+import type { Booleanish } from '../internal/types'
 import type { AriaAttributes, AriaRole } from './aria'
-import type { Booleanish } from './attr'
 import type { CSSAttributes } from './css'
 import type { ChangeEventHandler, DOMAttributes, EventHandler } from './dom'
 
@@ -714,4 +714,79 @@ export interface HTMLAttributesByTagName {
   video: HTMLVideoAttributes<HTMLVideoElement>
   wbr: HTMLAttributes<HTMLElement>
   webview: HTMLWebViewAttributes<HTMLElement>
+}
+
+export declare namespace HTML {
+  type Anchor = HTMLAnchorElement
+  type Area = HTMLAreaElement
+  type Audio = HTMLAudioElement
+  type Base = HTMLBaseElement
+  type Body = HTMLBodyElement
+  type BR = HTMLBRElement
+  type Button = HTMLButtonElement
+  type Canvas = HTMLCanvasElement
+  type Data = HTMLDataElement
+  type DataList = HTMLDataListElement
+  type Details = HTMLDetailsElement
+  type Dialog = HTMLDialogElement
+  type Directory = HTMLDirectoryElement
+  type Div = HTMLDivElement
+  type DList = HTMLDListElement
+  type Embed = HTMLEmbedElement
+  type FieldSet = HTMLFieldSetElement
+  type Font = HTMLFontElement
+  type Form = HTMLFormElement
+  type Frame = HTMLFrameElement
+  type FrameSet = HTMLFrameSetElement
+  type Head = HTMLHeadElement
+  type Heading = HTMLHeadingElement
+  type HR = HTMLHRElement
+  type HtmlElement = HTMLHtmlElement
+  type IFrame = HTMLIFrameElement
+  type Image = HTMLImageElement
+  type Input = HTMLInputElement
+  type Label = HTMLLabelElement
+  type Legend = HTMLLegendElement
+  type LI = HTMLLIElement
+  type Link = HTMLLinkElement
+  type Map = HTMLMapElement
+  type Marquee = HTMLMarqueeElement
+  type MediaElement = HTMLMediaElement
+  type Menu = HTMLMenuElement
+  type Meta = HTMLMetaElement
+  type Meter = HTMLMeterElement
+  type Mod = HTMLModElement
+  type Object = HTMLObjectElement
+  type OList = HTMLOListElement
+  type OptGroup = HTMLOptGroupElement
+  type Option = HTMLOptionElement
+  type Output = HTMLOutputElement
+  type Paragraph = HTMLParagraphElement
+  type Param = HTMLParamElement
+  type Picture = HTMLPictureElement
+  type Pre = HTMLPreElement
+  type Progress = HTMLProgressElement
+  type Quote = HTMLQuoteElement
+  type Script = HTMLScriptElement
+  type Select = HTMLSelectElement
+  type Slot = HTMLSlotElement
+  type Source = HTMLSourceElement
+  type Span = HTMLSpanElement
+  type Style = HTMLStyleElement
+  type Table = HTMLTableElement
+  type TableCaption = HTMLTableCaptionElement
+  type TableCell = HTMLTableCellElement
+  type TableCol = HTMLTableColElement
+  type TableDataCell = HTMLTableDataCellElement
+  type TableHeaderCell = HTMLTableHeaderCellElement
+  type TableRow = HTMLTableRowElement
+  type TableSection = HTMLTableSectionElement
+  type Template = HTMLTemplateElement
+  type TextArea = HTMLTextAreaElement
+  type Time = HTMLTimeElement
+  type Title = HTMLTitleElement
+  type Track = HTMLTrackElement
+  type UList = HTMLUListElement
+  type Unknown = HTMLUnknownElement
+  type Video = HTMLVideoElement
 }

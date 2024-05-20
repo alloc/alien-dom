@@ -34,7 +34,16 @@ function checkMount() {
   }
 }
 
-export function onMount<T extends Node>(node: T, callback: (node: T) => void) {
+/**
+ * Call the `callback` the next time the given `node` is connected to a document
+ * node. If the `node` is already connected, the `callback` is called
+ * immediately.
+ * @internal
+ */
+export function onceMounted<T extends Node>(
+  node: T,
+  callback: (node: T) => void
+) {
   if (node.isConnected) {
     callback(node)
     return

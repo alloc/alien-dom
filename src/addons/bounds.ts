@@ -1,8 +1,8 @@
+import { Disposable, createDisposable } from '../core/disposable'
 import { ComputedRef, computed, ref } from '../core/observable'
 import { getHostProps } from '../internal/symbols'
 import { AnyElement } from '../internal/types'
 import { defineProperty } from '../internal/util'
-import { Disposable, createDisposable } from './disposable'
 
 export class ObservableBounds {
   constructor(element?: AnyElement | null) {

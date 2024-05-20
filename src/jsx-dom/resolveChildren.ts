@@ -10,7 +10,7 @@ import {
   getFragmentNodes,
   setElementPosition,
 } from '../internal/symbols'
-import { lastValue } from '../internal/util'
+import { lastValue, noop } from '../internal/util'
 import { Fragment } from '../jsx-dom/jsx-runtime'
 import type { JSX } from '../types/jsx'
 import {
@@ -20,7 +20,6 @@ import {
   isDeferredNode,
   isShadowRoot,
 } from './node'
-import { noop } from './util'
 
 type Thunkable<T> = T | (() => T)
 

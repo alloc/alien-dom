@@ -5,7 +5,7 @@ import type {
   SpringConfig,
   StepAnimation,
   StepAnimationFn,
-} from '../../addons/animate'
+} from '../../core/animate'
 import { HTMLOrSVGElement } from '../types'
 import type { AnimatedTransform } from './transform'
 

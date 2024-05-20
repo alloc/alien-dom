@@ -158,7 +158,7 @@ type DepthFirstEffect = [
 
 let depthFirstBatch: DepthFirstEffect[] | null = null
 
-const createElementObserver = defineEffectType(
+const createElementObserver = /* @__PURE__ */ defineEffectType(
   (
     target: ChildNode,
     key: 'onAdded' | 'onRemoved',

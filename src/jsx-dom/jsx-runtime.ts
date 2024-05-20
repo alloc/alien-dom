@@ -6,7 +6,7 @@ import { wrapWithFragment } from '../internal/fragment'
 import { currentNodeStore } from '../internal/global'
 import { hasPrivate } from '../internal/privateSymbol'
 import { kAlienStateless } from '../internal/symbols'
-import { lastValue } from '../internal/util'
+import { compareNodeWithTag, lastValue } from '../internal/util'
 import type { FunctionComponent, JSX } from '../types'
 import {
   AnyDeferredNode,
@@ -17,7 +17,6 @@ import {
   deferHostNode,
   isTemplateNode,
 } from './node'
-import { compareNodeWithTag } from './util'
 
 export { Fragment }
 export type { JSX }

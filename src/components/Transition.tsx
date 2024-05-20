@@ -1,7 +1,7 @@
 import { isFunction, isPromiseLike } from '@alloc/is'
 import type { Falsy } from '@alloc/types'
-import { AnimatedProps, SpringAnimation, animate } from '../addons/animate'
 import { Promisable } from '../addons/promises'
+import { AnimatedProps, SpringAnimation, animate } from '../core/animate'
 import { restoreNodeReferences } from '../functions/restoreNodeReferences'
 import { toElements } from '../functions/toElements'
 import { isNode } from '../functions/typeChecking'

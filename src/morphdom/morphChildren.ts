@@ -1,7 +1,7 @@
 import { isArray, isFunction } from '@alloc/is'
 import { Falsy } from '@alloc/types'
+import { unmount } from '../core/unmount'
 import { getElementIdentity } from '../functions/getElementIdentity'
-import { unmount } from '../functions/unmount'
 import { AlienComponent } from '../internal/component'
 import { hasTagName, isElement, isFragment, isTextNode } from '../internal/duck'
 import { FragmentNodes, endOfFragment } from '../internal/fragment'

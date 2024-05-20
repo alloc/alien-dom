@@ -5,9 +5,9 @@ import {
   ArrayRef,
   observeArrayOperations,
 } from '../core/observable'
+import { unmount } from '../core/unmount'
 import { morphRootNode } from '../functions/morphRootNode'
 import { isFragment, isNode } from '../functions/typeChecking'
-import { unmount } from '../functions/unmount'
 import { AlienComponent } from '../internal/component'
 import { forwardContext } from '../internal/context'
 import { endOfFragment } from '../internal/fragment'

@@ -1,4 +1,3 @@
-import { createAlienElementList } from '../global/nodeList'
 import { hasForEach, isIterable } from '../internal/duck'
 import {
   AlienSelect,
@@ -7,6 +6,7 @@ import {
   HTMLOrSVGElement,
 } from '../internal/types'
 import type { AlienElement, AlienElementList } from './elementExtensions'
+import { createAlienElementList } from './global/nodeList'
 
 export function $<Element extends AlienTag<HTMLOrSVGElement>>(
   element: AnyElement

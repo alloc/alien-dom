@@ -1,4 +1,5 @@
 import { isElementProxy } from '../addons/elementProxy'
+import { isElement, isFragment } from '../functions/typeChecking'
 import type { AlienComponent } from '../internal/component'
 import { getPrivate } from '../internal/privateSymbol'
 import {
@@ -8,7 +9,6 @@ import {
   kAlienEffects,
   kAlienUnmountHandler,
 } from '../internal/symbols'
-import { isElement, isFragment } from './typeChecking'
 
 /**
  * Any JSX element created outside of a component must be removed from the DOM

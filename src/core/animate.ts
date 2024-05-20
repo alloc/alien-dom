@@ -1,6 +1,7 @@
 import { isBoolean, isFunction, isNumber, isPromise, isString } from '@alloc/is'
 import { Any, Falsy } from '@alloc/types'
 import { Color, mixColor, parseColor } from 'linear-color'
+import { AlienSelectable } from '../addons/selectors'
 import { isNode } from '../functions/typeChecking'
 import {
   applyAnimatedValue,
@@ -19,14 +20,14 @@ import {
   ResolvedSpringConfig,
   SpringTimeline,
 } from '../internal/animate/types'
-import { animatedElements } from '../internal/global'
 import { getPrivate, setPrivate } from '../internal/privateSymbol'
+import { isSvgChild } from '../internal/svg'
 import { cssTransformDefaults, cssTransformUnits } from '../internal/transform'
 import { AnyElement, HTMLOrSVGElement } from '../internal/types'
 import { keys, toArray } from '../internal/util'
-import { isSvgChild } from '../jsx-dom/svg-tags'
 import { CSSLength, CSSTransformAttributes } from '../types'
-import { AlienSelectable } from './selectors'
+
+const animatedElements = new Map<HTMLOrSVGElement, AnimatedElement>()
 
 export type SpringAnimation<
   Element extends AnyElement = any,

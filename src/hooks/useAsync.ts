@@ -1,6 +1,6 @@
 import { isFunction, isPlainObject } from '@alloc/is'
 import { Exclusive, Falsy } from '@alloc/types'
-import { Disposable } from '../addons/disposable'
+import { Disposable } from '../core/disposable'
 import { ref } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { keys } from '../internal/util'

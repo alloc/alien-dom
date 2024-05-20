@@ -1,6 +1,7 @@
 import { isFunction } from '@alloc/is'
 import { Fragment } from '../components/Fragment'
 import { ContextStore } from '../core/context'
+import { unmount } from '../core/unmount'
 import { isChildrenFragment } from '../hooks'
 import { isElement, isFragment, isNode, isTextNode } from '../internal/duck'
 import { updateParentFragment, wrapWithFragment } from '../internal/fragment'
@@ -27,7 +28,6 @@ import { morph } from '../morphdom/morph'
 import { morphComposite } from '../morphdom/morphComposite'
 import { morphFragment } from '../morphdom/morphFragment'
 import { JSX } from '../types/jsx'
-import { unmount } from './unmount'
 
 /**
  * This is the exact same function used by JSX components to resolve their

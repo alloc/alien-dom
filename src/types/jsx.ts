@@ -2,8 +2,8 @@ import type { FlatReadonlyRef, ReadonlyRef } from '../core/observable'
 import type { ChildrenFragment } from '../hooks/useChildren'
 import type { AnyElement } from '../internal/types'
 import type { AlienNode } from '../jsx-dom/node'
-import { FunctionComponent } from './component'
-import { CSSAttributes } from './css'
+import type { FunctionComponent } from './component'
+import type { CSSAttributes } from './css'
 import type { EventHandler } from './dom'
 import type {
   HTMLAttributes,
@@ -14,7 +14,7 @@ import type {
   HTMLStyleAttribute,
   HTMLTagName,
 } from './html'
-import { SVGAttributes, SVGAttributesByTagName, SVGTagName } from './svg'
+import type { SVGAttributes, SVGAttributesByTagName, SVGTagName } from './svg'
 
 type Thunk<T = any> = () => T
 type Thunkable<T> = T | Thunk<T>

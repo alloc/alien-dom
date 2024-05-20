@@ -1,9 +1,9 @@
 import { isFunction } from '@alloc/is'
+import { Disposable } from '../core/disposable'
 import { AlienBoundEffect, createEffect } from '../core/effects'
 import { isNode } from '../internal/duck'
 import { makeIterable } from '../internal/iterable'
 import { noop } from '../internal/util'
-import { Disposable } from './disposable'
 
 /**
  * Channels are strongly typed event buses.

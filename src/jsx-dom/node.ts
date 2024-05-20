@@ -19,6 +19,7 @@ import { FragmentKeys, FragmentNodes } from '../internal/fragment'
 import { currentEffects } from '../internal/global'
 import { HostProps } from '../internal/hostProps'
 import { hasPrivate } from '../internal/privateSymbol'
+import { svgTags } from '../internal/svg'
 import {
   getElementKey,
   getElementPosition,
@@ -30,14 +31,12 @@ import {
   setFragmentNodes,
 } from '../internal/symbols'
 import { HTMLOrSVGElement } from '../internal/types'
-import { lastValue } from '../internal/util'
+import { lastValue, noop } from '../internal/util'
 import { SVGNamespace } from '../jsx-dom/jsx-runtime'
 import { FunctionComponent } from '../types'
 import type { JSX } from '../types/jsx'
 import { appendChild } from './appendChild'
 import { resolveChildren, type ResolvedChild } from './resolveChildren'
-import { svgTags } from './svg-tags'
-import { noop } from './util'
 
 export type AlienNode =
   | ShadowRootNode

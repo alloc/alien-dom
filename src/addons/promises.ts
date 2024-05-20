@@ -1,6 +1,6 @@
+import { attachDisposer, isDisposable } from '../core/disposable'
 import { ref } from '../core/observable'
 import { defineProperty, noop } from '../internal/util'
-import { attachDisposer, isDisposable } from './disposable'
 
 export type Promisable<T> = T | PromiseLike<T>
 

@@ -1,6 +1,5 @@
 import { isFunction, isString } from '@alloc/is'
 import { Falsy } from '@alloc/types'
-import { Disposable, attachDisposer } from '../addons/disposable'
 import { Promisable } from '../addons/promises'
 import {
   definePrivateSymbol,
@@ -8,6 +7,7 @@ import {
   setPrivate,
 } from '../internal/privateSymbol'
 import { forEach, noop } from '../internal/util'
+import { Disposable, attachDisposer } from './disposable'
 
 const kRefType = Symbol.for('refType')
 

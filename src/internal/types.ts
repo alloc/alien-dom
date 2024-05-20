@@ -9,6 +9,9 @@ export type {
   HTMLOrSVGElement as DefaultElement,
 }
 
+export type VarArgs<T> = T | readonly T[]
+export type Booleanish = boolean | 'true' | 'false'
+
 /**
  * Allows type casting via tag name (eg: `"a"` → `HTMLAnchorElement`)
  */

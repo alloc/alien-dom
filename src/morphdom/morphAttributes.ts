@@ -1,5 +1,5 @@
 import { isNumber } from '@alloc/is'
-import { Disposable } from '../addons/disposable'
+import { Disposable } from '../core/disposable'
 import {
   parseTransform,
   readTransform,
@@ -12,12 +12,12 @@ import {
   applyProp,
 } from '../internal/applyProp'
 import { flattenStyleProp } from '../internal/flattenStyleProp'
+import { isSvgChild } from '../internal/svg'
 import { getHostProps } from '../internal/symbols'
 import { cssTransformAliases, cssTransformUnits } from '../internal/transform'
 import { HTMLOrSVGElement } from '../internal/types'
 import { UpdateStyle, updateStyle } from '../internal/updateStyle'
 import { forEach, keys, noop } from '../internal/util'
-import { isSvgChild } from '../jsx-dom/svg-tags'
 
 export function morphAttributes(
   fromNode: HTMLOrSVGElement,

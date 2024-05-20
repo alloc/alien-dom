@@ -1,5 +1,5 @@
 import { isArray } from '@alloc/is'
-import { Disposable, createDisposable } from '../addons/disposable'
+import { Disposable, createDisposable } from '../core/disposable'
 import { ReadonlyRef, observe } from '../core/observable'
 import { JSX } from '../types/jsx'
 import { setHostProps } from './symbols'

@@ -1,7 +1,7 @@
 import { isFunction } from '@alloc/is'
 import { Falsy } from '@alloc/types'
 import { DisposablePromise } from '../addons/promises'
-import { VarArgs } from '../types'
+import { VarArgs } from '../internal/types'
 import { EffectResult, useEffect } from './useEffect'
 
 type Yield = VarArgs<

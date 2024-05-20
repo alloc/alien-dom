@@ -10,7 +10,7 @@ type EventHandler<Event> =
  * effect is added to the current effect context, just like any
  * `createEffect` call would be.
  */
-export const createEventEffect = defineEffectType(
+export const createEventEffect = /* @__PURE__ */ defineEffectType(
   <Target extends EventTarget, EventName extends string>(
     target: Target,
     eventName: EventName,

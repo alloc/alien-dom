@@ -1,5 +1,5 @@
 import { isFunction } from '@alloc/is'
-import { toArray } from '../../jsx-dom/util'
+import { toArray } from '../../internal/util'
 
 export function hasClass(
   context: HTMLElement | SVGSVGElement,

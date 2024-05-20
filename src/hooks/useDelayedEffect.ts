@@ -1,8 +1,8 @@
 import { isFunction, isNumber } from '@alloc/is'
 import { Falsy } from '@alloc/types'
 import { DisposablePromise } from '../addons/promises'
+import { VarArgs } from '../internal/types'
 import { toArray } from '../internal/util'
-import { VarArgs } from '../types'
 import { EffectCallback, useWrappedEffect } from './useEffect'
 
 /**

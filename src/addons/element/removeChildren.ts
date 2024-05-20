@@ -1,4 +1,4 @@
-import { unmount } from '../../functions/unmount'
+import { unmount } from '../../core/unmount'
 import { nodeFilter } from './nodeFilter'
 import { AlienNodeFilter } from './types'
 

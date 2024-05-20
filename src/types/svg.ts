@@ -1,7 +1,7 @@
+import type { Booleanish } from '../internal/types'
 import type { AriaAttributes, AriaRole } from './aria'
-import type { Booleanish } from './attr'
 import type { DOMAttributes } from './dom'
-import { HTMLAttributes } from './html'
+import type { HTMLAttributes } from './html'
 
 // this list is "complete" in that it contains every SVG attribute
 // that React supports, but the types can be improved.
@@ -365,4 +365,65 @@ export interface SVGAttributesByTagName {
   tspan: SVGAttributes<SVGTSpanElement>
   use: SVGAttributes<SVGUseElement>
   view: SVGAttributes<SVGViewElement>
+}
+
+export declare namespace SVG {
+  type Anchor = SVGAElement
+  type Animate = SVGAnimateElement
+  type AnimateMotion = SVGAnimateMotionElement
+  type AnimateTransform = SVGAnimateTransformElement
+  type Circle = SVGCircleElement
+  type ClipPath = SVGClipPathElement
+  type Defs = SVGDefsElement
+  type Desc = SVGDescElement
+  type Ellipse = SVGEllipseElement
+  type FEBlend = SVGFEBlendElement
+  type FEColorMatrix = SVGFEColorMatrixElement
+  type FEComponentTransfer = SVGFEComponentTransferElement
+  type FEConvolveMatrix = SVGFEConvolveMatrixElement
+  type FEDiffuseLighting = SVGFEDiffuseLightingElement
+  type FEDisplacementMap = SVGFEDisplacementMapElement
+  type FEDistantLight = SVGFEDistantLightElement
+  type FEDropShadow = SVGFEDropShadowElement
+  type FEFlood = SVGFEFloodElement
+  type FEFuncA = SVGFEFuncAElement
+  type FEFuncB = SVGFEFuncBElement
+  type FEFuncG = SVGFEFuncGElement
+  type FEFuncR = SVGFEFuncRElement
+  type FEGaussianBlur = SVGFEGaussianBlurElement
+  type FEImage = SVGFEImageElement
+  type FEMerge = SVGFEMergeElement
+  type FEMergeNode = SVGFEMergeNodeElement
+  type FEMorphology = SVGFEMorphologyElement
+  type FEOffset = SVGFEOffsetElement
+  type FEPointLight = SVGFEPointLightElement
+  type FETile = SVGFETileElement
+  type FETurbulence = SVGFETurbulenceElement
+  type Filter = SVGFilterElement
+  type Foreign = SVGForeignObjectElement
+  type G = SVGGElement
+  type Gradient = SVGGradientElement
+  type Image = SVGImageElement
+  type Line = SVGLineElement
+  type LinearGradient = SVGLinearGradientElement
+  type Marker = SVGMarkerElement
+  type Mask = SVGMaskElement
+  type Metadata = SVGMetadataElement
+  type Path = SVGPathElement
+  type Pattern = SVGPatternElement
+  type Polygon = SVGPolygonElement
+  type Polyline = SVGPolylineElement
+  type RadialGradient = SVGRadialGradientElement
+  type Rect = SVGRectElement
+  type Script = SVGScriptElement
+  type Stop = SVGStopElement
+  type Style = SVGStyleElement
+  type SVG = SVGSVGElement
+  type Switch = SVGSwitchElement
+  type Symbol = SVGSymbolElement
+  type Text = SVGTextElement
+  type TextPath = SVGTextPathElement
+  type Title = SVGTitleElement
+  type Use = SVGUseElement
+  type View = SVGViewElement
 }

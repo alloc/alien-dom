@@ -1,5 +1,4 @@
 import { isArray, isFunction } from '@alloc/is'
-import { Disposable, attachDisposer } from '../addons/disposable'
 import { onMount, onUnmount } from '../addons/domObserver'
 import { Promisable } from '../addons/promises'
 import { EffectResult } from '../hooks'
@@ -17,6 +16,7 @@ import { popValue } from '../internal/stack'
 import { kAlienEffects } from '../internal/symbols'
 import type { AnyElement } from '../internal/types'
 import { lastValue } from '../internal/util'
+import { Disposable, attachDisposer } from './disposable'
 
 export interface AlienEffect<
   Target = any,

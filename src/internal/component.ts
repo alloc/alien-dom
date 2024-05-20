@@ -8,7 +8,6 @@ import {
   collectAccessedRefs,
   ref,
 } from '../core/observable'
-import { onMount } from '../core/onMount'
 import { attachRef } from '../functions/attachRef'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { morphRootNode } from '../functions/morphRootNode'
@@ -25,6 +24,7 @@ import {
   expectCurrentComponent,
 } from './global'
 import { NodeStore } from './nodeStore'
+import { onceMounted } from './onceMounted'
 import { hasPrivate, setPrivate } from './privateSymbol'
 import { popValue } from './stack'
 import {
@@ -254,7 +254,7 @@ export class AlienComponent<Props extends object = any>
       // Wait for the root node to be connected to the DOM before running its
       // side effects. Note that a memory leak occurs if the root node is never
       // connected to the DOM.
-      onMount(rootNode, () => {
+      onceMounted(rootNode, () => {
         if (this.effects === newEffects) {
           newEffects.enable()
         }

@@ -1,4 +1,4 @@
-import { HTMLOrSVGElement } from '../internal/types'
+import { HTMLOrSVGElement } from './types'
 
 export function isSvgChild(element: HTMLOrSVGElement) {
   return !!svgTags[element.tagName] && element.tagName !== 'svg'

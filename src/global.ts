@@ -1,8 +1,8 @@
-import { AnimationsParam } from './addons/animate'
 import { AlienElement, AlienElementList } from './addons/elementExtensions'
 import { FromElementProxy } from './addons/elementProxy'
-import { AlienElementPrototype } from './global/element'
-import { AlienNodeListPrototype } from './global/nodeList'
+import { AlienElementPrototype } from './addons/global/element'
+import { AlienNodeListPrototype } from './addons/global/nodeList'
+import { AnimationsParam } from './core/animate'
 import { AlienSelect, AlienTag } from './internal/types'
 import {
   HTMLAttributesByTagName,

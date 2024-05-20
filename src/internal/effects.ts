@@ -1,5 +1,5 @@
 import { isFunction } from '@alloc/is'
-import { attachDisposer, Disposable } from '../addons/disposable'
+import { attachDisposer, Disposable } from '../core/disposable'
 import { AlienEffect, AlienEffects, AlienMountEffects } from '../core/effects'
 import { currentEffects } from './global'
 import { LinkedList } from './linkedList'

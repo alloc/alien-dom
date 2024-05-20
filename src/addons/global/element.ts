@@ -1,12 +1,12 @@
 import { isNumber } from '@alloc/is'
 import type * as CSS from 'csstype'
-import { Disposable } from '../addons/disposable'
-import { AlienElement, AlienEvent } from '../addons/elementExtensions'
-import { AlienBoundEffect } from '../core/effects'
-import { createEventEffect } from '../internal/eventEffect'
-import { AnyElement, AnyEvent } from '../internal/types'
-import { isUnitlessNumber } from '../jsx-dom/css-props'
-import { CSSLength } from '../types'
+import { AlienElement, AlienEvent } from '../../addons/elementExtensions'
+import { Disposable } from '../../core/disposable'
+import { AlienBoundEffect } from '../../core/effects'
+import { isUnitlessNumber } from '../../internal/css'
+import { createEventEffect } from '../../internal/eventEffect'
+import { AnyElement, AnyEvent } from '../../internal/types'
+import { CSSLength } from '../../types'
 
 export const AlienElementPrototype = new Proxy(AlienElement.prototype, {
   get(target, key, receiver) {
