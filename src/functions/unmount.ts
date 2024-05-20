@@ -25,60 +25,63 @@ export function unmount(
     node = node.toElement()
   }
   if (node?.isConnected) {
-    unmountTree(node, skipRemove, keepComponent)
+    if (isFragment(node)) {
+      const childNodes = getFragmentNodes(node) || Array.from(node.childNodes)
+
+      // Recurse through the last descendants first, so effects are disabled
+      // bottom-up in reverse order.
+      for (let i = childNodes.length - 1; i >= 0; i--) {
+        const childNode = childNodes[i]
+        if (childNode) {
+          unmountTree(childNode, skipRemove)
+        }
+      }
+    } else {
+      unmountTree(node, skipRemove, keepComponent)
+    }
   }
 }
 
 // The inner function is defined separately to avoid the overhead of the
 // `isElementProxy` check on every call.
 function unmountTree(
-  node: ChildNode | DocumentFragment,
+  node: ChildNode,
   skipRemove?: boolean,
   keepComponent?: AlienComponent | null
 ) {
-  // Recurse through the last descendants first, so effects are disabled
-  // bottom-up in reverse order.
-  if (isFragment(node)) {
-    const childNodes = getFragmentNodes(node) || Array.from(node.childNodes)
-    for (let i = childNodes.length - 1; i >= 0; i--) {
-      const childNode = childNodes[i]
-      if (childNode) {
-        unmountTree(childNode)
-      }
-    }
-  } else {
-    if (isElement(node)) {
-      for (
-        let childNode = node.lastChild;
-        childNode;
-        childNode = childNode.previousSibling
-      ) {
-        unmountTree(childNode, true)
-      }
-
-      // Disconnect any persistent effects or element refs.
-      const hostProps = getHostProps(node)
-      hostProps?.unmount()
+  if (isElement(node)) {
+    // Recurse through the last descendants first, so effects are disabled
+    // bottom-up in reverse order.
+    for (
+      let childNode = node.lastChild;
+      childNode;
+      childNode = childNode.previousSibling
+    ) {
+      unmountTree(childNode, true)
     }
 
-    const effects = getPrivate(node, kAlienEffects)
-    effects?.disable(true)
-
-    const tags = getElementTags(node)
-    if (tags) {
-      // If a node is the root node of multiple components, the deepest
-      // component is disabled first.
-      for (const component of tags.values()) {
-        if (component === keepComponent) break
-        component.dispose()
-      }
-    }
-
-    if (!skipRemove) {
-      node.remove()
-    }
-
-    const unmountHandler = getPrivate(node, kAlienUnmountHandler)
-    unmountHandler?.()
+    // Disconnect any persistent effects or element refs.
+    const hostProps = getHostProps(node)
+    hostProps?.unmount()
   }
+
+  const effects = getPrivate(node, kAlienEffects)
+  effects?.disable(true)
+
+  const tags = getElementTags(node)
+  if (tags) {
+    // If a node is the root node of multiple components, the deepest
+    // component is disabled first.
+    for (const component of tags.values()) {
+      if (component === keepComponent) break
+      component.dispose()
+    }
+  }
+
+  if (!skipRemove) {
+    node.remove()
+  }
+
+  const unmountHandler = getPrivate(node, kAlienUnmountHandler)
+  unmountHandler?.()
 }
