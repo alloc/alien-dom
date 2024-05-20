@@ -4,6 +4,8 @@ import { useState } from './useState'
 
 /**
  * Creates a `ComputedRef` that is updated when the dependencies change.
+ *
+ * 🪝 This hook adds 1 to the hook offset.
  */
 export function useComputed<T>(
   get: () => T,
