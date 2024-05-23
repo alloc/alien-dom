@@ -4,7 +4,7 @@ import { useConst } from './useConst'
 export type { Refs }
 
 /**
- * Like `useState` but properties are observable. Array properties are wrapped
+ * Like `useConst` but properties are observable. Array properties are wrapped
  * with `ArrayRef` objects. Note that destructured values won't be observable.
  *
  * 🪝 This hook adds 1 to the hook offset.

@@ -10,11 +10,11 @@ import { expectCurrentComponent } from '../internal/global'
  * very useful for custom hooks whose behavior is flexible based on input
  * parameters.
  *
- * Built-in hooks like `useState`, `useMemo`, and `useComputed` require an
+ * Built-in hooks like `useConst`, `useMemo`, and `useComputed` require an
  * offset of 1, while `useRef`, `useEffect`, and `useObserver` require an offset
  * of 2. For other hooks, you must look at their implementation to calculate the
  * required offset. Statements like `component.nextHookIndex++` also increase
- * the required offset (see `useState` for an example).
+ * the required offset (see `useConst` for an example).
  */
 export function useHookOffset(offset: number) {
   const component = expectCurrentComponent()
