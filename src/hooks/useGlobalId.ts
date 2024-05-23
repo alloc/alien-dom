@@ -1,8 +1,6 @@
 import { expectCurrentComponent } from '../internal/global'
 import { createGuid } from '../internal/guid'
 
-let nextId = Number.MIN_SAFE_INTEGER
-
 /**
  * By default, this hook returns a stable guid. If the `reset` argument is true,
  * the guid will change on every render. If the `reset` argument is later
