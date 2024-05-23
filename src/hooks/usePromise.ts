@@ -1,6 +1,6 @@
 import { OpenPromise } from '../addons/promises'
 import { useConst } from './useConst'
-import { useSnapshot } from './useSnapshot'
+import { usePeekMemo } from './usePeekMemo'
 
 const newPromise = <T>() => new OpenPromise<T>()
 
@@ -20,5 +20,5 @@ export function usePromise<T>(deps: readonly any[]): OpenPromise<T>
 
 /** @internal */
 export function usePromise<T>(deps?: readonly any[]): OpenPromise<T> {
-  return deps ? useSnapshot(newPromise<T>, deps) : useConst(newPromise<T>)
+  return deps ? usePeekMemo(newPromise<T>, deps) : useConst(newPromise<T>)
 }

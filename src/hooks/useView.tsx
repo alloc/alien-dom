@@ -3,7 +3,7 @@ import { onceMounted } from '../internal/onceMounted'
 import { setPrivate } from '../internal/privateSymbol'
 import { kAlienUnmountHandler, setElementKey } from '../internal/symbols'
 import { useEffect } from './useEffect'
-import { useSnapshot } from './useSnapshot'
+import { usePeekMemo } from './usePeekMemo'
 
 let nextViewId = 1
 
@@ -30,7 +30,7 @@ export function useView(
   view: (parentNode: ParentNode) => () => void,
   deps: readonly any[]
 ): ChildNode {
-  const node = useSnapshot(initViewNode, deps)
+  const node = usePeekMemo(initViewNode, deps)
 
   useEffect(() => {
     let mountHandler = onceMounted(node, function mountEffect(): void {

@@ -24,7 +24,7 @@ import { JSX } from '../types'
 import { useCallbackProp } from './useCallbackProp'
 import { useEffect } from './useEffect'
 import { useHookOffset } from './useHookOffset'
-import { useSnapshot } from './useSnapshot'
+import { usePeekMemo } from './usePeekMemo'
 import { useView } from './useView'
 
 export type ArrayViewRenderFn<T = any> = (
@@ -44,7 +44,7 @@ export function useArrayView<T>(
 
   const component = expectCurrentComponent()
 
-  const view = useSnapshot(initArrayViewState<T>, [array])
+  const view = usePeekMemo(initArrayViewState<T>, [array])
   view.context = component.context
 
   // This effect is responsible for updating the items when the deps change. If

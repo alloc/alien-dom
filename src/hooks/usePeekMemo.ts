@@ -10,11 +10,11 @@ import { useConst } from './useConst'
  *
  * 🪝 This hook adds 1 to the hook offset.
  */
-export function useSnapshot<T>(
+export function usePeekMemo<T>(
   arg: T | (() => T),
   deps: readonly any[] = []
 ): T {
-  const state = useConst(UseSnapshot, deps)
+  const state = useConst(UsePeekMemo, deps)
   if (depsHaveChanged(deps, state.deps)) {
     state.value = isFunction(arg) ? peek(arg) : arg
     state.deps = deps
@@ -22,7 +22,7 @@ export function useSnapshot<T>(
   return state.value
 }
 
-class UseSnapshot {
+class UsePeekMemo {
   constructor(public deps: readonly any[]) {}
   value: any = undefined
   // This tells the runtime to reset the state after an HMR update.
