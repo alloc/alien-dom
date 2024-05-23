@@ -4,7 +4,7 @@ import { useDepsArray } from './useDepsArray'
 
 /**
  * Create an observable ref that persists between renders. Unlike the `useMemo`
- * hook, the ref is not recreated when the component hot reloads.
+ * hook, the ref is not recreated when the component is hot-reloaded.
  *
  * You may destructure the ref into a `[value, setValue]` tuple.
  *

@@ -200,17 +200,23 @@ function setValue<T>(this: ReadonlyRef<T>, newValue: T) {
   }
 }
 
-Object.defineProperties(Ref.prototype, {
+Object.defineProperties(ReadonlyRef.prototype, {
   0: { get: getValue },
-  1: {
-    get(this: Ref) {
-      return this.set.bind(this)
-    },
-  },
   [Symbol.iterator]: {
     value: function* () {
       yield this[0]
       yield this[1]
+    },
+  },
+  value: {
+    get: getValue,
+  },
+})
+
+Object.defineProperties(Ref.prototype, {
+  1: {
+    get(this: Ref) {
+      return this.set.bind(this)
     },
   },
   value: {
@@ -1025,6 +1031,12 @@ export class ComputedRef<T = any> extends ReadonlyRef<T> {
       return result
     }
   }
+}
+
+export interface ComputedRef<T> {
+  // This allows a computed ref to be destructured as an array for a more
+  // concise way to observe its value during render.
+  readonly 0: T
 }
 
 //

@@ -1,4 +1,4 @@
-import { useEffect, usePeekMemo } from '../hooks'
+import { useEffect, useMemo } from '../hooks'
 import { Refs, createRefs } from '../internal/createRefs'
 
 type CallableProperty<T extends object> = {
@@ -137,7 +137,7 @@ export function useController(
   const init = singleton ? key : params.shift()
   key = singleton ? void 0 : key
 
-  const instance = usePeekMemo(() => {
+  const instance = useMemo(() => {
     if (ctrl['instances']?.has(key)) {
       throw Error(`key ${key} already exists`)
     }

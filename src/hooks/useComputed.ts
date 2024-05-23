@@ -11,13 +11,13 @@ export function useComputed<T>(
   get: () => T,
   deps: readonly any[] = [],
   debugId?: string | number
-): ComputedRef<T> {
+): ComputedRef<T> & [value: T] {
   const state = useConst(UseComputed, deps)
   if (depsHaveChanged(deps, state.deps)) {
     state.ref = computed(get, debugId)
     state.deps = deps
   }
-  return state.ref!
+  return state.ref as any
 }
 
 class UseComputed {

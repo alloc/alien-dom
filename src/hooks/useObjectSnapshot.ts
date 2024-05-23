@@ -1,4 +1,4 @@
-import { usePeekMemo } from './usePeekMemo'
+import { useMemo } from './useMemo'
 
 /**
  * Return the same object reference unless its properties have changed. Strict
@@ -11,5 +11,5 @@ export function useObjectSnapshot(object: any) {
     .filter(k => object[k] !== undefined)
     .sort()
   const values = keys.map(k => object[k])
-  return usePeekMemo(object, [...keys, ...values])
+  return useMemo(object, [...keys, ...values])
 }
