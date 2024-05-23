@@ -1,5 +1,5 @@
 import { createRefs, type Refs } from '../internal/createRefs'
-import { useState } from './useState'
+import { useConst } from './useConst'
 
 export type { Refs }
 
@@ -24,5 +24,5 @@ export function useRefs<T extends object, Params extends any[]>(
 ): Refs<T>
 
 export function useRefs<T extends object>(init: T, ...params: any[]): Refs<T> {
-  return useState(createRefs, init, params)
+  return useConst(createRefs, init, params)
 }

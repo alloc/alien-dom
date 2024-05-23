@@ -1,10 +1,10 @@
 import { DelegatedElementRef, ElementRef } from '../addons/elementRef'
 import { AnyElement } from '../internal/types'
 import { at } from '../internal/util'
-import { useState } from './useState'
+import { useConst } from './useConst'
 
 export const useElementArray = <T extends AnyElement>() =>
-  useState(ElementArray<T>)
+  useConst(ElementArray<T>)
 
 export class ElementArray<T extends AnyElement = AnyElement> extends Array<
   ElementRef<T> | undefined

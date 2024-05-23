@@ -16,7 +16,7 @@ import { AnyElement } from '../internal/types'
 import { UnresolvedChild } from '../jsx-dom/resolveChildren'
 import { morphFragment } from '../morphdom/morphFragment'
 import { JSX } from '../types/jsx'
-import { useState } from './useState'
+import { useConst } from './useConst'
 
 /**
  * Takes the value of a component prop that contains JSX children of any kind
@@ -46,7 +46,7 @@ export function useChildren(
   children: UnresolvedChild,
   deps?: readonly any[]
 ): ChildrenFragment {
-  const hook = useState(UseChildren, deps)
+  const hook = useConst(UseChildren, deps)
   return hook.update(children, deps) as any
 }
 

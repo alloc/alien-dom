@@ -9,7 +9,7 @@ import {
   toMachineProxy,
 } from '../addons/machine'
 import { useCallbackProp } from './useCallbackProp'
-import { useState } from './useState'
+import { useConst } from './useConst'
 
 export function useMachineProxy<T extends MachineType<void>>(
   constructor: MachineClass<T>,
@@ -32,7 +32,7 @@ export function useMachineProxy(
     params = undefined
   }
   const onChangeRef = useCallbackProp(onChange)
-  return useState(initMachineProxy, constructor, params, onChangeRef)
+  return useConst(initMachineProxy, constructor, params, onChangeRef)
 }
 
 function initMachineProxy<T extends MachineType>(

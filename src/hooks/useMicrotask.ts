@@ -1,5 +1,5 @@
 import { expectCurrentComponent } from '../internal/global'
-import { useState } from './useState'
+import { useConst } from './useConst'
 
 /**
  * Run an effect in a microtask after the parent element is set.
@@ -8,7 +8,7 @@ import { useState } from './useState'
  */
 export function useMicrotask(effect: () => void, shouldRun = true) {
   const component = expectCurrentComponent()
-  const state = useState(UseMicrotask)
+  const state = useConst(UseMicrotask)
   if (shouldRun) {
     const nextRun = () => {
       if (nextRun == state.nextRun) {

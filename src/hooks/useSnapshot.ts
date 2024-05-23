@@ -1,7 +1,7 @@
 import { isFunction } from '@alloc/is'
 import { peek } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
-import { useState } from './useState'
+import { useConst } from './useConst'
 
 /**
  * Similar to `useMemo` except the callback is wrapped with `peek()` to ensure
@@ -14,7 +14,7 @@ export function useSnapshot<T>(
   arg: T | (() => T),
   deps: readonly any[] = []
 ): T {
-  const state = useState(UseSnapshot, deps)
+  const state = useConst(UseSnapshot, deps)
   if (depsHaveChanged(deps, state.deps)) {
     state.value = isFunction(arg) ? peek(arg) : arg
     state.deps = deps

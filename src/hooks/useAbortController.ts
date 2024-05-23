@@ -1,6 +1,6 @@
 import { isArray } from '@alloc/is'
+import { useConst } from './useConst'
 import { useDepsArray } from './useDepsArray'
-import { useState } from './useState'
 
 /**
  * Returns a new `AbortController` instance. When the `deps` argument changes,
@@ -33,7 +33,7 @@ export function useAbortController(
   deps?: readonly any[]
 ) {
   const signal = isArray(arg) ? ((deps = arg), undefined) : arg
-  const state = useState(UseAbortController, signal)
+  const state = useConst(UseAbortController, signal)
 
   if (useDepsArray(deps)) {
     state.ctrl.abort()

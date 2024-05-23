@@ -1,8 +1,8 @@
 import { onMount } from '../addons/domObserver'
 import { expectCurrentComponent } from '../internal/global'
 import { getShadowRoot } from '../internal/shadow'
+import { useConst } from './useConst'
 import { EffectResult, useEffect } from './useEffect'
-import { useState } from './useState'
 
 export type EventTargetEffect<Target extends EventTarget = EventTarget> = (
   target: Target | Document
@@ -17,7 +17,7 @@ export type EventTargetEffect<Target extends EventTarget = EventTarget> = (
 export function useEventTarget<Target extends EventTarget>(
   effect: EventTargetEffect<Target>
 ) {
-  const self = useState(initEventTarget, effect)
+  const self = useConst(initEventTarget, effect)
 
   const component = expectCurrentComponent()
   useEffect(() => {

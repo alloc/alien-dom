@@ -9,7 +9,7 @@ import { expectCurrentEffects } from '../internal/global'
 import { shallowEquals } from '../internal/shallowEquals'
 import type { HTMLOrSVGElement } from '../internal/types'
 import { toArray } from '../internal/util'
-import { useState } from './useState'
+import { useConst } from './useConst'
 
 export function useSpring<Element extends HTMLOrSVGElement>(
   element: Element,
@@ -23,7 +23,7 @@ export function useSpring<Element extends HTMLOrSVGElement>(
         from?: Record<string, any>
       })
 
-  const state = useState(UseSpring)
+  const state = useConst(UseSpring)
   if (shouldRun == null) {
     shouldRun = !!to && !shallowEquals(state.to, to)
   }

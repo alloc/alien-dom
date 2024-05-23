@@ -1,6 +1,6 @@
 import { ComputedRef, computed } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
-import { useState } from './useState'
+import { useConst } from './useConst'
 
 /**
  * Creates a `ComputedRef` that is updated when the dependencies change.
@@ -12,7 +12,7 @@ export function useComputed<T>(
   deps: readonly any[] = [],
   debugId?: string | number
 ): ComputedRef<T> {
-  const state = useState(UseComputed, deps)
+  const state = useConst(UseComputed, deps)
   if (depsHaveChanged(deps, state.deps)) {
     state.ref = computed(get, debugId)
     state.deps = deps

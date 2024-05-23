@@ -9,17 +9,17 @@ import { StateInitializer, createState } from '../internal/util'
  *
  * 🪝 This hook adds 1 to the hook offset.
  */
-export function useState<State extends object, Params extends any[]>(
+export function useConst<State extends object, Params extends any[]>(
   init: new (...params: Params) => State,
   ...params: Params
 ): State
 
-export function useState<State extends object, Params extends any[]>(
+export function useConst<State extends object, Params extends any[]>(
   init: (...params: Params) => State,
   ...params: Params
 ): State
 
-export function useState(init: StateInitializer, ...params: any[]) {
+export function useConst(init: StateInitializer, ...params: any[]) {
   const component = expectCurrentComponent()
   const index = component.nextHookIndex++
   return (component.hooks[index] ||= peek(createState, init, params))

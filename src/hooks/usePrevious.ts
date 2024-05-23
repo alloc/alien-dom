@@ -1,6 +1,6 @@
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { noop } from '../internal/util'
-import { useState } from './useState'
+import { useConst } from './useConst'
 
 /**
  * Save the given `value` for the next render.
@@ -10,7 +10,7 @@ import { useState } from './useState'
 export function usePrevious<T>(value: T): T | undefined
 export function usePrevious<T>(value: T, deps: readonly any[]): T | undefined
 export function usePrevious(value: any, deps?: readonly any[]) {
-  const state = useState(UsePrevious, deps)
+  const state = useConst(UsePrevious, deps)
 
   const { prev } = state
   state.prev = value

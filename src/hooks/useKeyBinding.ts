@@ -6,8 +6,8 @@ import { isDocument } from '../internal/duck'
 import { expectCurrentComponent } from '../internal/global'
 import { getHostProps } from '../internal/symbols'
 import { noop, toArray } from '../internal/util'
+import { useConst } from './useConst'
 import { EffectResult, useEffect } from './useEffect'
-import { useState } from './useState'
 
 export interface KeyBindingEvent<Target extends Document | HTMLElement = any> {
   target: Target
@@ -40,7 +40,7 @@ export function useKeyBinding<Target extends Document | HTMLElement>(
   options?: AddEventListenerOptions
 ) {
   const component = expectCurrentComponent()
-  const binding = useState(initKeyBinding, onKeyDown, options)
+  const binding = useConst(initKeyBinding, onKeyDown, options)
 
   binding.combo = prepareCombo(combo)
   binding.onKeyDown = onKeyDown

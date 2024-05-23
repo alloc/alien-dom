@@ -5,8 +5,8 @@ import { AnimatedProps, SpringAnimation, animate } from '../core/animate'
 import { restoreNodeReferences } from '../functions/restoreNodeReferences'
 import { toElements } from '../functions/toElements'
 import { isNode } from '../functions/typeChecking'
+import { useConst } from '../hooks/useConst'
 import { useEffect } from '../hooks/useEffect'
-import { useState } from '../hooks/useState'
 import { getFragmentNodes } from '../internal/symbols'
 import type { AnyElement } from '../internal/types'
 import { Fragment } from '../jsx-dom/jsx-runtime'
@@ -66,7 +66,7 @@ export type TransitionProps<Id> = {
 }
 
 export function Transition<Id>(props: TransitionProps<Id>) {
-  const state = useState(TransitionState)
+  const state = useConst(TransitionState)
 
   const previousId = state.currentId
   const leavingElements = Array.from(

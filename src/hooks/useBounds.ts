@@ -1,10 +1,10 @@
 import { isString } from '@alloc/is'
 import { ObservableBounds } from '../addons/bounds'
 import { ReadonlyRef, isRef } from '../core/observable'
+import { useConst } from './useConst'
 import { useHookOffset } from './useHookOffset'
 import { useObserver } from './useObserver'
 import { useQuerySelector } from './useSelector'
-import { useState } from './useState'
 
 export type UseBoundsOptions = {
   /** Pause the resize observer when true. */
@@ -16,7 +16,7 @@ export type UseBoundsOptions = {
 }
 
 export function useBounds(options: UseBoundsOptions = {}) {
-  const bbox = useState(ObservableBounds)
+  const bbox = useConst(ObservableBounds)
   bbox.lock(options.lock ?? false)
 
   let { target } = options

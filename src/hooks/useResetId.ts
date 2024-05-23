@@ -2,9 +2,9 @@ import { isBoolean, isFunction, isString } from '@alloc/is'
 import { ReadonlyRef, ref } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { createGuid } from '../internal/guid'
+import { useConst } from './useConst'
 import { useHookOffset } from './useHookOffset'
 import { useObserver } from './useObserver'
-import { useState } from './useState'
 
 /**
  * This hook is useful for generating a guid that changes on each render
@@ -38,7 +38,7 @@ export function useResetId(reset: any) {
     return reset
   }
 
-  const state = useState(UseResetId, reset)
+  const state = useConst(UseResetId, reset)
 
   // Allow the caller to compute resets.
   if (isFunction(reset)) {

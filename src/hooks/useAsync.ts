@@ -4,7 +4,7 @@ import { Disposable } from '../core/disposable'
 import { ref } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { keys } from '../internal/util'
-import { useState } from './useState'
+import { useConst } from './useConst'
 
 export type UseAsyncFn<T> = (state: UseAsync<T>) => PromiseLike<T> | T
 
@@ -12,7 +12,7 @@ export function useAsync<T>(
   get: UseAsyncFn<UseAsyncAwaited<T>> | Falsy,
   deps: readonly any[]
 ) {
-  const instance = useState(UseAsync<UseAsyncAwaited<T>>, deps)
+  const instance = useConst(UseAsync<UseAsyncAwaited<T>>, deps)
   if (!get) {
     instance.stale = true
     instance.abort()

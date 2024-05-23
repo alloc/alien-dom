@@ -6,9 +6,9 @@ import type { HTMLOrSVGElement } from '../internal/types'
 import { UpdateStyle, updateStyle } from '../internal/updateStyle'
 import { toArray } from '../internal/util'
 import type { CSSAttributes } from '../types'
+import { useConst } from './useConst'
 import { useHookOffset } from './useHookOffset'
 import { usePrevious } from './usePrevious'
-import { useState } from './useState'
 
 /**
  * Update the style of an element during render. This hook is preferred
@@ -61,7 +61,7 @@ export function useStyle(
         }
       }
   } else if (deps) {
-    const state = useState(UseStyle, style, deps)
+    const state = useConst(UseStyle, style, deps)
     if (state.dispose && depsHaveChanged(deps, state.deps)) {
       state.dispose()
       state.dispose = undefined

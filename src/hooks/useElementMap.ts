@@ -1,9 +1,9 @@
 import { DelegatedElementRef, ElementRef } from '../addons/elementRef'
 import { AnyElement } from '../internal/types'
-import { useState } from './useState'
+import { useConst } from './useConst'
 
 export const useElementMap = <K, T extends AnyElement = AnyElement>() =>
-  useState(ElementMap<K, T>)
+  useConst(ElementMap<K, T>)
 
 export class ElementMap<Key, Element extends AnyElement = AnyElement> {
   private map = new Map<Key, ElementRef<Element>>()

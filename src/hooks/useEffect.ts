@@ -5,8 +5,8 @@ import { AlienComponent } from '../internal/component'
 import { currentComponent } from '../internal/global'
 import { lastValue } from '../internal/util'
 import { JSX } from '../types/jsx'
+import { useConst } from './useConst'
 import { useMicrotask } from './useMicrotask'
-import { useState } from './useState'
 
 export type EffectResult = ((detail?: { isHotReload?: boolean }) => void) | void
 
@@ -32,7 +32,7 @@ export function useEffect<State = {}>(
   deps: readonly any[]
 ) {
   const component = lastValue(currentComponent)!
-  const hook = useState(UseEffect, deps, component)
+  const hook = useConst(UseEffect, deps, component)
   useMicrotask(() => {
     hook.effect = effect
     hook.deps = deps
