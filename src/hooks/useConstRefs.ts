@@ -9,20 +9,23 @@ export type { Refs }
  *
  * 🪝 This hook adds 1 to the hook offset.
  */
-export function useRefs<T extends object, Params extends any[]>(
+export function useConstRefs<T extends object, Params extends any[]>(
   init: new (...params: Params) => T,
   ...params: Params
 ): Refs<T>
 
-export function useRefs<T extends object, Params extends any[]>(
+export function useConstRefs<T extends object, Params extends any[]>(
   init: (...params: Params) => T,
   ...params: Params
 ): Refs<T>
 
-export function useRefs<T extends object, Params extends any[]>(
+export function useConstRefs<T extends object, Params extends any[]>(
   init: T
 ): Refs<T>
 
-export function useRefs<T extends object>(init: T, ...params: any[]): Refs<T> {
+export function useConstRefs<T extends object>(
+  init: T,
+  ...params: any[]
+): Refs<T> {
   return useConst(createRefs, init, params)
 }
