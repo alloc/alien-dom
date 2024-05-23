@@ -10,6 +10,8 @@ import { EffectCallback, useWrappedEffect } from './useEffect'
  *
  * If no dependency array is given, the effect runs once (even if the `delay`
  * argument value is changed in a future render).
+ *
+ * 🪝 This hook adds 1 to the hook offset.
  */
 export function useDelayedEffect(
   delay: VarArgs<number | DisposablePromise<any>>,

@@ -13,6 +13,8 @@ export type EventTargetEffect<Target extends EventTarget = EventTarget> = (
  *
  * If the ref is not attached to a JSX element at render time, the effect will
  * be attached to the `document` instead.
+ *
+ * 🪝 This hook adds 2 to the hook offset.
  */
 export function useEventTarget<Target extends EventTarget>(
   effect: EventTargetEffect<Target>

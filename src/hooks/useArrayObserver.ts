@@ -11,14 +11,14 @@ import { useHookOffset } from './useHookOffset'
 /**
  * Observe the fine-grained changes to an `ArrayRef` object.
  *
- * 🪝 This hook adds 3 to the hook offset.
+ * 🪝 This hook adds 2 to the hook offset.
  */
 export function useArrayObserver<T>(
   arrayRef: ArrayRef<T> | Falsy,
   handler: ArrayOperation.Handler<T>
 ) {
   if (!arrayRef) {
-    useHookOffset(3)
+    useHookOffset(2)
     return
   }
   handler = useCallbackProp(handler)

@@ -24,7 +24,7 @@ let nextViewId = 1
  * provided by AlienDOM (i.e. call `unmount` on the returned node or one of its
  * ancestors).
  *
- * 🪝 This hook adds 3 to the hook offset.
+ * 🪝 This hook adds 2 to the hook offset.
  */
 export function useView(
   view: (parentNode: ParentNode) => () => void,

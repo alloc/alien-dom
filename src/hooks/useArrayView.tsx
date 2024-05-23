@@ -38,7 +38,7 @@ export function useArrayView<T>(
   deps?: readonly any[]
 ): JSX.Element | null {
   if (!array) {
-    useHookOffset(7)
+    useHookOffset(6)
     return null
   }
 

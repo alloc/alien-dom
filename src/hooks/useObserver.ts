@@ -8,7 +8,7 @@ import { useHookOffset } from './useHookOffset'
 /**
  * Observe a single ref.
  *
- * 🪝 This hook adds 3 to the hook offset.
+ * 🪝 This hook adds 2 to the hook offset.
  */
 export function useObserver<T>(
   ref: ReadonlyRef<T> | Falsy,
@@ -18,7 +18,7 @@ export function useObserver<T>(
 /**
  * Observe any refs accessed by the effect.
  *
- * 🪝 This hook adds 3 to the hook offset.
+ * 🪝 This hook adds 2 to the hook offset.
  */
 export function useObserver(
   effect: EffectCallback | Falsy,
@@ -28,14 +28,13 @@ export function useObserver(
 /** @internal */
 export function useObserver(
   arg1: ReadonlyRef | EffectCallback | Falsy,
-  arg2: ((value: any, oldValue: any) => void) | readonly any[],
-  arg3?: readonly any[]
+  arg2: ((value: any, oldValue: any) => void) | readonly any[]
 ) {
   if (isFunction(arg1)) {
     const effect = arg1,
       deps = arg2 as readonly any[]
-    useWrappedEffect(effect, effect => observe(effect).destructor, deps)
     useHookOffset(1)
+    useWrappedEffect(effect, effect => observe(effect).destructor, deps)
   } else if (arg1) {
     const ref = arg1 as ReadonlyRef<any>,
       onChange = useCallbackProp(arg2 as (value: any, oldValue: any) => void)
@@ -45,6 +44,6 @@ export function useObserver(
       return observe(ref, onChange).destructor
     }, [ref])
   } else {
-    useHookOffset(3)
+    useHookOffset(2)
   }
 }

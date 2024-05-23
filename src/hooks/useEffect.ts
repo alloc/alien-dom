@@ -6,7 +6,6 @@ import { currentComponent } from '../internal/global'
 import { lastValue } from '../internal/util'
 import { JSX } from '../types/jsx'
 import { useConst } from './useConst'
-import { useMicrotask } from './useMicrotask'
 
 export type EffectResult = ((detail?: { isHotReload?: boolean }) => void) | void
 
@@ -25,7 +24,7 @@ export type EffectContext<State = {}> = State & {
  * Run an effect after the component is mounted. The effect may rerun on a rerender
  * if the dependencies have changed. The effect is disposed before the next run.
  *
- * 🪝 This hook adds 2 to the hook offset.
+ * 🪝 This hook adds 1 to the hook offset.
  */
 export function useEffect<State = {}>(
   effect: EffectCallback<State> | Falsy,
@@ -33,11 +32,13 @@ export function useEffect<State = {}>(
 ) {
   const component = lastValue(currentComponent)!
   const hook = useConst(UseEffect, deps, component)
-  useMicrotask(() => {
-    hook.effect = effect
-    hook.deps = deps
-    hook.run()
-  }, depsHaveChanged(deps, hook.deps))
+  if (depsHaveChanged(deps, hook.deps)) {
+    component.newEffects.run(() => {
+      hook.effect = effect
+      hook.deps = deps
+      hook.run()
+    })
+  }
 }
 
 class UseEffect {
@@ -97,7 +98,7 @@ class UseEffect {
 /**
  * Useful for hooks that wrap `useEffect`. It takes care of passing along the `EffectContext` to the wrapped effect.
  *
- * 🪝 This hook adds 2 to the hook offset.
+ * 🪝 This hook adds 1 to the hook offset.
  */
 export function useWrappedEffect(
   effect: EffectCallback | Falsy,
