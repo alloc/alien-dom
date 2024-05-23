@@ -327,11 +327,7 @@ const arrayTraps: ProxyHandler<InternalArrayRef> = {
           updateLengthRef(getPrivate(target, kLengthRef), oldArray, newArray)
         }
         if (target._arrayObservers) {
-          notifyArrayObservers(
-            target,
-            { type: 'replace', index, newValue },
-            oldArray
-          )
+          notifyArrayObservers(target, { type: 'replace', index, newValue })
         }
       }
       return true
@@ -351,8 +347,7 @@ const arrayTraps: ProxyHandler<InternalArrayRef> = {
             target,
             newValue > oldArray.length
               ? { type: 'add', index: oldArray.length, count: delta, newArray }
-              : { type: 'remove', index: newValue, count: -delta, oldArray },
-            oldArray
+              : { type: 'remove', index: newValue, count: -delta, oldArray }
           )
         }
       }
@@ -364,11 +359,11 @@ const arrayTraps: ProxyHandler<InternalArrayRef> = {
         setValue.call(target, newValue)
         updateLengthRef(getPrivate(target, kLengthRef), oldArray, newValue)
         if (target._arrayObservers) {
-          notifyArrayObservers(
-            target,
-            { type: 'rebase', newArray: newValue, oldArray },
-            oldArray
-          )
+          notifyArrayObservers(target, {
+            type: 'rebase',
+            newArray: newValue,
+            oldArray,
+          })
         }
       }
       return true
@@ -406,7 +401,7 @@ export let arrayRef = <T>(
       if (this._arrayObservers) {
         const operation = this._produceOperation(name, args, oldArray, newArray)
         if (operation) {
-          notifyArrayObservers(this, operation, oldArray)
+          notifyArrayObservers(this, operation)
         }
       }
       return result
@@ -789,10 +784,7 @@ export class ArrayObserver<T> extends Observer {
     addArrayObserver(target as any, this)
   }
 
-  protected onOperation(
-    operation: ArrayOperation<T> | ArrayOperation<T>[],
-    oldArray: any[]
-  ) {
+  protected onOperation(operation: ArrayOperation<T> | ArrayOperation<T>[]) {
     forEach(operation, operation => {
       if (operation.type === 'rebase') {
         this.operations.length = 0
@@ -899,7 +891,7 @@ export class ArrayObserver<T> extends Observer {
 }
 
 type InternalArrayObserver<T = any> = ArrayObserver<T> & {
-  onOperation(operation: ArrayOperation<T>, oldArray: any[]): void
+  onOperation(operation: ArrayOperation<T>): void
 }
 
 function addArrayObserver<T>(
@@ -925,12 +917,11 @@ function removeArrayObserver<T>(
 
 function notifyArrayObservers<T>(
   ref: InternalArrayRef<T>,
-  operation: ArrayOperation<T> | ArrayOperation<T>[],
-  oldArray: T[]
+  operation: ArrayOperation<T> | ArrayOperation<T>[]
 ) {
-  ref._arrayObservers!.forEach(observer =>
-    observer.onOperation(operation, oldArray)
-  )
+  ref._arrayObservers!.forEach(observer => {
+    observer.onOperation(operation)
+  })
 }
 
 //
