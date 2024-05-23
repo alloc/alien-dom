@@ -3,6 +3,11 @@ import { expectCurrentComponent } from '../internal/global'
 import { useDepsArray } from './useDepsArray'
 
 /**
+ * Create an observable ref that persists between renders. Unlike the `useMemo`
+ * hook, the ref is not recreated when the component hot reloads.
+ *
+ * You may destructure the ref into a `[value, setValue]` tuple.
+ *
  * 🪝 This hook adds 2 to the hook offset.
  */
 export function useRef<T>(): Ref<T | undefined> &
