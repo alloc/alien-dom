@@ -1,9 +1,9 @@
 import { isDocument } from '../functions/typeChecking'
-import { useCallbackProp } from './useCallbackProp'
 import { useEventTarget } from './useEventTarget'
+import { useStableCallback } from './useStableCallback'
 
 export function useScrollStart(handler: (event: Event) => void) {
-  handler = useCallbackProp(handler)
+  handler = useStableCallback(handler)
   return useEventTarget<HTMLElement>(target => {
     if (isDocument(target)) {
       target = target.scrollingElement as HTMLElement

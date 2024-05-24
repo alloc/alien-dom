@@ -1,9 +1,9 @@
 import { isFunction } from '@alloc/is'
 import { Falsy } from '@alloc/types'
 import { ReadonlyRef, observe } from '../core/observable'
-import { useCallbackProp } from './useCallbackProp'
 import { EffectCallback, useEffect, useWrappedEffect } from './useEffect'
 import { useHookOffset } from './useHookOffset'
+import { useStableCallback } from './useStableCallback'
 
 /**
  * Observe a single ref.
@@ -37,7 +37,7 @@ export function useObserver(
     useWrappedEffect(effect, effect => observe(effect).destructor, deps)
   } else if (arg1) {
     const ref = arg1 as ReadonlyRef<any>,
-      onChange = useCallbackProp(arg2 as (value: any, oldValue: any) => void)
+      onChange = useStableCallback(arg2 as (value: any, oldValue: any) => void)
     useEffect(() => {
       const initialValue = ref.value
       onChange(initialValue, initialValue)

@@ -8,8 +8,8 @@ import {
   MachineType,
   toMachineProxy,
 } from '../addons/machine'
-import { useCallbackProp } from './useCallbackProp'
 import { useConst } from './useConst'
+import { useStableCallback } from './useStableCallback'
 
 export function useMachineProxy<T extends MachineType<void>>(
   constructor: MachineClass<T>,
@@ -31,7 +31,7 @@ export function useMachineProxy(
     onChange = params
     params = undefined
   }
-  const onChangeRef = useCallbackProp(onChange)
+  const onChangeRef = useStableCallback(onChange)
   return useConst(initMachineProxy, constructor, params, onChangeRef)
 }
 

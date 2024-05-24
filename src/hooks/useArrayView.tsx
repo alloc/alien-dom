@@ -21,10 +21,10 @@ import {
 import { AnyDeferredNode } from '../jsx-dom/node'
 import { UnresolvedChild } from '../jsx-dom/resolveChildren'
 import { JSX } from '../types'
-import { useCallbackProp } from './useCallbackProp'
 import { useEffect } from './useEffect'
 import { useHookOffset } from './useHookOffset'
 import { useMemo } from './useMemo'
+import { useStableCallback } from './useStableCallback'
 import { useView } from './useView'
 
 export type ArrayViewRenderFn<T = any> = (
@@ -58,7 +58,7 @@ export function useArrayView<T>(
   }, deps || [render])
 
   // Ensure the render function is always up-to-date for new items.
-  render = useCallbackProp(render)
+  render = useStableCallback(render)
 
   // Handle mounting and unmounting side effects.
   view.head = useView(() => {

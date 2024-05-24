@@ -4,9 +4,9 @@ import {
   ArrayRef,
   observeArrayOperations,
 } from '../core/observable'
-import { useCallbackProp } from './useCallbackProp'
 import { useEffect } from './useEffect'
 import { useHookOffset } from './useHookOffset'
+import { useStableCallback } from './useStableCallback'
 
 /**
  * Observe the fine-grained changes to an `ArrayRef` object.
@@ -21,7 +21,7 @@ export function useArrayObserver<T>(
     useHookOffset(2)
     return
   }
-  handler = useCallbackProp(handler)
+  handler = useStableCallback(handler)
   useEffect(() => {
     return observeArrayOperations(arrayRef, handler).destructor
   }, [arrayRef])

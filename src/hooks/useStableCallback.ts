@@ -9,15 +9,15 @@ import { useConst } from './useConst'
  *
  * 🪝 This hook adds 1 to the hook offset.
  */
-export function useCallbackProp<T extends (...args: any[]) => any>(
+export function useStableCallback<T extends (...args: any[]) => any>(
   callback: T
 ): T
 
-export function useCallbackProp<T extends (...args: any[]) => void>(
+export function useStableCallback<T extends (...args: any[]) => void>(
   callback: T | Falsy
 ): T
 
-export function useCallbackProp<T extends (...args: any[]) => any>(
+export function useStableCallback<T extends (...args: any[]) => any>(
   callback: T | Falsy
 ) {
   const state = useConst(UseCallbackProp<T>)
