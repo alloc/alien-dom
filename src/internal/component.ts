@@ -26,7 +26,6 @@ import {
 import { NodeStore } from './nodeStore'
 import { onceMounted } from './onceMounted'
 import { hasPrivate, setPrivate } from './privateSymbol'
-import { popValue } from './stack'
 import {
   getElementKey,
   getElementTags,
@@ -225,9 +224,9 @@ export class AlienComponent<Props extends object = any>
     } finally {
       restoreContext()
 
-      popValue(currentNodeStore, this)
-      popValue(currentEffects, newEffects)
-      popValue(currentComponent, this as AlienRunningComponent)
+      currentNodeStore.pop()
+      currentEffects.pop()
+      currentComponent.pop()
 
       if (!threw) {
         this.truncate(this.nextHookIndex)

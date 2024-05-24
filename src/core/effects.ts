@@ -12,7 +12,6 @@ import {
 import { currentEffects } from '../internal/global'
 import { LinkedList } from '../internal/linkedList'
 import { setPrivate } from '../internal/privateSymbol'
-import { popValue } from '../internal/stack'
 import { kAlienEffects } from '../internal/symbols'
 import type { AnyElement } from '../internal/types'
 import { lastValue } from '../internal/util'
@@ -70,7 +69,7 @@ export class AlienEffects {
       try {
         callback()
       } finally {
-        popValue(currentEffects, this)
+        currentEffects.pop()
       }
     }
   }
@@ -95,7 +94,7 @@ export class AlienEffects {
         this.state = AlienEffectState.Enabled
       } finally {
         this.currentEffect = null
-        popValue(currentEffects, this)
+        currentEffects.pop()
       }
     }
   }

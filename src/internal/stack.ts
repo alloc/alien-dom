@@ -12,17 +12,3 @@ export const expectLastValue =
     }
     return value
   }
-
-/**
- * Pop the stack until the given value is popped.
- */
-export function popValue<T>(stack: Stack<T>, value: T) {
-  while (true) {
-    if (stack.length === 1) {
-      throw Error('Stack is empty')
-    }
-    if (stack.pop() === value) {
-      return
-    }
-  }
-}

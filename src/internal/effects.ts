@@ -5,7 +5,6 @@ import { currentEffects } from './global'
 import { LinkedList } from './linkedList'
 import { getPrivate } from './privateSymbol'
 import { getShadowRoot } from './shadow'
-import { popValue } from './stack'
 import { kAlienEffects } from './symbols'
 import { AnyElement } from './types'
 import { noop } from './util'
@@ -56,7 +55,7 @@ export function enableEffect<Effect extends AlienEffect<any, any>>(
       runEffect(effect, context)
     } finally {
       context.currentEffect = null
-      popValue(currentEffects, context)
+      currentEffects.pop()
     }
   }
 
