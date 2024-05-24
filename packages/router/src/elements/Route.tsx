@@ -1,4 +1,10 @@
-import { attachRefs, useAsync, useEffect, useMemo, useState } from 'alien-dom'
+import {
+  attachRefs,
+  useAsync,
+  useComputed,
+  useConst,
+  useEffect,
+} from 'alien-dom'
 import { Route } from '../objects/Route'
 import { deepMerge } from '../util/deepMerge'
 import { RouteContext, RouteInstance } from './RouteContext'
@@ -11,11 +17,11 @@ export function Route({
   transformTitle?: (title: string) => string
 }) {
   const { route, match } = instance
-  const state = useState(initRouteState, route, match.params)
+  const state = useConst(initRouteState, route, match.params)
 
   const app = route.app!
-  const dataPromise = useMemo(() => app.load(route, match, state), [])
-  const dataMemo = useState(() => ({ value: undefined as any }))
+  const [dataPromise] = useComputed(() => app.load(route, match, state), [])
+  const dataMemo = useConst(() => ({ value: undefined as any }))
   const dataTask = useAsync(
     () =>
       dataPromise.then(data => {
@@ -93,7 +99,7 @@ function initRouteState(Route: Route, params: any) {
 type Falsy = false | null | undefined | 0 | ''
 
 function useLastTruthy<T>(value: T): Exclude<T, Falsy> | undefined {
-  const state = useState(UseLastTruthy)
+  const state = useConst(UseLastTruthy)
   if (value) {
     state.value = value
   }
