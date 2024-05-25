@@ -3,7 +3,7 @@ import { fragmentToChildNodes } from '../internal/fragment'
 import { getPrivate } from '../internal/privateSymbol'
 import { kAlienStateless } from '../internal/symbols'
 import { findFirstElement, findLastElement } from '../internal/traversal'
-import { FunctionComponent } from '../types'
+import { FunctionComponent, JSX } from '../types'
 import { isFragment } from './typeChecking'
 
 export interface ComponentNode<Props extends object = any> {

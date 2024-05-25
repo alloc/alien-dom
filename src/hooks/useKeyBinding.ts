@@ -20,16 +20,16 @@ type Split<T extends string> = T extends `${infer First}${infer Rest}`
   ? First | Split<Rest>
   : never
 
-type Letter = Split<'ABCDEFGHIJKLMNOPQRSTUVWXYZ'>
-type Digit = Split<'0123456789'>
-type Symbol = Split<'!@#$%^&*()_+-=[]{}|\\;:,.?<>/\'" '>
+type LetterKey = Split<'ABCDEFGHIJKLMNOPQRSTUVWXYZ'>
+type DigitKey = Split<'0123456789'>
+type SymbolKey = Split<'!@#$%^&*()_+-=[]{}|\\;:,.?<>/\'" '>
 
 export type KeyCombo =
   | readonly KeyCombo[]
   | `${Key}`
-  | Letter
-  | Digit
-  | Symbol
+  | LetterKey
+  | DigitKey
+  | SymbolKey
   | false
   | null
   | undefined

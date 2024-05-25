@@ -19,9 +19,7 @@ export function useConstRefs<T extends object, Params extends any[]>(
   ...params: Params
 ): Refs<T>
 
-export function useConstRefs<T extends object, Params extends any[]>(
-  init: T
-): Refs<T>
+export function useConstRefs<T extends object>(init: T): Refs<T>
 
 export function useConstRefs<T extends object>(
   init: T,

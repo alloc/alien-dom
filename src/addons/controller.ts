@@ -1,8 +1,9 @@
 import { useEffect, useMemo } from '../hooks'
 import { Refs, createRefs } from '../internal/createRefs'
 
-type CallableProperty<T extends object> = {
-  [K in keyof T]: T[K] extends (...args: any[]) => any ? K : never
+type Fn = (...args: any[]) => any
+type FnPropertyOf<T extends object> = {
+  [K in keyof T]: T[K] extends Fn ? K : never
 }[keyof T]
 
 export class Controller<State extends object = any, Key = any> {
@@ -53,11 +54,11 @@ export class Controller<State extends object = any, Key = any> {
     Object.assign(instance, this.singleton ? arg1 : arg2)
   }
 
-  protected call<P extends CallableProperty<State>>(
+  protected call<P extends FnPropertyOf<State>>(
     key: Key,
     method: P,
-    ...args: Parameters<State[P]>
-  ): ReturnType<State[P]> {
+    ...args: Parameters<Extract<State[P], Fn>>
+  ): ReturnType<Extract<State[P], Fn>> {
     if (!this.instances?.has(key)) {
       throw Error(`key ${key} does not exist`)
     }
@@ -68,9 +69,9 @@ export class Controller<State extends object = any, Key = any> {
 
 export type ControllerProxy<State extends object, Key> = unknown &
   Controller<State, Key> & {
-    [P in CallableProperty<State>]-?: (
-      ...args: Parameters<State[P]>
-    ) => ReturnType<State[P]>
+    [P in FnPropertyOf<State>]-?: (
+      ...args: Parameters<Extract<State[P], Fn>>
+    ) => ReturnType<Extract<State[P], Fn>>
   }
 
 export function defineController<State extends object>(

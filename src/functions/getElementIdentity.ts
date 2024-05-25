@@ -1,4 +1,5 @@
 import { getElementKey, getElementPosition } from '../internal/symbols'
+import { JSX } from '../types/jsx'
 
 /**
  * If no element key was explicitly defined by user code and the compiler
