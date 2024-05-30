@@ -3,6 +3,12 @@
   "version": "0.1.2",
   "main": "dist/index.mjs",
   "types": "dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    }
+  },
   "scripts": {
     "dev": "tsup --watch --sourcemap",
     "build": "tsup",
