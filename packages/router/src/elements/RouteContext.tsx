@@ -3,8 +3,8 @@ import {
   defineContext,
   EffectContext,
   SpringAnimation,
-  useCallbackProp,
   useContext,
+  useStableCallback,
   useWrappedEffect,
 } from 'alien-dom'
 import { MatchResult } from 'path-to-regexp'
@@ -31,12 +31,12 @@ export const RouteContext = defineContext<RouteInstance>()
 
 export function useEnterEffect(effect: RouteEnterEffect) {
   const context = useRouteContext()
-  useEffectArray((context.enterEffects ||= []), useCallbackProp(effect))
+  useEffectArray((context.enterEffects ||= []), useStableCallback(effect))
 }
 
 export function useLeaveEffect(effect: RouteLeaveEffect) {
   const context = useRouteContext()
-  useEffectArray((context.leaveEffects ||= []), useCallbackProp(effect))
+  useEffectArray((context.leaveEffects ||= []), useStableCallback(effect))
 }
 
 function useRouteContext() {
