@@ -146,8 +146,8 @@ export class App<
               const element = instance.node.firstElementChild
               instance.enterEffects?.forEach(effect => {
                 const animation = effect()
-                if (animation) {
-                  element?.spring(animation)
+                if (element && animation) {
+                  animate(element, animation)
                 }
               })
             })
