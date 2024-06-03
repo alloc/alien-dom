@@ -1,11 +1,11 @@
-import { defineGenerator } from 'codegentool'
+import { defineGenerator } from '@alloc/codegentool'
 import {
   CallExpression,
   ExportDefaultDeclaration,
   Literal,
   ObjectExpression,
   Property,
-} from 'codegentool/estree'
+} from '@alloc/codegentool/estree'
 import { dirname, relative } from 'path'
 import type { PathRouterOptions } from '../'
 
