@@ -25,7 +25,7 @@
     "tsup": "^8.0.2"
   },
   "peerDependencies": {
-    "alien-dom": ">=0.10.5",
+    "alien-dom": ">=0.12.0",
     "codegentool": "npm:@alloc/codegentool@>=1.2.0"
   },
   "license": "MIT",
