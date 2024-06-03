@@ -82,6 +82,8 @@ export abstract class ClientRouter<
       passive: false,
     })
 
+    // Wait to perform the initial navigation, so there's a chance to trigger a
+    // manual navigation based on the page's location or whatever else.
     queueMicrotask(() => {
       if (!this.navigating) {
         const pathname = this.getPathname(location)
