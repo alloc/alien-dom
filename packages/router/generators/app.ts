@@ -68,7 +68,7 @@ export default <T extends RouterType = 'PathRouter'>(options: {
 
       // 5. Add the route to the app.
       const importPath = getRelativeImportPath(options.outPath, filename)
-      if (path === '/*') {
+      if (path === '/(.*)') {
         catchAll = importPath
       } else {
         app += `\n  .use("${path}", () => import("${importPath}"))`
@@ -76,7 +76,7 @@ export default <T extends RouterType = 'PathRouter'>(options: {
     }
 
     if (catchAll) {
-      app += `\n  .use("/*", () => import("${catchAll}"))`
+      app += `\n  .use("/(.*)", () => import("${catchAll}"))`
     }
 
     write(options.outPath, app + `\n`)
