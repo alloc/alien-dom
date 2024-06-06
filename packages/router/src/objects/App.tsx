@@ -13,9 +13,9 @@ import {
 import { MatchFunction, MatchResult, compile, match } from 'path-to-regexp'
 import type { InferParams, PathTemplate } from 'path-types'
 import { Route as RouteElement } from '../elements/Route'
-import { RouteInstance } from '../elements/RouteContext'
 import { ClientRouter, ClientRouterType, Page, PathRouter } from '../router'
 import { Route } from './Route'
+import { RouteInstance } from './RouteContext'
 
 interface Data {
   ref: ComputedRef<Promise<any>>

@@ -8,7 +8,7 @@ import {
   useWrappedEffect,
 } from 'alien-dom'
 import { MatchResult } from 'path-to-regexp'
-import type { Route } from '../objects/Route'
+import type { Route } from './Route'
 
 export type RouteEnterEffect = (
   context: EffectContext
@@ -28,6 +28,10 @@ export interface RouteInstance {
 }
 
 export const RouteContext = defineContext<RouteInstance>()
+
+export function useRoute() {
+  return useRouteContext().route
+}
 
 export function useEnterEffect(effect: RouteEnterEffect) {
   const context = useRouteContext()

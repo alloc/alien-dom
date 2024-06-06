@@ -6,8 +6,8 @@ import {
   useEffect,
 } from 'alien-dom'
 import { Route } from '../objects/Route'
+import { RouteContext, RouteInstance } from '../objects/RouteContext'
 import { deepMerge } from '../util/deepMerge'
-import { RouteContext, RouteInstance } from './RouteContext'
 
 export function Route({
   instance,
