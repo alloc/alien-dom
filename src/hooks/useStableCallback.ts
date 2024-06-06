@@ -20,12 +20,12 @@ export function useStableCallback<T extends (...args: any[]) => void>(
 export function useStableCallback<T extends (...args: any[]) => any>(
   callback: T | Falsy
 ) {
-  const state = useConst(UseCallbackProp<T>)
+  const state = useConst(UseStableCallback<T>)
   state.callback = callback
   return state.wrapper
 }
 
-class UseCallbackProp<T extends (...args: any[]) => any> {
+class UseStableCallback<T extends (...args: any[]) => any> {
   callback: T | Falsy = false
   wrapper = (...args: any[]) => {
     if (this.callback) {
