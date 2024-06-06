@@ -33,6 +33,7 @@ export default <T extends RouterType = 'PathRouter'>(options: {
     `
 
     let catchAll: string | null = null
+    const routes: [path: string, importPath: string][] = []
 
     for (const filename of scan(options.routes)) {
       const program = parseModule(filename)
@@ -71,8 +72,39 @@ export default <T extends RouterType = 'PathRouter'>(options: {
       if (path === '/(.*)') {
         catchAll = importPath
       } else {
-        app += `\n  .use("${path}", () => import("${importPath}"))`
+        routes.push([path, importPath])
       }
+    }
+
+    routes.sort((left, right) => {
+      const leftParts = left[0].split('/')
+      const rightParts = right[0].split('/')
+      // Check for dynamic parts (which have either a ":" or parentheses).
+      // If a dynamic part is found in one and not the other, then the other comes first.
+      for (let i = 0; i < Math.min(leftParts.length, rightParts.length); i++) {
+        const leftPart = leftParts[i]
+        const rightPart = rightParts[i]
+
+        if (leftPart !== rightPart) {
+          return leftPart.localeCompare(rightPart)
+        }
+
+        const leftIsDynamic = leftPart.includes(':') || leftPart.includes('(')
+        const rightIsDynamic =
+          rightPart.includes(':') || rightPart.includes('(')
+
+        if (leftIsDynamic && !rightIsDynamic) {
+          return 1
+        }
+        if (rightIsDynamic && !leftIsDynamic) {
+          return -1
+        }
+      }
+      return 0
+    })
+
+    for (const [path, importPath] of routes) {
+      app += `\n  .use("${path}", () => import("${importPath}"))`
     }
 
     if (catchAll) {
