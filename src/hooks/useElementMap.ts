@@ -1,4 +1,8 @@
-import { DelegatedElementRef, ElementRef } from '../addons/elementRef'
+import {
+  DelegatedElementRef,
+  ElementRef,
+  ElementRefDelegate,
+} from '../addons/elementRef'
 import { AnyElement } from '../internal/types'
 import { useConst } from './useConst'
 
@@ -7,6 +11,8 @@ export const useElementMap = <K, T extends AnyElement = AnyElement>() =>
 
 export class ElementMap<Key, Element extends AnyElement = AnyElement> {
   private map = new Map<Key, ElementRef<Element>>()
+
+  constructor(public delegate?: ElementRefDelegate<Element, Key>) {}
 
   /**
    * Get the element at the given key. Returns `null` if the key is not found.
@@ -24,10 +30,12 @@ export class ElementMap<Key, Element extends AnyElement = AnyElement> {
     return this.map.get(key) || new DelegatedElementRef(this as any, key)
   }
 
-  protected attach(_element: Element, ref: DelegatedElementRef<Element>) {
+  protected attach(element: Element, ref: DelegatedElementRef<Element>) {
     this.map.set(ref.key, ref)
+    this.delegate?.attach?.(element, ref)
   }
-  protected detach(_element: Element, ref: DelegatedElementRef<Element>) {
+  protected detach(element: Element, ref: DelegatedElementRef<Element>) {
     this.map.delete(ref.key)
+    this.delegate?.detach?.(element, ref)
   }
 }
