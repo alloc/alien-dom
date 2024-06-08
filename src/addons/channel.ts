@@ -46,11 +46,11 @@ export declare namespace Channel {
   /** A receiver is a function that receives messages from a channel. */
   type Receiver<
     T extends Signature = Signature,
-    Target extends InferTarget<T> = InferTarget<T>
+    Target extends InferTarget<T> | void = InferTarget<T>
   > = (
-    message: (InferTarget<T> extends void
-      ? Message<T, Target>
-      : BubblingMessage<T, Target>) &
+    message: (Target extends void
+      ? Message<T, InferTarget<T>>
+      : BubblingMessage<T, InferTarget<T>>) &
       InferData<T>
   ) => boolean | void
 
