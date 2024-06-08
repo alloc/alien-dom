@@ -10,7 +10,7 @@ export const useElementMap = <K, T extends AnyElement = AnyElement>() =>
   useConst(ElementMap<K, T>)
 
 export class ElementMap<Key, Element extends AnyElement = AnyElement>
-  implements Iterable<[Key, Element]>
+  implements Iterable<[Key, Element]>, ElementRefDelegate<Element, Key>
 {
   private map = new Map<Key, ElementRef<Element>>()
 
@@ -32,11 +32,13 @@ export class ElementMap<Key, Element extends AnyElement = AnyElement>
     return this.map.get(key) || new DelegatedElementRef(this as any, key)
   }
 
-  protected attach(element: Element, ref: DelegatedElementRef<Element>) {
+  /** @internal */
+  attach(element: Element, ref: DelegatedElementRef<Element>) {
     this.map.set(ref.key, ref)
     this.delegate?.attach?.(element, ref)
   }
-  protected detach(element: Element, ref: DelegatedElementRef<Element>) {
+  /** @internal */
+  detach(element: Element, ref: DelegatedElementRef<Element>) {
     this.map.delete(ref.key)
     this.delegate?.detach?.(element, ref)
   }
