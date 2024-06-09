@@ -242,23 +242,25 @@ function assignPrototype(
 // Array refs
 //
 
-export class ArrayRef<T> extends ReadonlyRef<readonly T[]> {
-  protected _arrayObservers: Set<InternalArrayObserver> | null = null
-  protected _produceOperation: ArrayOperation.Producer = noop
-}
+export abstract class ReadonlyArrayRef<T> extends ReadonlyRef<readonly T[]> {}
 
-export interface ArrayRef<T>
-  extends ArrayMutators<T>,
-    ArrayIterators<T>,
-    Iterable<T> {
+export interface ReadonlyArrayRef<T> extends ArrayIterators<T>, Iterable<T> {
   [index: number]: T
   length: number
-  set value(newValue: readonly T[])
   /**
    * Observe a single index in the array. Any time the array is mutated, this
    * will check the given `index` to see if a new value exists there.
    */
   observe(index: number): ComputedRef<T>
+}
+
+export class ArrayRef<T> extends ReadonlyArrayRef<T> {
+  protected _arrayObservers: Set<InternalArrayObserver> | null = null
+  protected _produceOperation: ArrayOperation.Producer = noop
+}
+
+export interface ArrayRef<T> extends ReadonlyArrayRef<T>, ArrayMutators<T> {
+  set value(newValue: readonly T[])
 }
 
 interface ArrayMutators<T>

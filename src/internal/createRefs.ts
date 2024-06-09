@@ -1,12 +1,22 @@
 import { isArray, isFunction, isPlainObject } from '@alloc/is'
-import { ArrayRef, Ref, arrayRef, ref } from '../core/observable'
+import {
+  ArrayRef,
+  ReadonlyArrayRef,
+  Ref,
+  arrayRef,
+  ref,
+} from '../core/observable'
 import { attachRef } from '../functions/attachRef'
 import { StateInitializer, createState, defineProperty, keys } from './util'
 
 export type Refs<T extends object> = {
-  [K in string & Exclude<keyof T, 'bind'>]: T[K] extends readonly (infer U)[]
-    ? ArrayRef<U>
-    : T[K]
+  [K in string & Exclude<keyof T, 'bind'>]: T[K] extends infer Value
+    ? Value extends readonly (infer U)[]
+      ? Value extends any[]
+        ? ArrayRef<U>
+        : ReadonlyArrayRef<U>
+      : Value
+    : never
 } & {
   bind<K extends keyof T>(key: K): Ref<T[K]>
 }
