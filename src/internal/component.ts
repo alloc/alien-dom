@@ -181,6 +181,7 @@ export class AlienComponent<Props extends object = any>
 
   override nextCompute() {
     const oldEffects = this.effects
+    const oldHooks = this.hooks
 
     // Schedule an update for the next microtask if the component
     // effects from the previous render are still being enabled.
@@ -190,6 +191,7 @@ export class AlienComponent<Props extends object = any>
 
     this.newEffects = new AlienEffects()
     this.newNodes = new Map()
+    this.hooks = [...this.hooks]
     this.nextHookIndex = 0
     this.updates = new Map()
 
@@ -228,7 +230,9 @@ export class AlienComponent<Props extends object = any>
       currentEffects.pop()
       currentComponent.pop()
 
-      if (!threw) {
+      if (threw) {
+        this.hooks = oldHooks
+      } else {
         this.truncate(this.nextHookIndex)
         this.nodes = this.newNodes
         this.effects = newEffects
