@@ -12,6 +12,6 @@ export function depsHaveChanged(
     deps === prevDeps ||
     prevDeps === undefined ||
     deps.length !== prevDeps.length ||
-    deps.some((dep, i) => dep !== prevDeps[i])
+    (deps.length > 0 && deps.some((dep, i) => dep !== prevDeps[i]))
   )
 }
