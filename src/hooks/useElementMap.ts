@@ -35,7 +35,7 @@ export class ElementMap<Key, Element extends AnyElement = AnyElement>
   /** @internal */
   attach(element: Element, ref: DelegatedElementRef<Element>) {
     this.map.set(ref.key, ref)
-    this.delegate?.attach?.(element, ref)
+    return this.delegate?.attach?.(element, ref)
   }
   /** @internal */
   detach(element: Element, ref: DelegatedElementRef<Element>) {
