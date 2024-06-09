@@ -21,18 +21,19 @@ export type EffectContext<State = {}> = State & {
 }
 
 /**
- * Run an effect after the component is mounted. The effect may rerun on a rerender
- * if the dependencies have changed. The effect is disposed before the next run.
+ * Run an effect after the component is mounted. The effect will run again
+ * following a rerender when the dependencies have changed (or the `deps`
+ * argument was not provided). The effect is disposed before the next run.
  *
  * 🪝 This hook adds 1 to the hook offset.
  */
 export function useEffect<State = {}>(
   effect: EffectCallback<State> | Falsy,
-  deps: readonly any[]
+  deps?: readonly any[]
 ) {
   const component = lastValue(currentComponent)!
   const hook = useConst(UseEffect, deps, component)
-  if (depsHaveChanged(deps, hook.deps)) {
+  if (!deps || depsHaveChanged(deps, hook.deps)) {
     component.newEffects.run(() => {
       hook.effect = effect
       hook.deps = deps
@@ -42,7 +43,10 @@ export function useEffect<State = {}>(
 }
 
 class UseEffect {
-  constructor(public deps: readonly any[], public component: AlienComponent) {}
+  constructor(
+    public deps: readonly any[] | undefined,
+    public component: AlienComponent
+  ) {}
   effect: EffectCallback<any> | Falsy = undefined
   dispose: (() => void) | void = undefined
   rerun: (() => void) | void = undefined
