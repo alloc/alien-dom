@@ -1,4 +1,4 @@
-import { Ref, ref } from '../core/observable'
+import { Ref, peek, ref } from '../core/observable'
 import { expectCurrentComponent } from '../internal/global'
 import { useDepsArray } from './useDepsArray'
 
@@ -29,9 +29,9 @@ export function useRef<T>(
   const component = expectCurrentComponent()
   const index = component.nextHookIndex++
   if (useDepsArray(deps)) {
-    component.hooks[index] = null
+    return (component.hooks[index] = ref(
+      init instanceof Function ? peek(init) : init
+    ))
   }
-  return (component.hooks[index] ||= ref(
-    init instanceof Function ? init() : init
-  ))
+  return component.hooks[index]
 }
