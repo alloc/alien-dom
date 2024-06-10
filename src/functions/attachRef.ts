@@ -26,4 +26,5 @@ export const attachRef = (
         }
       : Reflect.set.bind(Reflect, ref, 'value'),
   })
+  return ref
 }

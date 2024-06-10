@@ -1,5 +1,6 @@
 import { Falsy } from '@alloc/types'
-import { useConst } from './useConst'
+import { useApply } from './internal/useApply'
+import { useConstructor } from './internal/useConstructor'
 
 /**
  * This creates a stable callback (i.e. its reference never changes) whose
@@ -20,8 +21,10 @@ export function useStableCallback<T extends (...args: any[]) => void>(
 export function useStableCallback<T extends (...args: any[]) => any>(
   callback: T | Falsy
 ) {
-  const state = useConst(UseStableCallback<T>)
-  state.callback = callback
+  const state = useConstructor(UseStableCallback<T>)
+  useApply(() => {
+    state.callback = callback
+  })
   return state.wrapper
 }
 

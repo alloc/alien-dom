@@ -2,10 +2,9 @@ import { Falsy } from '@alloc/types'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { isElement, isFragment } from '../functions/typeChecking'
 import { AlienComponent } from '../internal/component'
-import { currentComponent } from '../internal/global'
-import { lastValue } from '../internal/util'
+import { expectCurrentComponent } from '../internal/global'
 import { JSX } from '../types/jsx'
-import { useConst } from './useConst'
+import { DisposableHook, useConstructor } from './internal/useConstructor'
 
 export type EffectResult = ((detail?: { isHotReload?: boolean }) => void) | void
 
@@ -31,10 +30,12 @@ export function useEffect<State = {}>(
   effect: EffectCallback<State> | Falsy,
   deps?: readonly any[]
 ) {
-  const component = lastValue(currentComponent)!
-  const hook = useConst(UseEffect, deps, component)
-  if (!deps || depsHaveChanged(deps, hook.deps)) {
+  const component = expectCurrentComponent()
+  const hook = useConstructor(UseEffect)
+
+  if (depsHaveChanged(deps, hook.deps)) {
     component.newEffects.run(() => {
+      hook.component = component
       hook.effect = effect
       hook.deps = deps
       hook.run()
@@ -42,11 +43,9 @@ export function useEffect<State = {}>(
   }
 }
 
-class UseEffect {
-  constructor(
-    public deps: readonly any[] | undefined,
-    public component: AlienComponent
-  ) {}
+class UseEffect implements DisposableHook {
+  deps?: readonly any[] = undefined
+  component: AlienComponent = null!
   effect: EffectCallback<any> | Falsy = undefined
   dispose: (() => void) | void = undefined
   rerun: (() => void) | void = undefined
@@ -54,7 +53,9 @@ class UseEffect {
 
   run() {
     this.dispose?.()
-    this.dispose = this.effect ? (0, this.effect)(this) : undefined
+    this.dispose = this.effect
+      ? (0, this.effect)(this as EffectContext<any>)
+      : undefined
     this.runs++
   }
 
@@ -107,7 +108,7 @@ class UseEffect {
 export function useWrappedEffect(
   effect: EffectCallback | Falsy,
   wrapper: (effect: () => EffectResult) => EffectResult,
-  deps: readonly any[]
+  deps?: readonly any[]
 ): void {
   useEffect(effect && (context => wrapper(() => effect(context))), deps)
 }

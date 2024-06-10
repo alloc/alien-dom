@@ -4,10 +4,11 @@ import {
   ElementRefDelegate,
 } from '../addons/elementRef'
 import { AnyElement } from '../internal/types'
-import { useConst } from './useConst'
+import { useMemo } from './useMemo'
 
-export const useElementMap = <K, T extends AnyElement = AnyElement>() =>
-  useConst(ElementMap<K, T>)
+export const useElementMap = <K, T extends AnyElement = AnyElement>(
+  deps?: readonly any[]
+) => useMemo(ElementMap<K, T>, deps)
 
 export class ElementMap<Key, Element extends AnyElement = AnyElement>
   implements Iterable<[Key, Element]>, ElementRefDelegate<Element, Key>

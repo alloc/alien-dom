@@ -7,7 +7,7 @@ export const currentEffects: Stack<AlienEffects> = [null]
 export const currentComponent: Stack<AlienRunningComponent> = [null]
 export const currentNodeStore: Stack<NodeStore> = [null]
 
-export const expectCurrentEffects = expectLastValue(
+export const expectCurrentEffects = /** @__PURE__ */ expectLastValue(
   currentEffects,
   'Effects context not found'
 )

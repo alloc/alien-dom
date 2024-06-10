@@ -1,7 +1,8 @@
 import { isBoolean, isFunction, isString } from '@alloc/is'
-import { ReadonlyRef, ref } from '../core/observable'
+import { ReadonlyRef, Ref, ref } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { createGuid } from '../internal/guid'
+import { useApply } from './internal/useApply'
 import { useConst } from './useConst'
 import { useHookOffset } from './useHookOffset'
 import { useObserver } from './useObserver'
@@ -23,9 +24,12 @@ export function useResetId(
   reset: string | ResetOption | undefined
 ): string | number | false
 
-export function useResetId(compute: () => ResetOption): ReadonlyRef<number>
+export function useResetId(
+  compute: () => ResetOption,
+  deps: readonly any[]
+): ReadonlyRef<number>
 
-export function useResetId(reset: any) {
+export function useResetId(reset: any, deps?: readonly any[]) {
   // Allow the caller to disable resets.
   if (reset === undefined) {
     useHookOffset(4)
@@ -38,46 +42,57 @@ export function useResetId(reset: any) {
     return reset
   }
 
-  const state = useConst(UseResetId, reset)
+  const state = useConst(UseResetId, isFunction(reset))
+  const container = state.ref || state
 
   // Allow the caller to compute resets.
   if (isFunction(reset)) {
     const compute: () => ResetOption = reset
     useObserver(() => {
-      createId(state, compute(), false)
-    }, [compute])
+      // Determine if a reset is necessary.
+      const reset = compute()
+      const force = resolveReset(reset, state.prevReset, false)
+      state.prevReset = isBoolean(reset) ? undefined : reset
+
+      // Either create a new id or use the previous one.
+      container.value = createGuid(container, 'value', force)
+    }, deps!)
 
     return state.ref as ReadonlyRef<number>
   }
 
-  useHookOffset(3)
-  return createId(state, reset)
+  const force = resolveReset(reset, state.prevReset)
+  const result = createGuid(container, 'value', force)
+  useApply(() => {
+    state.prevReset = isBoolean(reset) ? undefined : reset
+    container.value = result
+  })
+
+  useHookOffset(2)
+  return result
 }
 
 class UseResetId {
-  constructor(reset: ResetOption | (() => ResetOption)) {
-    this.ref = isFunction(reset) ? ref(createGuid()) : undefined
-  }
-  prevReset?: ResetOption = undefined
+  ref: Ref<number> | undefined
   value?: number = undefined
-  ref?: ReadonlyRef<number>
+  prevReset?: readonly any[] = undefined
+  constructor(isCompute: boolean) {
+    this.ref = isCompute ? ref(createGuid()) : undefined
+  }
 }
 
 type ResetOption = boolean | readonly any[]
 
-function createId(
-  state: UseResetId,
+function resolveReset(
   reset: ResetOption,
+  prevReset: readonly any[] | undefined,
   defaultReset = true
-): number {
-  if (!isBoolean(reset)) {
-    const deps = reset
-    if (Array.isArray(state.prevReset)) {
-      reset = deps !== state.prevReset && depsHaveChanged(deps, state.prevReset)
-    } else {
-      reset = defaultReset
-    }
-    state.prevReset = deps
+): boolean | undefined {
+  if (isBoolean(reset)) {
+    return reset
   }
-  return createGuid(state.ref || state, 'value', reset)
+  if (prevReset) {
+    return depsHaveChanged(reset, prevReset)
+  }
+  return defaultReset
 }

@@ -1,3 +1,4 @@
+import { objectToDeps } from '../internal/objectToDeps'
 import { useMemo } from './useMemo'
 
 /**
@@ -7,9 +8,5 @@ import { useMemo } from './useMemo'
  */
 export function useObjectMemo<T extends object>(o: T): T
 export function useObjectMemo(object: any) {
-  const keys = Object.keys(object)
-    .filter(k => object[k] !== undefined)
-    .sort()
-  const values = keys.map(k => object[k])
-  return useMemo(object, [...keys, ...values])
+  return useMemo(object, objectToDeps(object))
 }

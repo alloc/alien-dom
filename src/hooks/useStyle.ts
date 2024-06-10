@@ -1,12 +1,12 @@
+import { isFunction } from '@alloc/is'
 import type { Falsy } from '@alloc/types'
-import { isElementProxy } from '../addons/elementProxy'
 import { observe } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import type { HTMLOrSVGElement } from '../internal/types'
 import { UpdateStyle, updateStyle } from '../internal/updateStyle'
 import { toArray } from '../internal/util'
 import type { CSSAttributes } from '../types'
-import { useConst } from './useConst'
+import { useConstructor } from './internal/useConstructor'
 import { useHookOffset } from './useHookOffset'
 import { usePrevious } from './usePrevious'
 
@@ -46,30 +46,24 @@ export function useStyle(
 ) {
   const elements = toArray(element)
 
-  if (typeof style !== 'function') {
+  if (!isFunction(style)) {
     deps = deps ? [...elements, ...deps] : elements
 
     const prevDeps = usePrevious(deps)
     if (style && depsHaveChanged(deps, prevDeps))
       for (const element of elements) {
-        if (isElementProxy(element)) {
-          element.onceElementExists(element => {
-            updateStyle(element, style)
-          })
-        } else {
-          updateStyle(element, style)
-        }
+        updateStyle(element, style)
       }
   } else if (deps) {
-    const state = useConst(UseStyle, style, deps)
+    const state = useConstructor(UseStyle)
     if (state.dispose && depsHaveChanged(deps, state.deps)) {
       state.dispose()
       state.dispose = undefined
-      state.style = style
       state.deps = deps
     }
+    const getStyle = style
     state.dispose ||= observe(() => {
-      const style = state.style()
+      const style = getStyle()
       if (!style) return
 
       for (const element of elements) {
@@ -82,9 +76,6 @@ export function useStyle(
 }
 
 class UseStyle {
-  constructor(
-    public style: () => CSSAttributes | Falsy,
-    public deps: readonly any[]
-  ) {}
+  deps?: readonly any[] = undefined
   dispose?: () => void = undefined
 }

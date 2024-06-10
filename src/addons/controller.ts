@@ -1,5 +1,7 @@
+import { isClass } from '@alloc/is'
+import { Observable, makeObjectObservable } from '../functions/observable'
 import { useEffect, useMemo } from '../hooks'
-import { Refs, createRefs } from '../internal/createRefs'
+import { StateInitializer, createState } from '../internal/util'
 
 type Fn = (...args: any[]) => any
 type FnPropertyOf<T extends object> = {
@@ -99,50 +101,61 @@ export function defineController(singleton?: boolean) {
 }
 
 /**
- * Only one component can use a controller instance at a time. The `init`
- * function should declare every possible property, even if the initial value is
- * `undefined`. Every property in the returned object is observable.
+ * Create the instance of a singleton controller.
  */
 export function useController<State extends object, Params extends any[]>(
   ctrl: Controller<State, void>,
   init: new (...params: Params) => State,
   ...params: Params
-): Refs<State>
+): Observable<State>
 
+/**
+ * Create an instance of a controller for the given `key`.
+ */
 export function useController<Key, State extends object, Params extends any[]>(
   ctrl: Controller<State, Key>,
   key: Key,
   init: new (...params: Params) => State,
   ...params: Params
-): Refs<State>
+): Observable<State>
 
+/**
+ * Create the instance of a singleton controller.
+ */
 export function useController<State extends object, Params extends any[]>(
   ctrl: Controller<State, void>,
   init: (...params: Params) => State,
   ...params: Params
-): Refs<State>
+): Observable<State>
 
+/**
+ * Create an instance of a controller for the given `key`.
+ */
 export function useController<Key, State extends object, Params extends any[]>(
   ctrl: Controller<State, Key>,
   key: Key,
   init: (...params: Params) => State,
   ...params: Params
-): Refs<State>
+): Observable<State>
 
+/** @internal */
 export function useController(
   ctrl: Controller,
   key?: any,
   ...params: any[]
 ): any {
   const singleton = ctrl['singleton']
-  const init = singleton ? key : params.shift()
+  const init: StateInitializer = singleton ? key : params.shift()
   key = singleton ? void 0 : key
 
   const instance = useMemo(() => {
     if (ctrl['instances']?.has(key)) {
       throw Error(`key ${key} already exists`)
     }
-    const instance = createRefs(init, params)
+    const instance = createState(init, params)
+    if (!isClass(init)) {
+      makeObjectObservable(instance)
+    }
     ctrl['instances'] ||= new Map()
     ctrl['instances'].set(key, instance)
     return instance

@@ -6,7 +6,7 @@ import { EffectCallback, useEffect } from './useEffect'
  */
 export function useUpdateEffect<State = {}>(
   effect: EffectCallback<State> | Falsy,
-  deps: readonly any[]
+  deps?: readonly any[]
 ) {
   useEffect<State>(
     effect &&

@@ -5,11 +5,11 @@ import {
   animate,
 } from '../core/animate'
 import { getAnimatedKeys } from '../internal/animate'
-import { expectCurrentEffects } from '../internal/global'
 import { shallowEquals } from '../internal/shallowEquals'
 import type { HTMLOrSVGElement } from '../internal/types'
 import { toArray } from '../internal/util'
-import { useConst } from './useConst'
+import { useApply } from './internal/useApply'
+import { useConstructor } from './internal/useConstructor'
 
 export function useSpring<Element extends HTMLOrSVGElement>(
   element: Element,
@@ -23,14 +23,13 @@ export function useSpring<Element extends HTMLOrSVGElement>(
         from?: Record<string, any>
       })
 
-  const state = useConst(UseSpring)
+  const state = useConstructor(UseSpring)
   if (shouldRun == null) {
     shouldRun = !!to && !shallowEquals(state.to, to)
   }
 
   if (shouldRun) {
-    const effects = expectCurrentEffects()
-    effects.run(() => {
+    useApply(() => {
       state.to = to
       state.from = from
 

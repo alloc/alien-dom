@@ -1,10 +1,10 @@
 import { DelegatedElementRef, ElementRef } from '../addons/elementRef'
 import { AnyElement } from '../internal/types'
 import { at } from '../internal/util'
-import { useConst } from './useConst'
+import { useMemo } from './useMemo'
 
-export const useElementArray = <T extends AnyElement>() =>
-  useConst(ElementArray<T>)
+export const useElementArray = <T extends AnyElement>(deps?: readonly any[]) =>
+  useMemo(ElementArray<T>, deps)
 
 export class ElementArray<T extends AnyElement = AnyElement> extends Array<
   ElementRef<T> | undefined

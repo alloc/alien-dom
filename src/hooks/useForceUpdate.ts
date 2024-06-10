@@ -1,11 +1,10 @@
-import { AlienComponent } from '../internal/component'
 import { expectCurrentComponent } from '../internal/global'
-import { useConst } from './useConst'
 
+/**
+ * Create a function that forces the current component to rerender.
+ */
 export function useForceUpdate() {
   const component = expectCurrentComponent()
-  return useConst(getForceUpdate, component)
+  const index = component.nextHookIndex++
+  return (component.hooks[index] ||= component.update.bind(component))
 }
-
-const getForceUpdate = (component: AlienComponent) =>
-  component.update.bind(component)

@@ -1,6 +1,5 @@
 import { isFunction } from '@alloc/is'
 import {
-  Machine,
   MachineCallback,
   MachineClass,
   MachineParams,
@@ -8,7 +7,7 @@ import {
   MachineType,
   toMachineProxy,
 } from '../addons/machine'
-import { useConst } from './useConst'
+import { expectCurrentComponent } from '../internal/global'
 import { useStableCallback } from './useStableCallback'
 
 export function useMachineProxy<T extends MachineType<void>>(
@@ -23,7 +22,7 @@ export function useMachineProxy<T extends MachineType>(
 ): MachineProxy<T>
 
 export function useMachineProxy(
-  constructor: new (params: any) => Machine<any>,
+  constructor: MachineClass<any>,
   params?: any,
   onChange?: MachineCallback<any>
 ): any {
@@ -32,14 +31,9 @@ export function useMachineProxy(
     params = undefined
   }
   const onChangeRef = useStableCallback(onChange)
-  return useConst(initMachineProxy, constructor, params, onChangeRef)
-}
-
-function initMachineProxy<T extends MachineType>(
-  constructor: MachineClass<T>,
-  params: MachineParams<T> | undefined,
-  onChange: MachineCallback<T>
-) {
-  const machine = new constructor(params!, onChange)
-  return toMachineProxy(machine)
+  const component = expectCurrentComponent()
+  const index = component.nextHookIndex++
+  return (component.hooks[index] ||= toMachineProxy(
+    new constructor(params!, onChangeRef)
+  ))
 }

@@ -4,15 +4,15 @@ import { Disposable } from '../core/disposable'
 import { ref } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { keys } from '../internal/util'
-import { useConst } from './useConst'
+import { useConstructor } from './internal/useConstructor'
 
 export type UseAsyncFn<T> = (state: UseAsync<T>) => PromiseLike<T> | T
 
 export function useAsync<T>(
   get: UseAsyncFn<UseAsyncAwaited<T>> | Falsy,
-  deps: readonly any[]
+  deps: readonly any[] = []
 ) {
-  const instance = useConst(UseAsync<UseAsyncAwaited<T>>, deps)
+  const instance = useConstructor(UseAsync<UseAsyncAwaited<T>>)
   if (!get) {
     instance.stale = true
     instance.abort()
@@ -50,8 +50,7 @@ export class UseAsync<T> {
   effects: Disposable[] = []
   numAttempts = 0
   stale = true
-
-  constructor(public deps: readonly any[]) {}
+  deps?: readonly any[] = undefined
 
   /** @observable */
   get status() {
@@ -162,10 +161,6 @@ export class UseAsync<T> {
       return effect
     }
     return track
-  }
-
-  protected dispose() {
-    this.abort()
   }
 }
 

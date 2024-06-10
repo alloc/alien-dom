@@ -6,6 +6,7 @@ import { isDocument } from '../internal/duck'
 import { expectCurrentComponent } from '../internal/global'
 import { getHostProps } from '../internal/symbols'
 import { noop, toArray } from '../internal/util'
+import { useApply } from './internal/useApply'
 import { useConst } from './useConst'
 import { EffectResult, useEffect } from './useEffect'
 
@@ -40,15 +41,18 @@ export function useKeyBinding<Target extends Document | HTMLElement>(
   options?: AddEventListenerOptions
 ) {
   const component = expectCurrentComponent()
-  const binding = useConst(initKeyBinding, onKeyDown, options)
+  const binding = useConst(initKeyBinding)
 
-  binding.combo = prepareCombo(combo)
-  binding.onKeyDown = onKeyDown
+  useApply(() => {
+    binding.combo = prepareCombo(combo)
+    binding.options = options
+    binding.onKeyDown = onKeyDown
+  })
 
   // If no element is attached, use the document.
   useEffect(() => {
     if (!binding.effect) {
-      return binding.enable(component.ownerDocument!)
+      return binding.enable(component.ownerDocument!, options)
     }
   }, [])
 
@@ -57,10 +61,7 @@ export function useKeyBinding<Target extends Document | HTMLElement>(
 
 export type KeyBinding = ReturnType<typeof initKeyBinding>
 
-const initKeyBinding = (
-  callback: ((event: KeyBindingEvent) => void) | undefined,
-  options: AddEventListenerOptions | undefined
-): {
+const initKeyBinding = (): {
   /**
    * Equals true when the key binding is activated.
    * @observable
@@ -68,10 +69,14 @@ const initKeyBinding = (
   isActive: boolean
   effect: Disposable | null
   combo: Set<string>
+  options: AddEventListenerOptions | undefined
   onKeyDown: ((event: KeyBindingEvent) => EffectResult) | undefined
   onKeyUp: EffectResult | undefined
-  setElement: (element: HTMLElement) => void
-  enable: (target: Document | HTMLElement) => EffectResult
+  setElement: (element: HTMLElement | null) => void
+  enable: (
+    target: Document | HTMLElement,
+    options?: AddEventListenerOptions
+  ) => EffectResult
 } => {
   const isActiveRef = ref(false)
   const comboRef = ref<Set<string>>()
@@ -93,9 +98,10 @@ const initKeyBinding = (
         comboRef.value = newCombo
       }
     },
-    onKeyDown: callback,
+    options: undefined,
+    onKeyDown: undefined,
     onKeyUp: undefined,
-    enable(target) {
+    enable(target, options) {
       enableKeyBinding(target, this, options)
       return () => {
         disableKeyBinding(target, this, options)
@@ -107,9 +113,9 @@ const initKeyBinding = (
         return
       }
       const hostProps = getHostProps(element)!
-      enableKeyBinding(element, this, options)
+      enableKeyBinding(element, this, this.options)
       this.effect = hostProps.addEffect(
-        createDisposable([element, this, options], disableKeyBinding)
+        createDisposable([element, this, this.options], disableKeyBinding)
       )
     },
   }

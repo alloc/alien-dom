@@ -16,7 +16,7 @@ import { AnyElement } from '../internal/types'
 import { UnresolvedChild } from '../jsx-dom/resolveChildren'
 import { morphFragment } from '../morphdom/morphFragment'
 import { JSX } from '../types/jsx'
-import { useConst } from './useConst'
+import { useConstructor } from './internal/useConstructor'
 
 /**
  * Takes the value of a component prop that contains JSX children of any kind
@@ -46,15 +46,14 @@ export function useChildren(
   children: UnresolvedChild,
   deps?: readonly any[]
 ): ChildrenFragment {
-  const hook = useConst(UseChildren, deps)
+  const hook = useConstructor(UseChildren)
   return hook.update(children, deps) as any
 }
 
 class UseChildren {
   key = createGuid()
   fragment: DocumentFragment | null = null
-
-  constructor(public deps: readonly any[] | undefined) {}
+  deps?: readonly any[] = undefined
 
   get [kAlienNodeType]() {
     return kChildrenNodeType

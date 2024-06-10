@@ -46,11 +46,14 @@ export function forEach<T>(
   }
 }
 
-export type StateInitializer<T extends object = object> =
-  | ((...params: any[]) => T)
-  | (new (...args: any[]) => T)
+export type StateInitializer<T = any, Params extends any[] = any[]> =
+  | (T extends object ? new (...params: Params) => T : never)
+  | ((...params: Params) => T)
 
-export function createState(init: StateInitializer, params: any[]) {
+export function createState<T, Params extends any[]>(
+  init: StateInitializer<T, Params>,
+  params: Params
+) {
   return isClass(init) ? new init(...params) : init(...params)
 }
 

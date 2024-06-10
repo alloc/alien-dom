@@ -1,6 +1,9 @@
 import { Disposable } from '../core/disposable'
-import { defineEffectType } from '../core/effects'
 import type { EffectResult } from '../hooks/useEffect'
+import {
+  InternalElementProxy,
+  kElementProxyType,
+} from '../internal/elementProxy'
 
 export type ElementProxy<T extends Element = Element> = T & {
   toElement(): T | null
@@ -37,70 +40,7 @@ export function createElementProxy<T extends Element>(
   })
 }
 
-const kElementProxyType = Symbol.for('ElementProxy')
-
 export const isElementProxy: {
   <T extends Element>(arg: T): arg is ElementProxy<T>
   <T extends Element = Element>(arg: any): arg is ElementProxy<T>
 } = (arg): arg is ElementProxy<Element> => !!(arg && arg[kElementProxyType])
-
-class InternalElementProxy<T extends Element = any> {
-  /** The element that was set. */
-  _element: T | null = null
-  /**
-   * Pending effects that will be called when an element is set. They exist when
-   * `onceElementExists` is called before an element has been set.
-   */
-  _pendingEffects: Set<(element: T) => void> | null = null
-
-  constructor(effect?: (element: T) => EffectResult) {
-    if (effect) {
-      onceElementExists(this, effect)
-    }
-  }
-
-  get [kElementProxyType]() {
-    return true
-  }
-
-  toElement() {
-    return this._element
-  }
-
-  setElement(element: T | null) {
-    const pendingEffects = this._pendingEffects
-    this._pendingEffects = null
-
-    this._element = element
-    if (element) {
-      pendingEffects?.forEach(effect => effect(element))
-    }
-  }
-
-  onceElementExists(effect: (element: T) => EffectResult) {
-    return onceElementExists(this, effect)
-  }
-
-  // This must be named `dispose` for HMR to clear it on updates.
-  dispose() {
-    this._pendingEffects = null
-  }
-}
-
-const onceElementExists = /* @__PURE__ */ defineEffectType(
-  (ref: InternalElementProxy<any>, effect: (element: any) => EffectResult) => {
-    let dispose: EffectResult | undefined
-    if (ref._element) {
-      return effect(ref._element)
-    }
-    const pendingEffect = (element: any) => {
-      dispose = effect(element)
-    }
-    const pendingEffects = (ref._pendingEffects ||= new Set())
-    pendingEffects.add(pendingEffect)
-    return () => {
-      pendingEffects.delete(pendingEffect)
-      dispose?.()
-    }
-  }
-)
