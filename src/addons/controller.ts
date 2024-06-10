@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from '../hooks'
-import { Refs, createRefs } from '../internal/createRefs'
+import { Observable, createObservableState } from '../internal/createRefs'
 
 type Fn = (...args: any[]) => any
 type FnPropertyOf<T extends object> = {
@@ -107,27 +107,27 @@ export function useController<State extends object, Params extends any[]>(
   ctrl: Controller<State, void>,
   init: new (...params: Params) => State,
   ...params: Params
-): Refs<State>
+): Observable<State>
 
 export function useController<Key, State extends object, Params extends any[]>(
   ctrl: Controller<State, Key>,
   key: Key,
   init: new (...params: Params) => State,
   ...params: Params
-): Refs<State>
+): Observable<State>
 
 export function useController<State extends object, Params extends any[]>(
   ctrl: Controller<State, void>,
   init: (...params: Params) => State,
   ...params: Params
-): Refs<State>
+): Observable<State>
 
 export function useController<Key, State extends object, Params extends any[]>(
   ctrl: Controller<State, Key>,
   key: Key,
   init: (...params: Params) => State,
   ...params: Params
-): Refs<State>
+): Observable<State>
 
 export function useController(
   ctrl: Controller,
@@ -142,7 +142,7 @@ export function useController(
     if (ctrl['instances']?.has(key)) {
       throw Error(`key ${key} already exists`)
     }
-    const instance = createRefs(init, params)
+    const instance = createObservableState(init, params)
     ctrl['instances'] ||= new Map()
     ctrl['instances'].set(key, instance)
     return instance

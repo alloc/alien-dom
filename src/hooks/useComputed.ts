@@ -1,18 +1,20 @@
 import { ComputedRef, computed } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
-import { useConst } from './useConst'
+import { DisposableHook, useConstructor } from './useConstructor'
 
 /**
  * Creates a `ComputedRef` that is updated when the dependencies change.
  *
- * 🪝 This hook adds 1 to the hook offset.
+ * Like `useMemo`, the ref is recreated when the component is hot reloaded.
+ *
+ * 🪝 This hook adds 2 to the hook offset.
  */
 export function useComputed<T>(
   get: () => T,
   deps: readonly any[] = [],
   debugId?: string | number
 ): ComputedRef<T> & [value: T] {
-  const state = useConst(UseComputed, deps)
+  const state = useConstructor(UseComputed)
   if (depsHaveChanged(deps, state.deps)) {
     state.ref = computed(get, debugId)
     state.deps = deps
@@ -20,9 +22,8 @@ export function useComputed<T>(
   return state.ref as any
 }
 
-class UseComputed {
-  constructor(public deps: readonly any[] = []) {}
-  ref: ComputedRef | null = null
-  // This tells the runtime to reset the state after an HMR update.
+class UseComputed implements DisposableHook {
+  ref?: ComputedRef = undefined
+  deps?: readonly any[] = undefined
   dispose = true
 }

@@ -1,7 +1,7 @@
 import { isFunction } from '@alloc/is'
 import { peek } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
-import { useConst } from './useConst'
+import { DisposableHook, useConstructor } from './useConstructor'
 
 /**
  * Save a value until its dependencies change. If a function is passed, it‘s
@@ -12,7 +12,7 @@ import { useConst } from './useConst'
  * 🪝 This hook adds 1 to the hook offset.
  */
 export function useMemo<T>(arg: T | (() => T), deps: readonly any[] = []): T {
-  const state = useConst(UseMemo, deps)
+  const state = useConstructor(UseMemo)
   if (depsHaveChanged(deps, state.deps)) {
     state.value = isFunction(arg) ? peek(arg) : arg
     state.deps = deps
@@ -20,9 +20,8 @@ export function useMemo<T>(arg: T | (() => T), deps: readonly any[] = []): T {
   return state.value
 }
 
-class UseMemo {
-  constructor(public deps: readonly any[]) {}
+class UseMemo implements DisposableHook {
   value: any = undefined
-  // This tells the runtime to reset the state after an HMR update.
+  deps?: readonly any[] = undefined
   dispose = true
 }

@@ -3,8 +3,12 @@ import { ComputedRef, computed, ref } from '../core/observable'
 import { getHostProps } from '../internal/symbols'
 import { AnyElement } from '../internal/types'
 import { defineProperty } from '../internal/util'
+import { JSX } from '../types/jsx'
 
-export class ObservableBounds {
+/**
+ * An observable object that tracks the bounds of an element.
+ */
+export class ElementBounds implements JSX.ElementRef {
   constructor(element?: AnyElement | null) {
     if (element) this.setElement(element)
   }
@@ -74,6 +78,10 @@ export class ObservableBounds {
     }
   }
 
+  /**
+   * While locked, the current bounds won't be updated when the target element
+   * changes.
+   */
   lock(flag: boolean) {
     if (flag === this.locked) return
     this.locked = flag

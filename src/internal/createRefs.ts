@@ -1,53 +1,65 @@
-import { isArray, isFunction, isPlainObject } from '@alloc/is'
-import {
-  ArrayRef,
-  ReadonlyArrayRef,
-  Ref,
-  arrayRef,
-  ref,
-} from '../core/observable'
+import { isFunction, isPlainObject } from '@alloc/is'
+import { Ref, ref } from '../core/observable'
 import { attachRef } from '../functions/attachRef'
-import { StateInitializer, createState, defineProperty, keys } from './util'
+import { definePrivateSymbol, getPrivate, setPrivate } from './privateSymbol'
+import { createState, defineProperty, keys } from './util'
 
-export type Refs<T extends object> = {
-  [K in string & Exclude<keyof T, 'bind'>]: T[K] extends infer Value
-    ? Value extends readonly (infer U)[]
-      ? Value extends any[]
-        ? ArrayRef<U>
-        : ReadonlyArrayRef<U>
-      : Value
-    : never
-} & {
+/**
+ * The result type of `createObservable`.
+ */
+export type Observable<T extends object> = Omit<T, 'bind'> & {
   bind<K extends keyof T>(key: K): Ref<T[K]>
 }
 
+const kBoundRefs = definePrivateSymbol<Record<keyof any, Ref>>('boundRefs')
+
+function getBoundRef(this: any, key: keyof any) {
+  return getPrivate(this, kBoundRefs)![key]
+}
+
 class RefBindings {
-  declare _refs: Record<keyof any, Ref>
   constructor(refs: Record<keyof any, Ref>, context: any) {
-    defineProperty(this, '_refs', { value: refs })
+    setPrivate(this, kBoundRefs, refs)
+
+    // If the context is not a plain object, assume it's a class instance; in
+    // which case, we need to inherit its prototype while also preserving the
+    // `RefBindings#bind` method.
     if (!isPlainObject(context)) {
+      defineProperty(this, 'bind', { value: this.bind })
       Object.setPrototypeOf(this, context)
-      this.bind = RefBindings.prototype.bind
     }
   }
   bind(key: keyof any) {
-    return this._refs[key] || (this as any)[key]
+    return getPrivate(this, kBoundRefs)![key]
   }
 }
 
-export function createRefs<T extends object>(init: T, params: any[]) {
+/**
+ * Create a new object, using `init` for the initial property values. Create and
+ * attach a `Ref` for every property.
+ */
+export function createObservableState<T extends object>(
+  init: T | (() => T)
+): Observable<T>
+export function createObservableState<T extends object, Params extends any[]>(
+  init: (...params: Params) => T,
+  params: Params
+): Observable<T>
+export function createObservableState<T extends object, Params extends any[]>(
+  init: T | ((...params: Params) => T),
+  params?: Params
+) {
   if (isFunction(init)) {
-    init = createState(init as StateInitializer, params) as T
+    init = createState(init, params || []) as T
   }
-  const refs = {} as Record<keyof T, Ref>
-  const values: Refs<T> = new RefBindings(refs, init) as any
+  const boundRefs = {} as Record<keyof T, Ref>
+
+  const result: Observable<T> = isPlainObject(init) ? {} : Object.create(init)
+  setPrivate(result, kBoundRefs, boundRefs)
+
   for (const key of keys<Omit<T, 'bind'>>(init)) {
-    const value = init[key]
-    if (isArray(value)) {
-      values[key] = arrayRef(value) as any
-    } else {
-      attachRef(values, key, (refs[key] = ref(value)))
-    }
+    attachRef(result, key, (boundRefs[key] = ref(init[key])))
   }
-  return values
+
+  return result
 }

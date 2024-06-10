@@ -1,6 +1,7 @@
 import { isArray } from '@alloc/is'
-import { useConst } from './useConst'
+import { DisposableHook, useConstructor } from './useConstructor'
 import { useDepsArray } from './useDepsArray'
+import { useEffect } from './useEffect'
 
 /**
  * Returns a new `AbortController` instance. When the `deps` argument changes,
@@ -30,28 +31,39 @@ export function useAbortController(signal?: AbortSignal): AbortController
 /** @internal */
 export function useAbortController(
   arg?: AbortSignal | readonly any[],
-  deps?: readonly any[]
+  deps: readonly any[] = []
 ) {
   const signal = isArray(arg) ? ((deps = arg), undefined) : arg
-  const state = useConst(UseAbortController, signal)
+  const hook = useConstructor(UseAbortController)
+
+  useEffect(() => {
+    hook.setSignal(signal)
+  }, [signal])
 
   if (useDepsArray(deps)) {
-    state.ctrl.abort()
-    state.ctrl = new AbortController()
+    hook.ctrl.abort()
+    hook.ctrl = new AbortController()
   }
 
-  return state.ctrl
+  return hook.ctrl
 }
 
-class UseAbortController {
-  constructor(public signal: AbortSignal | undefined) {
+class UseAbortController implements DisposableHook {
+  ctrl = new AbortController()
+  signal?: AbortSignal = undefined
+  abort?: () => void = undefined
+
+  setSignal(signal: AbortSignal | undefined) {
+    if (this.signal) {
+      this.signal.removeEventListener('abort', this.abort!)
+    }
+    this.signal = signal
     this.abort = signal ? () => this.ctrl.abort() : undefined
     signal?.addEventListener('abort', this.abort!)
   }
-  ctrl = new AbortController()
-  abort?: () => void
+
   dispose() {
     this.ctrl.abort()
-    this.signal?.removeEventListener('abort', this.abort!)
+    this.setSignal(undefined)
   }
 }

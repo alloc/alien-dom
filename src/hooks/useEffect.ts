@@ -2,10 +2,9 @@ import { Falsy } from '@alloc/types'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
 import { isElement, isFragment } from '../functions/typeChecking'
 import { AlienComponent } from '../internal/component'
-import { currentComponent } from '../internal/global'
-import { lastValue } from '../internal/util'
+import { expectCurrentComponent } from '../internal/global'
 import { JSX } from '../types/jsx'
-import { useConst } from './useConst'
+import { DisposableHook, useConstructor } from './useConstructor'
 
 export type EffectResult = ((detail?: { isHotReload?: boolean }) => void) | void
 
@@ -31,32 +30,29 @@ export function useEffect<State = {}>(
   effect: EffectCallback<State> | Falsy,
   deps?: readonly any[]
 ) {
-  const component = lastValue(currentComponent)!
-  const hook = useConst(UseEffect, deps, component)
-  if (!deps || depsHaveChanged(deps, hook.deps)) {
+  const component = expectCurrentComponent()
+  const hook = useConstructor(UseEffect)
+
+  if (depsHaveChanged(deps, hook.deps)) {
     component.newEffects.run(() => {
+      hook.component = component
       hook.effect = effect
       hook.deps = deps
-      hook.run()
+
+      hook.dispose?.()
+      hook.dispose = effect ? effect(hook as EffectContext<any>) : undefined
+      hook.runs++
     })
   }
 }
 
-class UseEffect {
-  constructor(
-    public deps: readonly any[] | undefined,
-    public component: AlienComponent
-  ) {}
+class UseEffect implements DisposableHook {
+  deps?: readonly any[] = undefined
+  component: AlienComponent = null!
   effect: EffectCallback<any> | Falsy = undefined
   dispose: (() => void) | void = undefined
   rerun: (() => void) | void = undefined
   runs = 0
-
-  run() {
-    this.dispose?.()
-    this.dispose = this.effect ? (0, this.effect)(this) : undefined
-    this.runs++
-  }
 
   get isFirstRun() {
     return this.runs === 0

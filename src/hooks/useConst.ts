@@ -1,6 +1,7 @@
 import { peek } from '../core/observable'
 import { expectCurrentComponent } from '../internal/global'
 import { StateInitializer, createState } from '../internal/util'
+import { useDepsArray } from './useDepsArray'
 
 /**
  * Create a piece of state that persists between renders. The state is recreated
@@ -15,7 +16,7 @@ export function useConst<State extends object, Params extends any[]>(
   ...params: Params
 ): State
 
-export function useConst<State extends object, Params extends any[]>(
+export function useConst<State, Params extends any[]>(
   init: (...params: Params) => State,
   ...params: Params
 ): State
@@ -23,5 +24,8 @@ export function useConst<State extends object, Params extends any[]>(
 export function useConst(init: StateInitializer, ...params: any[]) {
   const component = expectCurrentComponent()
   const index = component.nextHookIndex++
-  return (component.hooks[index] ||= peek(createState, init, params))
+  if (useDepsArray(params)) {
+    return (component.hooks[index] = peek(createState, init, params))
+  }
+  return component.hooks[index]
 }
