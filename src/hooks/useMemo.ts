@@ -1,6 +1,7 @@
 import { isFunction } from '@alloc/is'
 import { peek } from '../core/observable'
 import { depsHaveChanged } from '../functions/depsHaveChanged'
+import { useApply } from './internal/useApply'
 import { DisposableHook, useConstructor } from './internal/useConstructor'
 
 /**
@@ -14,8 +15,12 @@ import { DisposableHook, useConstructor } from './internal/useConstructor'
 export function useMemo<T>(arg: T | (() => T), deps: readonly any[] = []): T {
   const state = useConstructor(UseMemo)
   if (depsHaveChanged(deps, state.deps)) {
-    state.value = isFunction(arg) ? peek(arg) : arg
-    state.deps = deps
+    const value = isFunction(arg) ? peek(arg) : arg
+    useApply(() => {
+      state.value = value
+      state.deps = deps
+    })
+    return value
   }
   return state.value
 }
