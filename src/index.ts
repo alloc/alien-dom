@@ -24,11 +24,11 @@ export * from './functions/toElements'
 export * from './functions/typeChecking'
 
 /// Addons
-export * from './addons/bounds'
 export * from './addons/channel'
 export * from './addons/controller'
 export * from './addons/domObserver'
 export * from './addons/element'
+export * from './addons/elementBounds'
 export * from './addons/elementExtensions'
 export * from './addons/elementProxy'
 export * from './addons/elementRef'
