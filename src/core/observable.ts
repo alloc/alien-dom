@@ -1281,8 +1281,11 @@ export function isReadonlyRef(arg: any): boolean {
   return isRef(arg) && !Object.getOwnPropertyDescriptor(arg, 'value')!.set
 }
 
+/**
+ * Returns true if the given value is an observable ref.
+ */
 export function isRef<T = any>(value: any): value is ReadonlyRef<T> {
-  return !!value && value[kRefType] !== undefined
+  return Boolean(value) && value[kRefType] !== undefined
 }
 
 export function guardRef<T>(
