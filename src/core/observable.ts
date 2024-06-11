@@ -103,10 +103,6 @@ export abstract class ReadonlyRef<T = any> {
     return 'ReadonlyRef'
   }
 
-  get value(): T {
-    return access(this as any)
-  }
-
   peek() {
     return this._value
   }
@@ -153,6 +149,10 @@ export abstract class ReadonlyRef<T = any> {
   ): ComputedRef<False | undefined> {
     return computed(() => (this.value ? undefined : evaluateInput(falseValue)))
   }
+}
+
+export interface ReadonlyRef<T> {
+  get value(): T
 }
 
 export class Ref<T = any> extends ReadonlyRef<T> {
