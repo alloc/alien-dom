@@ -1226,8 +1226,12 @@ export const observeArrayOperations = <T>(
   handler: ArrayOperation.Handler<T>
 ) => new ArrayObserver(arrayRef, handler)
 
-export function isReadonlyRef(value: any): boolean {
-  return !!value && value[kRefType] === 'ReadonlyRef'
+/**
+ * Returns true if the given value is an observable ref whose value cannot be
+ * set directly.
+ */
+export function isReadonlyRef(arg: any): boolean {
+  return isRef(arg) && !Object.getOwnPropertyDescriptor(arg, 'value')!.set
 }
 
 export function isRef<T = any>(value: any): value is ReadonlyRef<T> {
