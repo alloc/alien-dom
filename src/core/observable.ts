@@ -162,7 +162,7 @@ export class Ref<T = any> extends ReadonlyRef<T> {
 
   set(arg: T | ((value: T) => T)) {
     if (isFunction(arg)) {
-      arg = arg(this._value)
+      arg = arg(this.peek())
     }
     this.value = arg
     return arg
