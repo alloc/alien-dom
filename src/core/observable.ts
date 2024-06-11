@@ -1402,9 +1402,9 @@ export function when(
 /**
  * A "flat" ref is one that cannot point to another ref.
  */
-export type FlatReadonlyRef<T> = ReadonlyRef<Unref<T>>
+export type FlatReadonlyRef<T> = ReadonlyRef<Exclude<T, ReadonlyRef>>
 
 /**
- * Exclude ref types from type `T`.
+ * Unwrap any `ReadonlyRef` types in the type `T`.
  */
-export type Unref<T> = Exclude<T, ReadonlyRef>
+export type Unref<T> = T extends ReadonlyRef<infer U> ? U : T

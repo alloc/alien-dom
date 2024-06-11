@@ -1,6 +1,6 @@
 import { isArray, isBoolean, isObject } from '@alloc/is'
 import { createDisposable } from '../core/disposable'
-import { ReadonlyRef, Unref, isRef } from '../core/observable'
+import { ReadonlyRef, isRef } from '../core/observable'
 import { appendChild } from '../jsx-dom/appendChild'
 import { AnyDeferredNode, isDeferredNode } from '../jsx-dom/node'
 import { ResolvedChild, resolveChildren } from '../jsx-dom/resolveChildren'
@@ -100,7 +100,7 @@ export function applyChildrenProp(
 
 export function applyClassProp(
   node: HTMLOrSVGElement,
-  value: Unref<JSX.HTMLClassProp>,
+  value: Exclude<JSX.HTMLClassProp, ReadonlyRef>,
   hostProps?: HostProps
 ): void {
   const result = flattenClassProp(value, hostProps)
@@ -113,7 +113,7 @@ export function applyClassProp(
 
 export function applyDatasetProp(
   node: HTMLOrSVGElement,
-  value: Unref<JSX.HTMLDatasetProp>,
+  value: Exclude<JSX.HTMLDatasetProp, ReadonlyRef>,
   hostProps?: HostProps
 ): void {
   applyObjectProp(
@@ -129,7 +129,7 @@ export function applyDatasetProp(
 
 export function applyStyleProp(
   node: HTMLOrSVGElement,
-  value: Unref<JSX.HTMLStyleProp>,
+  value: Exclude<JSX.HTMLStyleProp, ReadonlyRef>,
   hostProps?: HostProps
 ): void {
   const merge: MergeStylesFn = (style, value) =>

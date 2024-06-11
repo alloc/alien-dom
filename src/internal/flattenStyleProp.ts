@@ -1,6 +1,6 @@
 import { isArray } from '@alloc/is'
 import { Falsy } from '@alloc/types'
-import { Unref, isRef } from '../core/observable'
+import { ReadonlyRef, isRef } from '../core/observable'
 import { morphAttributes } from '../morphdom/morphAttributes'
 import { CSSAttributes } from '../types'
 import { HostProps } from './hostProps'
@@ -8,12 +8,12 @@ import { HTMLOrSVGElement } from './types'
 
 export type MergeStylesFn = (
   toStyle: CSSAttributes,
-  fromStyle: Unref<JSX.HTMLStyleProp>
+  fromStyle: Exclude<JSX.HTMLStyleProp, ReadonlyRef>
 ) => void
 
 export function flattenStyleProp(
   node: HTMLOrSVGElement,
-  value: Unref<JSX.HTMLStyleProp>,
+  value: Exclude<JSX.HTMLStyleProp, ReadonlyRef>,
   style: CSSAttributes,
   merge: MergeStylesFn = Object.assign,
   hostProps?: HostProps,
