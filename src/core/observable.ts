@@ -1264,6 +1264,9 @@ export function peek<T extends object, K extends keyof T>(
 ): T[K]
 
 export function peek(arg1: object | ((...args: any[]) => any), ...rest: any[]) {
+  if (access === unseenAccess) {
+    return isFunction(arg1) ? arg1(...rest) : (arg1 as any)[rest[0]]
+  }
   const parentAccess = access
   access = unseenAccess
   try {
