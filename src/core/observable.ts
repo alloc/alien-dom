@@ -1238,6 +1238,13 @@ export function isRef<T = any>(value: any): value is ReadonlyRef<T> {
   return !!value && value[kRefType] !== undefined
 }
 
+export function guardRef<T>(
+  value: any,
+  guard: (value: any) => value is T
+): value is T | Ref<T> {
+  return isRef(value) ? guard(value.peek()) : guard(value)
+}
+
 /**
  * Like `ref.peek()` but applies to all access within the given `compute`
  * callback.
