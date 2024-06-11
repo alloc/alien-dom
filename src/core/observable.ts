@@ -6,7 +6,7 @@ import {
   getPrivate,
   setPrivate,
 } from '../internal/privateSymbol'
-import { forEach, noop } from '../internal/util'
+import { defineProperty, forEach, noop } from '../internal/util'
 import { Disposable, attachDisposer } from './disposable'
 
 const kRefType = Symbol.for('refType')
@@ -1033,6 +1033,41 @@ export interface ComputedRef<T> {
 }
 
 //
+// Lens refs
+//
+
+export class LensRef<T = any> extends Ref<T> {
+  constructor(
+    source: ReadonlyRef<T> | (() => T),
+    sink: Ref<T> | ((newValue: T) => void),
+    debugId?: string | number
+  ) {
+    super(null!, debugId)
+
+    if (isFunction(source)) {
+      source = new ComputedRef(source)
+    }
+    if (isRef(sink)) {
+      sink = Reflect.set.bind(Reflect, sink, 'value')
+    }
+
+    defineProperty(this, 'peek', {
+      configurable: true,
+      value: source.peek.bind(source),
+    })
+    defineProperty(this, 'value', {
+      configurable: true,
+      get: Reflect.get.bind(Reflect, source, 'value'),
+      set: sink,
+    })
+  }
+
+  get [kRefType]() {
+    return 'LensRef'
+  }
+}
+
+//
 // Single ref observer
 //
 
@@ -1187,6 +1222,18 @@ export const refMap = <K, V>(entries?: Iterable<[K, V]>) => new RefMap(entries)
 
 export const computed = <T>(compute: () => T, debugId?: string | number) =>
   new ComputedRef(compute, debugId)
+
+/**
+ * Create a `LensRef` object, which is a combination of a *source* (either a
+ * `ComputedRef` or a getter) and a *sink* (either a `Ref` or a setter). It acts
+ * as a middle-man for reads and/or writes, allowing you to transform the value
+ * during access or update.
+ */
+export const lens = <T>(
+  compute: ReadonlyRef<T> | (() => T),
+  set: Ref<T> | ((newValue: T) => void),
+  debugId?: string | number
+) => new LensRef(compute, set, debugId)
 
 /** Observe any refs accessed in the compute function. */
 export function observe(compute: () => void): Observer
