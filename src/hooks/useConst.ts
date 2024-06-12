@@ -1,7 +1,7 @@
 import { isPlainObject } from '@alloc/is'
 import { peek } from '../core/observable'
+import { objectToDeps } from '../functions/objectToDeps'
 import { expectCurrentComponent } from '../internal/global'
-import { objectToDeps } from '../internal/objectToDeps'
 import { StateInitializer, createState } from '../internal/util'
 import { useDepsArray } from './useDepsArray'
 

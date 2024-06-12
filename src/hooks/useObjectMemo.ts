@@ -1,4 +1,4 @@
-import { objectToDeps } from '../internal/objectToDeps'
+import { objectToDeps } from '../functions/objectToDeps'
 import { useMemo } from './useMemo'
 
 /**
