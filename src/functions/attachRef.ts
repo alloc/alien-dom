@@ -7,12 +7,15 @@ export const attachRef = (
   ref: ReadonlyRef,
   didSet?: (key: keyof any, newValue: any, oldValue: any) => void
 ) => {
-  const { get, set } = closestPropertyDescriptor(ref, 'value')!
+  const { get, set } = findPropertyDescriptor(ref, 'value') as {
+    get: () => any
+    set?: (value: any) => void
+  }
 
   defineProperty(props, key, {
     configurable: true,
     enumerable: true,
-    get: get,
+    get: get.bind(ref),
     set: set
       ? didSet
         ? newValue => {
@@ -22,13 +25,13 @@ export const attachRef = (
               didSet(key, newValue, oldValue)
             }
           }
-        : set
+        : set.bind(ref)
       : undefined,
   })
   return ref
 }
 
-function closestPropertyDescriptor(obj: object, key: keyof any) {
+function findPropertyDescriptor(obj: object, key: keyof any) {
   let proto = obj
   do {
     const descriptor = Object.getOwnPropertyDescriptor(proto, key)
