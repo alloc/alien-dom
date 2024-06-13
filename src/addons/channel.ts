@@ -214,9 +214,10 @@ export function defineChannel<
     let message: Channel.Message | null
 
     if (isTarget(arg1)) {
+      message = Object.create(arg2) as Channel.Message
+
       if (targetedReceiverCaches) {
-        message = {
-          ...(arg2 as Channel.Message),
+        Object.assign(message, {
           currentTarget: arg1,
           stopPropagation() {
             this.stopPropagation = noop
@@ -224,21 +225,20 @@ export function defineChannel<
           stopImmediatePropagation() {
             this.stopImmediatePropagation = noop
           },
-        }
+        })
         return bubble(arg1, message as Channel.BubblingMessage)
       }
 
-      message = {
-        ...(arg2 as Channel.Message),
+      Object.assign(message, {
         target: arg1,
         currentTarget: document,
-      }
+      })
     }
 
     let received = false
 
     if (untargetedReceivers) {
-      message ||= { ...arg1 } as Channel.Message
+      message ||= Object.create(arg1) as Channel.Message
       message.stopPropagation = noop
       message.stopImmediatePropagation = () => {
         message = null
