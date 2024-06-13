@@ -51,9 +51,12 @@ const extractor: Extractor = {
             // Assume that conditions won't contain any tokens.
             else if (
               node.type === 'IfStatement' ||
-              node.type === 'ConditionalExpression'
+              node.type === 'ConditionalExpression' ||
+              node.type === 'SwitchCase'
             ) {
-              skipped.add(node.test)
+              if (node.test) {
+                skipped.add(node.test)
+              }
             }
 
             // Handle pre-skipped nodes.
