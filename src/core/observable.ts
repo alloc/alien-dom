@@ -242,7 +242,11 @@ function assignPrototype(
 // Array refs
 //
 
-export abstract class ReadonlyArrayRef<T> extends ReadonlyRef<readonly T[]> {}
+export abstract class ReadonlyArrayRef<T> extends ReadonlyRef<readonly T[]> {
+  get [kRefType]() {
+    return 'ArrayRef'
+  }
+}
 
 export interface ReadonlyArrayRef<T> extends ArrayIterators<T>, Iterable<T> {
   [index: number]: T
@@ -1286,6 +1290,10 @@ export function isReadonlyRef(arg: any): boolean {
  */
 export function isRef<T = any>(value: any): value is ReadonlyRef<T> {
   return Boolean(value) && value[kRefType] !== undefined
+}
+
+export function isArrayRef<T = any>(value: any): value is ArrayRef<T> {
+  return Boolean(value) && value[kRefType] === 'ArrayRef'
 }
 
 export function guardRef<T>(
