@@ -1,0 +1,31 @@
+{
+  "name": "@alien-dom/unocss-extractor",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rimraf dist && tsup-node src/index.ts --format esm --dts",
+    "dev": "tsup-node src/index.ts --format esm --dts --watch --sourcemap",
+    "prepublishOnly": "rimraf dist && tsup-node src/index.ts --format esm --dts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alloc/alien-dom.git",
+    "directory": "packages/unocss-extractor"
+  },
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@types/estree-jsx": "^1.0.5",
+    "@types/node": "^18.15.11",
+    "@unocss/core": "^0.61.0",
+    "tsup": "^6.7.0"
+  },
+  "dependencies": {
+    "estree-walker": "^3.0.3",
+    "meriyah": "^4.5.0",
+    "sucrase": "^3.34.0"
+  }
+}
