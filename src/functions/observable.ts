@@ -1,4 +1,4 @@
-import { ReadonlyRef, Ref, computed, ref } from '../core/observable'
+import { Ref, computed, ref } from '../core/observable'
 import {
   definePrivateSymbol,
   getPrivate,
@@ -9,14 +9,20 @@ import { attachRef } from './attachRef'
 
 /**
  * A decorator for class fields that makes the field observable.
- *
- * If the field is a getter, it's backed by a `ComputedRef` object.
  */
-export function observable<Target>(
-  target: Target,
-  propertyKey: string | symbol,
-  descriptor: PropertyDescriptor
-): PropertyDescriptor
+export function observable<This, Value>(
+  target: undefined,
+  field: ClassFieldDecoratorContext<This, Value>
+): (this: This, value: Value) => Value
+
+/**
+ * A decorator for class getters that makes the getter observable. When
+ * observed, the getter is only called when a dependency is changed.
+ */
+export function observable<This, Return>(
+  target: () => Return,
+  field: ClassGetterDecoratorContext<This, Return>
+): (this: This) => Return
 
 /**
  * A decorator for classes that makes every property observable.
@@ -24,50 +30,52 @@ export function observable<Target>(
  * It also adds a `bind` method to the class, which can be used to bind a
  * property to a JSX attribute.
  */
-export function observable<Class extends abstract new (...args: any) => object>(
-  target: Class
-): {
-  new (...args: ConstructorParameters<Class>): Observable<InstanceType<Class>>
-}
+export function observable<Class extends abstract new (...args: any) => any>(
+  target: Class,
+  context: ClassDecoratorContext<Class>
+): typeof target
 
 /** @internal */
 export function observable(
   target: any,
-  propertyKey?: string | symbol,
-  descriptor?: PropertyDescriptor
+  context:
+    | ClassDecoratorContext
+    | ClassFieldDecoratorContext
+    | ClassGetterDecoratorContext
 ) {
-  // Property decorator
-  if (propertyKey != null && descriptor) {
-    let createRef: (object: any) => ReadonlyRef
-    if (descriptor.get) {
-      if (descriptor.set) {
-        throw Error('An @observable class field cannot have a setter')
-      }
-      const { get } = descriptor
-      createRef = object => computed(get.bind(object))
-    } else {
-      createRef = object => ref(object[propertyKey])
-    }
-    return {
-      configurable: true,
-      enumerable: true,
-      get(this: any) {
-        return attachRef(this, propertyKey, createRef(this)).value
-      },
+  const { name, kind } = context
+
+  if (kind === 'class') {
+    const { name, length, prototype, ...staticMembers } =
+      Object.getOwnPropertyDescriptors(target)
+
+    return Object.defineProperties(
+      new Function(
+        'decorate',
+        'Super',
+        `return class ${context.name} extends Super {` +
+          `  constructor(...args) {` +
+          `    super(...args);` +
+          `    decorate(this)` +
+          `  }` +
+          `}`
+      )(makeObjectObservable, target),
+      staticMembers
+    )
+  }
+
+  if (kind === 'getter') {
+    // Instance property getter
+    return function (this: any) {
+      attachRef(this, name, computed(target.bind(this)))
+      return this[name]
     }
   }
 
-  // Class decorator
-  return new Function(
-    'decorate',
-    'Super',
-    `return class ${target.name} extends Super {` +
-      `  constructor(...args) {` +
-      `    super(...args)` +
-      `    decorate(this)` +
-      `  }` +
-      `}`
-  )(makeObjectObservable, target)
+  // Instance field initializer
+  context.addInitializer(function (this: any) {
+    attachRef(this, name, ref(this[name]))
+  })
 }
 
 /**
