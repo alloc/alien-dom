@@ -1,8 +1,9 @@
-import { isPlainObject } from '@alloc/is'
+import { isFunction, isPlainObject } from '@alloc/is'
 import { peek } from '../core/observable'
 import { objectToDeps } from '../functions/objectToDeps'
 import { expectCurrentComponent } from '../internal/global'
 import { StateInitializer, createState } from '../internal/util'
+import { useApply } from './internal/useApply'
 import { useDepsArray } from './useDepsArray'
 
 /**
@@ -11,6 +12,9 @@ import { useDepsArray } from './useDepsArray'
  * object, its properties will be used for dependency tracking.
  *
  * Use this over `useMemo` for state that needs to persist between hot reloads.
+ * Note that if you define a `dispose` method on the state, it won't be
+ * persisted between hot reloads anymore and the `dispose` method will be called
+ * before the state is recreated (when its `params` change).
  *
  * 🪝 This hook adds 2 to the hook offset.
  */
@@ -32,8 +36,14 @@ export function useConst(init: StateInitializer, ...params: any[]) {
       ? objectToDeps(params[0])
       : params
 
+  const oldState = component.hooks[index]
   if (useDepsArray(deps)) {
+    if (oldState && isFunction(oldState.dispose))
+      useApply(() => {
+        oldState.dispose()
+      })
+
     return (component.hooks[index] = peek(createState, init, params))
   }
-  return component.hooks[index]
+  return oldState
 }
