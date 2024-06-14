@@ -1228,6 +1228,22 @@ export const computed = <T>(compute: () => T, debugId?: string | number) =>
   new ComputedRef(compute, debugId)
 
 /**
+ * Create a `ComputedRef` that equals `true` if all inputs are truthy.
+ */
+export const computedEvery = (
+  inputs: ComputedInput<any>[],
+  debugId?: string | number
+) => new ComputedRef(() => inputs.every(evaluateInput), debugId)
+
+/**
+ * Create a `ComputedRef` that equals `true` if any input is truthy.
+ */
+export const computedSome = (
+  inputs: ComputedInput<any>[],
+  debugId?: string | number
+) => new ComputedRef(() => inputs.some(evaluateInput), debugId)
+
+/**
  * Create a `LensRef` object, which is a combination of a *source* (either a
  * `ComputedRef` or a getter) and a *sink* (either a `Ref` or a setter). It acts
  * as a middle-man for reads and/or writes, allowing you to transform the value
