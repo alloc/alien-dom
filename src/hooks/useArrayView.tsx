@@ -1,3 +1,4 @@
+import { isArray, isFunction } from '@alloc/is'
 import { Falsy } from '@alloc/types'
 import { ContextStore } from '../core/context'
 import {
@@ -10,7 +11,7 @@ import { morphRootNode } from '../functions/morphRootNode'
 import { isFragment, isNode } from '../functions/typeChecking'
 import { AlienComponent } from '../internal/component'
 import { forwardContext } from '../internal/context'
-import { endOfFragment } from '../internal/fragment'
+import { endOfFragment, fragmentToChildNodes } from '../internal/fragment'
 import { currentNodeStore, expectCurrentComponent } from '../internal/global'
 import { NodeStore } from '../internal/nodeStore'
 import {
@@ -32,9 +33,27 @@ export type ArrayViewRenderFn<T = any> = (
   key: JSX.ElementKey
 ) => JSX.Children
 
+export interface ArrayViewOptions<T = any> {
+  getItemKey?: (item: T) => JSX.ElementKey
+}
+
 export function useArrayView<T>(
   array: ArrayRef<T> | Falsy,
   render: ArrayViewRenderFn<T>,
+  deps?: readonly any[]
+): JSX.Element | null
+
+export function useArrayView<T>(
+  array: ArrayRef<T> | Falsy,
+  options: ArrayViewOptions<T> | Falsy,
+  render: ArrayViewRenderFn<T>,
+  deps?: readonly any[]
+): JSX.Element | null
+
+export function useArrayView<T>(
+  array: ArrayRef<T> | Falsy,
+  arg2: ArrayViewRenderFn<T> | ArrayViewOptions<T> | Falsy,
+  arg3?: ArrayViewRenderFn<T> | readonly any[],
   deps?: readonly any[]
 ): JSX.Element | null {
   if (!array) {
@@ -47,13 +66,20 @@ export function useArrayView<T>(
   const view = useMemo(initArrayViewState<T>, [array])
   view.context = component.context
 
+  // Argument coercion
+  const options = arg2 && !isFunction(arg2) ? arg2 : ({} as ArrayViewOptions<T>)
+  let render = isFunction(arg2) ? arg2 : (arg3 as ArrayViewRenderFn<T>)
+  if (isArray(arg3)) {
+    deps = arg3
+  }
+
   // This effect is responsible for updating the items when the deps change. If
   // a deps array isn't provided, the items will only be updated if the render
   // function changes.
   useEffect(() => {
     if (view.mounted) {
       const items = array.peek()
-      renderArrayView(view, { type: 'update', items }, render)
+      renderArrayView(view, { type: 'update', items }, render, options)
     }
   }, deps || [render])
 
@@ -64,14 +90,18 @@ export function useArrayView<T>(
   view.head = useView(() => {
     // Mount the current items when the head is mounted.
     const items = array.peek()
-    renderArrayView(view, { type: 'mount', items }, render)
+    renderArrayView(view, { type: 'mount', items }, render, options)
     view.mounted = true
 
     // Observe array operations and update the view accordingly.
     const observer = observeArrayOperations(array, operations => {
       for (const operation of operations) {
-        view[operation.type](operation as any, render)
+        view[operation.type](operation as any, render, options)
       }
+      for (const node of view.itemsToUnmount.values()) {
+        unmount(isNode(node) ? node : node.rootNode)
+      }
+      view.itemsToUnmount.clear()
     })
 
     // We know that our observer won't be mutating any other observables, so
@@ -111,20 +141,49 @@ class ArrayViewState<T = any> implements NodeStore {
   readonly itemKeys: JSX.ElementKey[] = []
   readonly itemNodes: ArrayViewItemNode[] = []
   readonly itemUpdates = new Map<JSX.ElementKey, AnyDeferredNode>()
+  readonly itemsToUnmount = new Map<JSX.ElementKey, ArrayViewItemNode>()
   nextItemKey = 1
 
   /**
    * The `view` method is called once per item. It calls the `children` prop
    * to render the item, and keeps track of the item's key and node.
    */
-  mountItem(item: T, index: number, render: ArrayViewRenderFn<T>) {
-    const itemKey = getArrayViewItemKey(this, this.nextItemKey++)
-    const itemResult: UnresolvedChild = render(item, itemKey)
+  mountItem(
+    item: T,
+    index: number,
+    render: ArrayViewRenderFn<T>,
+    options: ArrayViewOptions<T>
+  ) {
+    const getItemKey = options?.getItemKey
+    const itemKey = getArrayViewItemKey(
+      this,
+      getItemKey ? getItemKey(item) : this.nextItemKey++
+    )
 
-    const rootNode = morphRootNode(null, itemResult, undefined)
+    let rootNode: ChildNode | DocumentFragment
+    let itemNode: ArrayViewItemNode | undefined
 
-    validateArrayViewItemResult(rootNode, itemResult, itemKey)
-    const itemNode = getArrayViewItemNode(rootNode)
+    const reusedItemNode = getItemKey && this.itemsToUnmount.get(itemKey)
+    if (reusedItemNode) {
+      this.itemsToUnmount.delete(itemKey)
+
+      itemNode = reusedItemNode
+      rootNode = isNode(itemNode) ? itemNode : itemNode.rootNode!
+
+      if (isFragment(rootNode)) {
+        const childNodes = fragmentToChildNodes(rootNode)
+        rootNode = document.createDocumentFragment()
+        for (const childNode of childNodes) {
+          rootNode.append(childNode)
+        }
+      }
+    } else {
+      const itemResult: UnresolvedChild = render(item, itemKey)
+      rootNode = morphRootNode(null, itemResult, undefined)
+
+      validateArrayViewItemResult(rootNode, itemResult, itemKey)
+      itemNode = getArrayViewItemNode(rootNode)
+    }
 
     // Register the item's key and node.
     const { itemNodes, itemKeys } = this
@@ -173,20 +232,27 @@ class ArrayViewState<T = any> implements NodeStore {
     this.itemNodes[index] = itemNode
   }
 
-  add(operation: ArrayOperation.Add, render: ArrayViewRenderFn<T>) {
+  add(
+    operation: ArrayOperation.Add,
+    render: ArrayViewRenderFn<T>,
+    options: ArrayViewOptions<T>
+  ) {
     // Expand the itemNodes and itemKeys arrays to make room for the new items.
     const slots = Array(operation.count)
     this.itemNodes.splice(operation.index, 0, ...slots)
     this.itemKeys.splice(operation.index, 0, ...slots)
 
     // Add the new items to the DOM.
-    renderArrayView(this, operation, render)
+    renderArrayView(this, operation, render, options)
   }
 
   remove(operation: ArrayOperation.Remove) {
     for (let offset = 0; offset < operation.count; offset++) {
-      const node = this.itemNodes[operation.index + offset]
-      unmount(isNode(node) ? node : node.rootNode)
+      const index = operation.index + offset
+      const node = this.itemNodes[index]
+      if (node) {
+        this.itemsToUnmount.set(this.itemKeys[index], node)
+      }
     }
 
     // Shrink the itemNodes and itemKeys arrays to remove the items.
@@ -194,29 +260,37 @@ class ArrayViewState<T = any> implements NodeStore {
     this.itemKeys.splice(operation.index, operation.count)
   }
 
-  replace(operation: ArrayOperation.Replace, render: ArrayViewRenderFn<T>) {
+  replace(
+    operation: ArrayOperation.Replace,
+    render: ArrayViewRenderFn<T>,
+    options: ArrayViewOptions<T>
+  ) {
     // Remove the previous item, if one exists.
     const node = this.itemNodes[operation.index]
     if (node) {
-      unmount(isNode(node) ? node : node.rootNode)
+      this.itemsToUnmount.set(this.itemKeys[operation.index], node)
     }
 
-    renderArrayView(this, operation, render)
+    renderArrayView(this, operation, render, options)
   }
 
   // TODO: Try to reuse old item nodes if possible?
-  rebase(operation: ArrayOperation.Rebase, render: ArrayViewRenderFn<T>) {
+  rebase(
+    operation: ArrayOperation.Rebase,
+    render: ArrayViewRenderFn<T>,
+    options: ArrayViewOptions<T>
+  ) {
     // Unmount all current item nodes.
-    for (const node of this.itemNodes) {
-      unmount(isNode(node) ? node : node.rootNode)
-    }
+    this.itemNodes.forEach((node, index) => {
+      this.itemsToUnmount.set(this.itemKeys[index], node)
+    })
 
     // Clear the item data storage.
     this.itemNodes.length = 0
     this.itemKeys.length = 0
 
     // Add the new items to the DOM.
-    renderArrayView(this, operation, render)
+    renderArrayView(this, operation, render, options)
   }
 
   //
@@ -255,7 +329,10 @@ function initArrayViewState<T>() {
   return new ArrayViewState<T>()
 }
 
-function getArrayViewItemKey(view: ArrayViewState<any>, itemKey: number) {
+function getArrayViewItemKey(
+  view: ArrayViewState<any>,
+  itemKey: string | number
+) {
   return `${view.key}@${itemKey}`
 }
 
@@ -293,37 +370,43 @@ declare namespace ArrayView {
 function renderArrayView(
   view: ArrayViewState,
   operation: ArrayView.MountOperation,
-  render: ArrayViewRenderFn
+  render: ArrayViewRenderFn,
+  options: ArrayViewOptions
 ): void
 
 function renderArrayView(
   view: ArrayViewState,
   operation: ArrayView.UpdateOperation,
-  render: ArrayViewRenderFn
+  render: ArrayViewRenderFn,
+  options: ArrayViewOptions
 ): void
 
 function renderArrayView(
   view: ArrayViewState,
   operation: ArrayOperation.Add,
-  render: ArrayViewRenderFn
+  render: ArrayViewRenderFn,
+  options: ArrayViewOptions
 ): void
 
 function renderArrayView(
   view: ArrayViewState,
   operation: ArrayOperation.Replace,
-  render: ArrayViewRenderFn
+  render: ArrayViewRenderFn,
+  options: ArrayViewOptions
 ): void
 
 function renderArrayView(
   view: ArrayViewState,
   operation: ArrayOperation.Rebase,
-  render: ArrayViewRenderFn
+  render: ArrayViewRenderFn,
+  options: ArrayViewOptions
 ): void
 
 function renderArrayView(
   view: ArrayViewState,
   props: ArrayView.Operation,
-  render: ArrayViewRenderFn
+  render: ArrayViewRenderFn,
+  options: ArrayViewOptions
 ): void {
   const restoreContext = forwardContext(view.context)
   currentNodeStore.push(view)
@@ -331,7 +414,7 @@ function renderArrayView(
     switch (props.type) {
       case 'mount':
         return props.items.forEach((item, i) => {
-          view.mountItem(item, i, render)
+          view.mountItem(item, i, render, options)
         })
       case 'update':
         return props.items.forEach((item, i) => {
@@ -341,15 +424,15 @@ function renderArrayView(
         for (let offset = 0; offset < props.count; offset++) {
           const index = props.index + offset
           if (props.newArray.hasOwnProperty(index)) {
-            view.mountItem(props.newArray[index], index, render)
+            view.mountItem(props.newArray[index], index, render, options)
           }
         }
         break
       case 'replace':
-        return view.mountItem(props.newValue, props.index, render)
+        return view.mountItem(props.newValue, props.index, render, options)
       case 'rebase':
         return props.newArray.forEach((item, i) => {
-          view.mountItem(item, i, render)
+          view.mountItem(item, i, render, options)
         })
     }
   } finally {

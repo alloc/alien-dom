@@ -1,7 +1,11 @@
 import { ArrayRef } from '../core/observable'
-import { ArrayViewRenderFn, useArrayView } from '../hooks/useArrayView'
+import {
+  ArrayViewOptions,
+  ArrayViewRenderFn,
+  useArrayView,
+} from '../hooks/useArrayView'
 
-export interface ArrayViewProps<T> {
+export interface ArrayViewProps<T> extends ArrayViewOptions<T> {
   array: ArrayRef<T>
   children: ArrayViewRenderFn<T>
   /**
@@ -16,6 +20,7 @@ export function ArrayView<T>({
   array,
   children: render,
   deps,
+  ...options
 }: ArrayViewProps<T>) {
-  return useArrayView(array, render, deps)
+  return useArrayView(array, options, render, deps)
 }
