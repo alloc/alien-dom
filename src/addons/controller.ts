@@ -1,5 +1,8 @@
 import { isClass } from '@alloc/is'
-import { Observable, makeObjectObservable } from '../functions/observable'
+import {
+  Observable,
+  makeObjectObservable,
+} from '../functions/makeObjectObservable'
 import { useEffect, useMemo } from '../hooks'
 import { StateInitializer, createState } from '../internal/util'
 

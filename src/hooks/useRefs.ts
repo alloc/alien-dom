@@ -1,6 +1,9 @@
 import { isFunction, isPlainObject } from '@alloc/is'
 import { peek } from '../core/observable'
-import { makeObjectObservable, type Observable } from '../functions/observable'
+import {
+  makeObjectObservable,
+  type Observable,
+} from '../functions/makeObjectObservable'
 import { expectCurrentComponent } from '../internal/global'
 import { useDepsArray } from './useDepsArray'
 
