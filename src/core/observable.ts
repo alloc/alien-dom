@@ -860,7 +860,10 @@ export class ArrayObserver<T> extends Observer {
           }
         )
       case 'splice':
-        const [start, deleteCount] = args as [number, number]
+        let [start, deleteCount] = args as [number, number]
+        if (start < 0) {
+          start = Math.max(0, oldArray.length + start)
+        }
 
         const addOperation: ArrayOperation.Add | false = args.length > 2 && {
           type: 'add',
@@ -873,7 +876,7 @@ export class ArrayObserver<T> extends Observer {
           0 && {
           type: 'remove',
           index: start,
-          count: deleteCount,
+          count: Math.max(0, Math.min(deleteCount, oldArray.length - start)),
           oldArray,
         }
 
