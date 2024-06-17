@@ -51,7 +51,8 @@ export declare namespace Channel {
     message: (Target extends void
       ? Message<T, InferTarget<T>>
       : BubblingMessage<T, InferTarget<T>>) &
-      InferData<T>
+      InferData<T>,
+    connection: Connection<Target>
   ) => boolean | void
 
   /** The signature of a channel. */
@@ -131,8 +132,10 @@ export function defineChannel<
   isTarget?(node: any): node is Target
   bubblingKey?: Extract<keyof Target, string> | false
 } = {}): Channel<Data, Target> {
-  let untargetedReceivers: Set<Channel.Receiver> | undefined
-  let targetedReceiverCaches: WeakMap<Target, Set<Channel.Receiver>> | undefined
+  type Receiver = (message: Channel.Message) => boolean | void
+
+  let untargetedReceivers: Set<Receiver> | undefined
+  let targetedReceiverCaches: WeakMap<Target, Set<Receiver>> | undefined
 
   const bubble = (
     target: Target,
@@ -172,17 +175,17 @@ export function defineChannel<
   }
 
   const connect: Channel.Connect = (arg1: any, arg2?: any): any => {
+    let connection: Channel.Connection
     if (isTarget(arg1)) {
       const receiversByTarget = (targetedReceiverCaches ||= new WeakMap())
-      return createEffect({
+      connection = createEffect({
         target: arg1,
         args: [arg2],
         enable(target: Target, receiver: Channel.Receiver) {
           const receivers = receiversByTarget.get(target) || new Set()
           receiversByTarget.set(target, receivers)
 
-          // Clone the receiver in case it was memoized by a component.
-          const newReceiver = receiver.bind(null)
+          const newReceiver: Receiver = message => receiver(message, connection)
           receivers.add(newReceiver)
 
           return () => {
@@ -194,20 +197,21 @@ export function defineChannel<
           }
         },
       })
-    }
-    const receivers = (untargetedReceivers ||= new Set())
-    return createEffect({
-      args: [arg1],
-      enable(_: void, receiver: Channel.Receiver) {
-        // Clone the receiver in case it was memoized by a component.
-        const newReceiver = receiver.bind(null)
-        receivers.add(newReceiver)
+    } else {
+      const receivers = (untargetedReceivers ||= new Set())
+      connection = createEffect({
+        args: [arg1],
+        enable(_: void, receiver: Channel.Receiver) {
+          const newReceiver: Receiver = message => receiver(message, connection)
+          receivers.add(newReceiver)
 
-        return () => {
-          receivers.delete(newReceiver)
-        }
-      },
-    })
+          return () => {
+            receivers.delete(newReceiver)
+          }
+        },
+      })
+    }
+    return connection
   }
 
   const send: Channel.Send = (arg1: any, arg2?: any) => {
