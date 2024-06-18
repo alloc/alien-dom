@@ -95,7 +95,7 @@ export declare namespace Channel {
   }
 
   /** A disposable connection of a receiver to a channel. */
-  type Connection<Target extends object | void> = Disposable<
+  type Connection<Target extends object | void = any> = Disposable<
     AlienBoundEffect<Target>
   >
 }
