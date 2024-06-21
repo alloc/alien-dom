@@ -5,6 +5,8 @@ import {
   AlienEffect,
   AlienMountEffects,
 } from '../core/effects'
+import { mountFirstChild, mountLastChild } from '../core/mount'
+import { unmount } from '../core/unmount'
 import { observeAs } from '../functions/observeAs'
 import { canMatch } from '../internal/duck'
 import { EffectFlags, enableEffect, getEffects } from '../internal/effects'
@@ -147,16 +149,16 @@ export class AlienElement<Element extends AnyElement = HTMLOrSVGElement> {
   }
   empty() {
     while (this.firstChild) {
-      this.removeChild(this.firstChild)
+      unmount(this.firstChild)
     }
     return this
   }
   appendTo(parent: AlienParentElement<Element>) {
-    parent.appendChild(this)
+    mountLastChild(parent, this)
     return this
   }
   prependTo(parent: AlienParentElement<Element>) {
-    parent.insertBefore(this, parent.firstChild)
+    mountFirstChild(parent, this)
     return this
   }
   hasClass(name: string) {

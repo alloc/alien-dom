@@ -1,6 +1,7 @@
 import { isArray, isFunction } from '@alloc/is'
 import { Falsy } from '@alloc/types'
 import { ContextStore } from '../core/context'
+import { mountAfterNode } from '../core/mount'
 import {
   ArrayOperation,
   ArrayRef,
@@ -203,12 +204,12 @@ class ArrayViewState<T = any> implements NodeStore {
     if (isNode(prevSibling)) {
       if (isFragment(prevSibling)) {
         const lastChild = endOfFragment(prevSibling)
-        lastChild!.after(rootNode)
+        mountAfterNode(lastChild!, rootNode)
       } else {
-        prevSibling.after(rootNode)
+        mountAfterNode(prevSibling, rootNode)
       }
     } else {
-      prevSibling!.lastChild!.after(rootNode)
+      mountAfterNode(prevSibling!.lastChild!, rootNode)
     }
   }
 

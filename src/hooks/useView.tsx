@@ -33,20 +33,20 @@ export function useView(
   const node = useMemo(initViewNode, deps)
 
   useEffect(() => {
-    let mountHandler = onceMounted(node, function mountEffect(): void {
+    let disposeMountEffect = onceMounted(node, function mountEffect(): void {
       const dispose = view(node.parentNode!)
       setPrivate(node, kAlienUnmountHandler, () => {
         dispose()
 
         // Re-attach the mount handler to the node, so that it can be called
         // again if the node is mounted again.
-        mountHandler = onceMounted(node, mountEffect)
+        disposeMountEffect = onceMounted(node, mountEffect)
       })
     })
 
     return () => {
       unmount(node)
-      mountHandler?.dispose()
+      disposeMountEffect?.()
     }
   }, [node])
 

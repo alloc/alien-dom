@@ -1,3 +1,4 @@
+import { mountAfterNode } from '../core/mount'
 import { isFragment } from '../functions/typeChecking'
 import { AlienComponent } from '../internal/component'
 import {
@@ -101,7 +102,7 @@ class ParentFragment implements ParentNode {
         this.childNodes.splice(previousIndex, 1)
       }
       this.childNodes.push(node)
-      lastChild.after(node)
+      mountAfterNode(lastChild, node)
     }
   }
 }

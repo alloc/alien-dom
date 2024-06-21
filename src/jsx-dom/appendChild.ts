@@ -1,6 +1,7 @@
 import { ref } from '../core/observable'
 import { setContext } from '../internal/context'
 import { hasTagName, isFragment, isNode } from '../internal/duck'
+import { notifyMounted } from '../internal/onceMounted'
 import { ShadowRootContext } from '../internal/shadow'
 import { getParentFragment, setParentFragment } from '../internal/symbols'
 import { evaluateChild } from './evaluateChild'
@@ -42,6 +43,7 @@ export function appendChild(
       parent.content.appendChild(child)
     } else {
       parent.appendChild(child)
+      notifyMounted(child)
     }
     return child
   }

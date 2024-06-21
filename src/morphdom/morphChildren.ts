@@ -1,11 +1,13 @@
 import { isArray, isFunction } from '@alloc/is'
 import { Falsy } from '@alloc/types'
+import { mountBeforeNode, mountLastChild } from '../core/mount'
 import { unmount } from '../core/unmount'
 import { getElementIdentity } from '../functions/getElementIdentity'
 import { AlienComponent } from '../internal/component'
 import { hasTagName, isElement, isFragment, isTextNode } from '../internal/duck'
 import { FragmentNodes, endOfFragment } from '../internal/fragment'
 import { currentNodeStore } from '../internal/global'
+import { notifyMounted } from '../internal/onceMounted'
 import {
   getElementKey,
   getElementPosition,
@@ -151,9 +153,9 @@ export function morphChildren(
           for (const childNode of childNodes) {
             if (childNode) {
               if (nextSibling) {
-                nextSibling.before(childNode)
+                mountBeforeNode(nextSibling, childNode)
               } else if (matchingNode !== resolvedNode) {
-                oldChildNodes[0].before(childNode)
+                mountBeforeNode(oldChildNodes[0], childNode)
               }
             }
           }
@@ -310,7 +312,9 @@ function insertChild(
     newChild = node
   }
   if (nextSibling) {
-    nextSibling.before(newChild)
+    mountBeforeNode(nextSibling, newChild)
+  } else if (isElement(parentNode)) {
+    mountLastChild(parentNode, newChild)
   } else {
     parentNode.appendChild(newChild)
   }
@@ -347,6 +351,7 @@ function updateChild(
     } else {
       fromNode.replaceWith(toNode)
       unmount(fromNode, true, component)
+      notifyMounted(toNode)
 
       onChildNode(toNode)
       return
@@ -368,7 +373,7 @@ function updateChild(
       onChildNode(morphedNode)
     }
     if (!nextSibling) {
-      fromNode.before(morphedNode)
+      mountBeforeNode(fromNode, morphedNode)
     }
     unmount(fromNode)
   } else {
@@ -376,7 +381,9 @@ function updateChild(
   }
 
   // If a sibling is passed, nodes are being reordered.
-  nextSibling?.before(morphedNode || fromNode)
+  if (nextSibling) {
+    mountBeforeNode(nextSibling, morphedNode || fromNode)
+  }
 }
 
 function nextDiscardableNode(

@@ -6,6 +6,10 @@ import {
   animate,
   arrayRef,
   computed,
+  mountAfterNode,
+  mountBeforeNode,
+  mountLastChild,
+  mountReplacementNode,
   observe,
   renderComponent,
   unmount,
@@ -120,20 +124,20 @@ export class App<
           const isAppend = route.overlay || popped?.length === 0
           if (isAppend && this.stack.length) {
             const lastRoute = this.stack.at(-1)!
-            lastRoute.node.lastChild.after(node.rootNode)
+            mountAfterNode(lastRoute.node.lastChild, node.rootNode)
             if (!route.overlay) {
               lastRoute.unmount()
             }
           } else if (popped) {
             const poppedRoute = this.stack.at(-popped.length)!
-            poppedRoute.node.firstChild.before(node.rootNode)
+            mountBeforeNode(poppedRoute.node.firstChild, node.rootNode)
             popped.forEach(page => page.unmount())
           } else if (this.stack.length) {
             const lastRoute = this.stack.at(-1)!
-            lastRoute.node.firstChild.before(node.rootNode)
+            mountBeforeNode(lastRoute.node.firstChild, node.rootNode)
             lastRoute.unmount()
-          } else {
-            this.placeholder?.replaceWith(node.rootNode)
+          } else if (this.placeholder) {
+            mountReplacementNode(this.placeholder, node.rootNode)
             this.placeholder = null
           }
 
@@ -209,11 +213,11 @@ export class App<
   mount(root: HTMLElement) {
     if (this.stack.length) {
       for (const { node: handle } of this.stack) {
-        root.append(handle.rootNode)
+        mountLastChild(root, handle.rootNode)
       }
     } else {
       this.placeholder = <div />
-      root.append(this.placeholder)
+      mountLastChild(root, this.placeholder)
     }
     this.router.mount()
   }

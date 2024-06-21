@@ -40,22 +40,24 @@ export function isNode(val: any): val is Node | ChildNode | ParentNode {
   return isObject(val) && isNumber((val as any).nodeType)
 }
 
-export function isElement(node: Node): node is HTMLOrSVGElement {
+type PossibleNode = object & { nodeType?: number }
+
+export function isElement(node: PossibleNode): node is HTMLOrSVGElement {
   return node.nodeType === kElementNodeType
 }
 
-export function isFragment(node: Node): node is DocumentFragment {
+export function isFragment(node: PossibleNode): node is DocumentFragment {
   return node.nodeType === kFragmentNodeType
 }
 
-export function isTextNode(node: Node): node is Text {
+export function isTextNode(node: PossibleNode): node is Text {
   return node.nodeType === kTextNodeType
 }
 
-export function isComment(node: Node): node is Comment {
+export function isComment(node: PossibleNode): node is Comment {
   return node.nodeType === kCommentNodeType
 }
 
-export function isDocument(node: Node): node is Document {
+export function isDocument(node: PossibleNode): node is Document {
   return node.nodeType === 9
 }

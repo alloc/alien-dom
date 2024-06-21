@@ -8,6 +8,7 @@ import { updateParentFragment, wrapWithFragment } from '../internal/fragment'
 import { fromElementThunk } from '../internal/fromElementThunk'
 import { currentComponent } from '../internal/global'
 import { NodeStore } from '../internal/nodeStore'
+import { notifyMounted } from '../internal/onceMounted'
 import {
   getElementKey,
   getElementTags,
@@ -153,6 +154,7 @@ export function morphRootNode(
         if (replacedNode.parentElement) {
           replacedNode.replaceWith(newRootNode)
           unmount(replacedNode, true, component)
+          notifyMounted(newRootNode)
         } else if (DEV) {
           // TODO: schedule a replaceWith call upon being mounted?
           const name = component ? `Component "${component.name}"` : `Element`
