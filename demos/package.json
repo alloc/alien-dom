@@ -9,9 +9,9 @@
   },
   "devDependencies": {
     "@alien-dom/htmelt": "link:../packages/htmelt-plugin",
-    "@htmelt/preval": "^0.1.0",
-    "@htmelt/unocss": "^0.3.1",
-    "htmelt": "^0.4.4",
+    "@htmelt/preval": "^0.2.0",
+    "@htmelt/unocss": "^0.4.0",
+    "htmelt": "^0.5.0",
     "unocss-preset-alloc": "^0.22.9"
   }
 }
